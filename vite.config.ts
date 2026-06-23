@@ -11,6 +11,22 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
+  // Static Vercel deploy: prerender HTML into dist/client (no Cloudflare worker bundle).
+  cloudflare: false,
+  tanstackStart: {
+    prerender: {
+      enabled: true,
+      crawlLinks: true,
+      autoStaticPathsDiscovery: true,
+      failOnError: false,
+      // Auth/workspace routes need browser session — serve via SPA shell + client routing.
+      filter: ({ path }) =>
+        !path.startsWith("/app") &&
+        !path.startsWith("/admin") &&
+        !path.startsWith("/invite/") &&
+        !path.startsWith("/quote/"),
+    },
+  },
   vite: {
     resolve: {
       alias: {

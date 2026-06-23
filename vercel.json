@@ -3,6 +3,7 @@
   "buildCommand": "npm run build:web",
   "installCommand": "npm ci",
   "outputDirectory": "dist/client",
+  "cleanUrls": true,
   "framework": null,
   "rewrites": [
     {
