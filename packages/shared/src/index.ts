@@ -1,0 +1,229 @@
+export const API_VERSION = "v1";
+
+export { VELON_CONTACT_EMAIL } from "./velon-contact";
+
+export { VelonRole, normalizeVelonRole } from "./velon-role";
+import { VelonRole, normalizeVelonRole } from "./velon-role";
+
+export type AuthScope = "platform" | "tenant";
+
+export const ROLE_PERMISSIONS: Record<VelonRole, string[]> = {
+  [VelonRole.SUPER_ADMIN]: ["*"],
+  [VelonRole.PLATFORM_SUPPORT]: [
+    "tenants:read",
+    "tenants:update",
+    "users:read",
+    "audit:read",
+    "notifications:read",
+  ],
+  [VelonRole.TENANT_OWNER]: [
+    "workspace:*",
+    "tenant:read",
+    "tenant:update",
+    "users:read",
+    "users:invite",
+    "users:manage",
+    "departments:*",
+    "seats:read",
+    "billing:*",
+    "audit:read",
+    "crm:*",
+    "inventory:*",
+    "procurement:*",
+    "sales:*",
+  ],
+  [VelonRole.TENANT_ADMIN]: [
+    "workspace:*",
+    "tenant:read",
+    "tenant:update",
+    "users:read",
+    "users:invite",
+    "users:manage",
+    "departments:*",
+    "seats:read",
+    "billing:*",
+    "audit:read",
+    "crm:*",
+    "inventory:*",
+    "procurement:*",
+    "sales:*",
+  ],
+  [VelonRole.DEPARTMENT_ADMIN]: [
+    "workspace:read",
+    "workspace:write:department",
+    "users:read:department",
+    "crm:read",
+    "crm:write",
+    "inventory:read",
+    "inventory:write",
+    "procurement:read",
+    "procurement:write",
+    "sales:*",
+  ],
+  [VelonRole.USER]: [
+    "workspace:read",
+    "workspace:write:limited",
+    "crm:read",
+    "inventory:read",
+    "procurement:read",
+    "sales:read",
+  ],
+  [VelonRole.TENANT_USER]: [
+    "workspace:read",
+    "workspace:write:limited",
+    "crm:read",
+    "inventory:read",
+    "procurement:read",
+    "sales:read",
+  ],
+};
+
+export function isPlatformRole(role: VelonRole | string): boolean {
+  const r = normalizeVelonRole(role);
+  return r === VelonRole.SUPER_ADMIN || r === VelonRole.PLATFORM_SUPPORT;
+}
+
+export function isTenantRole(role: VelonRole | string): boolean {
+  const r = normalizeVelonRole(role);
+  return (
+    r === VelonRole.TENANT_OWNER ||
+    r === VelonRole.TENANT_ADMIN ||
+    r === VelonRole.DEPARTMENT_ADMIN ||
+    r === VelonRole.USER ||
+    r === VelonRole.TENANT_USER
+  );
+}
+
+export function roleHasPermission(role: VelonRole, permission: string): boolean {
+  const normalized = normalizeVelonRole(role);
+  const perms = ROLE_PERMISSIONS[normalized] ?? [];
+  if (perms.includes("*")) return true;
+  return perms.some(
+    (p) => p === permission || (p.endsWith(":*") && permission.startsWith(p.slice(0, -1))),
+  );
+}
+
+export type JwtPayload = {
+  sub: string;
+  email: string;
+  scope: AuthScope;
+  role: VelonRole;
+  tenantId?: string;
+  workspaceId?: string;
+  membershipId?: string;
+};
+
+export type AuthTokens = {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+};
+
+/** Server-only — import from `@velon/shared/signup-verification` in API code. */
+
+export {
+  SEAT_LIMITS,
+  seatLimitForPlan,
+  isUnlimitedSeats,
+  seatsRemaining,
+  canAddSeat,
+} from "./seats";
+
+export { PLAN_CATALOG, planCatalogEntry, type PlanCatalogEntry } from "./plans";
+
+export {
+  PASSWORD_MIN_LENGTH,
+  PASSWORD_RULES,
+  evaluatePasswordRules,
+  isPasswordStrong,
+  passwordStrengthMessage,
+  type PasswordRuleId,
+  type PasswordRuleStatus,
+} from "./password-policy";
+
+export {
+  PAYMENT_PROVIDERS,
+  TRIAL_DAYS_DEFAULT,
+  BILLING_PORTAL_PATH_PREFIXES,
+  yearlyPriceFromMonthly,
+  mrrForPlan,
+  normalizeApiPath,
+  isBillingPortalPath,
+  subscriptionAllowsWorkspaceAccess,
+  subscriptionAllowsBillingPortal,
+  mapSubscriptionStatusToTenantStatus,
+  type BillingInterval,
+  type SubscriptionBillingStatus,
+  type PaymentProviderId,
+} from "./billing";
+
+export {
+  WORKSPACE_SIDEBAR_LABELS,
+  classifyDashboardLoaderError,
+  isWorkspaceNavItemActive,
+  normalizeWorkspacePath,
+  workspaceNavHasDuplicateCrm,
+  type DashboardErrorKind,
+} from "./workspace-navigation";
+
+export { isAdminNavItemActive } from "./admin-navigation";
+
+export {
+  DEMO_SEED_SOURCES,
+  canSeedDemoTenants,
+  inferDemoSeedSourceFromEmail,
+  inferDemoSeedSourceFromTenantName,
+  isDemoSeedSource,
+  type DemoSeedSource,
+} from "./seed-guards";
+
+export {
+  isProductionPlatformUser,
+  isProductionTenant,
+  productionPlatformUserWhere,
+  productionTenantWhere,
+} from "./production-data";
+
+export {
+  DEFAULT_WORKSPACE_PUBLIC_DOMAIN,
+  resolveWorkspacePublicDomain,
+  tenantWorkspaceHost,
+} from "./workspace-host";
+
+export {
+  TENANT_STATUS_COLUMN_HELP,
+  TENANT_STATUS_DESCRIPTIONS,
+} from "./tenant-status-help";
+
+export {
+  SETTINGS_PATHS,
+  SETTINGS_USER_TABS,
+  WORKSPACE_ADMIN_SECTIONS,
+  canManageWorkspaceBilling,
+  canManageWorkspaceSettings,
+  parseSettingsUserTab,
+  parseWorkspaceAdminSection,
+  settingsBillingSearch,
+  workspaceAdminSearch,
+  type SettingsUserTab,
+  type WorkspaceAdminSection,
+} from "./settings-routes";
+
+export {
+  canReadCrm,
+  canWriteCrmRecords,
+  canManageCrmCustomers,
+  canWriteCrmNotes,
+  canWriteCrmActivities,
+  canManageCrmActivities,
+} from "./crm-permissions";
+
+export { canReadInventory, canManageInventory } from "./inventory-permissions";
+
+export {
+  canReadProcurement,
+  canManageProcurement,
+  canApproveProcurement,
+} from "./procurement-permissions";
+
+export { canReadSales, canWriteSales } from "./sales-permissions";
