@@ -17,6 +17,8 @@ dist-ssr
 *.local
 .env
 .env.local
+.env.vercel.deploy
+.env.railway.deploy
 backups/
 
 # Wrangler / Cloudflare
