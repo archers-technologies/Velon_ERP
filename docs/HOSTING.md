@@ -22,14 +22,19 @@ Copy-paste templates:
 2. Railway creates one service from the repo. Open it → **Settings** → set **Root Directory** to `/` (repo root).
 3. `railway.json` is already in the repo — Railway uses the API Dockerfile, runs Prisma migrations before deploy, and health-checks `/api/v1/health/live`.
 
-### Add PostgreSQL
+**Important:** The first deploy will fail at **pre-deploy** (`prisma migrate deploy`) until PostgreSQL exists and `DATABASE_URL` is set on the API service. Add Postgres and wire variables **before** expecting a green deploy.
 
-1. In the same project: **+ New** → **Database** → **PostgreSQL**.
-2. Open the Postgres service → **Connect** → copy **DATABASE_URL** (or use variable references below).
+### Add PostgreSQL (required)
+
+1. In the **same project** as the API: **+ New** → **Database** → **PostgreSQL**.
+2. Wait until the Postgres service shows as running.
+3. Open the Postgres service → **Connect** → note **DATABASE_URL** (or use variable references below).
 
 You do **not** install Postgres yourself on Railway — it is a managed plugin. The API only needs the connection string.
 
-### Add Redis
+If your Postgres service is not named `Postgres`, use that name in the reference, e.g. `${{PostgreSQL.DATABASE_URL}}`.
+
+### Add Redis (required for API boot)
 
 1. **+ New** → **Database** → **Redis**.
 2. Copy **REDIS_URL** from the Redis service **Connect** tab.
@@ -44,6 +49,8 @@ Open the **API** service (not Postgres) → **Variables**.
 DATABASE_URL=${{Postgres.DATABASE_URL}}
 REDIS_URL=${{Redis.REDIS_URL}}
 ```
+
+**Verify before redeploying:** In the API service **Variables** tab, the resolved preview for `DATABASE_URL` must show a real `postgresql://…` URL — not blank and not the literal `${{Postgres.DATABASE_URL}}` text.
 
 Then add the rest from [`.env.railway.example`](../.env.railway.example):
 
@@ -174,6 +181,7 @@ Requires `psql` on your PATH and a working `DATABASE_URL` in `.env`.
 | CORS error in browser | Add your Vercel URL to `CORS_ORIGINS` on Railway API |
 | API crash on boot: missing env | Set `DATABASE_URL`, `REDIS_URL`, `JWT_*`, `AUTH_OTP_SECRET` on Railway |
 | `password authentication failed` | Password in `DATABASE_URL` does not match Postgres — rotate and update URL |
-| Migrations failed on deploy | Check Railway deploy logs; run `railway run npm run db:migrate:deploy` manually |
+| Pre-deploy fails: `prisma migrate deploy` / `DATABASE_URL` empty | Add **PostgreSQL** to the project; on the **API** service set `DATABASE_URL=${{Postgres.DATABASE_URL}}` (match your Postgres service name); confirm the variable preview shows a real URL; redeploy |
+| Migrations failed on deploy (URL is set) | Check Railway deploy logs; run `railway run npm run db:migrate:deploy` manually |
 
 More detail: [DEPLOYMENT.md](./DEPLOYMENT.md)

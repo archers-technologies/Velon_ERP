@@ -5,7 +5,7 @@
     "dockerfilePath": "apps/api/Dockerfile"
   },
   "deploy": {
-    "preDeployCommand": "cd packages/database && npx prisma migrate deploy",
+    "preDeployCommand": "node packages/database/scripts/require-database-url.mjs && cd packages/database && npx prisma migrate deploy",
     "startCommand": "node apps/api/dist/main.js",
     "healthcheckPath": "/api/v1/health/live",
     "healthcheckTimeout": 100,
