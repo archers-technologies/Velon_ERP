@@ -6,12 +6,17 @@
 // You can pass additional config via defineConfig({ vite: { ... } }) if needed.
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { nitro } from "nitro/vite";
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
+const isVercelBuild = Boolean(process.env.VERCEL);
 
 export default defineConfig({
+  // Cloudflare worker output breaks Vercel static hosting (no index.html). Use Nitro on Vercel.
+  cloudflare: isVercelBuild ? false : undefined,
   vite: {
+    plugins: isVercelBuild ? [nitro()] : [],
     resolve: {
       alias: {
         // Browser must not load CJS dist directly — use TypeScript source (ESM).
