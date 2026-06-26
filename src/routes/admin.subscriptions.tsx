@@ -7,6 +7,7 @@ import {
   resetTenantSubscription,
   updatePlanDefinition,
 } from "@/lib/platform/admin-loaders";
+import { emptySubscriptionCommandCenter } from "@/lib/workspace/empty-states";
 import {
   approveBillingPayment,
   extendTenantTrial,
@@ -83,12 +84,21 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/subscriptions")({
   loader: async () => {
-    const [data, pendingPayments, platformPayments] = await Promise.all([
-      loadSubscriptionCommandCenter(),
+    let data = emptySubscriptionCommandCenter();
+    let loadError: string | null = null;
+    try {
+      data = await loadSubscriptionCommandCenter();
+    } catch (err) {
+      loadError =
+        err instanceof Error
+          ? err.message
+          : "Could not load subscription data. Restart the API (npm run dev) and try again.";
+    }
+    const [pendingPayments, platformPayments] = await Promise.all([
       loadPendingBillingPayments().catch(() => []),
       loadPlatformBillingPayments().catch(() => []),
     ]);
-    return { data, pendingPayments, platformPayments };
+    return { data, pendingPayments, platformPayments, loadError };
   },
   component: AdminSubscriptionsPage,
 });
@@ -141,7 +151,7 @@ function catalogPlanToApi(planId: string): "STARTER" | "GROWTH" | "ENTERPRISE" {
 
 function AdminSubscriptionsPage() {
   const router = useRouter();
-  const { data, pendingPayments, platformPayments } = Route.useLoaderData();
+  const { data, pendingPayments, platformPayments, loadError } = Route.useLoaderData();
   const { formatCurrency } = useAdminCurrency();
   const [paymentBusy, setPaymentBusy] = useState<string | null>(null);
   const [planFilter, setPlanFilter] = useState<"all" | "Starter" | "Growth" | "Enterprise">("all");
@@ -179,6 +189,8 @@ function AdminSubscriptionsPage() {
     try {
       await updatePlanDefinition(catalogPlanToApi(planDraft.id), {
         displayName: planDraft.name,
+        indiaMonthlyPrice: planDraft.monthlyPrice ?? 0,
+        indiaAnnualPrice: planDraft.annualPrice ?? 0,
         monthlyPrice: planDraft.monthlyPrice ?? 0,
         annualPrice: planDraft.annualPrice ?? 0,
         currency: "INR",
@@ -203,6 +215,26 @@ function AdminSubscriptionsPage() {
 
   return (
     <div className="space-y-6">
+      {loadError ? (
+        <Card className="border-destructive/40 bg-destructive/5 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-destructive">Subscription data unavailable</p>
+              <p className="mt-1 text-xs text-muted-foreground">{loadError}</p>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                void router.invalidate();
+              }}
+            >
+              <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+              Retry
+            </Button>
+          </div>
+        </Card>
+      ) : null}
       {pendingPayments.length > 0 ? (
         <Card className="border-amber-500/30 bg-amber-500/5 p-6">
           <div className="mb-4 flex items-center justify-between gap-2">

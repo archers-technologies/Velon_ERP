@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { VELON_CONTACT_EMAIL } from "@velon/shared";
+import { VelonLogoMark } from "@/components/velon-logo-mark";
 import type { PublicSiteContent } from "@/lib/cms/load-public";
 
 type SiteFooterProps = {
@@ -8,7 +9,7 @@ type SiteFooterProps = {
 };
 
 export function SiteFooter({ footer, contact }: SiteFooterProps = {}) {
-  const tagline = footer?.tagline ?? "Velon Technologies";
+  const tagline = footer?.tagline ?? "Velon-ERP";
   const email = footer?.email ?? contact?.email ?? VELON_CONTACT_EMAIL;
   const links = footer?.links ?? [
     { label: "Features", href: "/features" },
@@ -21,9 +22,7 @@ export function SiteFooter({ footer, contact }: SiteFooterProps = {}) {
       <div className="mx-auto max-w-7xl space-y-6 px-6 py-10">
         <div className="flex flex-col items-center justify-between gap-4 sm:flex-row sm:items-start">
           <div className="flex items-center gap-2">
-            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-foreground text-[10px] font-bold text-background">
-              V
-            </div>
+            <VelonLogoMark size="xs" />
             <span className="font-medium text-foreground">{tagline}</span>
           </div>
           <nav className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 sm:justify-end">
@@ -55,8 +54,15 @@ export function SiteFooter({ footer, contact }: SiteFooterProps = {}) {
 
         <div className="border-t border-border/60 pt-6 text-center sm:text-left">
           <p className="text-sm text-foreground/90">
-            Velon-ERP is designed and developed by{" "}
-            <span className="font-medium text-foreground">Archers Technologies</span>.
+            Velon ERP Powered by{" "}
+            <a
+              href="https://archerstechnologies.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-foreground underline-offset-4 hover:underline"
+            >
+              Archers Technologies
+            </a>
           </p>
           <p className="mt-2">
             <a href={`mailto:${email}`} className="hover:text-foreground">
@@ -71,7 +77,9 @@ export function SiteFooter({ footer, contact }: SiteFooterProps = {}) {
           </p>
         </div>
 
-        <p className="text-center text-[11px] sm:text-left">© 2026 Velon Systems. All rights reserved.</p>
+        <p className="text-center text-[11px] sm:text-left">
+          © 2026 Archers Technologies. All rights reserved.
+        </p>
       </div>
     </footer>
   );

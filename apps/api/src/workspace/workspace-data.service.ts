@@ -172,7 +172,11 @@ export class WorkspaceDataService {
         name: ctx.workspace.name,
         slug: ctx.workspace.slug,
         timezone: ctx.workspace.timezone,
+        countryCode: ctx.workspace.countryCode,
         currency: ctx.workspace.currency,
+        currencySymbol: ctx.workspace.currencySymbol,
+        dateFormat: ctx.workspace.dateFormat,
+        numberFormat: ctx.workspace.numberFormat,
         language: ctx.workspace.language,
       },
       subscription: {

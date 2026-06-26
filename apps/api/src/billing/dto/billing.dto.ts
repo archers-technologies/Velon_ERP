@@ -60,6 +60,12 @@ export class VerifyRazorpayPaymentDto {
   razorpay_signature!: string;
 }
 
+export class CancelCheckoutDto {
+  @IsOptional()
+  @IsString()
+  orderId?: string;
+}
+
 export class PlatformSubscriptionActionDto {
   @IsString()
   tenantId!: string;
@@ -101,6 +107,26 @@ export class UpdatePlanDefinitionDto {
   @IsNumber()
   @Min(0)
   annualPrice?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  indiaMonthlyPrice?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  indiaAnnualPrice?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  globalMonthlyPrice?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  globalAnnualPrice?: number;
 
   @IsOptional()
   @IsString()

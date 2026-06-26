@@ -18,6 +18,9 @@ export type TenantPlatformSeed = {
   name: string;
   plan: TenantPlan;
   country: string;
+  countryCode?: string | null;
+  currency?: string | null;
+  currencySymbol?: string | null;
   users: number;
   mrr: number;
   status: TenantStatus;

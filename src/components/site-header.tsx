@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { BrandLogoLink } from "@/components/brand-logo-link";
+import { VelonLogoMark } from "@/components/velon-logo-mark";
 import { Button } from "@/components/ui/button";
 
 export function SiteHeader() {
@@ -7,9 +8,7 @@ export function SiteHeader() {
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         <BrandLogoLink className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-foreground text-background font-bold">
-            V
-          </div>
+          <VelonLogoMark size="sm" />
           <span className="text-lg font-semibold tracking-tight">
             Velon<span className="text-muted-foreground">-ERP</span>
           </span>

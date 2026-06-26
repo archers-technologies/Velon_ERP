@@ -5,13 +5,20 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { TenantStatusPill } from "@/components/tenant-status-pill";
 import type { TenantStatus } from "@/lib/admin-demo";
 import { getSessionMembershipRole } from "@/lib/auth/session";
@@ -19,6 +26,7 @@ import { formatApiError } from "@/lib/auth/login-utils";
 import { normalizeVelonRole, canManageWorkspaceBilling, parseSettingsUserTab, settingsBillingSearch, VelonRole } from "@velon/shared";
 import { SettingsWorkspaceShortcuts } from "@/components/settings/settings-workspace-shortcuts";
 import {
+  cancelBillingCheckout,
   cancelTenantSubscription,
   changeTenantSubscriptionPlan,
   loadBillingAccess,
@@ -33,10 +41,11 @@ import {
   type BillingPaymentConfig,
   type SubscriptionInvoiceView,
   type SubscriptionPaymentView,
-  type TenantSubscriptionView,
 } from "@/lib/api/subscription-billing";
 import { openRazorpayCheckout } from "@/lib/razorpay-checkout";
-import { CreditCard, ArrowLeft, RefreshCw, Landmark, IndianRupee } from "lucide-react";
+import { CreditCard, ArrowLeft, RefreshCw, Landmark, IndianRupee, Zap } from "lucide-react";
+import { formatCurrency } from "@/lib/format-money";
+import { useWorkspaceCurrency } from "@/contexts/workspace-currency";
 
 export const Route = createFileRoute("/app/settings/billing")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -60,6 +69,7 @@ type PlanId = "STARTER" | "GROWTH" | "ENTERPRISE";
 
 function BillingPortalPage() {
   const initial = Route.useLoaderData();
+  const { formatCurrency: formatWorkspaceAmount, moneyFormat } = useWorkspaceCurrency();
   const [subscription, setSubscription] = useState(initial.subscription);
   const [invoices, setInvoices] = useState(initial.invoices);
   const [payments, setPayments] = useState(initial.payments);
@@ -67,6 +77,7 @@ function BillingPortalPage() {
   const [plans] = useState(initial.plans);
   const [paymentConfig] = useState<BillingPaymentConfig>(initial.paymentConfig);
   const [busy, setBusy] = useState(false);
+  const [payDialogOpen, setPayDialogOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<PlanId>(subscription.plan as PlanId);
   const [interval, setInterval] = useState<"MONTHLY" | "YEARLY">(subscription.billingInterval);
   const role = normalizeVelonRole(getSessionMembershipRole() ?? VelonRole.USER);
@@ -95,6 +106,21 @@ function BillingPortalPage() {
     pendingPayment?.provider === "BANK_TRANSFER" ? pendingPayment : undefined;
   const razorpayEnabled = paymentConfig.razorpay.enabled && Boolean(paymentConfig.razorpay.keyId);
   const selectedPlanMeta = plans.find((p) => p.id === selectedPlan);
+  const displayCurrency =
+    selectedPlanMeta?.currency ?? subscription.currency ?? moneyFormat.currencyCode;
+
+  const subscriptionNeedsPayment =
+    subscription.status === "TRIAL" ||
+    subscription.status === "PAST_DUE" ||
+    subscription.status === "SUSPENDED" ||
+    !access.allowsWorkspace;
+
+  const checkoutAmount =
+    interval === "YEARLY"
+      ? (selectedPlanMeta?.annualPrice ?? (selectedPlanMeta?.monthlyPrice ?? subscription.mrr) * 10)
+      : (selectedPlanMeta?.monthlyPrice ?? subscription.mrr);
+
+  const payNowBlocked = !razorpayEnabled && Boolean(pendingBankTransfer);
 
   const refresh = async () => {
     const [sub, inv, pay] = await Promise.all([
@@ -135,6 +161,7 @@ function BillingPortalPage() {
         result.session.instructions ??
         "Bank transfer request created. Include your workspace code in the payment reference.";
       toast.success(instructions);
+      setPayDialogOpen(false);
       await refresh();
     } catch (err) {
       toast.error(formatApiError(err));
@@ -158,6 +185,8 @@ function BillingPortalPage() {
         throw new Error("Razorpay checkout is not available");
       }
 
+      setPayDialogOpen(false);
+
       await openRazorpayCheckout({
         keyId: checkout.keyId,
         orderId: checkout.orderId,
@@ -165,8 +194,10 @@ function BillingPortalPage() {
         currency: checkout.currency,
         planLabel: selectedPlanMeta?.displayName ?? selectedPlan,
         onDismiss: () => {
-          toast.message("Payment cancelled");
-          setBusy(false);
+          void cancelBillingCheckout(checkout.orderId).finally(() => {
+            toast.message("Payment cancelled — you can try again");
+            setBusy(false);
+          });
         },
         onSuccess: async (response) => {
           try {
@@ -188,6 +219,19 @@ function BillingPortalPage() {
       toast.error(formatApiError(err));
       setBusy(false);
     }
+  };
+
+  const onPayNow = () => {
+    if (!isOwner) return;
+    if (razorpayEnabled) {
+      void onPayWithRazorpay();
+      return;
+    }
+    if (pendingBankTransfer) {
+      toast.error("A bank transfer is already pending admin approval.");
+      return;
+    }
+    setPayDialogOpen(true);
   };
 
   const onCancel = async () => {
@@ -239,31 +283,84 @@ function BillingPortalPage() {
         </Button>
       </div>
 
+      {isOwner && subscriptionNeedsPayment ? (
+        <Card className="border-primary/40 bg-gradient-to-br from-primary/10 via-primary/5 to-background p-6 shadow-sm">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Zap className="h-5 w-5 text-primary" />
+                <h2 className="text-lg font-semibold">Pay now to activate your workspace</h2>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {selectedPlanMeta?.displayName ?? subscription.planDisplayName} ·{" "}
+                {interval === "YEARLY" ? "Yearly billing" : "Monthly billing"}
+                {subscription.trialEndsAt ? ` · Trial ends ${subscription.trialEndsAt}` : ""}
+              </p>
+              <p className="pt-1 text-3xl font-bold tracking-tight">
+                {formatCurrency(checkoutAmount, { currencyCode: displayCurrency })}
+                <span className="text-base font-normal text-muted-foreground">
+                  {interval === "YEARLY" ? "/yr" : "/mo"}
+                </span>
+              </p>
+              {razorpayEnabled ? (
+                <p className="text-xs text-muted-foreground">
+                  Pay instantly with card, UPI, or netbanking via Razorpay.
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Online checkout is unavailable — use bank transfer and wait for platform approval.
+                </p>
+              )}
+            </div>
+            <Button
+              size="lg"
+              className="h-12 min-w-[160px] px-8 text-base font-semibold"
+              onClick={onPayNow}
+              disabled={busy || payNowBlocked}
+            >
+              Pay now
+            </Button>
+          </div>
+          {pendingBankTransfer && razorpayEnabled ? (
+            <p className="mt-4 text-xs text-muted-foreground">
+              You have a pending bank transfer request. Pay now online to activate immediately
+              instead of waiting for admin approval.
+            </p>
+          ) : null}
+          {payNowBlocked ? (
+            <p className="mt-4 text-xs text-amber-700 dark:text-amber-300">
+              A bank transfer is awaiting admin approval. Contact your platform admin or wait for
+              approval before submitting another request.
+            </p>
+          ) : null}
+        </Card>
+      ) : null}
+
       <SettingsWorkspaceShortcuts />
 
-      <Card className="border-border bg-muted/30 p-4 text-sm text-muted-foreground">
-        <p>
-          <strong className="text-foreground">Bank transfer billing is always available.</strong>
-          {razorpayEnabled
-            ? " Pay online with Razorpay (cards, UPI, netbanking) or request a manual bank transfer below."
-            : " Online payment gateways are disabled until configured by platform administration. Request a bank transfer below; a platform admin will approve your payment and activate your subscription."}
-        </p>
-      </Card>
-
-      {!access.allowsWorkspace && (
-        <Card className="border-amber-500/40 bg-amber-500/10 p-4 text-sm">
-          ERP access is restricted until your subscription is active. Submit a manual payment
-          request below and wait for platform approval.
+      {isOwner && !subscriptionNeedsPayment ? (
+        <Card className="flex flex-wrap items-center justify-between gap-3 border-border bg-muted/30 p-4">
+          <div>
+            <p className="text-sm font-medium">Renew or change your plan</p>
+            <p className="text-xs text-muted-foreground">
+              Update billing or pay for the next period before renewal.
+            </p>
+          </div>
+          <Button onClick={onPayNow} disabled={busy || payNowBlocked}>
+            Pay now
+          </Button>
         </Card>
-      )}
+      ) : null}
 
-      {pendingBankTransfer ? (
+      {pendingBankTransfer && !razorpayEnabled ? (
         <Card className="border-amber-500/30 bg-amber-500/5 p-4 text-sm">
           <p className="font-medium text-foreground">Payment pending approval</p>
           <p className="mt-1 text-muted-foreground">
-            Your bank transfer request ({pendingBankTransfer.currency === "INR" ? "₹" : "$"}
-            {pendingBankTransfer.amount}) is awaiting platform admin review. You will regain full
-            access once it is approved.
+            Your bank transfer request (
+            {formatCurrency(pendingBankTransfer.amount, {
+              currencyCode: pendingBankTransfer.currency,
+            })}
+            ) is awaiting platform admin review. You will regain full access once it is approved.
           </p>
         </Card>
       ) : null}
@@ -274,7 +371,7 @@ function BillingPortalPage() {
             <p className="text-sm text-muted-foreground">Current plan</p>
             <h2 className="text-xl font-semibold">{subscription.planDisplayName}</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              ${subscription.mrr}/mo · Renews {subscription.currentPeriodEnd}
+              {formatWorkspaceAmount(subscription.mrr)}/mo · Renews {subscription.currentPeriodEnd}
               {subscription.trialEndsAt ? ` · Trial ends ${subscription.trialEndsAt}` : ""}
             </p>
             {subscription.seatLimit != null ? (
@@ -296,7 +393,7 @@ function BillingPortalPage() {
         <Card className="space-y-4 p-6">
           <div className="flex items-center gap-2">
             <CreditCard className="h-5 w-5" />
-            <h3 className="font-semibold">Change plan &amp; request payment</h3>
+            <h3 className="font-semibold">Change plan</h3>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
@@ -308,7 +405,8 @@ function BillingPortalPage() {
                 <SelectContent>
                   {plans.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
-                      {p.displayName} — ${p.monthlyPrice}/mo
+                      {p.displayName} —{" "}
+                      {formatCurrency(p.monthlyPrice, { currencyCode: displayCurrency })}/mo
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -328,27 +426,30 @@ function BillingPortalPage() {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button onClick={() => void onChangePlan()} disabled={busy}>
+            <Button variant="outline" onClick={() => void onChangePlan()} disabled={busy}>
               Save plan selection
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => void onRequestManualPayment()}
-              disabled={busy || Boolean(pendingPayment)}
-            >
-              <Landmark className="mr-2 h-4 w-4" />
-              Request bank transfer payment
+            <Button onClick={onPayNow} disabled={busy || payNowBlocked}>
+              Pay now
             </Button>
             {razorpayEnabled ? (
               <Button
-                variant="default"
+                variant="secondary"
                 onClick={() => void onPayWithRazorpay()}
-                disabled={busy || Boolean(pendingPayment)}
+                disabled={busy}
               >
                 <IndianRupee className="mr-2 h-4 w-4" />
                 Pay with Razorpay
               </Button>
             ) : null}
+            <Button
+              variant="outline"
+              onClick={() => setPayDialogOpen(true)}
+              disabled={busy || Boolean(pendingBankTransfer)}
+            >
+              <Landmark className="mr-2 h-4 w-4" />
+              Bank transfer
+            </Button>
             {subscription.cancelAtPeriodEnd ? (
               <Button variant="secondary" onClick={() => void onResume()} disabled={busy}>
                 Resume subscription
@@ -359,13 +460,52 @@ function BillingPortalPage() {
               </Button>
             )}
           </div>
-          {pendingPayment ? (
+          {pendingBankTransfer && !razorpayEnabled ? (
             <p className="text-xs text-muted-foreground">
-              A payment is already pending review. Wait for approval before submitting another request.
+              A bank transfer is already pending review. Wait for approval before submitting another
+              request.
             </p>
           ) : null}
         </Card>
       )}
+
+      <Dialog open={payDialogOpen} onOpenChange={setPayDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Choose how to pay</DialogTitle>
+            <DialogDescription>
+              {selectedPlanMeta?.displayName ?? subscription.planDisplayName} ·{" "}
+              {formatCurrency(checkoutAmount, { currencyCode: displayCurrency })}
+              {interval === "YEARLY" ? "/yr" : "/mo"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            {razorpayEnabled ? (
+              <Button
+                className="h-12 w-full justify-start gap-3 text-base"
+                onClick={() => void onPayWithRazorpay()}
+                disabled={busy}
+              >
+                <IndianRupee className="h-5 w-5" />
+                Pay online with Razorpay
+              </Button>
+            ) : null}
+            <Button
+              variant={razorpayEnabled ? "outline" : "default"}
+              className="h-12 w-full justify-start gap-3 text-base"
+              onClick={() => void onRequestManualPayment()}
+              disabled={busy || Boolean(pendingBankTransfer)}
+            >
+              <Landmark className="h-5 w-5" />
+              Request bank transfer
+            </Button>
+          </div>
+          <DialogFooter className="text-xs text-muted-foreground sm:justify-start">
+            Bank transfers require platform admin approval. Online payment activates your
+            subscription immediately.
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <InvoiceTable title="Invoices" rows={invoices} />
@@ -408,10 +548,7 @@ function InvoiceTable({ title, rows }: { title: string; rows: SubscriptionInvoic
                 </p>
               </div>
               <div className="text-right">
-                <p>
-                  {row.currency === "INR" ? "₹" : "$"}
-                  {row.amount}
-                </p>
+                <p>{formatCurrency(row.amount, { currencyCode: row.currency })}</p>
                 <Badge variant="outline">{row.status}</Badge>
               </div>
             </div>
@@ -437,10 +574,7 @@ function PaymentTable({ title, rows }: { title: string; rows: SubscriptionPaymen
                 <p className="text-muted-foreground">{new Date(row.createdAt).toLocaleDateString()}</p>
               </div>
               <div className="text-right">
-                <p>
-                  {row.currency === "INR" ? "₹" : "$"}
-                  {row.amount}
-                </p>
+                <p>{formatCurrency(row.amount, { currencyCode: row.currency })}</p>
                 <Badge variant="outline">{row.status}</Badge>
               </div>
             </div>

@@ -7,6 +7,9 @@ type ApiTenant = {
   slug: string;
   tenantCode: string;
   country: string;
+  countryCode?: string | null;
+  currency?: string | null;
+  currencySymbol?: string | null;
   plan: string;
   status: string;
   health: string;
@@ -75,6 +78,9 @@ export function mapApiTenant(row: ApiTenant): TenantRecord {
     slug: row.slug,
     tenantCode: row.tenantCode,
     country: row.country,
+    countryCode: row.countryCode ?? null,
+    currency: row.currency ?? null,
+    currencySymbol: row.currencySymbol ?? null,
     plan: planFromApi[row.plan] ?? "Starter",
     status: statusFromApi[row.status] ?? "Trial",
     health: healthFromApi[row.health] ?? "healthy",

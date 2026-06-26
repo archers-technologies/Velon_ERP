@@ -81,6 +81,8 @@ export const BILLING_PORTAL_PATH_PREFIXES = [
   "/billing/payments",
   "/billing/checkout",
   "/billing/plans",
+  "/billing/plans/for-workspace",
+  "/billing/checkout/cancel",
   "/billing/payment-config",
   "/billing/razorpay/verify",
   "/billing/providers",

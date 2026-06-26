@@ -34,16 +34,18 @@ function InfrastructurePage() {
         <Card className="border-border bg-card p-5">
           <div className="flex items-center gap-2 text-muted-foreground">
             <Activity className="h-4 w-4" />
-            <span className="text-xs font-medium uppercase tracking-wider">Active tenants</span>
+            <span className="text-xs font-medium uppercase tracking-wider">Active workspaces</span>
           </div>
           <p className="mt-2 text-3xl font-semibold">{data.activeTenants}</p>
+          <p className="mt-1 text-xs text-muted-foreground">Tenants on trial or paid plans</p>
         </Card>
         <Card className="border-border bg-card p-5">
           <div className="flex items-center gap-2 text-muted-foreground">
             <Server className="h-4 w-4" />
-            <span className="text-xs font-medium uppercase tracking-wider">Active users</span>
+            <span className="text-xs font-medium uppercase tracking-wider">Workspace members</span>
           </div>
           <p className="mt-2 text-3xl font-semibold">{data.activeUsers}</p>
+          <p className="mt-1 text-xs text-muted-foreground">Active users across all workspaces</p>
         </Card>
         <Card className="border-border bg-card p-5">
           <div className="flex items-center gap-2 text-muted-foreground">

@@ -11,10 +11,10 @@ import {
 import {
   TRIAL_DAYS_DEFAULT,
   mapSubscriptionStatusToTenantStatus,
-  mrrForPlan,
   planCatalogEntry,
 } from "@velon/shared";
 import { PrismaService } from "../prisma/prisma.service";
+import { BillingPricingService } from "./billing-pricing.service";
 import type { CheckoutSession } from "./providers/payment-provider.types";
 
 function addDays(date: Date, days: number): Date {
@@ -38,7 +38,10 @@ function isMissingSubscriptionTableError(err: unknown): boolean {
 
 @Injectable()
 export class SubscriptionService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly pricing: BillingPricingService,
+  ) {}
 
   async ensureForTenant(
     tenantId: string,
@@ -140,6 +143,11 @@ export class SubscriptionService {
   async getTenantSubscription(tenantId: string) {
     const sub = await this.ensureForTenant(tenantId);
     const entry = planCatalogEntry(sub.plan);
+    const resolved = await this.pricing.resolveForTenant(
+      tenantId,
+      sub.plan,
+      sub.billingInterval,
+    );
     return {
       id: sub.id,
       plan: sub.plan,
@@ -151,8 +159,10 @@ export class SubscriptionService {
       currentPeriodEnd: sub.currentPeriodEnd.toISOString().slice(0, 10),
       cancelAtPeriodEnd: sub.cancelAtPeriodEnd,
       cancelledAt: sub.cancelledAt?.toISOString() ?? null,
-      mrr: Number(sub.mrr),
-      monthlyPrice: entry.monthlyPrice,
+      mrr: resolved.monthlyEquivalent,
+      monthlyPrice: resolved.monthlyEquivalent,
+      currency: resolved.currency,
+      regionApplied: resolved.regionApplied,
       seatLimit: entry.seatLimit,
       provider: sub.provider,
     };
@@ -217,7 +227,8 @@ export class SubscriptionService {
     billingInterval: BillingInterval = BillingInterval.MONTHLY,
   ) {
     const sub = await this.ensureForTenant(tenantId);
-    const mrr = mrrForPlan(plan, billingInterval);
+    const resolved = await this.pricing.resolveForTenant(tenantId, plan, billingInterval);
+    const mrr = resolved.monthlyEquivalent;
     if (sub.id.startsWith("legacy-")) {
       await this.prisma.client.tenant.update({
         where: { id: tenantId },
@@ -464,30 +475,20 @@ export class SubscriptionService {
       where: { tenantId, status: SubscriptionPaymentStatus.PENDING },
     });
     if (pending) {
-      throw new BadRequestException(
-        "A payment is already pending. Complete or wait for approval before starting another checkout.",
-      );
+      await this.supersedePendingPayment(pending);
     }
 
     await this.changePlan(tenantId, plan, billingInterval);
     const sub = await this.ensureForTenant(tenantId);
-    const entry = planCatalogEntry(plan);
+    const resolved = await this.pricing.resolveForTenant(tenantId, plan, billingInterval);
+    const amount = resolved.amount;
+    const currency = resolved.currency;
     const isRazorpay = provider === PaymentProvider.RAZORPAY;
 
-    let amount: number;
-    let currency: string;
-    if (isRazorpay) {
-      const { planCheckoutAmountMinorUnits, planCheckoutCurrency } = await import(
-        "./providers/razorpay.util"
+    if (isRazorpay && currency !== "INR") {
+      throw new BadRequestException(
+        "Razorpay checkout is only available for India (INR) regional pricing.",
       );
-      currency = planCheckoutCurrency();
-      amount = planCheckoutAmountMinorUnits(plan, billingInterval, currency) / 100;
-    } else {
-      currency = "USD";
-      amount =
-        billingInterval === BillingInterval.YEARLY
-          ? entry.monthlyPrice * 10
-          : entry.monthlyPrice;
     }
 
     const invoiceNumber = `VEL-${tenantId.slice(0, 6).toUpperCase()}-${Date.now()}`;
@@ -545,6 +546,45 @@ export class SubscriptionService {
       payment: { id: payment.id },
       razorpay: session.razorpay ?? undefined,
     };
+  }
+
+  private async supersedePendingPayment(pending: { id: string; invoiceId: string | null }) {
+    await this.prisma.client.subscriptionPayment.update({
+      where: { id: pending.id },
+      data: {
+        status: SubscriptionPaymentStatus.FAILED,
+        failureReason: "Superseded by a new checkout attempt",
+      },
+    });
+    if (pending.invoiceId) {
+      await this.prisma.client.subscriptionInvoice.update({
+        where: { id: pending.invoiceId },
+        data: { status: SubscriptionInvoiceStatus.VOID },
+      });
+    }
+  }
+
+  async cancelCheckoutPayment(tenantId: string, orderId?: string) {
+    const pending = await this.prisma.client.subscriptionPayment.findFirst({
+      where: {
+        tenantId,
+        status: SubscriptionPaymentStatus.PENDING,
+        provider: PaymentProvider.RAZORPAY,
+        ...(orderId ? { providerOrderId: orderId } : {}),
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    if (!pending) {
+      return { cancelled: false as const };
+    }
+    await this.prisma.client.subscriptionPayment.update({
+      where: { id: pending.id },
+      data: {
+        status: SubscriptionPaymentStatus.FAILED,
+        failureReason: "Cancelled by user",
+      },
+    });
+    return { cancelled: true as const, paymentId: pending.id };
   }
 
   private async buildCheckoutResponse(

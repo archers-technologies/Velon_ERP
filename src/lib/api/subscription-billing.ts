@@ -13,6 +13,8 @@ export type TenantSubscriptionView = {
   cancelledAt: string | null;
   mrr: number;
   monthlyPrice: number;
+  currency: string;
+  regionApplied?: string;
   seatLimit: number | null;
   provider: string | null;
 };
@@ -141,10 +143,20 @@ export async function loadBillingPlans() {
       id: string;
       displayName: string;
       monthlyPrice: number;
+      annualPrice?: number;
+      currency: string;
+      regionApplied?: string;
       seatLimit: number | null;
       description: string;
     }>
-  >("/billing/plans");
+  >("/billing/plans/for-workspace");
+}
+
+export async function cancelBillingCheckout(orderId?: string) {
+  return apiFetch<{ cancelled: boolean; paymentId?: string }>("/billing/checkout/cancel", {
+    method: "POST",
+    body: JSON.stringify({ orderId }),
+  });
 }
 
 export async function loadPendingBillingPayments() {

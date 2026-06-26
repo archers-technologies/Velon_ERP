@@ -1,10 +1,8 @@
 import { createHmac } from "crypto";
 import {
-  planCheckoutAmountMinorUnits,
   verifyRazorpayPaymentSignature,
   verifyRazorpayWebhookSignature,
 } from "./razorpay.util";
-import { BillingInterval, TenantPlan } from "@velon/database";
 
 describe("razorpay.util", () => {
   const secret = "test_key_secret";
@@ -28,20 +26,5 @@ describe("razorpay.util", () => {
     const body = JSON.stringify({ event: "payment.captured" });
     const signature = createHmac("sha256", "whsec_test").update(body).digest("hex");
     expect(verifyRazorpayWebhookSignature(body, signature, "whsec_test")).toBe(true);
-  });
-
-  it("computes plan amount from catalog (not client input)", () => {
-    const monthly = planCheckoutAmountMinorUnits(
-      TenantPlan.STARTER,
-      BillingInterval.MONTHLY,
-      "INR",
-    );
-    expect(monthly).toBeGreaterThan(0);
-    const yearly = planCheckoutAmountMinorUnits(
-      TenantPlan.STARTER,
-      BillingInterval.YEARLY,
-      "INR",
-    );
-    expect(yearly).toBeGreaterThan(monthly);
   });
 });

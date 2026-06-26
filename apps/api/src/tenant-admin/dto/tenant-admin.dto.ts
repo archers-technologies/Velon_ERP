@@ -110,8 +110,25 @@ export class UpdateWorkspaceDto {
 
   @IsOptional()
   @IsString()
+  @MinLength(2)
+  countryCode?: string;
+
+  @IsOptional()
+  @IsString()
   @MinLength(3)
   currency?: string;
+
+  @IsOptional()
+  @IsString()
+  currencySymbol?: string;
+
+  @IsOptional()
+  @IsString()
+  dateFormat?: string;
+
+  @IsOptional()
+  @IsString()
+  numberFormat?: string;
 
   @IsOptional()
   @IsString()

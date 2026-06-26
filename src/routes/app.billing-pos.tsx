@@ -48,18 +48,9 @@ function cloneTicket(lines: PosTicketLine[]): PosTicketLine[] {
   return lines.map((l) => ({ ...l }));
 }
 
-const CURRENCY_BY_PRESET = {
-  INR: "INR",
-  USD: "USD",
-  EUR: "EUR",
-  GBP: "GBP",
-  AED: "AED",
-  CUSTOM: "INR",
-} as const;
-
 function BillingPosPage() {
   const router = useRouter();
-  const { formatCurrency, preset } = useWorkspaceCurrency();
+  const { formatCurrency, moneyFormat } = useWorkspaceCurrency();
   const { defaultTicket, catalog, customers } = Route.useLoaderData();
 
   const [lines, setLines] = useState<PosTicketLine[]>(() => cloneTicket(defaultTicket));
@@ -177,11 +168,11 @@ function BillingPosPage() {
         quantity: l.qty,
         unitPrice: l.unitPrice,
       })),
-      currency: CURRENCY_BY_PRESET[preset],
+      currency: moneyFormat.currencyCode,
       company: companyProfile ?? { legalName: "Velon Workspace" },
       paymentStatus: "paid",
     }),
-    [lines, customerName, preset, companyProfile],
+    [lines, customerName, moneyFormat.currencyCode, companyProfile],
   );
 
   async function printReceipt() {

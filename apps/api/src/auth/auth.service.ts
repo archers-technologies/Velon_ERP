@@ -3,7 +3,7 @@ import { JwtService } from "@nestjs/jwt";
 import { IndustryTemplate, Prisma, UserRole } from "@velon/database";
 import * as bcrypt from "bcrypt";
 import * as crypto from "crypto";
-import { isPlatformRole, JwtPayload, normalizeVelonRole, VelonRole } from "@velon/shared";
+import { isPlatformRole, JwtPayload, normalizeVelonRole, VelonRole, getCountryByCode, getCurrencySymbol, defaultDateFormatForCountry, defaultNumberFormatForCountry, isKnownCountryCode, isKnownCurrencyCode } from "@velon/shared";
 import { verifySignupVerificationToken } from "../../../../packages/shared/src/signup-verification";
 import { PrismaService } from "../prisma/prisma.service";
 import { AuditService } from "../audit/audit.service";
@@ -275,10 +275,27 @@ export class AuthService {
     const companyEmail = dto.companyEmail.trim().toLowerCase();
     const companyName = dto.companyName.trim();
     const fullName = dto.fullName.trim();
-    const country = dto.country.trim();
+    const countryCode = dto.countryCode.trim().toUpperCase();
+    const currency = dto.currency.trim().toUpperCase();
+    const timezone = dto.timezone.trim();
+    const address = dto.address.trim();
+    const taxId = dto.taxId?.trim() || null;
     const phone = dto.companyPhone.trim();
 
-    this.log.auth("signup.attempt", { email: companyEmail, companyName });
+    if (!isKnownCountryCode(countryCode)) {
+      throw new BadRequestException("Country is required and must be a valid country code.");
+    }
+    if (!isKnownCurrencyCode(currency)) {
+      throw new BadRequestException("Currency is required and must be a valid 3-letter code.");
+    }
+
+    const countryMeta = getCountryByCode(countryCode);
+    const countryName = dto.country?.trim() || countryMeta?.label || countryCode;
+    const currencySymbol = getCurrencySymbol(currency);
+    const dateFormat = defaultDateFormatForCountry(countryCode);
+    const numberFormat = defaultNumberFormatForCountry(countryCode);
+
+    this.log.auth("signup.attempt", { email: companyEmail, companyName, countryCode, currency });
 
     const otpValid = verifySignupVerificationToken(
       getAuthOtpSecret(),
@@ -334,7 +351,7 @@ export class AuthService {
             name: companyName,
             slug: tenantSlug,
             tenantCode: `TNT-${crypto.randomBytes(3).toString("hex").toUpperCase()}`,
-            country,
+            country: countryName,
             industryTemplate: dto.industry as IndustryTemplate,
             renewalDate: renewal,
           },
@@ -346,8 +363,10 @@ export class AuthService {
             legalName: companyName,
             email: companyEmail,
             phone,
-            country,
+            country: countryName,
             industry: dto.industry as IndustryTemplate,
+            address,
+            taxId,
           },
         });
 
@@ -356,6 +375,12 @@ export class AuthService {
             tenantId: tenant.id,
             name: companyName,
             slug: workspaceSlug,
+            timezone,
+            countryCode,
+            currency,
+            currencySymbol,
+            dateFormat,
+            numberFormat,
           },
         });
 

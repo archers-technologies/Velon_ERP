@@ -25,14 +25,14 @@ export function getRazorpaySecrets(): RazorpaySecrets | null {
   const keySecret = read("RAZORPAY_KEY_SECRET");
   const webhookSecret = read("RAZORPAY_WEBHOOK_SECRET");
 
-  if (!keyId || !keySecret || !webhookSecret) {
+  if (!keyId || !keySecret) {
     return null;
   }
 
   return {
     keyId,
     keySecret,
-    webhookSecret,
+    webhookSecret: webhookSecret ?? "",
     currency: getRazorpayCurrency(),
   };
 }
@@ -50,8 +50,16 @@ export function assertRazorpayConfigured(): RazorpaySecrets {
   const secrets = getRazorpaySecrets();
   if (!secrets) {
     throw new Error(
-      "Razorpay is enabled but RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, and RAZORPAY_WEBHOOK_SECRET must be set.",
+      "Razorpay is enabled but RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET must be set.",
     );
+  }
+  return secrets;
+}
+
+export function assertRazorpayWebhookConfigured(): RazorpaySecrets {
+  const secrets = assertRazorpayConfigured();
+  if (!secrets.webhookSecret) {
+    throw new Error("RAZORPAY_WEBHOOK_SECRET must be set to process Razorpay webhooks.");
   }
   return secrets;
 }

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { TenantPlan } from "@velon/database";
-import { PLAN_CATALOG } from "@velon/shared";
+import { PLAN_CATALOG, planRegionalPricesFromDefinition } from "@velon/shared";
 import { PrismaService } from "../prisma/prisma.service";
 import type { UpdatePlanDefinitionDto } from "./dto/billing.dto";
 
@@ -12,6 +12,14 @@ export type PlanDefinitionView = {
   monthlyPrice: number;
   annualPrice: number;
   currency: string;
+  indiaMonthlyPrice: number;
+  indiaAnnualPrice: number;
+  globalMonthlyPrice: number;
+  globalAnnualPrice: number;
+  regionalPrices: {
+    india: { monthlyPrice: number; annualPrice: number; currency: "INR" };
+    global: { monthlyPrice: number; annualPrice: number; currency: "USD" };
+  };
   storageLimitGb: number;
   invoiceLimitMo: number | null;
   branchLimit: number | null;
@@ -34,14 +42,25 @@ export class PlanDefinitionService {
 
   private fallbackFromShared(plan: TenantPlan): PlanDefinitionView {
     const entry = PLAN_CATALOG.find((p) => p.id === plan) ?? PLAN_CATALOG[0];
+    const regionalPrices = planRegionalPricesFromDefinition({
+      indiaMonthlyPrice: entry.monthlyPrice,
+      indiaAnnualPrice: entry.monthlyPrice * 10,
+      globalMonthlyPrice: entry.monthlyPrice,
+      globalAnnualPrice: entry.monthlyPrice * 10,
+    });
     return {
       id: entry.id,
       name: entry.name,
       displayName: entry.displayName,
       seatLimit: entry.seatLimit,
-      monthlyPrice: entry.monthlyPrice,
-      annualPrice: entry.monthlyPrice * 10,
+      monthlyPrice: regionalPrices.india.monthlyPrice,
+      annualPrice: regionalPrices.india.annualPrice,
       currency: "INR",
+      indiaMonthlyPrice: regionalPrices.india.monthlyPrice,
+      indiaAnnualPrice: regionalPrices.india.annualPrice,
+      globalMonthlyPrice: regionalPrices.global.monthlyPrice,
+      globalAnnualPrice: regionalPrices.global.annualPrice,
+      regionalPrices,
       storageLimitGb: plan === "STARTER" ? 10 : plan === "GROWTH" ? 50 : 500,
       invoiceLimitMo: plan === "STARTER" ? 500 : plan === "GROWTH" ? 5000 : null,
       branchLimit: plan === "STARTER" ? 1 : plan === "GROWTH" ? 5 : null,
@@ -65,6 +84,10 @@ export class PlanDefinitionService {
     monthlyPrice: unknown;
     annualPrice: unknown;
     currency: string;
+    indiaMonthlyPrice: unknown | null;
+    indiaAnnualPrice: unknown | null;
+    globalMonthlyPrice: unknown | null;
+    globalAnnualPrice: unknown | null;
     seatLimit: number | null;
     storageLimitGb: number;
     invoiceLimitMo: number | null;
@@ -79,14 +102,28 @@ export class PlanDefinitionService {
     moduleManufacturing: boolean;
   }): PlanDefinitionView {
     const fallback = this.fallbackFromShared(row.plan);
+    const regionalPrices = planRegionalPricesFromDefinition({
+      indiaMonthlyPrice: row.indiaMonthlyPrice != null ? Number(row.indiaMonthlyPrice) : null,
+      indiaAnnualPrice: row.indiaAnnualPrice != null ? Number(row.indiaAnnualPrice) : null,
+      globalMonthlyPrice: row.globalMonthlyPrice != null ? Number(row.globalMonthlyPrice) : null,
+      globalAnnualPrice: row.globalAnnualPrice != null ? Number(row.globalAnnualPrice) : null,
+      monthlyPrice: Number(row.monthlyPrice),
+      annualPrice: Number(row.annualPrice),
+      currency: row.currency,
+    });
     return {
       id: row.plan,
       name: row.plan,
       displayName: row.displayName,
       seatLimit: row.seatLimit,
-      monthlyPrice: Number(row.monthlyPrice),
-      annualPrice: Number(row.annualPrice),
+      monthlyPrice: regionalPrices.india.monthlyPrice,
+      annualPrice: regionalPrices.india.annualPrice,
       currency: row.currency,
+      indiaMonthlyPrice: regionalPrices.india.monthlyPrice,
+      indiaAnnualPrice: regionalPrices.india.annualPrice,
+      globalMonthlyPrice: regionalPrices.global.monthlyPrice,
+      globalAnnualPrice: regionalPrices.global.annualPrice,
+      regionalPrices,
       storageLimitGb: row.storageLimitGb,
       invoiceLimitMo: row.invoiceLimitMo,
       branchLimit: row.branchLimit,
@@ -127,9 +164,13 @@ export class PlanDefinitionService {
       where: { plan },
       data: {
         displayName: dto.displayName?.trim() ?? undefined,
-        monthlyPrice: dto.monthlyPrice,
-        annualPrice: dto.annualPrice,
-        currency: dto.currency?.trim().toUpperCase(),
+        monthlyPrice: dto.indiaMonthlyPrice ?? dto.monthlyPrice,
+        annualPrice: dto.indiaAnnualPrice ?? dto.annualPrice,
+        currency: dto.currency?.trim().toUpperCase() ?? "INR",
+        indiaMonthlyPrice: dto.indiaMonthlyPrice ?? dto.monthlyPrice,
+        indiaAnnualPrice: dto.indiaAnnualPrice ?? dto.annualPrice,
+        globalMonthlyPrice: dto.globalMonthlyPrice,
+        globalAnnualPrice: dto.globalAnnualPrice,
         seatLimit: dto.seatLimit,
         storageLimitGb: dto.storageLimitGb,
         invoiceLimitMo: dto.invoiceLimitMo,

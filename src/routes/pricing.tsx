@@ -32,7 +32,7 @@ function PricingPage() {
       description={siteContent.pricing.subhead}
       siteContent={siteContent}
     >
-      <PricingPreferencePrompt />
+      <PricingPreferencePrompt skipAutoOpen />
       <div className="mb-6">
         <PricingPreferenceControl preference={preference} onChange={updatePreference} />
       </div>

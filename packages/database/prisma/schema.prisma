@@ -293,6 +293,10 @@ model PlanDefinition {
   monthlyPrice          Decimal    @db.Decimal(12, 2)
   annualPrice           Decimal    @db.Decimal(12, 2)
   currency              String     @default("INR")
+  indiaMonthlyPrice     Decimal?   @db.Decimal(12, 2)
+  indiaAnnualPrice      Decimal?   @db.Decimal(12, 2)
+  globalMonthlyPrice    Decimal?   @db.Decimal(12, 2)
+  globalAnnualPrice     Decimal?   @db.Decimal(12, 2)
   seatLimit             Int?
   storageLimitGb        Int        @default(10)
   invoiceLimitMo        Int?
@@ -330,16 +334,20 @@ model CompanyProfile {
 }
 
 model Workspace {
-  id        String   @id @default(cuid())
-  tenantId  String   @unique
-  name      String
-  slug      String   @unique
-  timezone  String   @default("Asia/Kolkata")
-  currency  String   @default("INR")
-  language  String   @default("en")
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String   @id @default(cuid())
+  tenantId       String   @unique
+  name           String
+  slug           String   @unique
+  timezone       String   @default("Asia/Kolkata")
+  countryCode    String   @default("IN")
+  currency       String   @default("INR")
+  currencySymbol String?
+  language       String   @default("en")
+  dateFormat     String   @default("DD/MM/YYYY")
+  numberFormat   String   @default("en-IN")
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   salesOrders SalesOrder[]

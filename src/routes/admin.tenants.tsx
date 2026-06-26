@@ -1162,7 +1162,13 @@ function AdminTenantsPage() {
                     <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-muted-foreground sm:px-5">
                       {t.tenantCode}
                     </td>
-                    <td className="min-w-[140px] px-4 py-3 font-medium sm:px-5">{t.name}</td>
+                    <td className="min-w-[140px] px-4 py-3 sm:px-5">
+                      <div className="font-medium">{t.name}</div>
+                      <div className="text-[10px] text-muted-foreground">
+                        {t.country}
+                        {t.currency ? ` · ${t.currency}` : ""}
+                      </div>
+                    </td>
                     <td className="max-w-[200px] truncate px-4 py-3 font-mono text-xs text-muted-foreground sm:max-w-[240px] sm:px-5">
                       {tenantWorkspaceHost(t.slug)}
                     </td>

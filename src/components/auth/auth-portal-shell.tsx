@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { BrandLogoLink } from "@/components/brand-logo-link";
+import { VelonLogoMark } from "@/components/velon-logo-mark";
 import { SiteFooter } from "@/components/site-footer";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -57,14 +58,7 @@ export function AuthPortalShell({
       >
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
           <BrandLogoLink className="flex items-center gap-2.5">
-            <div
-              className={cn(
-                "flex h-8 w-8 items-center justify-center rounded-lg font-bold",
-                isPlatform ? "bg-amber-500 text-black" : "bg-foreground text-background",
-              )}
-            >
-              V
-            </div>
+            <VelonLogoMark size="sm" variant={isPlatform ? "platform" : "default"} />
             <span className="text-lg font-semibold tracking-tight">
               Velon
               <span className={isPlatform ? "text-white/50" : "text-muted-foreground"}>-ERP</span>
@@ -113,14 +107,11 @@ export function AuthPortalShell({
             </Badge>
 
             <div className="mt-8 flex items-center gap-3">
-              <div
-                className={cn(
-                  "flex h-12 w-12 items-center justify-center rounded-2xl text-lg font-bold shadow-elegant",
-                  isPlatform ? "bg-amber-500 text-black" : "bg-foreground text-background",
-                )}
-              >
-                V
-              </div>
+              <VelonLogoMark
+                size="lg"
+                variant={isPlatform ? "platform" : "default"}
+                className="shadow-elegant"
+              />
               <div>
                 <div
                   className={cn("text-sm", isPlatform ? "text-white/55" : "text-muted-foreground")}

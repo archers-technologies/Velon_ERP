@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AlertTriangle, RefreshCw } from "lucide-react";
-import { classifyDashboardLoaderError, workspaceAdminSearch } from "@velon/shared";
+import { classifyDashboardLoaderError, workspaceAdminSearch, formatCurrencyLabel, getCountryByCode } from "@velon/shared";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { MetricCard } from "@/components/ui/metric-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { WorkspaceDashboardSkeleton } from "@/components/workspace-dashboard-skeleton";
 import { signOutWorkspace } from "@/lib/auth/sign-out";
 import { loadWorkspaceDashboard } from "@/lib/workspace/loaders";
@@ -85,20 +87,37 @@ function DashboardError({ error }: { error: Error }) {
 
 function DashboardPage() {
   const data = Route.useLoaderData();
+  const countryLabel =
+    data.company.country ??
+    getCountryByCode(data.workspace.countryCode)?.label ??
+    data.workspace.countryCode;
+  const currencyLabel = formatCurrencyLabel(data.workspace.currency);
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
+      <div className="glass-panel flex flex-wrap items-start justify-between gap-4 rounded-xl p-5">
         <div>
-          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-primary">
             Welcome back
           </p>
           <h1 className="text-2xl font-semibold tracking-tight">{data.company.name}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {data.workspace.name} · {data.subscription.planDisplayName} plan ·{" "}
-            <Badge variant="secondary" className="ml-1 align-middle">
+            <Badge
+              variant={
+                data.subscription.status === "ACTIVE"
+                  ? "success"
+                  : data.subscription.status === "PAST_DUE"
+                    ? "warning"
+                    : "secondary"
+              }
+              className="ml-1 align-middle"
+            >
               {data.subscription.status}
             </Badge>
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Country: {countryLabel} · Currency: {currencyLabel}
           </p>
         </div>
         <Button asChild variant="outline" size="sm">
@@ -110,61 +129,46 @@ function DashboardPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        <Card className="border-border bg-card p-5">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <CreditCard className="h-4 w-4" />
-            <span className="text-xs font-medium uppercase tracking-wider">Subscription</span>
-          </div>
-          <p className="mt-2 text-xl font-semibold">{data.subscription.planDisplayName}</p>
-          <p className="text-xs text-muted-foreground">Renews {data.subscription.renewalDate}</p>
-        </Card>
-        <Card className="border-border bg-card p-5">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Users className="h-4 w-4" />
-            <span className="text-xs font-medium uppercase tracking-wider">Seats</span>
-          </div>
-          <p className="mt-2 text-xl font-semibold">
-            {data.seats.used}
-            {data.seats.unlimited ? "" : ` / ${data.seats.limit}`}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {data.seats.unlimited ? "Unlimited" : `${data.seats.remaining} remaining`}
-          </p>
-        </Card>
-        <Card className="border-border bg-card p-5">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Building2 className="h-4 w-4" />
-            <span className="text-xs font-medium uppercase tracking-wider">Active users</span>
-          </div>
-          <p className="mt-2 text-xl font-semibold">{data.team.activeUsers}</p>
-          <p className="text-xs text-muted-foreground">{data.seats.pendingInvites} pending invites</p>
-        </Card>
-        <Card className="border-border bg-card p-5">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Layers className="h-4 w-4" />
-            <span className="text-xs font-medium uppercase tracking-wider">Departments</span>
-          </div>
-          <p className="mt-2 text-xl font-semibold">{data.team.departments}</p>
-          <p className="text-xs text-muted-foreground">Organize your team</p>
-        </Card>
-        <Card className="border-border bg-card p-5">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <UserPlus className="h-4 w-4" />
-            <span className="text-xs font-medium uppercase tracking-wider">Pending invites</span>
-          </div>
-          <p className="mt-2 text-xl font-semibold">{data.seats.pendingInvites}</p>
-          <p className="text-xs text-muted-foreground">Awaiting acceptance</p>
-        </Card>
-        <Card className="border-border bg-card p-5">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Building2 className="h-4 w-4" />
-            <span className="text-xs font-medium uppercase tracking-wider">Customers</span>
-          </div>
-          <p className="mt-2 text-xl font-semibold">{data.crmSummary.customers}</p>
-          <p className="text-xs text-muted-foreground">
-            {data.crmSummary.customers === 0 ? "Add customers" : "Active records"}
-          </p>
-        </Card>
+        <MetricCard
+          label="Subscription"
+          value={data.subscription.planDisplayName}
+          hint={`Renews ${data.subscription.renewalDate}`}
+          icon={CreditCard}
+        />
+        <MetricCard
+          label="Seats"
+          value={
+            data.seats.unlimited
+              ? `${data.seats.used}`
+              : `${data.seats.used} / ${data.seats.limit}`
+          }
+          hint={data.seats.unlimited ? "Unlimited" : `${data.seats.remaining} remaining`}
+          icon={Users}
+        />
+        <MetricCard
+          label="Active users"
+          value={data.team.activeUsers}
+          hint={`${data.seats.pendingInvites} pending invites`}
+          icon={Building2}
+        />
+        <MetricCard
+          label="Departments"
+          value={data.team.departments}
+          hint="Organize your team"
+          icon={Layers}
+        />
+        <MetricCard
+          label="Pending invites"
+          value={data.seats.pendingInvites}
+          hint="Awaiting acceptance"
+          icon={UserPlus}
+        />
+        <MetricCard
+          label="Customers"
+          value={data.crmSummary.customers}
+          hint={data.crmSummary.customers === 0 ? "Add customers" : "Active records"}
+          icon={Building2}
+        />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -241,41 +245,28 @@ function DashboardPage() {
           </div>
         </div>
         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          <div className="rounded-lg border border-border p-4">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Boxes className="h-4 w-4" />
-              <span className="text-xs uppercase tracking-wider">Products</span>
-            </div>
-            <p className="mt-2 text-2xl font-semibold">{data.inventorySummary.totalProducts}</p>
-          </div>
-          <div className="rounded-lg border border-border p-4">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <AlertTriangle className="h-4 w-4" />
-              <span className="text-xs uppercase tracking-wider">Low stock</span>
-            </div>
-            <p className="mt-2 text-2xl font-semibold">{data.inventorySummary.lowStockAlerts}</p>
-          </div>
-          <div className="rounded-lg border border-border p-4">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <ClipboardList className="h-4 w-4" />
-              <span className="text-xs uppercase tracking-wider">Pending requests</span>
-            </div>
-            <p className="mt-2 text-2xl font-semibold">{data.inventorySummary.pendingPurchaseRequests}</p>
-          </div>
-          <div className="rounded-lg border border-border p-4">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <FileText className="h-4 w-4" />
-              <span className="text-xs uppercase tracking-wider">Pending POs</span>
-            </div>
-            <p className="mt-2 text-2xl font-semibold">{data.inventorySummary.pendingPurchaseOrders}</p>
-          </div>
-          <div className="rounded-lg border border-border p-4">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Warehouse className="h-4 w-4" />
-              <span className="text-xs uppercase tracking-wider">Warehouses</span>
-            </div>
-            <p className="mt-2 text-2xl font-semibold">{data.inventorySummary.warehouseCount}</p>
-          </div>
+          <MetricCard label="Products" value={data.inventorySummary.totalProducts} icon={Boxes} />
+          <MetricCard
+            label="Low stock"
+            value={data.inventorySummary.lowStockAlerts}
+            icon={AlertTriangle}
+            trendTone={data.inventorySummary.lowStockAlerts > 0 ? "down" : "neutral"}
+          />
+          <MetricCard
+            label="Pending requests"
+            value={data.inventorySummary.pendingPurchaseRequests}
+            icon={ClipboardList}
+          />
+          <MetricCard
+            label="Pending POs"
+            value={data.inventorySummary.pendingPurchaseOrders}
+            icon={FileText}
+          />
+          <MetricCard
+            label="Warehouses"
+            value={data.inventorySummary.warehouseCount}
+            icon={Warehouse}
+          />
         </div>
       </Card>
 
@@ -287,41 +278,19 @@ function DashboardPage() {
           </Button>
         </div>
         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          <div className="rounded-lg border border-border p-4">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Building2 className="h-4 w-4" />
-              <span className="text-xs uppercase tracking-wider">Customers</span>
-            </div>
-            <p className="mt-2 text-2xl font-semibold">{data.crmSummary.customers}</p>
-          </div>
-          <div className="rounded-lg border border-border p-4">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Target className="h-4 w-4" />
-              <span className="text-xs uppercase tracking-wider">Active leads</span>
-            </div>
-            <p className="mt-2 text-2xl font-semibold">{data.crmSummary.leads}</p>
-          </div>
-          <div className="rounded-lg border border-border p-4">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Briefcase className="h-4 w-4" />
-              <span className="text-xs uppercase tracking-wider">Open opportunities</span>
-            </div>
-            <p className="mt-2 text-2xl font-semibold">{data.crmSummary.openOpportunities}</p>
-          </div>
-          <div className="rounded-lg border border-border p-4">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <FileText className="h-4 w-4" />
-              <span className="text-xs uppercase tracking-wider">Open quotations</span>
-            </div>
-            <p className="mt-2 text-2xl font-semibold">{data.crmSummary.openQuotations}</p>
-          </div>
-          <div className="rounded-lg border border-border p-4">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Activity className="h-4 w-4" />
-              <span className="text-xs uppercase tracking-wider">CRM activities</span>
-            </div>
-            <p className="mt-2 text-2xl font-semibold">{data.crmSummary.activities}</p>
-          </div>
+          <MetricCard label="Customers" value={data.crmSummary.customers} icon={Building2} />
+          <MetricCard label="Active leads" value={data.crmSummary.leads} icon={Target} />
+          <MetricCard
+            label="Open opportunities"
+            value={data.crmSummary.openOpportunities}
+            icon={Briefcase}
+          />
+          <MetricCard
+            label="Open quotations"
+            value={data.crmSummary.openQuotations}
+            icon={FileText}
+          />
+          <MetricCard label="CRM activities" value={data.crmSummary.activities} icon={Activity} />
         </div>
       </Card>
 
@@ -383,7 +352,12 @@ function DashboardPage() {
               </li>
             ))}
             {data.notifications.length === 0 && (
-              <p className="text-sm text-muted-foreground">No notifications yet.</p>
+              <EmptyState
+                icon={Bell}
+                title="No notifications"
+                description="Alerts and updates will appear here."
+                className="border-0 bg-transparent py-6"
+              />
             )}
           </ul>
           <Button asChild variant="link" className="mt-3 h-auto p-0">
@@ -403,10 +377,15 @@ function DashboardPage() {
               </span>
             </li>
           ))}
-          {data.recentActivity.length === 0 && (
-            <li className="py-6 text-sm text-muted-foreground">Activity will appear as your team uses Velon.</li>
-          )}
         </ul>
+        {data.recentActivity.length === 0 ? (
+          <EmptyState
+            icon={Activity}
+            title="No recent activity"
+            description="Activity will appear as your team uses Velon."
+            className="mt-4 border-0 bg-transparent py-4"
+          />
+        ) : null}
         <Button asChild variant="link" className="mt-2 h-auto p-0">
           <Link to="/app/settings/admin" search={workspaceAdminSearch("audit")}>
             View audit log

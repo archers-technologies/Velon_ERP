@@ -50,13 +50,21 @@ export class TenantsService {
     return this.formatLastActive(row?.user.lastLoginAt);
   }
 
-  private mapTenant(t: Prisma.TenantGetPayload<object>, lastActiveLabel = "Never") {
+  private mapTenant(
+    t: Prisma.TenantGetPayload<object> & {
+      workspace?: { countryCode: string; currency: string; currencySymbol: string | null } | null;
+    },
+    lastActiveLabel = "Never",
+  ) {
     return {
       id: t.id,
       name: t.name,
       slug: t.slug,
       tenantCode: t.tenantCode,
       country: t.country,
+      countryCode: t.workspace?.countryCode ?? null,
+      currency: t.workspace?.currency ?? null,
+      currencySymbol: t.workspace?.currencySymbol ?? null,
       plan: t.plan,
       status: t.status,
       health: t.health,
@@ -83,11 +91,12 @@ export class TenantsService {
     const rows = await this.prisma.client.tenant.findMany({
       where: productionTenantWhere(),
       orderBy: { createdAt: "desc" },
+      include: {
+        workspace: { select: { countryCode: true, currency: true, currencySymbol: true } },
+      },
     });
     return Promise.all(
-      rows.map(async (t: Prisma.TenantGetPayload<object>) =>
-        this.mapTenant(t, await this.lastActiveLabelForTenant(t.id)),
-      ),
+      rows.map(async (t) => this.mapTenant(t, await this.lastActiveLabelForTenant(t.id))),
     );
   }
 

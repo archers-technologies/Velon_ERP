@@ -14,6 +14,7 @@ import { RazorpayBillingService } from "./razorpay-billing.service";
 import { SubscriptionService } from "./subscription.service";
 import {
   ChangeTenantPlanDto,
+  CancelCheckoutDto,
   CreateCheckoutDto,
   ExtendTrialDto,
   GrantTrialDto,
@@ -53,6 +54,14 @@ export class BillingController {
   @Get("plans")
   getPlans() {
     return this.billing.getPlanCatalog();
+  }
+
+  @Get("plans/for-workspace")
+  @RequirePortalScope("tenant")
+  @UseGuards(JwtAuthGuard, PortalScopeGuard, TenantScopeGuard)
+  @ApiBearerAuth()
+  workspacePlans(@CurrentUser() user: AuthenticatedUser) {
+    return this.billing.getTenantPlanCatalog(user.tenantId!);
   }
 
   @Patch("platform/plans/:plan")
@@ -263,6 +272,15 @@ export class BillingController {
       user.email,
       dto.idempotencyKey,
     );
+  }
+
+  @Post("checkout/cancel")
+  @RequirePortalScope("tenant")
+  @UseGuards(JwtAuthGuard, PortalScopeGuard, TenantScopeGuard, RolesGuard)
+  @Roles(UserRole.TENANT_OWNER)
+  @ApiBearerAuth()
+  cancelCheckout(@CurrentUser() user: AuthenticatedUser, @Body() dto: CancelCheckoutDto) {
+    return this.subscriptions.cancelCheckoutPayment(user.tenantId!, dto.orderId);
   }
 
   @Post("razorpay/verify")

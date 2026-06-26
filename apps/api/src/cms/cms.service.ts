@@ -1,6 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { Prisma } from "@velon/database";
-import { VELON_CONTACT_EMAIL } from "@velon/shared";
+import {
+  VELON_CONTACT_ADDRESS,
+  VELON_CONTACT_EMAIL,
+  VELON_CONTACT_PHONE,
+} from "@velon/shared";
 import { PrismaService } from "../prisma/prisma.service";
 
 export const SITE_CONTENT_KEYS = [
@@ -55,7 +59,7 @@ const DEFAULTS: Record<SiteContentKey, Prisma.JsonValue> = {
     ],
   },
   footer: {
-    tagline: "Velon Technologies",
+    tagline: "Velon-ERP",
     email: VELON_CONTACT_EMAIL,
     links: [
       { label: "Features", href: "/features" },
@@ -66,8 +70,8 @@ const DEFAULTS: Record<SiteContentKey, Prisma.JsonValue> = {
   contact: {
     headline: "Get in touch",
     email: VELON_CONTACT_EMAIL,
-    phone: "+1 (555) 000-0000",
-    address: "Velon HQ",
+    phone: VELON_CONTACT_PHONE,
+    address: VELON_CONTACT_ADDRESS,
   },
   about: {
     label: "About Velon",

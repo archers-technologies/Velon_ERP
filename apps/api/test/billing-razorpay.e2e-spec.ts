@@ -161,6 +161,57 @@ describeIfDb("Billing — Razorpay and manual bank transfer (e2e)", () => {
       setRazorpayOrderCreatorForTests(null);
     });
 
+    it("India tenant Starter charges ₹49 (4900 paise), not USD converted", async () => {
+      await prisma.subscriptionPayment.deleteMany({ where: { tenantId } });
+      await prisma.subscriptionInvoice.deleteMany({ where: { tenantId } });
+      const res = await request(app.getHttpServer())
+        .post("/api/v1/billing/checkout")
+        .set("Authorization", `Bearer ${ownerToken}`)
+        .send({
+          plan: "STARTER",
+          billingInterval: "MONTHLY",
+          provider: "RAZORPAY",
+          idempotencyKey: `rzp-india-starter-${tag}`,
+        });
+      expect([200, 201]).toContain(res.status);
+      const body = res.body.data ?? res.body;
+      expect(body.razorpay?.currency).toBe("INR");
+      expect(body.razorpay?.amount).toBe(4900);
+      expect(Number(body.invoice?.amount ?? body.invoice.amount)).toBe(49);
+    });
+
+    it("allows retry after checkout cancel", async () => {
+      await prisma.subscriptionPayment.deleteMany({ where: { tenantId } });
+      const checkout = await request(app.getHttpServer())
+        .post("/api/v1/billing/checkout")
+        .set("Authorization", `Bearer ${ownerToken}`)
+        .send({
+          plan: "STARTER",
+          billingInterval: "MONTHLY",
+          provider: "RAZORPAY",
+          idempotencyKey: `rzp-cancel-${tag}`,
+        });
+      const orderId = (checkout.body.data ?? checkout.body).razorpay.orderId;
+      const cancel = await request(app.getHttpServer())
+        .post("/api/v1/billing/checkout/cancel")
+        .set("Authorization", `Bearer ${ownerToken}`)
+        .send({ orderId });
+      expect(cancel.status).toBe(201);
+      expect((cancel.body.data ?? cancel.body).cancelled).toBe(true);
+
+      const retry = await request(app.getHttpServer())
+        .post("/api/v1/billing/checkout")
+        .set("Authorization", `Bearer ${ownerToken}`)
+        .send({
+          plan: "STARTER",
+          billingInterval: "MONTHLY",
+          provider: "RAZORPAY",
+          idempotencyKey: `rzp-retry-${tag}`,
+        });
+      expect([200, 201]).toContain(retry.status);
+      expect((retry.body.data ?? retry.body).razorpay?.amount).toBe(4900);
+    });
+
     it("creates Razorpay order with database plan amount", async () => {
       await prisma.subscriptionPayment.deleteMany({ where: { tenantId } });
       const res = await request(app.getHttpServer())

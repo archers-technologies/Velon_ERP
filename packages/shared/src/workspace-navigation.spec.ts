@@ -42,10 +42,25 @@ describe("workspace-navigation", () => {
     expect(isWorkspaceNavItemActive("/app/customers", "/app", "Dashboard")).toBe(false);
   });
 
-  it("highlights Settings for admin and billing subroutes", () => {
+  it("highlights Settings for general and admin subroutes, not billing", () => {
     expect(isWorkspaceNavItemActive("/app/settings/admin", "/app/settings", "Settings")).toBe(true);
-    expect(isWorkspaceNavItemActive("/app/settings/billing", "/app/settings", "Settings")).toBe(true);
     expect(isWorkspaceNavItemActive("/app/settings", "/app/settings", "Settings")).toBe(true);
+    expect(isWorkspaceNavItemActive("/app/settings/billing", "/app/settings", "Settings")).toBe(false);
+  });
+
+  it("highlights Subscription only on billing route", () => {
+    expect(
+      isWorkspaceNavItemActive("/app/settings/billing", "/app/settings/billing", "Subscription"),
+    ).toBe(true);
+    expect(
+      isWorkspaceNavItemActive("/app/settings/billing", "/app/settings", "Settings"),
+    ).toBe(false);
+    expect(
+      isWorkspaceNavItemActive("/app/settings", "/app/settings/billing", "Subscription"),
+    ).toBe(false);
+    expect(
+      isWorkspaceNavItemActive("/app/settings/admin", "/app/settings/billing", "Subscription"),
+    ).toBe(false);
   });
 
   it("classifies missing API config separately from auth errors", () => {

@@ -17,7 +17,11 @@ export type TenantAdminOverview = {
     name: string;
     slug: string;
     timezone: string;
+    countryCode: string;
     currency: string;
+    currencySymbol: string | null;
+    dateFormat: string;
+    numberFormat: string;
     language: string;
     isActive: boolean;
   } | null;
@@ -128,7 +132,11 @@ export async function updateCompanyProfile(body: {
 export async function updateWorkspaceSettings(body: {
   name?: string;
   timezone?: string;
+  countryCode?: string;
   currency?: string;
+  currencySymbol?: string;
+  dateFormat?: string;
+  numberFormat?: string;
   language?: string;
 }) {
   return apiFetch<{
@@ -136,7 +144,11 @@ export async function updateWorkspaceSettings(body: {
     name: string;
     slug: string;
     timezone: string;
+    countryCode: string;
     currency: string;
+    currencySymbol: string | null;
+    dateFormat: string;
+    numberFormat: string;
     language: string;
     isActive: boolean;
   }>(

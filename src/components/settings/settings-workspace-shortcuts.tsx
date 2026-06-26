@@ -47,16 +47,16 @@ export function SettingsWorkspaceShortcuts() {
           </div>
           {onBillingPage ? (
             <Button size="sm" variant="outline" disabled aria-label="You are on subscription billing">
-              Open billing
+              Pay now
             </Button>
           ) : (
-            <Button asChild size="sm" variant="outline">
+            <Button asChild size="sm">
               <Link
                 to={SETTINGS_PATHS.billing}
                 search={settingsBillingSearch()}
-                aria-label="Open subscription and billing"
+                aria-label="Pay now and manage subscription billing"
               >
-                Open billing
+                Pay now
               </Link>
             </Button>
           )}

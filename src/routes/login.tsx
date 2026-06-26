@@ -23,6 +23,11 @@ import { redirectIfWorkspaceAuthenticated } from "@/lib/auth/route-guard";
 import { bootstrapWorkspaceUser } from "@/lib/workspace-user-profile";
 import { saveWorkspaceName } from "@/lib/tenant-workspace";
 import { PasswordRequirementsChecklist } from "@/components/password-requirements-checklist";
+import {
+  BusinessLocalizationFields,
+  createDefaultLocalization,
+  type BusinessLocalizationValue,
+} from "@/components/business-localization-fields";
 import { Headphones, LockKeyhole, ShieldCheck } from "lucide-react";
 
 const INDUSTRY_OPTIONS = [
@@ -30,17 +35,6 @@ const INDUSTRY_OPTIONS = [
   { value: "MANUFACTURING", label: "Manufacturing" },
   { value: "DISTRIBUTION", label: "Distribution" },
   { value: "SERVICES", label: "Services" },
-] as const;
-
-const COUNTRY_OPTIONS = [
-  "India",
-  "United States",
-  "United Kingdom",
-  "United Arab Emirates",
-  "Singapore",
-  "Australia",
-  "Germany",
-  "Canada",
 ] as const;
 
 export const Route = createFileRoute("/login")({
@@ -94,7 +88,9 @@ function WorkspaceLoginPage() {
   const [companyName, setCompanyName] = useState("");
   const [companyEmail, setCompanyEmail] = useState("");
   const [companyPhone, setCompanyPhone] = useState("");
-  const [country, setCountry] = useState<string>(COUNTRY_OPTIONS[0]);
+  const [localization, setLocalization] = useState<BusinessLocalizationValue>(() =>
+    createDefaultLocalization("IN"),
+  );
   const [industry, setIndustry] = useState<string>(INDUSTRY_OPTIONS[0].value);
   const [fullName, setFullName] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
@@ -102,6 +98,14 @@ function WorkspaceLoginPage() {
   const [signupOtp, setSignupOtp] = useState("");
   const [signupVerificationToken, setSignupVerificationToken] = useState<string | null>(null);
   const [devOtpHint, setDevOtpHint] = useState<string | null>(null);
+  const [apiReachable, setApiReachable] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    void fetch("/api/v1/health/live")
+      .then((r) => setApiReachable(r.ok))
+      .catch(() => setApiReachable(false));
+  }, []);
 
   function saveWorkspaceSession(
     res: {
@@ -173,7 +177,11 @@ function WorkspaceLoginPage() {
         companyName,
         companyEmail,
         companyPhone,
-        country,
+        countryCode: localization.countryCode,
+        currency: localization.currency,
+        timezone: localization.timezone,
+        address: localization.address?.trim() ?? "",
+        taxId: localization.taxId?.trim() || undefined,
         industry,
         fullName,
         password: signupPassword,
@@ -193,6 +201,18 @@ function WorkspaceLoginPage() {
   async function requestSignupOtpCode() {
     if (!companyName.trim() || !companyEmail.trim() || !fullName.trim()) {
       toast.error("Complete all required company and owner fields first.");
+      return;
+    }
+    if (!localization.countryCode || !localization.currency) {
+      toast.error("Country and currency are required.");
+      return;
+    }
+    if (!localization.address?.trim()) {
+      toast.error("Business address is required.");
+      return;
+    }
+    if (!localization.timezone) {
+      toast.error("Timezone is required.");
       return;
     }
     setBusy(true);
@@ -260,6 +280,16 @@ function WorkspaceLoginPage() {
         </>
       }
     >
+      {import.meta.env.DEV && apiReachable === false ? (
+        <div className="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+          API not reachable. Close extra terminals, run{" "}
+          <code className="rounded bg-destructive/10 px-1 font-mono">npm run dev</code>, then use{" "}
+          <a href="http://localhost:8080" className="font-medium underline">
+            localhost:8080
+          </a>{" "}
+          only (not 8081).
+        </div>
+      ) : null}
       <Tabs defaultValue={search.tab}>
         <TabsList className="w-full">
           <TabsTrigger className="flex-1" value="signin">
@@ -329,18 +359,14 @@ function WorkspaceLoginPage() {
                 onChange={(e) => setCompanyPhone(e.target.value)}
                 required
               />
-              <Select value={country} onValueChange={setCountry}>
-                <SelectTrigger className="h-10">
-                  <SelectValue placeholder="Country" />
-                </SelectTrigger>
-                <SelectContent>
-                  {COUNTRY_OPTIONS.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <BusinessLocalizationFields
+                value={localization}
+                onChange={setLocalization}
+                showAddress
+                showTaxId
+                showFormats={false}
+                idPrefix="signup"
+              />
               <Select value={industry} onValueChange={setIndustry}>
                 <SelectTrigger className="h-10">
                   <SelectValue placeholder="Industry" />
@@ -434,13 +460,10 @@ function WorkspaceLoginPage() {
           )}
         </TabsContent>
       </Tabs>
-      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4 text-xs text-muted-foreground">
+      <div className="mt-5 border-t border-border pt-4 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
           <Headphones className="h-3.5 w-3.5" /> {VELON_CONTACT_EMAIL}
         </span>
-        <Link to="/platform/login" className="font-medium text-foreground hover:underline">
-          Platform admin
-        </Link>
       </div>
     </AuthPortalShell>
   );

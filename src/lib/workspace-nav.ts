@@ -13,6 +13,7 @@ import {
   Building2,
   Settings,
   ClipboardList,
+  CreditCard,
 } from "lucide-react";
 
 export type WorkspaceNavBadges = {
@@ -62,6 +63,12 @@ export function buildWorkspaceNavGroups(badges: WorkspaceNavBadges): NavGroup[] 
           to: "/app/settings",
           search: { tab: "general" },
           icon: Settings,
+        },
+        {
+          label: "Subscription",
+          to: "/app/settings/billing",
+          search: { tab: "general" },
+          icon: CreditCard,
         },
       ],
     },

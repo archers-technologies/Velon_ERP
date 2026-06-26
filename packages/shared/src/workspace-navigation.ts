@@ -50,8 +50,15 @@ export function isWorkspaceNavItemActive(pathname: string, to: string, label: st
     return path === "/app/suppliers" || path.startsWith("/app/suppliers/");
   }
 
+  if (label === "Subscription") {
+    return path === "/app/settings/billing" || path.startsWith("/app/settings/billing/");
+  }
+
   if (label === "Settings") {
-    return path === "/app/settings" || path.startsWith("/app/settings/");
+    if (path === "/app/settings/billing" || path.startsWith("/app/settings/billing/")) {
+      return false;
+    }
+    return path === "/app/settings" || path === "/app/settings/" || path.startsWith("/app/settings/");
   }
 
   return path === to || path.startsWith(`${to}/`);

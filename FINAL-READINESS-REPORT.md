@@ -211,3 +211,50 @@ RAZORPAY_CURRENCY=INR           # default INR; plan USD list prices converted vi
 | Razorpay online payments | **GO when env + webhook configured and smoke-tested** (code complete; disabled by default) |
 
 **Verdict: GO** for production MVP with manual billing. Razorpay is an optional, fully wired add-on — enable only after configuring credentials and webhooks in the target environment.
+
+---
+
+## Pass 6 — Enterprise SaaS UI & Architecture Review (2026-06-26)
+
+### Architecture audit summary
+
+| Layer | Stack | Notes |
+|-------|-------|-------|
+| **Frontend** | Vite 7, React 19, TanStack Router/Start, React Query, shadcn/Radix, Tailwind 4 | File-based routes under `src/routes/`; `WorkspaceShell` → `AppShell`; scoped JWT in `localStorage` (`velon.app.*` / `velon.admin.*`) |
+| **Backend** | NestJS 11, Prisma, PostgreSQL, Redis, Mongo (auxiliary) | Global prefix `api/v1`; `ValidationPipe` whitelist; Helmet + CORS; Throttler 120/min; `SubscriptionGuard` on tenant routes |
+| **Database** | PostgreSQL via Prisma (`packages/database`) | 50 tables; tenant-scoped models carry `tenantId`; migrations verified via `db:migrate:verify` |
+| **Auth** | JWT access (15 min) + refresh (7 d, hashed in DB) | `WorkspaceContextService` resolves tenant from JWT only — never from client body/URL |
+| **Tenant isolation** | `TenantScopeGuard`, repository `tenantId` filters, e2e isolation suites | CRM, inventory, billing, procurement all tenant-scoped |
+| **Billing** | Bank transfer (default) + Razorpay (env-gated) | Signature verification on checkout + webhook; subscription activation server-side only |
+| **Deployment** | Docker Compose (local), Vercel (web) + Railway (API) examples | `VITE_API_URL`, `WEB_ORIGIN`, CORS allowlist required |
+
+### UI enhancement summary (pass 6)
+
+| Area | Changes |
+|------|---------|
+| **Design tokens** | Indigo/slate enterprise palette; `glass-panel` utility; refined shadows |
+| **Design system** | `MetricCard`, `EmptyState`, `PageHeader`, `PageBreadcrumbs`; badge variants: `success`, `warning`, `info`, `neutral` |
+| **App shell** | Mobile collapsible nav (Sheet); breadcrumbs; indigo active sidebar state; improved table spacing |
+| **Dashboard** | Metric cards, glass welcome panel, semantic subscription badges, empty states |
+| **CRM opportunities** | Kanban board view (static columns by stage; stage moves via existing API) + list toggle |
+
+### Verification results (2026-06-26, pass 6)
+
+| Check | Result |
+|-------|--------|
+| `npm run typecheck` | **PASS** |
+| `npm run build:web` | **PASS** |
+| `npm run build:api` | **PASS** |
+| `npm run db:migrate:verify` | **PASS** — all migrations applied |
+| `npm run test:security` | **PASS** — 114 tests (tenant isolation, billing-razorpay, permissions) |
+| `npm run test` (unit) | **PARTIAL** — 10/11 suites pass; `plan-pricing.spec.ts` uses vitest import (pre-existing) |
+| `npm run lint` | **PRE-EXISTING DEBT** — repo-wide prettier formatting drift (not introduced by pass 6) |
+
+### Pass 6 verdict
+
+| Criterion | Status |
+|-----------|--------|
+| Tenant data leakage risk | **Low** — guards + e2e isolation tests pass |
+| Payment flow safety | **Production-ready when Razorpay env configured** |
+| UI professional enough for SaaS launch | **Improved** — enterprise palette, mobile nav, dashboard metrics, CRM kanban |
+| Overall | **READY FOR INTERNAL DEMO** / **GO** for manual-billing MVP (unchanged from pass 5) |

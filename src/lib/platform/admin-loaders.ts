@@ -480,6 +480,10 @@ export async function updatePlanDefinition(
     displayName?: string;
     monthlyPrice?: number;
     annualPrice?: number;
+    indiaMonthlyPrice?: number;
+    indiaAnnualPrice?: number;
+    globalMonthlyPrice?: number;
+    globalAnnualPrice?: number;
     currency?: string;
     seatLimit?: number | null;
     storageLimitGb?: number;

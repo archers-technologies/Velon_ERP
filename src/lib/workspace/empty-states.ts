@@ -48,7 +48,11 @@ export function emptyWorkspaceDashboard() {
       name: "Workspace",
       slug: "workspace",
       timezone: "Asia/Kolkata",
+      countryCode: "IN",
       currency: "INR",
+      currencySymbol: "₹",
+      dateFormat: "DD/MM/YYYY",
+      numberFormat: "en-IN",
       language: "en",
     },
     subscription: {

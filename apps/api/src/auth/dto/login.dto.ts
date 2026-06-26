@@ -1,7 +1,7 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { IndustryTemplate } from "@velon/database";
 import { VELON_CONTACT_EMAIL } from "@velon/shared";
-import { IsEmail, IsEnum, IsString, Matches, MinLength } from "class-validator";
+import { IsEmail, IsEnum, IsOptional, IsString, Matches, MinLength } from "class-validator";
 import { IsVelonPassword } from "../validators/is-velon-password.decorator";
 
 export class LoginDto {
@@ -36,10 +36,38 @@ export class SignUpDto {
   @MinLength(6)
   companyPhone!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: "ISO 3166-1 alpha-2 country code" })
   @IsString()
   @MinLength(2)
-  country!: string;
+  countryCode!: string;
+
+  @ApiProperty({ description: "ISO 4217 currency code", example: "SAR" })
+  @IsString()
+  @MinLength(3)
+  @Matches(/^[A-Za-z]{3}$/, { message: "Currency must be a 3-letter ISO code" })
+  currency!: string;
+
+  @ApiProperty({ example: "Asia/Riyadh" })
+  @IsString()
+  @MinLength(3)
+  timezone!: string;
+
+  @ApiProperty({ description: "Registered business address" })
+  @IsString()
+  @MinLength(5)
+  address!: string;
+
+  @ApiPropertyOptional({ description: "Tax / VAT registration number" })
+  @IsOptional()
+  @IsString()
+  taxId?: string;
+
+  /** @deprecated Use countryCode — kept for backward-compatible clients */
+  @ApiPropertyOptional({ description: "Country display name (optional if countryCode is set)" })
+  @IsOptional()
+  @IsString()
+  @MinLength(2)
+  country?: string;
 
   @ApiProperty({ enum: IndustryTemplate })
   @IsEnum(IndustryTemplate)

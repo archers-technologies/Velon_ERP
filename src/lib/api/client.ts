@@ -148,7 +148,11 @@ export type SignUpPayload = {
   companyName: string;
   companyEmail: string;
   companyPhone: string;
-  country: string;
+  countryCode: string;
+  currency: string;
+  timezone: string;
+  address: string;
+  taxId?: string;
   industry: string;
   fullName: string;
   password: string;

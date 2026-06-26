@@ -14,7 +14,11 @@ export type WorkspaceContext = {
     name: string;
     slug: string;
     timezone: string;
+    countryCode: string;
     currency: string;
+    currencySymbol: string | null;
+    dateFormat: string;
+    numberFormat: string;
     language: string;
     isActive: boolean;
   };
@@ -106,7 +110,11 @@ export class WorkspaceContextService {
         name: ws.name,
         slug: ws.slug,
         timezone: ws.timezone,
+        countryCode: ws.countryCode,
         currency: ws.currency,
+        currencySymbol: ws.currencySymbol,
+        dateFormat: ws.dateFormat,
+        numberFormat: ws.numberFormat,
         language: ws.language,
         isActive: ws.isActive,
       },

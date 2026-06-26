@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import {
   WorkspaceProfileIdentityPanel,
   WorkspaceSecurityPanel,
@@ -7,16 +7,21 @@ import {
 import { SettingsWorkspaceShortcuts } from "@/components/settings/settings-workspace-shortcuts";
 import { toast } from "sonner";
 import {
-  WorkspaceCurrencySelect,
-  workspaceBooksCurrencyLine,
   useWorkspaceCurrency,
-  type WorkspaceCurrencyDraft,
+  type WorkspaceCurrencyPreset,
 } from "@/contexts/workspace-currency";
+import { apiFetch } from "@/lib/api/client";
+import { updateCompanyProfile, updateWorkspaceSettings } from "@/lib/api/tenant-admin";
+import {
+  BusinessLocalizationFields,
+  createDefaultLocalization,
+  type BusinessLocalizationValue,
+} from "@/components/business-localization-fields";
+import { getCountryByCode, getCurrencySymbol } from "@velon/shared";
 import { useWorkspacePreferences } from "@/contexts/workspace-preferences";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -61,14 +66,26 @@ export const Route = createFileRoute("/app/settings/")({
   component: SettingsPage,
 });
 
-type RegionalFormDraft = WorkspaceCurrencyDraft & {
-  city: string;
-  country: string;
-  region: string;
-};
+type RegionalFormDraft = BusinessLocalizationValue;
+
+function isWorkspaceCurrencyPreset(code: string): code is Exclude<WorkspaceCurrencyPreset, "CUSTOM"> {
+  return (
+    code === "INR" ||
+    code === "USD" ||
+    code === "EUR" ||
+    code === "GBP" ||
+    code === "AED" ||
+    code === "SAR" ||
+    code === "BHD" ||
+    code === "OMR" ||
+    code === "QAR" ||
+    code === "KWD"
+  );
+}
 
 function SettingsPage() {
   const navigate = useNavigate();
+  const router = useRouter();
   const { tab: tabFromUrl } = Route.useSearch();
   const {
     theme,
@@ -77,15 +94,9 @@ function SettingsPage() {
     setLowStockEmailAlerts,
     dailySummaryReport,
     setDailySummaryReport,
-    city,
-    setCity,
-    country,
-    setCountry,
-    region,
-    setRegion,
     resetToFactoryDefaults,
   } = useWorkspacePreferences();
-  const { preset, customSymbol, setPreset, setCustomSymbol } = useWorkspaceCurrency();
+  const { setPreset } = useWorkspaceCurrency();
   const membershipRole = normalizeVelonRole(getSessionMembershipRole() ?? VelonRole.USER);
   const isWorkspaceOwner = membershipRole === VelonRole.TENANT_OWNER;
   const isOwner = isWorkspaceOwner || membershipRole === VelonRole.TENANT_ADMIN;
@@ -111,60 +122,96 @@ function SettingsPage() {
     }
   }, [tabFromUrl]);
   const [regionalDraft, setRegionalDraft] = useState<RegionalFormDraft | null>(null);
+  const [regionalSaving, setRegionalSaving] = useState(false);
 
-  const snapshotRegional = useCallback(
-    (): RegionalFormDraft => ({
-      preset,
-      customSymbol,
-      city,
-      country,
-      region,
-    }),
-    [preset, customSymbol, city, country, region],
-  );
+  const snapshotRegional = useCallback((): RegionalFormDraft => createDefaultLocalization(), []);
 
   function handleTabChange(next: string) {
     const safe = settingsTabs.includes(next as SettingsTab) ? (next as SettingsTab) : "general";
     if (safe === "regional") {
-      setRegionalDraft(snapshotRegional());
+      const base = createDefaultLocalization();
+      setRegionalDraft(base);
+      void apiFetch<{
+        workspace: {
+          countryCode: string;
+          currency: string;
+          timezone: string;
+          dateFormat: string;
+          numberFormat: string;
+        };
+        companyProfile: { address: string | null; taxId: string | null } | null;
+      }>("/workspace/context")
+        .then((ctx) => {
+          setRegionalDraft({
+            countryCode: ctx.workspace.countryCode,
+            currency: ctx.workspace.currency,
+            timezone: ctx.workspace.timezone,
+            dateFormat: ctx.workspace.dateFormat,
+            numberFormat: ctx.workspace.numberFormat,
+            address: ctx.companyProfile?.address ?? "",
+            taxId: ctx.companyProfile?.taxId ?? "",
+          });
+        })
+        .catch(() => {
+          /* keep defaults */
+        });
     }
     setTab(safe);
     void navigate({ to: "/app/settings", search: { tab: safe }, replace: true });
   }
 
-  function updateRegionalDraft(patch: Partial<RegionalFormDraft>) {
-    setRegionalDraft((d) => ({ ...(d ?? snapshotRegional()), ...patch }));
-  }
-
   const effectiveRegional = regionalDraft ?? snapshotRegional();
 
   const regionalDirty = useMemo(() => {
-    const s = snapshotRegional();
-    const e = effectiveRegional;
-    return (
-      e.preset !== s.preset ||
-      e.customSymbol !== s.customSymbol ||
-      e.city.trim() !== s.city.trim() ||
-      e.country.trim() !== s.country.trim() ||
-      e.region.trim() !== s.region.trim()
-    );
-  }, [effectiveRegional, snapshotRegional]);
+    if (!regionalDraft) return false;
+    return true;
+  }, [regionalDraft]);
 
-  function saveRegional() {
+  async function saveRegional() {
     const e = effectiveRegional;
-    setPreset(e.preset);
-    setCustomSymbol(e.customSymbol);
-    setCity(e.city.trim());
-    setCountry(e.country.trim());
-    setRegion(e.region.trim());
-    setRegionalDraft({
-      preset: e.preset,
-      customSymbol: e.customSymbol,
-      city: e.city.trim(),
-      country: e.country.trim(),
-      region: e.region.trim(),
-    });
-    toast.success("Regional preferences saved");
+    if (!e.countryCode?.trim()) {
+      toast.error("Country is required");
+      return;
+    }
+    if (!e.currency?.trim()) {
+      toast.error("Currency is required");
+      return;
+    }
+    if (!e.timezone?.trim()) {
+      toast.error("Timezone is required");
+      return;
+    }
+    setRegionalSaving(true);
+    try {
+      if (isOwner) {
+        const symbol = getCurrencySymbol(e.currency);
+        await updateWorkspaceSettings({
+          countryCode: e.countryCode.trim().toUpperCase(),
+          currency: e.currency.trim().toUpperCase(),
+          currencySymbol: symbol,
+          timezone: e.timezone,
+          dateFormat: e.dateFormat,
+          numberFormat: e.numberFormat,
+        });
+        await updateCompanyProfile({
+          address: e.address?.trim() || undefined,
+          taxId: e.taxId?.trim() || undefined,
+          country: getCountryByCode(e.countryCode)?.label ?? e.countryCode,
+        });
+        if (isWorkspaceCurrencyPreset(e.currency)) {
+          setPreset(e.currency);
+        }
+        void router.invalidate();
+      }
+      setRegionalDraft({ ...e });
+      toast.success(
+        isOwner ? "Business localization saved to workspace" : "Regional preferences saved",
+      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not save business localization");
+    } finally {
+      setRegionalSaving(false);
+    }
   }
 
   function handleReceiptFormatChange(format: ReceiptFormat) {
@@ -219,7 +266,7 @@ function SettingsPage() {
             General
           </TabsTrigger>
           <TabsTrigger value="regional" className="rounded-md text-xs sm:text-sm">
-            Regional &amp; currency
+            Business localization
           </TabsTrigger>
           <TabsTrigger value="printers" className="rounded-md text-xs sm:text-sm">
             Printers
@@ -326,73 +373,20 @@ function SettingsPage() {
 
         <TabsContent value="regional" className="mt-6 outline-none">
           <Card className="border-border bg-card p-6">
-            <h2 className="text-lg font-semibold">Regional &amp; display currency</h2>
+            <h2 className="text-lg font-semibold">Business localization</h2>
             <p className="mt-1 text-xs text-muted-foreground">
-              Amounts across dashboards and POS use Indian Rupee by default. Teams operating outside
-              India can select their local standard currency below, then save to apply.
+              Country, currency, and regional formats used across invoices, quotations, dashboards,
+              and billing. Workspace owners save these settings to PostgreSQL for the whole team.
             </p>
             <Separator className="my-5" />
             <div className="space-y-5">
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Workspace display currency</Label>
-                <WorkspaceCurrencySelect
-                  draft={{
-                    preset: effectiveRegional.preset,
-                    customSymbol: effectiveRegional.customSymbol,
-                  }}
-                  onDraftChange={(next) =>
-                    updateRegionalDraft({ preset: next.preset, customSymbol: next.customSymbol })
-                  }
-                />
-                <p className="text-xs text-muted-foreground">
-                  After save:{" "}
-                  <span className="font-medium text-foreground">
-                    {workspaceBooksCurrencyLine(
-                      effectiveRegional.preset,
-                      effectiveRegional.customSymbol,
-                    )}
-                  </span>
-                  {" · "}
-                  <span className="text-muted-foreground">live header uses saved values</span>
-                </p>
-              </div>
-              <Separator />
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="ws-city">City</Label>
-                  <Input
-                    id="ws-city"
-                    value={effectiveRegional.city}
-                    onChange={(e) => updateRegionalDraft({ city: e.target.value })}
-                    placeholder="City"
-                    className="rounded-lg"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="ws-country">Country</Label>
-                  <Input
-                    id="ws-country"
-                    value={effectiveRegional.country}
-                    onChange={(e) => updateRegionalDraft({ country: e.target.value })}
-                    placeholder="Country"
-                    className="rounded-lg"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="ws-region">Region / territory</Label>
-                <Input
-                  id="ws-region"
-                  value={effectiveRegional.region}
-                  onChange={(e) => updateRegionalDraft({ region: e.target.value })}
-                  placeholder="e.g. West India, US Northeast"
-                  className="rounded-lg"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Shown in the top bar next to notifications so context stays visible while you
-                  work.
-                </p>
-              </div>
+              <BusinessLocalizationFields
+                value={effectiveRegional}
+                onChange={(next) => setRegionalDraft(next)}
+                showAddress
+                showTaxId
+                idPrefix="ws-localization"
+              />
               <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border pt-5">
                 <Button
                   type="button"
@@ -400,7 +394,7 @@ function SettingsPage() {
                   size="sm"
                   className="rounded-lg"
                   disabled={!regionalDirty}
-                  onClick={() => setRegionalDraft(snapshotRegional())}
+                  onClick={() => setRegionalDraft(null)}
                 >
                   Discard changes
                 </Button>
@@ -408,10 +402,10 @@ function SettingsPage() {
                   type="button"
                   size="sm"
                   className="rounded-lg bg-foreground text-background hover:bg-foreground/90"
-                  disabled={!regionalDirty}
-                  onClick={saveRegional}
+                  disabled={!regionalDirty || regionalSaving}
+                  onClick={() => void saveRegional()}
                 >
-                  Save changes
+                  {regionalSaving ? "Saving…" : "Save changes"}
                 </Button>
               </div>
             </div>

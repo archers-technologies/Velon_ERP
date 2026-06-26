@@ -65,7 +65,10 @@ describeIfDb("Release flow — signup to CRM access (e2e)", () => {
       .send({
         companyEmail: ownerEmail,
         companyPhone: "+91 9999999999",
-        country: "India",
+        countryCode: "IN",
+        currency: "INR",
+        timezone: "Asia/Kolkata",
+        address: "123 Test Street, Mumbai",
         industry: "SERVICES",
         password: "ReleaseFlow123!",
         companyName,

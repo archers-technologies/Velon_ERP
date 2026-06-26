@@ -137,11 +137,18 @@ export class PlatformService {
 
   /** SUPER_ADMIN platform diagnostics — no tenant business data. */
   async getDiagnostics() {
+    const tenantWhere = productionTenantWhere();
     const [tenantCount, activeUserCount, securityEvents, recentErrors] = await Promise.all([
       this.prisma.client.tenant.count({
-        where: { ...productionTenantWhere(), status: { in: ["ACTIVE", "TRIAL"] } },
+        where: { ...tenantWhere, status: { in: ["ACTIVE", "TRIAL"] } },
       }),
-      this.prisma.client.user.count({ where: { isActive: true } }),
+      this.prisma.client.tenantMembership.count({
+        where: {
+          isActive: true,
+          user: { isActive: true, ...productionPlatformUserWhere() },
+          tenant: tenantWhere,
+        },
+      }),
       this.prisma.client.auditLog.findMany({
         where: { action: { startsWith: "security." } },
         orderBy: { createdAt: "desc" },

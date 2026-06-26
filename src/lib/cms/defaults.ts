@@ -1,4 +1,8 @@
-import { VELON_CONTACT_EMAIL } from "@velon/shared";
+import {
+  VELON_CONTACT_ADDRESS,
+  VELON_CONTACT_EMAIL,
+  VELON_CONTACT_PHONE,
+} from "@velon/shared";
 
 export const CMS_DEFAULTS = {
   hero: {
@@ -35,7 +39,7 @@ export const CMS_DEFAULTS = {
     ],
   },
   footer: {
-    tagline: "Velon Technologies",
+    tagline: "Velon-ERP",
     email: VELON_CONTACT_EMAIL,
     links: [
       { label: "Features", href: "/features" },
@@ -47,8 +51,8 @@ export const CMS_DEFAULTS = {
   contact: {
     headline: "Get in touch",
     email: VELON_CONTACT_EMAIL,
-    phone: "+1 (555) 000-0000",
-    address: "Velon HQ",
+    phone: VELON_CONTACT_PHONE,
+    address: VELON_CONTACT_ADDRESS,
   },
   about: {
     label: "About Velon",

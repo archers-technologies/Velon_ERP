@@ -48,94 +48,92 @@
   --font-display: "Inter", "SF Pro Display", system-ui, sans-serif;
 }
 
-/* Velon-ERP — premium monochrome with pale gradient accents */
+/* Velon-ERP — enterprise SaaS: slate surfaces, indigo primary, soft elevation */
 :root {
-  --radius: 0.875rem;
+  --radius: 0.75rem;
 
-  --background: oklch(0.995 0 0);
-  --foreground: oklch(0.14 0 0);
+  --background: oklch(0.985 0.004 260);
+  --foreground: oklch(0.22 0.02 260);
 
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.14 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.14 0 0);
+  --card: oklch(1 0.002 260);
+  --card-foreground: oklch(0.22 0.02 260);
+  --popover: oklch(1 0.002 260);
+  --popover-foreground: oklch(0.22 0.02 260);
 
-  /* Primary = pure black for maximum contrast */
-  --primary: oklch(0.16 0 0);
-  --primary-foreground: oklch(1 0 0);
-  --primary-glow: oklch(0.32 0 0);
+  --primary: oklch(0.52 0.16 264);
+  --primary-foreground: oklch(0.99 0.005 264);
+  --primary-glow: oklch(0.62 0.14 264);
 
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.18 0 0);
+  --secondary: oklch(0.96 0.012 260);
+  --secondary-foreground: oklch(0.28 0.03 260);
 
-  --muted: oklch(0.965 0 0);
-  --muted-foreground: oklch(0.46 0 0);
+  --muted: oklch(0.965 0.008 260);
+  --muted-foreground: oklch(0.5 0.02 260);
 
-  --accent: oklch(0.96 0.012 250);
-  --accent-foreground: oklch(0.2 0 0);
+  --accent: oklch(0.955 0.02 264);
+  --accent-foreground: oklch(0.28 0.04 264);
 
   --destructive: oklch(0.55 0.2 25);
   --destructive-foreground: oklch(0.99 0 0);
 
-  --success: oklch(0.62 0.13 155);
+  --success: oklch(0.58 0.14 155);
   --success-foreground: oklch(0.99 0 0);
-  --warning: oklch(0.74 0.14 75);
-  --warning-foreground: oklch(0.18 0.04 75);
-  --info: oklch(0.6 0.1 240);
+  --warning: oklch(0.72 0.14 75);
+  --warning-foreground: oklch(0.22 0.04 75);
+  --info: oklch(0.58 0.12 240);
   --info-foreground: oklch(0.99 0 0);
 
-  --border: oklch(0.92 0 0);
-  --input: oklch(0.92 0 0);
-  --ring: oklch(0.2 0 0);
+  --border: oklch(0.91 0.01 260);
+  --input: oklch(0.91 0.01 260);
+  --ring: oklch(0.52 0.16 264);
 
-  /* Sidebar — deep charcoal for premium contrast */
-  --sidebar: oklch(0.13 0 0);
-  --sidebar-foreground: oklch(0.86 0 0);
-  --sidebar-primary: oklch(1 0 0);
-  --sidebar-primary-foreground: oklch(0.13 0 0);
-  --sidebar-accent: oklch(0.2 0 0);
-  --sidebar-accent-foreground: oklch(0.99 0 0);
-  --sidebar-border: oklch(0.22 0 0);
-  --sidebar-ring: oklch(0.7 0 0);
+  /* Sidebar — slate navy for enterprise contrast */
+  --sidebar: oklch(0.24 0.04 264);
+  --sidebar-foreground: oklch(0.92 0.01 264);
+  --sidebar-primary: oklch(0.62 0.14 264);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.3 0.045 264);
+  --sidebar-accent-foreground: oklch(0.98 0.005 264);
+  --sidebar-border: oklch(0.32 0.04 264);
+  --sidebar-ring: oklch(0.55 0.12 264);
 
-  /* Pale gradient design language */
-  --gradient-primary: linear-gradient(135deg, oklch(0.16 0 0), oklch(0.32 0 0));
-  --gradient-pale: linear-gradient(135deg, oklch(0.985 0.01 250), oklch(0.96 0.018 280));
-  --gradient-hero: radial-gradient(ellipse at top left, oklch(0.95 0.025 250 / 0.8), transparent 55%),
-                   radial-gradient(ellipse at bottom right, oklch(0.94 0.03 320 / 0.7), transparent 55%),
-                   linear-gradient(180deg, oklch(0.99 0 0), oklch(0.97 0.008 260));
-  --gradient-card: linear-gradient(180deg, oklch(1 0 0), oklch(0.985 0.005 250));
+  --gradient-primary: linear-gradient(135deg, oklch(0.48 0.16 264), oklch(0.58 0.14 250));
+  --gradient-pale: linear-gradient(135deg, oklch(0.98 0.01 264), oklch(0.96 0.015 250));
+  --gradient-hero: radial-gradient(ellipse at top left, oklch(0.94 0.03 264 / 0.5), transparent 55%),
+                   radial-gradient(ellipse at bottom right, oklch(0.93 0.025 240 / 0.4), transparent 55%),
+                   linear-gradient(180deg, oklch(0.99 0.005 260), oklch(0.975 0.008 264));
+  --gradient-card: linear-gradient(180deg, oklch(1 0.002 260), oklch(0.985 0.008 264));
   --gradient-mesh: conic-gradient(from 200deg at 50% 50%,
-                   oklch(0.96 0.02 240 / 0.6),
-                   oklch(0.95 0.025 300 / 0.55),
-                   oklch(0.97 0.018 200 / 0.6),
-                   oklch(0.96 0.02 240 / 0.6));
+                   oklch(0.96 0.02 264 / 0.5),
+                   oklch(0.95 0.02 240 / 0.45),
+                   oklch(0.97 0.015 280 / 0.5),
+                   oklch(0.96 0.02 264 / 0.5));
 
-  --shadow-sm: 0 1px 2px 0 oklch(0 0 0 / 0.04);
-  --shadow-md: 0 4px 18px -4px oklch(0 0 0 / 0.06);
-  --shadow-lg: 0 18px 50px -16px oklch(0 0 0 / 0.16);
-  --shadow-glow: 0 0 0 1px oklch(0 0 0 / 0.06), 0 12px 40px -12px oklch(0 0 0 / 0.25);
+  --shadow-sm: 0 1px 2px 0 oklch(0.24 0.04 264 / 0.05);
+  --shadow-md: 0 4px 16px -4px oklch(0.24 0.04 264 / 0.08);
+  --shadow-lg: 0 16px 48px -12px oklch(0.24 0.04 264 / 0.14);
+  --shadow-glow: 0 0 0 1px oklch(0.52 0.16 264 / 0.08), 0 12px 36px -10px oklch(0.52 0.16 264 / 0.18);
 }
 
 .dark {
-  --background: oklch(0.1 0 0);
-  --foreground: oklch(0.98 0 0);
-  --card: oklch(0.14 0 0);
-  --card-foreground: oklch(0.98 0 0);
-  --popover: oklch(0.14 0 0);
-  --popover-foreground: oklch(0.98 0 0);
-  --primary: oklch(1 0 0);
-  --primary-foreground: oklch(0.1 0 0);
-  --primary-glow: oklch(0.85 0 0);
-  --secondary: oklch(0.18 0 0);
-  --secondary-foreground: oklch(0.98 0 0);
-  --muted: oklch(0.18 0 0);
-  --muted-foreground: oklch(0.7 0 0);
-  --accent: oklch(0.22 0 0);
-  --accent-foreground: oklch(0.98 0 0);
-  --border: oklch(1 0 0 / 0.1);
-  --input: oklch(1 0 0 / 0.12);
-  --ring: oklch(0.9 0 0);
+  --background: oklch(0.16 0.02 264);
+  --foreground: oklch(0.96 0.01 264);
+  --card: oklch(0.2 0.025 264);
+  --card-foreground: oklch(0.96 0.01 264);
+  --popover: oklch(0.2 0.025 264);
+  --popover-foreground: oklch(0.96 0.01 264);
+  --primary: oklch(0.65 0.14 264);
+  --primary-foreground: oklch(0.16 0.02 264);
+  --primary-glow: oklch(0.72 0.12 264);
+  --secondary: oklch(0.24 0.03 264);
+  --secondary-foreground: oklch(0.96 0.01 264);
+  --muted: oklch(0.24 0.03 264);
+  --muted-foreground: oklch(0.68 0.02 264);
+  --accent: oklch(0.28 0.035 264);
+  --accent-foreground: oklch(0.96 0.01 264);
+  --border: oklch(0.32 0.03 264);
+  --input: oklch(0.32 0.03 264);
+  --ring: oklch(0.65 0.14 264);
 
   --destructive: oklch(0.58 0.18 25);
   --destructive-foreground: oklch(0.99 0 0);
@@ -143,17 +141,17 @@
   --success-foreground: oklch(0.99 0 0);
   --warning: oklch(0.72 0.12 75);
   --warning-foreground: oklch(0.14 0.04 75);
-  --info: oklch(0.55 0.09 240);
+  --info: oklch(0.58 0.1 240);
   --info-foreground: oklch(0.99 0 0);
 
-  --sidebar: oklch(0.08 0 0);
-  --sidebar-foreground: oklch(0.86 0 0);
-  --sidebar-primary: oklch(1 0 0);
-  --sidebar-primary-foreground: oklch(0.08 0 0);
-  --sidebar-accent: oklch(0.14 0 0);
-  --sidebar-accent-foreground: oklch(0.98 0 0);
-  --sidebar-border: oklch(0.2 0 0);
-  --sidebar-ring: oklch(0.55 0 0);
+  --sidebar: oklch(0.14 0.025 264);
+  --sidebar-foreground: oklch(0.88 0.01 264);
+  --sidebar-primary: oklch(0.65 0.14 264);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.22 0.03 264);
+  --sidebar-accent-foreground: oklch(0.98 0.005 264);
+  --sidebar-border: oklch(0.26 0.03 264);
+  --sidebar-ring: oklch(0.55 0.1 264);
 }
 
 @layer base {
@@ -175,10 +173,21 @@
 @utility shadow-elegant { box-shadow: var(--shadow-lg); }
 @utility shadow-glow { box-shadow: var(--shadow-glow); }
 @utility text-gradient {
-  background: linear-gradient(135deg, oklch(0.14 0 0), oklch(0.45 0 0));
+  background: linear-gradient(135deg, oklch(0.38 0.12 264), oklch(0.55 0.14 250));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+@utility glass-panel {
+  background: oklch(1 0.002 260 / 0.72);
+  backdrop-filter: blur(12px);
+  border: 1px solid oklch(0.91 0.01 260 / 0.8);
+}
+
+.dark .glass-panel {
+  background: oklch(0.2 0.025 264 / 0.75);
+  border-color: oklch(0.32 0.03 264 / 0.8);
 }
 
 /* Tenant brand tint — use class `bg-workspace-brand` on primary actions when needed */

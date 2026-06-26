@@ -16,11 +16,13 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { apiFetch } from "@/lib/api/client";
+import { formatWorkspaceMoney } from "@velon/shared";
 
 const STORAGE_PRESET = "velon-workspace-currency-preset";
 const STORAGE_CUSTOM = "velon-workspace-currency-custom-symbol";
 
-export type WorkspaceCurrencyPreset = "INR" | "USD" | "EUR" | "GBP" | "AED" | "CUSTOM";
+export type WorkspaceCurrencyPreset = "INR" | "USD" | "EUR" | "GBP" | "AED" | "SAR" | "BHD" | "OMR" | "QAR" | "KWD" | "CUSTOM";
 
 const PRESET_META: Record<
   Exclude<WorkspaceCurrencyPreset, "CUSTOM">,
@@ -31,10 +33,27 @@ const PRESET_META: Record<
   EUR: { currency: "EUR", locale: "de-DE" },
   GBP: { currency: "GBP", locale: "en-GB" },
   AED: { currency: "AED", locale: "en-AE" },
+  SAR: { currency: "SAR", locale: "ar-SA" },
+  BHD: { currency: "BHD", locale: "ar-BH" },
+  OMR: { currency: "OMR", locale: "ar-OM" },
+  QAR: { currency: "QAR", locale: "ar-QA" },
+  KWD: { currency: "KWD", locale: "ar-KW" },
 };
 
 function isPreset(v: string): v is WorkspaceCurrencyPreset {
-  return v === "INR" || v === "USD" || v === "EUR" || v === "GBP" || v === "AED" || v === "CUSTOM";
+  return (
+    v === "INR" ||
+    v === "USD" ||
+    v === "EUR" ||
+    v === "GBP" ||
+    v === "AED" ||
+    v === "SAR" ||
+    v === "BHD" ||
+    v === "OMR" ||
+    v === "QAR" ||
+    v === "KWD" ||
+    v === "CUSTOM"
+  );
 }
 
 type WorkspaceCurrencyContextValue = {
@@ -43,6 +62,7 @@ type WorkspaceCurrencyContextValue = {
   setPreset: (p: WorkspaceCurrencyPreset) => void;
   customSymbol: string;
   setCustomSymbol: (s: string) => void;
+  moneyFormat: { currencyCode: string; currencySymbol?: string | null; numberFormat?: string | null };
 };
 
 const WorkspaceCurrencyContext = createContext<WorkspaceCurrencyContextValue | null>(null);
@@ -50,6 +70,15 @@ const WorkspaceCurrencyContext = createContext<WorkspaceCurrencyContextValue | n
 export function WorkspaceCurrencyProvider({ children }: { children: ReactNode }) {
   const [preset, setPresetState] = useState<WorkspaceCurrencyPreset>("INR");
   const [customSymbol, setCustomSymbolState] = useState("₹");
+  const [moneyFormat, setMoneyFormat] = useState<{
+    currencyCode: string;
+    currencySymbol?: string | null;
+    numberFormat?: string | null;
+  }>({
+    currencyCode: "INR",
+    currencySymbol: "₹",
+    numberFormat: "en-IN",
+  });
 
   useEffect(() => {
     try {
@@ -67,6 +96,29 @@ export function WorkspaceCurrencyProvider({ children }: { children: ReactNode })
     } catch {
       /* ignore */
     }
+  }, []);
+
+  useEffect(() => {
+    void apiFetch<{
+      workspace: {
+        currency: string;
+        currencySymbol: string | null;
+        numberFormat: string;
+        countryCode: string;
+      };
+    }>("/workspace/context")
+      .then((ctx) => {
+        const { currency, currencySymbol, numberFormat } = ctx.workspace;
+        setMoneyFormat({
+          currencyCode: currency,
+          currencySymbol,
+          numberFormat,
+        });
+        if (isPreset(currency)) setPresetState(currency);
+      })
+      .catch(() => {
+        /* keep defaults */
+      });
   }, []);
 
   const setPreset = useCallback((p: WorkspaceCurrencyPreset) => {
@@ -90,23 +142,20 @@ export function WorkspaceCurrencyProvider({ children }: { children: ReactNode })
   const formatCurrency = useCallback(
     (amount: number) => {
       if (preset === "CUSTOM") {
-        const sym = customSymbol.trim() || "₹";
-        return `${sym}${new Intl.NumberFormat("en-IN", {
+        const sym = customSymbol.trim() || moneyFormat.currencySymbol || "₹";
+        return `${sym}${new Intl.NumberFormat(moneyFormat.numberFormat ?? "en-IN", {
           minimumFractionDigits: 0,
           maximumFractionDigits: 2,
         }).format(amount)}`;
       }
-      const m = PRESET_META[preset];
-      return new Intl.NumberFormat(m.locale, { style: "currency", currency: m.currency }).format(
-        amount,
-      );
+      return formatWorkspaceMoney(amount, moneyFormat);
     },
-    [preset, customSymbol],
+    [preset, customSymbol, moneyFormat],
   );
 
   const value = useMemo(
-    () => ({ formatCurrency, preset, setPreset, customSymbol, setCustomSymbol }),
-    [formatCurrency, preset, setPreset, customSymbol, setCustomSymbol],
+    () => ({ formatCurrency, preset, setPreset, customSymbol, setCustomSymbol, moneyFormat }),
+    [formatCurrency, preset, setPreset, customSymbol, setCustomSymbol, moneyFormat],
   );
 
   return (
@@ -126,6 +175,11 @@ const PRESET_BOOKS_IN: Record<Exclude<WorkspaceCurrencyPreset, "CUSTOM">, string
   EUR: "Euro · EUR (€)",
   GBP: "Pound sterling · GBP (£)",
   AED: "UAE Dirham · AED",
+  SAR: "Saudi Riyal · SAR",
+  BHD: "Bahraini Dinar · BHD",
+  OMR: "Omani Rial · OMR",
+  QAR: "Qatari Riyal · QAR",
+  KWD: "Kuwaiti Dinar · KWD",
 };
 
 /** Short line for header: workspace books are denominated in this currency. */
@@ -189,6 +243,11 @@ export function WorkspaceCurrencySelect({
           <SelectItem value="EUR">EUR · Euro (€)</SelectItem>
           <SelectItem value="GBP">GBP · Pound (£)</SelectItem>
           <SelectItem value="AED">AED · UAE Dirham</SelectItem>
+          <SelectItem value="SAR">SAR · Saudi Riyal</SelectItem>
+          <SelectItem value="BHD">BHD · Bahraini Dinar</SelectItem>
+          <SelectItem value="OMR">OMR · Omani Rial</SelectItem>
+          <SelectItem value="QAR">QAR · Qatari Riyal</SelectItem>
+          <SelectItem value="KWD">KWD · Kuwaiti Dinar</SelectItem>
         </SelectContent>
       </Select>
       {preset === "CUSTOM" && (

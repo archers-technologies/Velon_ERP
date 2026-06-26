@@ -1,6 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, UnauthorizedException } from "@nestjs/common";
 import { PaymentProvider, SubscriptionPaymentStatus } from "@velon/database";
-import { assertRazorpayConfigured } from "../config/razorpay.env";
+import { assertRazorpayConfigured, assertRazorpayWebhookConfigured } from "../config/razorpay.env";
 import { AuditService } from "../audit/audit.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { SubscriptionService } from "./subscription.service";
@@ -92,7 +92,7 @@ export class RazorpayBillingService {
   }
 
   async handleWebhook(rawBody: Buffer, signature: string | undefined, eventId: string | undefined) {
-    const secrets = assertRazorpayConfigured();
+    const secrets = assertRazorpayWebhookConfigured();
     if (!signature || !verifyRazorpayWebhookSignature(rawBody, signature, secrets.webhookSecret)) {
       throw new UnauthorizedException("Invalid Razorpay webhook signature");
     }

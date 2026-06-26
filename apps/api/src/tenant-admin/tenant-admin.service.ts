@@ -8,7 +8,7 @@ import {
 } from "@nestjs/common";
 import { InvitationStatus, UserRole } from "@velon/database";
 import * as bcrypt from "bcrypt";
-import { normalizeVelonRole, VelonRole } from "@velon/shared";
+import { normalizeVelonRole, VelonRole, getCountryByCode, getCurrencySymbol } from "@velon/shared";
 import type { AuthenticatedUser } from "../auth/auth.types";
 import { AuthService } from "../auth/auth.service";
 import { assertPasswordAllowed } from "../auth/password-policy.util";
@@ -89,7 +89,11 @@ export class TenantAdminService {
             name: workspace.name,
             slug: workspace.slug,
             timezone: workspace.timezone,
+            countryCode: workspace.countryCode,
             currency: workspace.currency,
+            currencySymbol: workspace.currencySymbol,
+            dateFormat: workspace.dateFormat,
+            numberFormat: workspace.numberFormat,
             language: workspace.language,
             isActive: workspace.isActive,
           }
@@ -158,15 +162,42 @@ export class TenantAdminService {
     const tenantId = this.tenantId();
     const ws = await this.prisma.client.workspace.findUnique({ where: { tenantId } });
     if (!ws) throw new NotFoundException("Workspace not found.");
+
+    const countryCode = dto.countryCode?.trim().toUpperCase();
+    const currency = dto.currency?.trim().toUpperCase();
+    const currencySymbol =
+      dto.currencySymbol !== undefined
+        ? dto.currencySymbol.trim() || getCurrencySymbol(currency ?? ws.currency)
+        : currency
+          ? getCurrencySymbol(currency)
+          : undefined;
+
     const row = await this.prisma.client.workspace.update({
       where: { tenantId },
       data: {
         ...(dto.name !== undefined ? { name: dto.name.trim() } : {}),
         ...(dto.timezone !== undefined ? { timezone: dto.timezone.trim() } : {}),
-        ...(dto.currency !== undefined ? { currency: dto.currency.trim().toUpperCase() } : {}),
+        ...(countryCode !== undefined ? { countryCode } : {}),
+        ...(currency !== undefined ? { currency } : {}),
+        ...(currencySymbol !== undefined ? { currencySymbol } : {}),
+        ...(dto.dateFormat !== undefined ? { dateFormat: dto.dateFormat.trim() } : {}),
+        ...(dto.numberFormat !== undefined ? { numberFormat: dto.numberFormat.trim() } : {}),
         ...(dto.language !== undefined ? { language: dto.language.trim().toLowerCase() } : {}),
       },
     });
+
+    if (countryCode) {
+      const countryName = getCountryByCode(countryCode)?.label ?? countryCode;
+      await this.prisma.client.tenant.update({
+        where: { id: tenantId },
+        data: { country: countryName },
+      });
+      await this.prisma.client.companyProfile.updateMany({
+        where: { tenantId },
+        data: { country: countryName },
+      });
+    }
+
     await this.audit.log({
       actorId: user.id,
       tenantId,
@@ -181,7 +212,11 @@ export class TenantAdminService {
       name: row.name,
       slug: row.slug,
       timezone: row.timezone,
+      countryCode: row.countryCode,
       currency: row.currency,
+      currencySymbol: row.currencySymbol,
+      dateFormat: row.dateFormat,
+      numberFormat: row.numberFormat,
       language: row.language,
       isActive: row.isActive,
     };
