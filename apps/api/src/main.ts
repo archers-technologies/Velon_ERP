@@ -6,7 +6,7 @@ import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import { AppModule } from "./app.module";
 import { formatSmtpConfigForLog, smtpConfigured } from "./common/mail-delivery.util";
-import { getApiPort, isCorsOriginAllowed } from "./config/env";
+import { isCorsOriginAllowed } from "./config/env";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { rawBody: true });
@@ -43,7 +43,7 @@ async function bootstrap() {
     .build();
   SwaggerModule.setup("api/docs", app, SwaggerModule.createDocument(app, swagger));
 
-  const port = getApiPort();
+  const port = Number(process.env.PORT || process.env.API_PORT || 3001);
   await app.listen(port, "0.0.0.0");
   console.log(`Velon API listening on 0.0.0.0:${port}`);
   console.log(`Swagger: /api/docs`);
