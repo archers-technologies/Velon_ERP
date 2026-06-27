@@ -11,7 +11,10 @@ import {
   verifyPasswordResetVerificationToken,
 } from "../../../../packages/shared/src/password-reset-verification";
 import { AuditService } from "../audit/audit.service";
-import { sendTransactionalMail } from "../common/mail-delivery.util";
+import {
+  formatMailProviderForLog,
+  sendTransactionalMail,
+} from "../common/mail-delivery.util";
 import { getAuthOtpSecret } from "../config/env";
 import { PrismaService } from "../prisma/prisma.service";
 import { RedisService } from "../redis/redis.service";
@@ -198,6 +201,7 @@ export class PasswordResetService {
     to: string;
     code: string;
   }): Promise<{ delivered: boolean; devCode?: string }> {
+    this.log.log(`Password reset OTP email attempt for ${input.to}\n${formatMailProviderForLog()}`);
     try {
       const mail = await sendTransactionalMail({
         to: input.to,
@@ -210,13 +214,48 @@ export class PasswordResetService {
         this.log.log(`[dev password reset OTP] ${input.to}: ${input.code}`);
         return { delivered: false, devCode: input.code };
       }
+
+      if (
+        mail.skippedReason === "smtp_not_configured" ||
+        mail.skippedReason === "resend_not_configured" ||
+        mail.skippedReason === "mail_not_configured"
+      ) {
+        throw new ServiceUnavailableException(
+          "Email delivery is not configured. Set RESEND_API_KEY + RESEND_FROM on the API service (recommended on Railway), or set MAIL_PROVIDER=smtp with SMTP credentials.",
+        );
+      }
+      if (mail.skippedReason === "resend_send_failed") {
+        if (mail.resendFailureDetail) {
+          const d = mail.resendFailureDetail;
+          this.log.error(
+            [
+              `Password reset OTP Resend failure for ${input.to}`,
+              `status=${d.statusCode}`,
+              `body=${d.body}`,
+              `message=${d.message}`,
+            ].join(" "),
+          );
+        }
+        throw new ServiceUnavailableException(
+          "Could not send verification email. Check Resend credentials and sender domain, then try again.",
+        );
+      }
+      if (mail.skippedReason === "smtp_send_failed" || mail.skippedReason === "smtp_timeout") {
+        throw new ServiceUnavailableException(
+          process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_SERVICE_NAME
+            ? "Email server timed out. Railway Hobby/Trial plans block outbound SMTP — use Resend (RESEND_API_KEY + RESEND_FROM) instead."
+            : "Could not send verification email. Check SMTP credentials and try again.",
+        );
+      }
+      throw new ServiceUnavailableException("Email delivery failed. Try again shortly.");
     } catch (err) {
+      if (err instanceof ServiceUnavailableException) throw err;
       this.log.warn(`Password reset OTP email failed for ${input.to}: ${String(err)}`);
     }
 
     if (process.env.NODE_ENV === "production") {
       throw new ServiceUnavailableException(
-        "Email delivery is not configured. Set RESEND_API_KEY + RESEND_FROM, or SMTP_HOST + SMTP_FROM.",
+        "Could not send verification email. Check Resend credentials and try again.",
       );
     }
 

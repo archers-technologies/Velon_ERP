@@ -8,7 +8,7 @@ import { createHash, randomInt } from "node:crypto";
 import { issueSignupVerificationToken } from "../../../../packages/shared/src/signup-verification";
 import { getAuthOtpSecret } from "../config/env";
 import {
-  formatSmtpConfigForLog,
+  formatMailProviderForLog,
   sendTransactionalMail,
 } from "../common/mail-delivery.util";
 import { RedisService } from "../redis/redis.service";
@@ -145,7 +145,7 @@ export class SignupOtpService {
     businessName: string;
     code: string;
   }): Promise<{ delivered: boolean; devCode?: string }> {
-    this.log.log(`Signup OTP email attempt for ${input.to}\n${formatSmtpConfigForLog()}`);
+    this.log.log(`Signup OTP email attempt for ${input.to}\n${formatMailProviderForLog()}`);
     try {
       const mail = await sendTransactionalMail({
         to: input.to,
@@ -161,9 +161,29 @@ export class SignupOtpService {
         return { delivered: false, devCode: input.code };
       }
 
-      if (mail.skippedReason === "smtp_not_configured") {
+      if (
+        mail.skippedReason === "smtp_not_configured" ||
+        mail.skippedReason === "resend_not_configured" ||
+        mail.skippedReason === "mail_not_configured"
+      ) {
         throw new ServiceUnavailableException(
-          "Email OTP delivery is not configured. Set RESEND_API_KEY + RESEND_FROM, or SMTP_HOST + SMTP_FROM on the API service.",
+          "Email OTP delivery is not configured. Set RESEND_API_KEY + RESEND_FROM on the API service (recommended on Railway), or set MAIL_PROVIDER=smtp with SMTP credentials.",
+        );
+      }
+      if (mail.skippedReason === "resend_send_failed") {
+        if (mail.resendFailureDetail) {
+          const d = mail.resendFailureDetail;
+          this.log.error(
+            [
+              `Signup OTP Resend failure for ${input.to}`,
+              `status=${d.statusCode}`,
+              `body=${d.body}`,
+              `message=${d.message}`,
+            ].join(" "),
+          );
+        }
+        throw new ServiceUnavailableException(
+          "Could not send verification email. Check Resend credentials and sender domain, then try again.",
         );
       }
       if (mail.skippedReason === "smtp_send_failed") {
@@ -209,7 +229,7 @@ export class SignupOtpService {
 
     if (process.env.NODE_ENV === "production") {
       throw new ServiceUnavailableException(
-        "Could not send verification email. Check Resend/SMTP credentials and try again.",
+        "Could not send verification email. Check Resend credentials and try again.",
       );
     }
 
