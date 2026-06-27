@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { apiLogin, apiRequestSignupOtp, apiSignUp, apiVerifySignupOtp } from "@/lib/api/client";
-import { isApiEnabled } from "@/lib/api/config";
+import { API_V1_BASE, isApiEnabled } from "@/lib/api/config";
 import { saveSession } from "@/lib/auth/session";
 import { isSuperAdminEmail } from "@/lib/demo-auth";
 import { VELON_CONTACT_EMAIL } from "@velon/shared";
@@ -99,10 +99,11 @@ function WorkspaceLoginPage() {
   const [signupVerificationToken, setSignupVerificationToken] = useState<string | null>(null);
   const [devOtpHint, setDevOtpHint] = useState<string | null>(null);
   const [apiReachable, setApiReachable] = useState<boolean | null>(null);
+  const appOrigin = typeof window !== "undefined" ? window.location.origin : "";
 
   useEffect(() => {
     if (!import.meta.env.DEV) return;
-    void fetch("/api/v1/health/live")
+    void fetch(`${API_V1_BASE}/health/live`)
       .then((r) => setApiReachable(r.ok))
       .catch(() => setApiReachable(false));
   }, []);
@@ -284,8 +285,8 @@ function WorkspaceLoginPage() {
         <div className="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 px-3 py-2 text-xs text-destructive">
           API not reachable. Close extra terminals, run{" "}
           <code className="rounded bg-destructive/10 px-1 font-mono">npm run dev</code>, then use{" "}
-          <a href="http://localhost:8080" className="font-medium underline">
-            localhost:8080
+          <a href={appOrigin || "/"} className="font-medium underline">
+            {appOrigin ? appOrigin.replace(/^https?:\/\//, "") : "this app origin"}
           </a>{" "}
           only (not 8081).
         </div>

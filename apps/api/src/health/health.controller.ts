@@ -13,8 +13,11 @@ export class HealthController {
   ) {}
 
   @Get()
-  async check() {
-    return this.ready();
+  check() {
+    return {
+      status: "ok",
+      service: "Velon ERP API",
+    };
   }
 
   @Get("live")

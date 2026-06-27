@@ -1,5 +1,5 @@
 import { apiFetch } from "@/lib/api/client";
-import { API_BASE_URL } from "@/lib/api/config";
+import { API_V1_BASE } from "@/lib/api/config";
 
 export type CrmQuotationStatus =
   | "DRAFT"
@@ -204,7 +204,7 @@ export function loadProposals(quotationId: string) {
 }
 
 export function proposalPdfUrl(proposalId: string) {
-  return `${API_BASE_URL}/api/v1/crm/proposals/${proposalId}/pdf`;
+  return `${API_V1_BASE}/crm/proposals/${proposalId}/pdf`;
 }
 
 export function loadProposalTemplates() {
@@ -230,9 +230,9 @@ export function deleteProposalTemplate(id: string) {
 }
 
 export function customerViewUrl(token: string) {
-  return `${API_BASE_URL}/api/v1/crm/customer-view/${token}`;
+  return `${API_V1_BASE}/crm/customer-view/${token}`;
 }
 
 export function customerViewPdfUrl(token: string) {
-  return `${API_BASE_URL}/api/v1/crm/customer-view/${token}/pdf`;
+  return `${API_V1_BASE}/crm/customer-view/${token}/pdf`;
 }

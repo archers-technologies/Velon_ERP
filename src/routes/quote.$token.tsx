@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { customerViewPdfUrl } from "@/lib/api/crm-quotation";
-import { API_BASE_URL } from "@/lib/api/config";
+import { API_V1_BASE } from "@/lib/api/config";
 
 type CustomerView = {
   quotationNumber: string;
@@ -44,7 +44,7 @@ function CustomerQuoteViewPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    void fetch(`${API_BASE_URL}/api/v1/crm/customer-view/${token}`)
+    void fetch(`${API_V1_BASE}/crm/customer-view/${token}`)
       .then((r) => r.json())
       .then((body) => setData(body.data ?? body))
       .catch((e) => toast.error(String(e)));
@@ -53,14 +53,14 @@ function CustomerQuoteViewPage() {
   async function postAction(path: string) {
     setBusy(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/v1/crm/customer-view/${token}/${path}`, {
+      const res = await fetch(`${API_V1_BASE}/crm/customer-view/${token}/${path}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ comments: comment || undefined }),
       });
       if (!res.ok) throw new Error(await res.text());
       toast.success("Submitted");
-      const body = await fetch(`${API_BASE_URL}/api/v1/crm/customer-view/${token}`).then((r) =>
+      const body = await fetch(`${API_V1_BASE}/crm/customer-view/${token}`).then((r) =>
         r.json(),
       );
       setData(body.data ?? body);

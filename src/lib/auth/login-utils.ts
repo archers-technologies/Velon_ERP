@@ -20,10 +20,10 @@ export function formatApiError(err: unknown, fallback = "Request failed"): strin
     return "API is outdated or not fully started. Stop all dev servers, run npm run dev, and wait for “Velon API listening on port 3001”.";
   }
   if (err instanceof Error && /^internal server error$/i.test(err.message.trim())) {
-    return "Cannot reach the API (port 3001). Close all terminals running npm run dev, then run npm run dev once and use http://localhost:8080 only.";
+    return "Cannot reach the API (port 3001). Close all terminals running npm run dev, then run npm run dev once and use a single local web origin.";
   }
   if (err instanceof Error && /unexpected error occurred/i.test(err.message)) {
-    return "API rejected the request (often CORS or API not fully started). Use http://localhost:8080, run npm run dev, and wait for “Velon API listening on port 3001”.";
+    return "API rejected the request (often CORS or API not fully started). Run npm run dev and wait for “Velon API listening on port 3001”.";
   }
   return err instanceof Error ? err.message : fallback;
 }

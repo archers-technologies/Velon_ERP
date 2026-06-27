@@ -1,4 +1,4 @@
-import { API_BASE_URL, isApiEnabled } from "@/lib/api/config";
+import { API_V1_BASE, isApiEnabled } from "@/lib/api/config";
 import type { PlanRegionalPrices } from "@velon/shared";
 
 export type PublicPlan = {
@@ -52,7 +52,7 @@ function unwrapPublicPlans(body: unknown): PublicPlan[] {
 export async function loadPublicPlans(): Promise<PublicPlan[]> {
   if (!isApiEnabled()) return FALLBACK_PLANS;
   try {
-    const res = await fetch(`${API_BASE_URL}/api/v1/billing/plans`);
+    const res = await fetch(`${API_V1_BASE}/billing/plans`);
     if (!res.ok) return FALLBACK_PLANS;
     const body = await res.json();
     return unwrapPublicPlans(body);

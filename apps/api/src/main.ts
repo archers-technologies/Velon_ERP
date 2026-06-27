@@ -44,8 +44,8 @@ async function bootstrap() {
   SwaggerModule.setup("api/docs", app, SwaggerModule.createDocument(app, swagger));
 
   const port = getApiPort();
-  await app.listen(port);
-  console.log(`Velon API listening on port ${port}`);
+  await app.listen(port, "0.0.0.0");
+  console.log(`Velon API listening on 0.0.0.0:${port}`);
   console.log(`Swagger: /api/docs`);
   console.log(formatSmtpConfigForLog());
   console.log(`SMTP configured: ${smtpConfigured() ? "yes" : "no"}`);

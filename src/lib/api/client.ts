@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "./config";
+import { API_V1_BASE } from "./config";
 import {
   clearSession,
   getAccessToken,
@@ -54,7 +54,7 @@ export async function authFetch<T>(path: string, init: RequestInit = {}): Promis
     headers.set("Content-Type", "application/json");
   }
 
-  const res = await fetch(`${API_BASE_URL}/api/v1${path}`, {
+  const res = await fetch(`${API_V1_BASE}${path}`, {
     ...init,
     headers,
     credentials: "include",
@@ -75,7 +75,7 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}, retry = 
   }
   if (token) headers.set("Authorization", `Bearer ${token}`);
 
-  const res = await fetch(`${API_BASE_URL}/api/v1${path}`, {
+  const res = await fetch(`${API_V1_BASE}${path}`, {
     ...init,
     headers,
     credentials: "include",
@@ -101,7 +101,7 @@ async function tryRefresh(context: SessionRole): Promise<boolean> {
   const refreshToken = getRefreshToken(context);
   if (!refreshToken) return false;
   try {
-    const res = await fetch(`${API_BASE_URL}/api/v1/auth/refresh`, {
+    const res = await fetch(`${API_V1_BASE}/auth/refresh`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refreshToken }),

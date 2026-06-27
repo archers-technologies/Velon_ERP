@@ -2,6 +2,11 @@ import { validateMongoEnvironment } from "../mongo/mongo.config";
 
 const REQUIRED_IN_ALL_ENVS = ["DATABASE_URL", "REDIS_URL"] as const;
 const REQUIRED_SECRETS = ["JWT_ACCESS_SECRET", "JWT_REFRESH_SECRET", "AUTH_OTP_SECRET"] as const;
+const PROD_CORS_BASELINE = [
+  "https://velonerp.com",
+  "https://www.velonerp.com",
+  "https://*.vercel.app",
+] as const;
 
 const unsafeSecretValues = new Set([
   "",
@@ -92,19 +97,37 @@ export function getCorsOrigins(): string[] {
   const raw = read("CORS_ORIGINS");
   if (!raw) {
     return process.env.NODE_ENV === "production"
-      ? []
+      ? [...PROD_CORS_BASELINE]
       : ["http://localhost:8080", "http://localhost:3000"];
   }
-  return raw
+  const configured = raw
     .split(",")
     .map((origin) => origin.trim().replace(/\/$/, ""))
     .filter(Boolean);
+  if (process.env.NODE_ENV !== "production") return configured;
+  return [...new Set([...configured, ...PROD_CORS_BASELINE])];
+}
+
+function isWildcardMatch(origin: string, pattern: string): boolean {
+  if (!pattern.includes("*")) return origin === pattern;
+  try {
+    const originUrl = new URL(origin);
+    const wildcardMarker = "__wildcard__";
+    const patternUrl = new URL(pattern.replace("*.", `${wildcardMarker}.`));
+    if (originUrl.protocol !== patternUrl.protocol) return false;
+    if (patternUrl.port && originUrl.port !== patternUrl.port) return false;
+    const suffix = patternUrl.hostname.replace(`${wildcardMarker}.`, "");
+    return originUrl.hostname.endsWith(`.${suffix}`);
+  } catch {
+    return false;
+  }
 }
 
 export function isCorsOriginAllowed(origin: string | undefined): boolean {
   if (!origin) return true;
   const normalized = origin.replace(/\/$/, "");
   const allowed = getCorsOrigins();
-  if (allowed.includes("*") || allowed.includes(normalized)) return true;
+  if (allowed.includes("*")) return true;
+  if (allowed.some((allowedOrigin) => isWildcardMatch(normalized, allowedOrigin))) return true;
   return isDevLanOrigin(normalized);
 }

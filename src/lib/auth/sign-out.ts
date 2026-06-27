@@ -1,13 +1,13 @@
-import { API_BASE_URL } from "@/lib/api/config";
+import { API_V1_BASE, isApiEnabled } from "@/lib/api/config";
 import { clearSession, getAccessToken, getRefreshToken, type SessionRole } from "@/lib/auth/session";
 import { clearWorkspaceSessionCache } from "@/lib/workspace-user-profile";
 
 async function revokeServerSession(route: SessionRole): Promise<void> {
   const accessToken = getAccessToken(route);
   const refreshToken = getRefreshToken(route);
-  if (!accessToken || !API_BASE_URL) return;
+  if (!accessToken || !isApiEnabled()) return;
   try {
-    await fetch(`${API_BASE_URL}/api/v1/auth/logout`, {
+    await fetch(`${API_V1_BASE}/auth/logout`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
