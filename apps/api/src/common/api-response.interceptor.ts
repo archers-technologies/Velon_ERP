@@ -4,12 +4,19 @@ import {
   Injectable,
   NestInterceptor,
 } from "@nestjs/common";
+import type { Request } from "express";
 import type { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 
 @Injectable()
 export class ApiResponseInterceptor implements NestInterceptor {
-  intercept(_context: ExecutionContext, next: CallHandler): Observable<unknown> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
+    const req = context.switchToHttp().getRequest<Request | undefined>();
+    const path = req?.path ?? req?.url ?? "";
+    if (path.includes("/health")) {
+      return next.handle();
+    }
+
     return next.handle().pipe(
       map((data) => {
         if (data === undefined || data === null) {
