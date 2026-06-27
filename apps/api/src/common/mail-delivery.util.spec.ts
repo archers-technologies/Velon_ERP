@@ -2,8 +2,8 @@ import {
   classifySmtpSendError,
   getSmtpPassword,
   isNonDeliverableEmail,
-  parseSmtpPort,
   parseSmtpSecure,
+  resolveSmtpPortAndSecure,
   shouldSendViaSmtp,
   smtpConfigured,
 } from "./mail-delivery.util";
@@ -56,8 +56,13 @@ describe("mail-delivery.util", () => {
   it("does not force secure=true when port is 465 and SMTP_SECURE=false", () => {
     process.env.SMTP_PORT = "465";
     process.env.SMTP_SECURE = "false";
-    expect(parseSmtpPort()).toBe(465);
-    expect(parseSmtpSecure()).toBe(false);
+    expect(resolveSmtpPortAndSecure()).toEqual({ port: 465, secure: true });
+  });
+
+  it("forces secure=false when port is 587", () => {
+    process.env.SMTP_PORT = "587";
+    process.env.SMTP_SECURE = "true";
+    expect(resolveSmtpPortAndSecure()).toEqual({ port: 587, secure: false });
   });
 
   it("accepts SMTP_PASSWORD as fallback for SMTP_PASS", () => {

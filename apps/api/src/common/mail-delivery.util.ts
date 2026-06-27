@@ -57,12 +57,12 @@ export function parseSmtpPort(raw = process.env.SMTP_PORT): number {
 }
 
 export function getSmtpConfigSummary(): SmtpConfigSummary {
-  const port = parseSmtpPort();
+  const { port, secure } = resolveSmtpPortAndSecure();
   return {
     hostPresent: Boolean(process.env.SMTP_HOST?.trim()),
     portPresent: Boolean(process.env.SMTP_PORT?.trim()),
     port,
-    secure: parseSmtpSecure(),
+    secure,
     userPresent: Boolean(process.env.SMTP_USER?.trim()),
     passwordPresent: Boolean(getSmtpPassword()),
     fromPresent: Boolean(process.env.SMTP_FROM?.trim()),
@@ -98,22 +98,55 @@ export function shouldSendViaSmtp(to: string): boolean {
   return smtpConfigured();
 }
 
-function smtpTransportOptions() {
-  const port = parseSmtpPort();
-  const secure = parseSmtpSecure();
+function smtpTransportOptions(override?: { port: number; secure: boolean }) {
+  const resolved = override ?? resolveSmtpPortAndSecure();
+  const { port, secure } = resolved;
   return {
-    host: process.env.SMTP_HOST?.trim(),
+    host: process.env.SMTP_HOST!.trim(),
     port,
     secure,
     requireTLS: !secure && port === 587,
-    connectionTimeout: 12_000,
-    greetingTimeout: 12_000,
-    socketTimeout: 15_000,
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 12_000,
     auth: {
       user: process.env.SMTP_USER!.trim(),
       pass: getSmtpPassword()!,
     },
   };
+}
+
+/** Hostinger: 465 = implicit TLS, 587 = STARTTLS. Auto-correct mismatched SMTP_SECURE. */
+export function resolveSmtpPortAndSecure(): { port: number; secure: boolean } {
+  const port = parseSmtpPort();
+  if (port === 465) return { port, secure: true };
+  if (port === 587) return { port, secure: false };
+  return { port, secure: parseSmtpSecure() };
+}
+
+const SMTP_RETRY_CATEGORIES = new Set<SmtpSendFailureDetail["category"]>([
+  "connection_timeout",
+  "tls_mismatch",
+  "host_unreachable",
+  "unknown",
+]);
+
+async function deliverViaSmtp(
+  input: TransactionalMail,
+  override?: { port: number; secure: boolean },
+): Promise<void> {
+  const nodemailer = await import("nodemailer");
+  const transporter = nodemailer.createTransport(smtpTransportOptions(override));
+  await withSmtpTimeout(
+    transporter.sendMail({
+      from: process.env.SMTP_FROM,
+      to: input.to,
+      subject: input.subject,
+      text: input.text,
+      html: input.html,
+    }),
+    12_000,
+  );
 }
 
 function sanitizeSmtpErrorMessage(message: string): string {
@@ -236,37 +269,59 @@ export async function sendTransactionalMail(
     return { delivered: false, skippedReason: reason };
   }
 
+  const primary = resolveSmtpPortAndSecure();
+
   try {
-    const nodemailer = await import("nodemailer");
-    const transporter = nodemailer.createTransport(smtpTransportOptions());
-
-    await withSmtpTimeout(
-      transporter.sendMail({
-        from: process.env.SMTP_FROM,
-        to: input.to,
-        subject: input.subject,
-        text: input.text,
-        html: input.html,
-      }),
-    );
-
+    await deliverViaSmtp(input);
     return { delivered: true };
   } catch (err) {
     const message = String(err);
+    const primaryFailure =
+      message.includes("smtp_timeout")
+        ? ({
+            category: "connection_timeout" as const,
+            message: "SMTP connection timed out",
+          } satisfies SmtpSendFailureDetail)
+        : classifySmtpSendError(err);
+
+    const shouldRetryOn587 =
+      primary.port !== 587 &&
+      (SMTP_RETRY_CATEGORIES.has(primaryFailure.category) ||
+        message.toLowerCase().includes("greeting never received"));
+
+    if (shouldRetryOn587) {
+      try {
+        await deliverViaSmtp(input, { port: 587, secure: false });
+        return { delivered: true };
+      } catch (retryErr) {
+        const retryMessage = String(retryErr);
+        const retryFailure = retryMessage.includes("smtp_timeout")
+          ? ({
+              category: "connection_timeout" as const,
+              message: "SMTP connection timed out on port 587 fallback",
+            } satisfies SmtpSendFailureDetail)
+          : classifySmtpSendError(retryErr);
+        return {
+          delivered: false,
+          skippedReason: retryMessage.includes("smtp_timeout")
+            ? "smtp_timeout"
+            : "smtp_send_failed",
+          failureDetail: retryFailure,
+        };
+      }
+    }
+
     if (message.includes("smtp_timeout")) {
       return {
         delivered: false,
         skippedReason: "smtp_timeout",
-        failureDetail: {
-          category: "connection_timeout",
-          message: "SMTP connection timed out",
-        },
+        failureDetail: primaryFailure,
       };
     }
     return {
       delivered: false,
       skippedReason: "smtp_send_failed",
-      failureDetail: classifySmtpSendError(err),
+      failureDetail: primaryFailure,
     };
   }
 }
