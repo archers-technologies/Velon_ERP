@@ -3,7 +3,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm install --no-audit --no-fund
 COPY . .
-ARG VITE_API_URL=https://velonapi-production.up.railway.app
+ARG VITE_API_URL=https://velonerp-production.up.railway.app/
 ARG VITE_PUBLIC_WORKSPACE_DOMAIN=app.velonerp.com
 ENV NODE_ENV=production \
     VERCEL=1 \

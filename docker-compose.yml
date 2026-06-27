@@ -81,7 +81,7 @@ services:
     env_file:
       - .env
     environment:
-      VITE_API_URL: http://localhost:3001
+      VITE_API_URL: https://velonerp-production.up.railway.app/
     depends_on:
       - api
     profiles: ["full"]
