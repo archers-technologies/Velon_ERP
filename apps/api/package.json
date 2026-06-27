@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "nest start --watch --preserveWatchOutput --env-file ../../.env -e \"node dist/apps/api/src/main.js\"",
+    "dev": "nest start --watch --preserveWatchOutput --env-file ../../.env -e \"node dist/src/main.js\"",
     "build": "nest build",
-    "start": "node dist/apps/api/src/main.js",
-    "start:prod": "node dist/apps/api/src/main.js",
+    "start": "node dist/src/main.js",
+    "start:prod": "node dist/src/main.js",
     "lint": "eslint \"src/**/*.ts\"",
     "test:e2e": "jest --config ./test/jest-e2e.json --runInBand --forceExit",
     "test:unit": "jest --config ./jest-unit.json --runInBand",
