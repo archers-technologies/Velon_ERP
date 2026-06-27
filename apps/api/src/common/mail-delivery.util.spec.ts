@@ -3,7 +3,9 @@ import {
   getSmtpPassword,
   isNonDeliverableEmail,
   parseSmtpSecure,
+  resendConfigured,
   resolveSmtpPortAndSecure,
+  shouldSendViaResend,
   shouldSendViaSmtp,
   smtpConfigured,
 } from "./mail-delivery.util";
@@ -70,6 +72,19 @@ describe("mail-delivery.util", () => {
     process.env.SMTP_PASSWORD = "fallback-secret";
     expect(getSmtpPassword()).toBe("fallback-secret");
     expect(smtpConfigured()).toBe(true);
+  });
+
+  it("marks Resend as configured when key and sender are provided", () => {
+    process.env.RESEND_API_KEY = "re_test_123";
+    process.env.RESEND_FROM = "Velon ERP <noreply@velonerp.com>";
+    expect(resendConfigured()).toBe(true);
+  });
+
+  it("does not use Resend in test environment", () => {
+    process.env.RESEND_API_KEY = "re_test_123";
+    process.env.RESEND_FROM = "Velon ERP <noreply@velonerp.com>";
+    process.env.NODE_ENV = "test";
+    expect(shouldSendViaResend("user@gmail.com")).toBe(false);
   });
 
   it("classifies auth failures", () => {

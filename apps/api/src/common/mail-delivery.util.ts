@@ -29,6 +29,11 @@ export type SmtpSendFailureDetail = {
   message: string;
 };
 
+type ResendSendFailureDetail = {
+  statusCode?: number;
+  message: string;
+};
+
 const NON_DELIVERABLE_SUFFIXES = [".test", ".invalid", ".example", ".localhost"] as const;
 const NON_DELIVERABLE_DOMAINS = new Set(["example.com", "example.org", "example.net"]);
 
@@ -92,10 +97,20 @@ export function smtpConfigured(): boolean {
   );
 }
 
+export function resendConfigured(): boolean {
+  return Boolean(process.env.RESEND_API_KEY?.trim() && process.env.RESEND_FROM?.trim());
+}
+
 export function shouldSendViaSmtp(to: string): boolean {
   if (process.env.NODE_ENV === "test") return false;
   if (isNonDeliverableEmail(to)) return false;
   return smtpConfigured();
+}
+
+export function shouldSendViaResend(to: string): boolean {
+  if (process.env.NODE_ENV === "test") return false;
+  if (isNonDeliverableEmail(to)) return false;
+  return resendConfigured();
 }
 
 function smtpTransportOptions(override?: { port: number; secure: boolean }) {
@@ -147,6 +162,52 @@ async function deliverViaSmtp(
     }),
     12_000,
   );
+}
+
+async function deliverViaResend(input: TransactionalMail): Promise<void> {
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  const from = process.env.RESEND_FROM?.trim();
+  if (!apiKey || !from) {
+    throw new Error("resend_not_configured");
+  }
+
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from,
+      to: [input.to],
+      subject: input.subject,
+      html: input.html,
+      text: input.text,
+    }),
+  });
+
+  if (response.ok) return;
+
+  let detail: ResendSendFailureDetail = {
+    statusCode: response.status,
+    message: `Resend API request failed with HTTP ${response.status}`,
+  };
+  try {
+    const json = (await response.json()) as
+      | { message?: string; error?: { message?: string } }
+      | undefined;
+    const message = json?.message ?? json?.error?.message;
+    if (message) {
+      detail = {
+        statusCode: response.status,
+        message,
+      };
+    }
+  } catch {
+    /* ignore JSON parse failures */
+  }
+
+  throw new Error(`resend_send_failed:${JSON.stringify(detail)}`);
 }
 
 function sanitizeSmtpErrorMessage(message: string): string {
@@ -259,12 +320,28 @@ export async function sendTransactionalMail(
   skippedReason?: string;
   failureDetail?: SmtpSendFailureDetail;
 }> {
+  const isTestEnv = process.env.NODE_ENV === "test";
+  const nonDeliverable = isNonDeliverableEmail(input.to);
+
+  if (shouldSendViaResend(input.to)) {
+    try {
+      await deliverViaResend(input);
+      return { delivered: true };
+    } catch {
+      // If SMTP is configured, continue to SMTP fallback before failing.
+      if (!shouldSendViaSmtp(input.to)) {
+        return { delivered: false, skippedReason: "resend_send_failed" };
+      }
+    }
+  }
+
   if (!shouldSendViaSmtp(input.to)) {
-    const reason =
-      process.env.NODE_ENV === "test"
-        ? "test_environment"
-        : isNonDeliverableEmail(input.to)
-          ? "non_deliverable_recipient"
+    const reason = isTestEnv
+      ? "test_environment"
+      : nonDeliverable
+        ? "non_deliverable_recipient"
+        : resendConfigured()
+          ? "resend_send_failed"
           : "smtp_not_configured";
     return { delivered: false, skippedReason: reason };
   }

@@ -163,7 +163,7 @@ export class SignupOtpService {
 
       if (mail.skippedReason === "smtp_not_configured") {
         throw new ServiceUnavailableException(
-          "Email OTP delivery is not configured. Set SMTP_HOST and SMTP_FROM on the API service.",
+          "Email OTP delivery is not configured. Set RESEND_API_KEY + RESEND_FROM, or SMTP_HOST + SMTP_FROM on the API service.",
         );
       }
       if (mail.skippedReason === "smtp_send_failed") {
@@ -209,7 +209,7 @@ export class SignupOtpService {
 
     if (process.env.NODE_ENV === "production") {
       throw new ServiceUnavailableException(
-        "Could not send verification email. Check SMTP credentials and try again.",
+        "Could not send verification email. Check Resend/SMTP credentials and try again.",
       );
     }
 

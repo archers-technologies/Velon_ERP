@@ -216,7 +216,7 @@ export class PasswordResetService {
 
     if (process.env.NODE_ENV === "production") {
       throw new ServiceUnavailableException(
-        "Email delivery is not configured. Set SMTP_HOST and SMTP_FROM.",
+        "Email delivery is not configured. Set RESEND_API_KEY + RESEND_FROM, or SMTP_HOST + SMTP_FROM.",
       );
     }
 
