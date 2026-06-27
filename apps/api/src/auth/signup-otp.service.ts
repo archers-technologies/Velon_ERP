@@ -181,13 +181,22 @@ export class SignupOtpService {
               .join(" "),
           );
         }
+        if (mail.failureDetail?.category === "connection_timeout") {
+          throw new ServiceUnavailableException(
+            process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_SERVICE_NAME
+              ? "Email server timed out. Railway Hobby/Trial plans block outbound SMTP — upgrade to Pro, then redeploy @velon/api."
+              : "Could not send verification email. Check SMTP credentials and try again.",
+          );
+        }
         throw new ServiceUnavailableException(
           "Could not send verification email. Check SMTP credentials and try again.",
         );
       }
       if (mail.skippedReason === "smtp_timeout") {
         throw new ServiceUnavailableException(
-          "Email server timed out. On Railway + Hostinger use SMTP_PORT=587 and SMTP_SECURE=false.",
+          process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_SERVICE_NAME
+            ? "Email server timed out. Railway Hobby/Trial plans block outbound SMTP — upgrade to Pro, then redeploy @velon/api."
+            : "Email server timed out. On Railway + Hostinger use SMTP_PORT=587 and SMTP_SECURE=false.",
         );
       }
       throw new ServiceUnavailableException(
