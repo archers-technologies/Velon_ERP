@@ -31,10 +31,7 @@ export const defaultPricingPreference: PricingPreference = {
 export { countryOptions, currencyOptions, getCountryDefaultCurrency };
 
 export function formatMarketingMonthlyPrice(amount: number, currency: PricingCurrency) {
-  const rounded =
-    currency === "INR" && amount >= 100
-      ? Math.round(amount / 100) * 100 - 1
-      : Math.round(amount);
+  const rounded = Math.round(amount * 100) / 100;
 
   const locale = currencyLocale[currency] ?? "en-US";
   try {

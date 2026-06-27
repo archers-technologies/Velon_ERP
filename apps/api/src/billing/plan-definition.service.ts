@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { TenantPlan } from "@velon/database";
-import { PLAN_CATALOG, planRegionalPricesFromDefinition } from "@velon/shared";
+import { PLAN_CATALOG, planRegionalPricesFromDefinition, yearlyPriceFromMonthly } from "@velon/shared";
 import { PrismaService } from "../prisma/prisma.service";
 import type { UpdatePlanDefinitionDto } from "./dto/billing.dto";
 
@@ -44,9 +44,9 @@ export class PlanDefinitionService {
     const entry = PLAN_CATALOG.find((p) => p.id === plan) ?? PLAN_CATALOG[0];
     const regionalPrices = planRegionalPricesFromDefinition({
       indiaMonthlyPrice: entry.monthlyPrice,
-      indiaAnnualPrice: entry.monthlyPrice * 10,
+      indiaAnnualPrice: yearlyPriceFromMonthly(entry.monthlyPrice),
       globalMonthlyPrice: entry.monthlyPrice,
-      globalAnnualPrice: entry.monthlyPrice * 10,
+      globalAnnualPrice: yearlyPriceFromMonthly(entry.monthlyPrice),
     });
     return {
       id: entry.id,

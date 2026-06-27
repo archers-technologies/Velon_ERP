@@ -62,8 +62,11 @@ export const PAYMENT_PROVIDERS: {
 
 export const TRIAL_DAYS_DEFAULT = 30;
 
+/** Annual billing = 11 months charged (1 month free vs paying monthly for 12). */
+export const ANNUAL_BILLING_MONTHS = 11;
+
 export function yearlyPriceFromMonthly(monthlyPrice: number): number {
-  return monthlyPrice * 10;
+  return monthlyPrice * ANNUAL_BILLING_MONTHS;
 }
 
 export function mrrForPlan(plan: string, interval: BillingInterval): number {

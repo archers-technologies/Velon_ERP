@@ -16,6 +16,7 @@ import type {
   SubscriptionClientRow,
   SubscriptionPlanCatalogEntry,
 } from "@/lib/types/workspace-ui";
+import { yearlyPriceFromMonthly } from "@velon/shared";
 
 function canCallApiFromLoader(): boolean {
   return typeof window !== "undefined";
@@ -259,7 +260,7 @@ function mapCatalogPlan(
     id: plan.id.toLowerCase(),
     name: plan.displayName,
     monthlyPrice: plan.monthlyPrice,
-    annualPrice: plan.annualPrice ?? plan.monthlyPrice * 10,
+    annualPrice: plan.annualPrice ?? yearlyPriceFromMonthly(plan.monthlyPrice),
     description: plan.description ?? "",
     seatsSummary: plan.seatLimit ? `Up to ${plan.seatLimit} users` : "Unlimited users",
     activeRenewals,

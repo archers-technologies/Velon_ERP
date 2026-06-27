@@ -1,4 +1,3 @@
-import { describe, expect, it } from "vitest";
 import { isIndiaBilling, planRegionalPricesFromDefinition, resolvePlanPrice } from "./plan-pricing";
 
 describe("plan-pricing", () => {
@@ -61,5 +60,14 @@ describe("plan-pricing", () => {
     });
     expect(resolved.amount).toBe(490);
     expect(resolved.paymentAmountMinorUnit).toBe(49000);
+  });
+
+  it("annual fallback equals 11× monthly when annual prices are omitted", () => {
+    const derived = planRegionalPricesFromDefinition({
+      indiaMonthlyPrice: 650,
+      globalMonthlyPrice: 49,
+    });
+    expect(derived.india.annualPrice).toBe(7150);
+    expect(derived.global.annualPrice).toBe(539);
   });
 });

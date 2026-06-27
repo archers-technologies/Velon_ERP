@@ -23,7 +23,7 @@ import { TenantStatusPill } from "@/components/tenant-status-pill";
 import type { TenantStatus } from "@/lib/admin-demo";
 import { getSessionMembershipRole } from "@/lib/auth/session";
 import { formatApiError } from "@/lib/auth/login-utils";
-import { normalizeVelonRole, canManageWorkspaceBilling, parseSettingsUserTab, settingsBillingSearch, VelonRole } from "@velon/shared";
+import { normalizeVelonRole, canManageWorkspaceBilling, parseSettingsUserTab, settingsBillingSearch, VelonRole, yearlyPriceFromMonthly } from "@velon/shared";
 import { SettingsWorkspaceShortcuts } from "@/components/settings/settings-workspace-shortcuts";
 import {
   cancelBillingCheckout,
@@ -117,7 +117,8 @@ function BillingPortalPage() {
 
   const checkoutAmount =
     interval === "YEARLY"
-      ? (selectedPlanMeta?.annualPrice ?? (selectedPlanMeta?.monthlyPrice ?? subscription.mrr) * 10)
+      ? (selectedPlanMeta?.annualPrice ??
+          yearlyPriceFromMonthly(selectedPlanMeta?.monthlyPrice ?? subscription.mrr))
       : (selectedPlanMeta?.monthlyPrice ?? subscription.mrr);
 
   const payNowBlocked = !razorpayEnabled && Boolean(pendingBankTransfer);
@@ -420,7 +421,7 @@ function BillingPortalPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="MONTHLY">Monthly</SelectItem>
-                  <SelectItem value="YEARLY">Yearly (2 months free)</SelectItem>
+                  <SelectItem value="YEARLY">Yearly (1 month free)</SelectItem>
                 </SelectContent>
               </Select>
             </div>

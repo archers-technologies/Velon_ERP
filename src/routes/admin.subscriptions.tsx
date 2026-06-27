@@ -481,7 +481,7 @@ function AdminSubscriptionsPage() {
               </div>
               {!p.customPricing && p.annualPrice != null ? (
                 <p className="text-[11px] text-muted-foreground">
-                  Annual {formatCurrency(p.annualPrice)} · ~2 mo free
+                  Annual {formatCurrency(p.annualPrice)} · ~1 mo free
                 </p>
               ) : null}
               <p className="mt-2 text-xs text-muted-foreground">{p.description}</p>

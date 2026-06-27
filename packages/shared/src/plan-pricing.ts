@@ -1,4 +1,4 @@
-import type { BillingInterval } from "./billing";
+import { yearlyPriceFromMonthly, type BillingInterval } from "./billing";
 
 export type PricingRegion = "INDIA" | "GLOBAL";
 
@@ -34,13 +34,27 @@ export function planRegionalPricesFromDefinition(input: {
   currency?: string;
 }): PlanRegionalPrices {
   const legacyMonthly = Number(input.monthlyPrice ?? 49);
-  const legacyAnnual = Number(input.annualPrice ?? legacyMonthly * 10);
+  const legacyAnnual = Number(input.annualPrice ?? yearlyPriceFromMonthly(legacyMonthly));
   const legacyCurrency = (input.currency ?? "INR").toUpperCase();
 
   const indiaMonthly = Number(input.indiaMonthlyPrice ?? (legacyCurrency === "INR" ? legacyMonthly : 49));
-  const indiaAnnual = Number(input.indiaAnnualPrice ?? (legacyCurrency === "INR" ? legacyAnnual : indiaMonthly * 10));
+  const indiaAnnual = Number(
+    input.indiaAnnualPrice ??
+      (input.indiaMonthlyPrice != null
+        ? yearlyPriceFromMonthly(indiaMonthly)
+        : legacyCurrency === "INR"
+          ? legacyAnnual
+          : yearlyPriceFromMonthly(indiaMonthly)),
+  );
   const globalMonthly = Number(input.globalMonthlyPrice ?? (legacyCurrency === "USD" ? legacyMonthly : 49));
-  const globalAnnual = Number(input.globalAnnualPrice ?? (legacyCurrency === "USD" ? legacyAnnual : globalMonthly * 10));
+  const globalAnnual = Number(
+    input.globalAnnualPrice ??
+      (input.globalMonthlyPrice != null
+        ? yearlyPriceFromMonthly(globalMonthly)
+        : legacyCurrency === "USD"
+          ? legacyAnnual
+          : yearlyPriceFromMonthly(globalMonthly)),
+  );
 
   return {
     india: { monthlyPrice: indiaMonthly, annualPrice: indiaAnnual, currency: "INR" },
