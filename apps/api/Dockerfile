@@ -1,5 +1,5 @@
 FROM node:22-alpine AS builder
-WORKDIR /app
+WORKDIR /workspace
 COPY package.json package-lock.json ./
 COPY packages/database/package.json ./packages/database/
 COPY packages/shared/package.json ./packages/shared/
@@ -11,12 +11,12 @@ RUN npm run generate -w @velon/database
 RUN npm run build -w @velon/database && npm run build -w @velon/shared && npm run build -w @velon/api
 
 FROM node:22-alpine
-WORKDIR /app
+WORKDIR /
 ENV NODE_ENV=production
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages/database ./packages/database
-COPY --from=builder /app/packages/shared ./packages/shared
-COPY --from=builder /app/apps/api/dist ./apps/api/dist
-COPY --from=builder /app/apps/api/package.json ./apps/api/
+COPY --from=builder /workspace/node_modules /node_modules
+COPY --from=builder /workspace/packages/database /packages/database
+COPY --from=builder /workspace/packages/shared /packages/shared
+COPY --from=builder /workspace/apps/api/dist /apps/api/dist
+COPY --from=builder /workspace/apps/api/package.json /apps/api/
 EXPOSE 3001
-CMD ["node", "apps/api/dist/main.js"]
+CMD ["node", "/apps/api/dist/apps/api/src/main.js"]
