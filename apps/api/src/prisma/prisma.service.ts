@@ -6,7 +6,13 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   readonly client = prisma;
 
   async onModuleInit() {
-    await this.client.$connect();
+    try {
+      await this.client.$connect();
+    } catch (error) {
+      // Do not crash process startup if DB is briefly unavailable on platform boot.
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(`Prisma initial connect failed: ${message}`);
+    }
   }
 
   async onModuleDestroy() {
