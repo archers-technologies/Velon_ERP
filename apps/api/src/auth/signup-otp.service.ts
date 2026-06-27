@@ -7,7 +7,10 @@ import {
 import { createHash, randomInt } from "node:crypto";
 import { issueSignupVerificationToken } from "../../../../packages/shared/src/signup-verification";
 import { getAuthOtpSecret } from "../config/env";
-import { sendTransactionalMail } from "../common/mail-delivery.util";
+import {
+  formatSmtpConfigForLog,
+  sendTransactionalMail,
+} from "../common/mail-delivery.util";
 import { RedisService } from "../redis/redis.service";
 
 const OTP_TTL_SEC = 10 * 60;
@@ -142,6 +145,7 @@ export class SignupOtpService {
     businessName: string;
     code: string;
   }): Promise<{ delivered: boolean; devCode?: string }> {
+    this.log.log(`Signup OTP email attempt for ${input.to}\n${formatSmtpConfigForLog()}`);
     try {
       const mail = await sendTransactionalMail({
         to: input.to,
@@ -163,6 +167,20 @@ export class SignupOtpService {
         );
       }
       if (mail.skippedReason === "smtp_send_failed") {
+        if (mail.failureDetail) {
+          const d = mail.failureDetail;
+          this.log.error(
+            [
+              `Signup OTP SMTP failure for ${input.to} [${d.category}]`,
+              d.code ? `code=${d.code}` : null,
+              d.command ? `command=${d.command}` : null,
+              d.responseCode ? `responseCode=${d.responseCode}` : null,
+              `message=${d.message}`,
+            ]
+              .filter(Boolean)
+              .join(" "),
+          );
+        }
         throw new ServiceUnavailableException(
           "Could not send verification email. Check SMTP credentials and try again.",
         );

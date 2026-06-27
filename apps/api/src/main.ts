@@ -5,6 +5,7 @@ import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import { AppModule } from "./app.module";
+import { formatSmtpConfigForLog, smtpConfigured } from "./common/mail-delivery.util";
 import { getApiPort, isCorsOriginAllowed } from "./config/env";
 
 async function bootstrap() {
@@ -46,6 +47,8 @@ async function bootstrap() {
   await app.listen(port);
   console.log(`Velon API listening on port ${port}`);
   console.log(`Swagger: /api/docs`);
+  console.log(formatSmtpConfigForLog());
+  console.log(`SMTP configured: ${smtpConfigured() ? "yes" : "no"}`);
 }
 
 bootstrap();
