@@ -11,6 +11,24 @@ import {
 type ApiError = { message?: string; statusCode?: number; success?: boolean };
 type ApiEnvelope<T> = { success: boolean; data?: T; message?: string };
 
+function withSameOriginApiV1(path: string): string {
+  return `/api/v1${path}`;
+}
+
+function shouldRetryWithSameOrigin(url: string): boolean {
+  return /^https?:\/\//i.test(url);
+}
+
+async function fetchApi(url: string, init: RequestInit): Promise<Response> {
+  try {
+    return await fetch(url, init);
+  } catch (error) {
+    // Recover from invalid/external API host DNS issues by retrying same-origin.
+    if (!shouldRetryWithSameOrigin(url)) throw error;
+    return fetch(withSameOriginApiV1(new URL(url).pathname.replace(/^.*\/v1/, "")), init);
+  }
+}
+
 function loginRedirectForContext(context: SessionRole): string {
   return context === "admin" ? "/platform/login" : "/login?tab=signin";
 }
@@ -54,7 +72,7 @@ export async function authFetch<T>(path: string, init: RequestInit = {}): Promis
     headers.set("Content-Type", "application/json");
   }
 
-  const res = await fetch(`${API_V1_BASE}${path}`, {
+  const res = await fetchApi(`${API_V1_BASE}${path}`, {
     ...init,
     headers,
     credentials: "include",
@@ -75,7 +93,7 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}, retry = 
   }
   if (token) headers.set("Authorization", `Bearer ${token}`);
 
-  const res = await fetch(`${API_V1_BASE}${path}`, {
+  const res = await fetchApi(`${API_V1_BASE}${path}`, {
     ...init,
     headers,
     credentials: "include",
@@ -101,7 +119,7 @@ async function tryRefresh(context: SessionRole): Promise<boolean> {
   const refreshToken = getRefreshToken(context);
   if (!refreshToken) return false;
   try {
-    const res = await fetch(`${API_V1_BASE}/auth/refresh`, {
+    const res = await fetchApi(`${API_V1_BASE}/auth/refresh`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refreshToken }),
