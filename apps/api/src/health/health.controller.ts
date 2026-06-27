@@ -1,5 +1,6 @@
 import { Controller, Get, ServiceUnavailableException } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
+import { smtpConfigured } from "../common/mail-delivery.util";
 import { PrismaService } from "../prisma/prisma.service";
 import { RedisService } from "../redis/redis.service";
 
@@ -53,7 +54,10 @@ export class HealthController {
     return {
       status: "ok",
       timestamp: new Date().toISOString(),
-      services,
+      services: {
+        ...services,
+        smtp: smtpConfigured() ? "configured" : "not_configured",
+      },
     };
   }
 }

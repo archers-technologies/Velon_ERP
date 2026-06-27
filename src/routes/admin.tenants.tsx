@@ -8,6 +8,7 @@ import {
   resetTenantSubscription,
   updateAdminTenant,
 } from "@/lib/platform/admin-loaders";
+import { useClientAdminLoader } from "@/lib/platform/use-client-admin-loader";
 import { tenantWorkspaceHost } from "@/lib/tenant-workspace";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
@@ -379,7 +380,12 @@ function SortableTh({
 function AdminTenantsPage() {
   const router = useRouter();
   const { formatCurrency } = useAdminCurrency();
-  const tenants = Route.useLoaderData();
+  const loaderTenants = Route.useLoaderData();
+  const tenants = useClientAdminLoader(
+    loaderTenants,
+    loadAdminTenants,
+    (rows) => rows.length === 0,
+  );
 
   const [q, setQ] = useState("");
   const [planFilter, setPlanFilter] = useState<"all" | TenantPlan>("all");

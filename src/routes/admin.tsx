@@ -1,9 +1,6 @@
-import { Outlet, createFileRoute, useRouter, useRouterState } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { Outlet, createFileRoute, useRouterState } from "@tanstack/react-router";
 import { AdminAuthGate } from "@/components/auth-gate";
 import { AdminShell } from "@/components/admin-shell";
-import { isApiEnabled } from "@/lib/api/config";
-import { isAuthenticated } from "@/lib/auth/session";
 import { requireAdminAccess } from "@/lib/auth/route-guard";
 
 export const Route = createFileRoute("/admin")({
@@ -77,13 +74,6 @@ const titles: Record<string, { title: string; subtitle: string }> = {
 };
 
 function AdminLayout() {
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isApiEnabled() || !isAuthenticated("admin")) return;
-    void router.invalidate();
-  }, [router]);
-
   const pathname = useRouterState({
     select: (s) => {
       const p = s.location.pathname;

@@ -2,11 +2,12 @@
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
     "builder": "DOCKERFILE",
-    "dockerfilePath": "Dockerfile.web"
+    "dockerfilePath": "Dockerfile.railway"
   },
   "deploy": {
-    "startCommand": "node .output/server/index.mjs",
-    "healthcheckPath": "/",
+    "preDeployCommand": "node packages/database/scripts/require-database-url.mjs && cd packages/database && npx prisma migrate deploy",
+    "startCommand": "sh scripts/start-railway-stack.sh",
+    "healthcheckPath": "/api/v1/health/live",
     "healthcheckTimeout": 120,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10

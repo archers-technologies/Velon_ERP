@@ -11,12 +11,26 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 const isVercelBuild = Boolean(process.env.VERCEL);
+const isRailwayCombined = process.env.RAILWAY_STACK === "combined";
+const internalApiOrigin = process.env.INTERNAL_API_ORIGIN ?? "http://127.0.0.1:3001";
 
 export default defineConfig({
   // Cloudflare worker output breaks Vercel static hosting (no index.html). Use Nitro on Vercel.
   cloudflare: isVercelBuild ? false : undefined,
   vite: {
-    plugins: isVercelBuild ? [nitro()] : [],
+    plugins: isVercelBuild
+      ? [
+          nitro(
+            isRailwayCombined
+              ? {
+                  routeRules: {
+                    "/api/**": { proxy: `${internalApiOrigin}/api/**` },
+                  },
+                }
+              : {},
+          ),
+        ]
+      : [],
     resolve: {
       alias: {
         // Browser must not load CJS dist directly — use TypeScript source (ESM).

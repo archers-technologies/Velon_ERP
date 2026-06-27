@@ -156,13 +156,33 @@ export class SignupOtpService {
         );
         return { delivered: false, devCode: input.code };
       }
+
+      if (mail.skippedReason === "smtp_not_configured") {
+        throw new ServiceUnavailableException(
+          "Email OTP delivery is not configured. Set SMTP_HOST and SMTP_FROM on the API service.",
+        );
+      }
+      if (mail.skippedReason === "smtp_send_failed") {
+        throw new ServiceUnavailableException(
+          "Could not send verification email. Check SMTP credentials and try again.",
+        );
+      }
+      if (mail.skippedReason === "smtp_timeout") {
+        throw new ServiceUnavailableException(
+          "Email server timed out. On Railway + Hostinger use SMTP_PORT=587 and SMTP_SECURE=false.",
+        );
+      }
+      throw new ServiceUnavailableException(
+        "Email OTP delivery failed. Try again shortly.",
+      );
     } catch (err) {
+      if (err instanceof ServiceUnavailableException) throw err;
       this.log.warn(`SMTP OTP failed for ${input.to}: ${String(err)}`);
     }
 
     if (process.env.NODE_ENV === "production") {
       throw new ServiceUnavailableException(
-        "Email OTP delivery is not configured. Set SMTP_HOST and SMTP_FROM.",
+        "Could not send verification email. Check SMTP credentials and try again.",
       );
     }
 

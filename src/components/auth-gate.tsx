@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "@tanstack/react-router";
+import { isApiEnabled } from "@/lib/api/config";
 import { isAuthenticated } from "@/lib/auth/session";
 import { loginSearch } from "@/lib/auth/login-utils";
 import { resolveAuthScope } from "@/lib/auth/portal-access";
@@ -41,6 +42,11 @@ export function AdminAuthGate({ children }: { children: React.ReactNode }) {
     }
     setReady(true);
   }, [router]);
+
+  useEffect(() => {
+    if (!ready || !isApiEnabled()) return;
+    void router.invalidate();
+  }, [ready, router]);
 
   if (!ready) return null;
 

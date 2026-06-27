@@ -7,7 +7,13 @@ describe("mail-delivery.util", () => {
   const env = process.env;
 
   beforeEach(() => {
-    process.env = { ...env, SMTP_HOST: "smtp.example.com", SMTP_FROM: "test@example.com" };
+    process.env = {
+      ...env,
+      SMTP_HOST: "smtp.example.com",
+      SMTP_FROM: "test@example.com",
+      SMTP_USER: "test@example.com",
+      SMTP_PASS: "secret",
+    };
   });
 
   afterAll(() => {
