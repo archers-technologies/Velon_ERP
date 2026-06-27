@@ -10,7 +10,7 @@ import {
   PricingPreferencePrompt,
   usePricingPreference,
 } from "@/components/pricing-preference";
-import { formatMonthlyPrice } from "@/lib/pricing-preferences";
+import { formatPlanPriceForPreference } from "@/lib/pricing-preferences";
 import { Check } from "lucide-react";
 
 export const Route = createFileRoute("/pricing")({
@@ -51,7 +51,7 @@ function PricingPage() {
             <p className="mt-2 text-3xl font-semibold tracking-tight">
               {plan.isCustom
                 ? "Custom"
-                : `${formatMonthlyPrice(plan.monthlyPrice, preference.currency)}/mo`}
+                : `${formatPlanPriceForPreference(plan, preference)}/mo`}
             </p>
             <p className={`mt-1 text-sm ${plan.featured ? "text-background/70" : "text-muted-foreground"}`}>
               {plan.desc}

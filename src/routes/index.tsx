@@ -9,7 +9,7 @@ import {
   PricingPreferencePrompt,
   usePricingPreference,
 } from "@/components/pricing-preference";
-import { formatMonthlyPrice } from "@/lib/pricing-preferences";
+import { formatPlanPriceForPreference } from "@/lib/pricing-preferences";
 import { loadPublicSiteContentSafe } from "@/lib/cms/load-public";
 import { loginSearch } from "@/lib/auth/login-utils";
 import { loadPublicPlans, marketingPlanCards } from "@/lib/api/billing-public";
@@ -151,7 +151,7 @@ function Home() {
                 </div>
                 <div className="mt-3 flex items-baseline gap-1">
                   <span className="text-4xl font-semibold tracking-tight">
-                    {p.isCustom ? "Custom" : formatMonthlyPrice(p.monthlyPrice, preference.currency)}
+                    {p.isCustom ? "Custom" : formatPlanPriceForPreference(p, preference)}
                   </span>
                   {!p.isCustom && (
                     <span className={`text-sm ${p.featured ? "text-background/60" : "text-muted-foreground"}`}>

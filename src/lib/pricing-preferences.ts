@@ -7,6 +7,7 @@ import {
   type PricingCountry,
   type PricingCurrency,
 } from "@/lib/country-currency-catalog";
+import { isIndiaBilling, type PlanRegionalPrices } from "@velon/shared";
 
 export type { PricingCountry, PricingCurrency };
 
@@ -29,11 +30,11 @@ export const defaultPricingPreference: PricingPreference = {
 
 export { countryOptions, currencyOptions, getCountryDefaultCurrency };
 
-export function formatMonthlyPrice(monthlyInr: number, currency: PricingCurrency) {
-  const inrPerUnit = getInrPerUnit(currency);
-  const converted = monthlyInr / inrPerUnit;
+export function formatMarketingMonthlyPrice(amount: number, currency: PricingCurrency) {
   const rounded =
-    currency === "INR" ? Math.round(converted / 100) * 100 - 1 : Math.round(converted);
+    currency === "INR" && amount >= 100
+      ? Math.round(amount / 100) * 100 - 1
+      : Math.round(amount);
 
   const locale = currencyLocale[currency] ?? "en-US";
   try {
@@ -45,6 +46,49 @@ export function formatMonthlyPrice(monthlyInr: number, currency: PricingCurrency
   } catch {
     return `${currency} ${Math.max(rounded, 0)}`;
   }
+}
+
+export function resolveMarketingPlanPrice(
+  regionalPrices: PlanRegionalPrices | undefined,
+  fallbackMonthlyPrice: number,
+  preference: PricingPreference,
+): { amount: number; currency: PricingCurrency } {
+  if (!regionalPrices) {
+    if (isIndiaBilling(preference.country, preference.currency)) {
+      return { amount: fallbackMonthlyPrice, currency: "INR" };
+    }
+    if (preference.currency === "USD") {
+      return { amount: fallbackMonthlyPrice, currency: "USD" };
+    }
+    const inrPerUnit = getInrPerUnit(preference.currency);
+    return { amount: fallbackMonthlyPrice / inrPerUnit, currency: preference.currency };
+  }
+
+  if (isIndiaBilling(preference.country, preference.currency)) {
+    return { amount: regionalPrices.india.monthlyPrice, currency: "INR" };
+  }
+
+  if (preference.currency === "USD") {
+    return { amount: regionalPrices.global.monthlyPrice, currency: "USD" };
+  }
+
+  const inrPerUnit = getInrPerUnit(preference.currency);
+  return {
+    amount: regionalPrices.india.monthlyPrice / inrPerUnit,
+    currency: preference.currency,
+  };
+}
+
+export function formatPlanPriceForPreference(
+  plan: { regionalPrices?: PlanRegionalPrices; monthlyPrice: number },
+  preference: PricingPreference,
+) {
+  const { amount, currency } = resolveMarketingPlanPrice(
+    plan.regionalPrices,
+    plan.monthlyPrice,
+    preference,
+  );
+  return formatMarketingMonthlyPrice(amount, currency);
 }
 
 function isValidLanguage(value: unknown): value is PricingLanguage {

@@ -1,4 +1,5 @@
 import { API_BASE_URL, isApiEnabled } from "@/lib/api/config";
+import type { PlanRegionalPrices } from "@velon/shared";
 
 export type PublicPlan = {
   id: string;
@@ -7,6 +8,7 @@ export type PublicPlan = {
   seatLimit: number | null;
   description: string;
   features: string[];
+  regionalPrices?: PlanRegionalPrices;
 };
 
 const FALLBACK_PLANS: PublicPlan[] = [
@@ -62,11 +64,13 @@ export async function loadPublicPlans(): Promise<PublicPlan[]> {
 export function marketingPlanCards(plans: PublicPlan[]) {
   const list = Array.isArray(plans) ? plans : FALLBACK_PLANS;
   return list.map((plan) => ({
+    id: plan.id,
     name: plan.displayName,
     monthlyPrice: plan.monthlyPrice,
+    regionalPrices: plan.regionalPrices,
     desc: plan.description,
     features: plan.features,
     featured: plan.id === "GROWTH",
-    isCustom: plan.id === "ENTERPRISE" && plan.monthlyPrice >= 499,
+    isCustom: plan.id === "ENTERPRISE",
   }));
 }
