@@ -90,7 +90,7 @@ If your session expires, Velon asks you to sign in again. Use the **Sign in agai
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  [Logo]  Workspace name          Currency · Location · 🌙 🔔 👤 │
+│  [Logo]  Workspace name       Currency · Location · 🌙 🔔 👤 │
 ├──────────┬──────────────────────────────────────────────────┤
 │          │                                                  │
 │ Sidebar  │  Page title + content                            │

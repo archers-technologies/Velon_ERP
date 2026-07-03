@@ -95,6 +95,123 @@ async function seedPlanDefinitions() {
   }
 }
 
+async function seedDevTenant() {
+  if (process.env.NODE_ENV === "production") return;
+
+  const email = process.env.DEV_TENANT_EMAIL?.trim().toLowerCase();
+  const password = process.env.DEV_TENANT_PASSWORD;
+  if (!email || !password) {
+    console.log(
+      "Skipping dev tenant — set DEV_TENANT_EMAIL and DEV_TENANT_PASSWORD in .env, then run npm run db:seed",
+    );
+    return;
+  }
+
+  const companyName = process.env.DEV_TENANT_COMPANY_NAME?.trim() || "Velon Test Workspace";
+  const passwordHash = await bcrypt.hash(password, 12);
+  const slug = "velon-test-workspace";
+  const renewal = new Date();
+  renewal.setDate(renewal.getDate() + 30);
+
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) {
+    await prisma.user.update({
+      where: { id: existing.id },
+      data: { passwordHash, isActive: true, role: UserRole.USER, seedSource: "seed" },
+    });
+    const membership = await prisma.tenantMembership.findFirst({
+      where: { userId: existing.id, isActive: true },
+    });
+    if (membership) {
+      console.log(`Dev tenant user updated: ${email}`);
+      return;
+    }
+  }
+
+  await prisma.$transaction(async (tx) => {
+    const user =
+      existing ??
+      (await tx.user.create({
+        data: {
+          email,
+          passwordHash,
+          name: "Test Tenant Owner",
+          role: UserRole.USER,
+          seedSource: "seed",
+        },
+      }));
+
+    if (existing) {
+      await tx.user.update({
+        where: { id: user.id },
+        data: { passwordHash, isActive: true, role: UserRole.USER, seedSource: "seed" },
+      });
+    }
+
+    let tenant = await tx.tenant.findFirst({
+      where: { slug, deletedAt: null },
+    });
+
+    if (!tenant) {
+      tenant = await tx.tenant.create({
+        data: {
+          name: companyName,
+          slug,
+          tenantCode: "TNT-DEV01",
+          country: "India",
+          plan: TenantPlan.GROWTH,
+          status: TenantStatus.ACTIVE,
+          health: TenantHealth.HEALTHY,
+          industryTemplate: IndustryTemplate.SERVICES,
+          renewalDate: renewal,
+          seedSource: "seed",
+        },
+      });
+
+      await tx.companyProfile.create({
+        data: {
+          tenantId: tenant.id,
+          legalName: companyName,
+          email,
+          phone: "+91 9999999999",
+          country: "India",
+          industry: IndustryTemplate.SERVICES,
+        },
+      });
+
+      await tx.workspace.create({
+        data: {
+          tenantId: tenant.id,
+          name: companyName,
+          slug: `${slug}-ws`,
+        },
+      });
+    }
+
+    const membership = await tx.tenantMembership.findFirst({
+      where: { userId: user.id, tenantId: tenant.id },
+    });
+
+    if (!membership) {
+      await tx.tenantMembership.create({
+        data: {
+          userId: user.id,
+          tenantId: tenant.id,
+          role: UserRole.TENANT_OWNER,
+          isActive: true,
+        },
+      });
+    } else if (!membership.isActive || membership.role !== UserRole.TENANT_OWNER) {
+      await tx.tenantMembership.update({
+        where: { id: membership.id },
+        data: { role: UserRole.TENANT_OWNER, isActive: true },
+      });
+    }
+  });
+
+  console.log(`Dev tenant ready for local login: ${email}`);
+}
+
 async function main() {
   const superEmail = process.env.SUPER_ADMIN_EMAIL ?? "info@velonerp.com";
   const superPassword = process.env.SUPER_ADMIN_PASSWORD;
@@ -165,6 +282,8 @@ async function main() {
   } else if (tenantCount === 0 && !canSeedDemoTenants()) {
     console.log("Skipping demo tenant — set SEED_DEMO_DATA=true in development to seed one.");
   }
+
+  await seedDevTenant();
 
   await prisma.auditLog.create({
     data: {

@@ -31,4 +31,5 @@ echo "Seeding super admin…"
 npm run db:seed
 
 echo "Done. Run: npm run dev:all"
-echo "Login: info@velonerp.com + SUPER_ADMIN_PASSWORD from .env"
+echo "Platform admin: info@velonerp.com + SUPER_ADMIN_PASSWORD from .env"
+echo "Workspace test user: set DEV_TENANT_EMAIL + DEV_TENANT_PASSWORD, then npm run db:seed"

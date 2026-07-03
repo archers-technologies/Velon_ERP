@@ -7,7 +7,7 @@ import {
 export const CMS_DEFAULTS = {
   hero: {
     title: "Easy and affordable ERP for growing businesses",
-    subtitle: "Simple like Khatabook. Powerful when you need invoices, inventory, accounting, and reports.",
+    subtitle: "Simple & Powerful tool for your business",
     cta: "Start free trial",
     ctaSecondary: "View pricing",
     badge: "Velon-ERP · Easy ERP for SMBs",
