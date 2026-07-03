@@ -27,13 +27,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import {
   Table,
   TableBody,
   TableCell,
@@ -42,8 +35,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Landmark,
-  ClipboardList,
   AlertTriangle,
   Sparkles,
   Download,
@@ -79,17 +70,11 @@ type RoleLens = "cfo" | "controller";
 function ReportsPage() {
   const { formatCurrency } = useWorkspaceCurrency();
   const data = Route.useLoaderData();
-  const [roleLens, setRoleLens] = React.useState<RoleLens>("cfo");
   const [drillOpen, setDrillOpen] = React.useState<string | null>(null);
-  const [kpiFocus, setKpiFocus] = React.useState<string | null>(null);
   const alertsDismiss = useDismissiblePanel("velon-dismiss:app:reports:alerts");
 
-  const marginTone =
-    data.kpis.netMarginPct >= 15
-      ? "text-success"
-      : data.kpis.netMarginPct >= 0
-        ? "text-foreground"
-        : "text-destructive";
+  const profitLoss = data.kpis.revenueMtd - data.kpis.expensesMtd;
+  const profitTone = profitLoss >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-destructive";
 
   const hasFinanceData =
     data.kpis.revenueMtd > 0 ||
@@ -98,127 +83,78 @@ function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="inline-flex h-9 items-center rounded-lg border border-border bg-muted/40 p-1">
-          <Button
-            type="button"
-            variant={roleLens === "cfo" ? "secondary" : "ghost"}
-            size="sm"
-            className="rounded-md px-3"
-            onClick={() => setRoleLens("cfo")}
-          >
-            <Landmark className="mr-1.5 h-3.5 w-3.5" />
-            CFO lens
-          </Button>
-          <Button
-            type="button"
-            variant={roleLens === "controller" ? "secondary" : "ghost"}
-            size="sm"
-            className="rounded-md px-3"
-            onClick={() => setRoleLens("controller")}
-          >
-            <ClipboardList className="mr-1.5 h-3.5 w-3.5" />
-            Controller lens
-          </Button>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[11px] text-muted-foreground">Workspace</span>
-          <Badge variant="outline" className="font-normal">
-            Current workspace
-          </Badge>
-        </div>
+      <div>
+        <p className="text-sm text-muted-foreground">
+          Plain-language reports for your business — no accounting degree required.
+        </p>
       </div>
-      <p className="text-xs text-muted-foreground">
-        {roleLens === "cfo"
-          ? "Figures below come from workspace finance aggregates. Zeros mean no ledger activity recorded yet."
-          : "Transactional drill-down uses the same API-backed aggregates as Accounting."}
-      </p>
 
       {!hasFinanceData ? (
         <Card className="border-dashed border-border bg-muted/20 p-6 text-sm text-muted-foreground">
-          No finance activity recorded yet for this workspace. Post journal entries in Accounting or
-          complete sales and procurement flows to populate these reports.
+          No activity yet. Create an invoice or add a purchase to see your numbers here.
         </Card>
       ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {[
-          {
-            id: "cash",
-            label: "Operating cash",
-            value: formatCurrency(data.kpis.operatingCash),
-            hint: "Aligned to ledger cash position",
-            detail: "Single source with Accounting bank reconciliation.",
-          },
-          {
-            id: "margin",
-            label: "Net margin",
-            value: `${data.kpis.netMarginPct}%`,
-            hint: "MTD revenue vs COGS & OpEx",
-            detail: "Computed from synchronized journals and billing cut.",
-          },
-          {
-            id: "ar",
-            label: "Receivables",
-            value: formatCurrency(data.kpis.receivables),
-            hint: "Open billing workspace AR",
-            detail: "Drill to invoice-level aging from Customers.",
-          },
-          {
-            id: "ap",
-            label: "Payables",
-            value: formatCurrency(data.kpis.payables),
-            hint: "Supplier AP snapshot",
-            detail: "Matches Suppliers module outstanding balances.",
-          },
-        ].map((k) => (
-          <button key={k.id} type="button" className="text-left" onClick={() => setKpiFocus(k.id)}>
-            <Card className="border-border bg-card p-5 transition-colors hover:border-foreground/25 hover:bg-muted/15">
-              <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                {k.label}
-              </div>
-              <div
-                className={`mt-2 text-2xl font-semibold tabular-nums tracking-tight ${k.id === "margin" ? marginTone : ""}`}
-              >
-                {k.value}
-              </div>
-              <div className="mt-1 text-[11px] text-muted-foreground">{k.hint}</div>
-              <div className="mt-2 text-[10px] font-medium text-primary">Tap for narrative ·</div>
-            </Card>
-          </button>
-        ))}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <Card className="border-border bg-card p-5">
+          <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Total Sales
+          </div>
+          <div className="mt-2 text-2xl font-semibold tabular-nums tracking-tight">
+            {formatCurrency(data.kpis.revenueMtd)}
+          </div>
+          <div className="mt-1 text-[11px] text-muted-foreground">This month</div>
+        </Card>
+        <Card className="border-border bg-card p-5">
+          <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Total Purchases
+          </div>
+          <div className="mt-2 text-2xl font-semibold tabular-nums tracking-tight">
+            {formatCurrency(data.kpis.expensesMtd)}
+          </div>
+          <div className="mt-1 text-[11px] text-muted-foreground">This month</div>
+        </Card>
+        <Card className="border-border bg-card p-5">
+          <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Pending Payments
+          </div>
+          <div className="mt-2 text-2xl font-semibold tabular-nums tracking-tight">
+            {formatCurrency(data.kpis.receivables)}
+          </div>
+          <div className="mt-1 text-[11px] text-muted-foreground">Money customers owe you</div>
+        </Card>
+        <Card className="border-border bg-card p-5">
+          <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Low Stock
+          </div>
+          <div className="mt-2 text-2xl font-semibold tabular-nums tracking-tight">
+            {data.alerts.filter((a) => a.toLowerCase().includes("stock")).length || "—"}
+          </div>
+          <div className="mt-1 text-[11px] text-muted-foreground">
+            <Link to="/app/inventory" className="text-primary hover:underline">
+              Check inventory
+            </Link>
+          </div>
+        </Card>
+        <Card className="border-border bg-card p-5">
+          <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Profit / Loss
+          </div>
+          <div className={`mt-2 text-2xl font-semibold tabular-nums tracking-tight ${profitTone}`}>
+            {formatCurrency(profitLoss)}
+          </div>
+          <div className="mt-1 text-[11px] text-muted-foreground">Sales minus purchases (MTD)</div>
+        </Card>
+        <Card className="border-border bg-card p-5">
+          <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Tax Summary
+          </div>
+          <div className="mt-2 text-2xl font-semibold tabular-nums tracking-tight">
+            {formatCurrency(data.kpis.payables)}
+          </div>
+          <div className="mt-1 text-[11px] text-muted-foreground">Payables & tax-related balances</div>
+        </Card>
       </div>
-
-      {roleLens === "controller" ? (
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Card className="border-border bg-card p-5">
-            <div className="text-xs uppercase tracking-wider text-muted-foreground">
-              Revenue (MTD)
-            </div>
-            <div className="mt-2 text-xl font-semibold tabular-nums">
-              {formatCurrency(data.kpis.revenueMtd)}
-            </div>
-          </Card>
-          <Card className="border-border bg-card p-5">
-            <div className="text-xs uppercase tracking-wider text-muted-foreground">OpEx (MTD)</div>
-            <div className="mt-2 text-xl font-semibold tabular-nums">
-              {formatCurrency(data.kpis.expensesMtd)}
-            </div>
-          </Card>
-          <Card className="border-border bg-card p-5">
-            <div className="text-xs uppercase tracking-wider text-muted-foreground">
-              Budget variance
-            </div>
-            <div
-              className={`mt-2 text-xl font-semibold tabular-nums ${data.kpis.budgetVariancePct > 5 ? "text-destructive" : "text-foreground"}`}
-            >
-              {data.kpis.budgetVariancePct > 0 ? "+" : ""}
-              {data.kpis.budgetVariancePct}%
-            </div>
-            <div className="mt-1 text-[11px] text-muted-foreground">Vs rolling OpEx envelope</div>
-          </Card>
-        </div>
-      ) : null}
 
       {data.alerts.length > 0 && !alertsDismiss.dismissed ? (
         <Card className="border-destructive/25 bg-destructive/5 p-4">
@@ -250,10 +186,10 @@ function ReportsPage() {
           <div className="mb-4 flex items-start justify-between gap-2">
             <div>
               <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                Liquidity bridge
+                Cash movement
               </div>
               <div className="mt-1 flex items-center gap-2 text-lg font-semibold tracking-tight">
-                Net operating cash pulse
+                Money in vs money out
                 <TrendingUp className="h-4 w-4 text-success" />
               </div>
             </div>
@@ -323,7 +259,7 @@ function ReportsPage() {
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2 text-sm font-semibold">
                 <PieChartIcon className="h-4 w-4" />
-                OpEx composition (MTD journals)
+                Where your money goes
               </div>
               <span className="text-[11px] text-muted-foreground">Workspace aggregate</span>
             </div>
@@ -515,45 +451,6 @@ function ReportsPage() {
         </TabsContent>
       </Tabs>
 
-      <Sheet open={kpiFocus !== null} onOpenChange={(o) => !o && setKpiFocus(null)}>
-        <SheetContent className="overflow-y-auto sm:max-w-md">
-          <SheetHeader>
-            <SheetTitle>KPI drill narrative</SheetTitle>
-            <SheetDescription>Contextual storytelling for executive readouts.</SheetDescription>
-          </SheetHeader>
-          <div className="mt-6 space-y-4 text-sm text-muted-foreground">
-            {kpiFocus === "cash" ? (
-              <p>
-                Operating cash ties to the same ledger balance highlighted in Accounting. Net cash
-                bridge chart above shows operational rhythm — CFO lens emphasizes runway vs
-                strategic bets.
-              </p>
-            ) : null}
-            {kpiFocus === "margin" ? (
-              <p>
-                Margin tiles blend POS revenue recognition, inventory COGS journals, and accrued
-                OpEx. Controllers use the GL drill tab to prove each driver before publishing board
-                decks.
-              </p>
-            ) : null}
-            {kpiFocus === "ar" ? (
-              <p>
-                Receivables reflect billing workspace truth. Drill into Customers for collections
-                workflows without exporting static CSVs.
-              </p>
-            ) : null}
-            {kpiFocus === "ap" ? (
-              <p>
-                Payables mirror Supplier masters — exception queues explain deltas versus straight
-                vendor balances.
-              </p>
-            ) : null}
-            <Button variant="outline" className="w-full rounded-lg" asChild>
-              <Link to="/app/accounting">Jump to Accounting</Link>
-            </Button>
-          </div>
-        </SheetContent>
-      </Sheet>
     </div>
   );
 }

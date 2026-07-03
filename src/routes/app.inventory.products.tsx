@@ -33,8 +33,10 @@ import {
 } from "@/lib/api/inventory";
 import { getSessionMembershipRole } from "@/lib/auth/session";
 import { canManageInventory, normalizeVelonRole } from "@velon/shared";
-import { Barcode, Plus } from "lucide-react";
+import { Barcode, Plus, Package } from "lucide-react";
 import { BarcodeManagementDialog } from "@/components/barcode-management-dialog";
+import { MoreOptionsSection } from "@/components/workspace/more-options-section";
+import { ModuleEmptyState } from "@/components/workspace/module-empty-state";
 
 export const Route = createFileRoute("/app/inventory/products")({
   component: InventoryProductsPage,
@@ -48,6 +50,7 @@ function InventoryProductsPage() {
   const [busy, setBusy] = useState(false);
   const [barcodeOpen, setBarcodeOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [productMoreOpen, setProductMoreOpen] = useState(false);
   const [form, setForm] = useState({
     name: "",
     sku: "",
@@ -158,81 +161,120 @@ function InventoryProductsPage() {
       {canManage && (
         <Card className="border-border bg-card p-4">
           <h2 className="font-medium">{editingId ? "Edit product" : "New product"}</h2>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <div className="sm:col-span-2">
               <Label>Name</Label>
-              <Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+              <Input
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                placeholder="What you sell"
+              />
             </div>
             <div>
-              <Label>SKU</Label>
-              <Input value={form.sku} onChange={(e) => setForm((f) => ({ ...f, sku: e.target.value }))} placeholder="Auto-generated if empty" />
-            </div>
-            <div>
-              <Label>Barcode</Label>
-              <Input value={form.barcode} onChange={(e) => setForm((f) => ({ ...f, barcode: e.target.value }))} />
-            </div>
-            <div>
-              <Label>Category</Label>
-              <Select value={form.categoryId || "none"} onValueChange={(v) => setForm((f) => ({ ...f, categoryId: v === "none" ? "" : v }))}>
-                <SelectTrigger><SelectValue placeholder="Category" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  {categories.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Unit price</Label>
-              <Input value={form.unitPrice} onChange={(e) => setForm((f) => ({ ...f, unitPrice: e.target.value }))} />
-            </div>
-            <div>
-              <Label>Status</Label>
-              <Select value={form.status} onValueChange={(v) => setForm((f) => ({ ...f, status: v }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ACTIVE">Active</SelectItem>
-                  <SelectItem value="INACTIVE">Inactive</SelectItem>
-                  <SelectItem value="DISCONTINUED">Discontinued</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>Selling price</Label>
+              <Input
+                value={form.unitPrice}
+                onChange={(e) => setForm((f) => ({ ...f, unitPrice: e.target.value }))}
+                placeholder="0"
+              />
             </div>
             {!editingId && (
-              <>
+              <div>
+                <Label>Opening stock</Label>
+                <Input
+                  value={form.quantity}
+                  onChange={(e) => setForm((f) => ({ ...f, quantity: e.target.value }))}
+                  placeholder="0"
+                />
+              </div>
+            )}
+            <div className="sm:col-span-2">
+              <MoreOptionsSection open={productMoreOpen} onOpenChange={setProductMoreOpen}>
                 <div>
-                  <Label>Initial warehouse</Label>
-                  <Select value={form.warehouseId || "none"} onValueChange={(v) => setForm((f) => ({ ...f, warehouseId: v === "none" ? "" : v }))}>
-                    <SelectTrigger><SelectValue placeholder="Warehouse" /></SelectTrigger>
+                  <Label>SKU</Label>
+                  <Input
+                    value={form.sku}
+                    onChange={(e) => setForm((f) => ({ ...f, sku: e.target.value }))}
+                    placeholder="Auto-generated if empty"
+                  />
+                </div>
+                <div>
+                  <Label>Barcode</Label>
+                  <Input
+                    value={form.barcode}
+                    onChange={(e) => setForm((f) => ({ ...f, barcode: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <Label>Category</Label>
+                  <Select
+                    value={form.categoryId || "none"}
+                    onValueChange={(v) => setForm((f) => ({ ...f, categoryId: v === "none" ? "" : v }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Category" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">None</SelectItem>
-                      {warehouses.map((w) => (
-                        <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
+                      {categories.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label>Initial quantity</Label>
-                  <Input value={form.quantity} onChange={(e) => setForm((f) => ({ ...f, quantity: e.target.value }))} />
+                  <Label>Status</Label>
+                  <Select value={form.status} onValueChange={(v) => setForm((f) => ({ ...f, status: v }))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ACTIVE">Active</SelectItem>
+                      <SelectItem value="INACTIVE">Inactive</SelectItem>
+                      <SelectItem value="DISCONTINUED">Discontinued</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-              </>
-            )}
-            <div className="sm:col-span-2 lg:col-span-3">
-              <Label>Product image</Label>
-              <Input
-                type="file"
-                accept="image/*"
-                className="mt-1"
-                onChange={(e) => handleImageFile(e.target.files?.[0] ?? null)}
-              />
-              {form.imageDataUrl ? (
-                <img
-                  src={form.imageDataUrl}
-                  alt="Product preview"
-                  className="mt-2 h-16 w-16 rounded-md border border-border object-cover"
-                />
-              ) : null}
+                {!editingId && (
+                  <div>
+                    <Label>Warehouse</Label>
+                    <Select
+                      value={form.warehouseId || "none"}
+                      onValueChange={(v) => setForm((f) => ({ ...f, warehouseId: v === "none" ? "" : v }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Warehouse" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {warehouses.map((w) => (
+                          <SelectItem key={w.id} value={w.id}>
+                            {w.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                <div className="sm:col-span-2">
+                  <Label>Product image</Label>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    className="mt-1"
+                    onChange={(e) => handleImageFile(e.target.files?.[0] ?? null)}
+                  />
+                  {form.imageDataUrl ? (
+                    <img
+                      src={form.imageDataUrl}
+                      alt="Product preview"
+                      className="mt-2 h-16 w-16 rounded-md border border-border object-cover"
+                    />
+                  ) : null}
+                </div>
+              </MoreOptionsSection>
             </div>
           </div>
           <div className="mt-3 flex gap-2">
@@ -257,7 +299,7 @@ function InventoryProductsPage() {
         ) : null}
       </div>
 
-      <Card className="border-border bg-card">
+      <Card className="hidden border-border bg-card md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -296,14 +338,48 @@ function InventoryProductsPage() {
             ))}
             {products.length === 0 && (
               <TableRow>
-                <TableCell colSpan={canManage ? 8 : 7} className="text-center text-muted-foreground">
-                  No products yet
+                <TableCell colSpan={canManage ? 8 : 7} className="p-0">
+                  <ModuleEmptyState
+                    icon={Package}
+                    title="No products yet"
+                    description="Add what you sell above — then use them in invoices and quotes."
+                  />
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
       </Card>
+
+      <div className="space-y-3 md:hidden">
+        {products.map((p) => (
+          <Card key={p.id} className="border-border bg-card p-4">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <p className="font-medium">{p.name}</p>
+                <p className="text-xs text-muted-foreground">{p.sku}</p>
+              </div>
+              <Badge variant="secondary">{p.status}</Badge>
+            </div>
+            <div className="mt-2 flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">{p.category?.name ?? "No category"}</span>
+              <span className="font-semibold tabular-nums">{Number(p.unitPrice).toFixed(2)}</span>
+            </div>
+            {canManage && (
+              <Button size="sm" variant="outline" className="mt-3 w-full" onClick={() => startEdit(p)}>
+                Edit
+              </Button>
+            )}
+          </Card>
+        ))}
+        {products.length === 0 && (
+          <ModuleEmptyState
+            icon={Package}
+            title="No products yet"
+            description="Add what you sell above — then use them in invoices and quotes."
+          />
+        )}
+      </div>
 
       <BarcodeManagementDialog
         open={barcodeOpen}

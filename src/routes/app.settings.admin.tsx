@@ -43,8 +43,11 @@ import {
   parseWorkspaceAdminSection,
   workspaceAdminSearch,
   VelonRole,
+  WORKSPACE_ROLE_PRESETS,
+  type RolePresetId,
 } from "@velon/shared";
 import { SettingsWorkspaceShortcuts } from "@/components/settings/settings-workspace-shortcuts";
+import { RolePresetsGuide } from "@/components/workspace/role-presets-guide";
 
 const adminTabs = [
   "company",
@@ -82,7 +85,7 @@ function TenantAdminSettingsPage() {
     fullName: "",
     email: "",
     departmentId: "",
-    role: "USER",
+    presetId: "sales" as RolePresetId,
   });
   const [deptForm, setDeptForm] = useState({ name: "", description: "" });
   const [companyForm, setCompanyForm] = useState({
@@ -136,15 +139,16 @@ function TenantAdminSettingsPage() {
     e.preventDefault();
     setBusy(true);
     try {
+      const preset = WORKSPACE_ROLE_PRESETS.find((p) => p.id === inviteForm.presetId);
       const res = await createTenantInvitation({
         fullName: inviteForm.fullName,
         email: inviteForm.email,
-        role: inviteForm.role,
+        role: preset?.backendRole ?? "USER",
         departmentId: inviteForm.departmentId || undefined,
       });
       toast.success("Invitation sent");
       if (res.devInviteUrl) toast.info(`Dev invite link: ${res.devInviteUrl}`, { duration: 12000 });
-      setInviteForm({ fullName: "", email: "", departmentId: "", role: "USER" });
+      setInviteForm({ fullName: "", email: "", departmentId: "", presetId: "sales" });
       await refreshLists();
       void router.invalidate();
     } catch (err) {
@@ -174,9 +178,11 @@ function TenantAdminSettingsPage() {
       <SettingsWorkspaceShortcuts />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Tenant administration</p>
+          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Team</p>
           <h1 className="text-2xl font-semibold tracking-tight">Workspace admin</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Manage users, departments, seats, and invitations.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Manage users, roles, branches, and departments — kept simple with role presets.
+          </p>
         </div>
         <Button asChild variant="outline" size="sm">
           <Link to="/app/settings" search={{ tab: "general" }}>← User settings</Link>
@@ -355,6 +361,7 @@ function TenantAdminSettingsPage() {
         </TabsContent>
 
         <TabsContent value="users" className="mt-4 space-y-4">
+          <RolePresetsGuide />
           <div className="flex gap-2">
             <Input placeholder="Search users…" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-xs" />
             <Button variant="secondary" onClick={() => void refreshLists()}>Search</Button>
@@ -368,11 +375,29 @@ function TenantAdminSettingsPage() {
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant={m.isActive ? "secondary" : "outline"}>{m.isActive ? "Active" : "Disabled"}</Badge>
-                  <Select value={m.role} onValueChange={(r) => void updateMemberRole(m.id, r).then(refreshLists).then(() => toast.success("Role updated")).catch((e) => toast.error(String(e)))}>
-                    <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+                  <Select
+                    value={
+                      WORKSPACE_ROLE_PRESETS.find((p) => p.backendRole === m.role)?.id ??
+                      (m.role === "DEPARTMENT_ADMIN" ? "admin" : "viewer")
+                    }
+                    onValueChange={(presetId) => {
+                      const preset = WORKSPACE_ROLE_PRESETS.find((p) => p.id === presetId);
+                      if (!preset) return;
+                      void updateMemberRole(m.id, preset.backendRole)
+                        .then(refreshLists)
+                        .then(() => toast.success("Role updated"))
+                        .catch((e) => toast.error(String(e)));
+                    }}
+                  >
+                    <SelectTrigger className="w-[160px]">
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="USER">User</SelectItem>
-                      <SelectItem value="DEPARTMENT_ADMIN">Department Admin</SelectItem>
+                      {WORKSPACE_ROLE_PRESETS.filter((p) => p.id !== "owner").map((preset) => (
+                        <SelectItem key={preset.id} value={preset.id}>
+                          {preset.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <Select
@@ -479,12 +504,22 @@ function TenantAdminSettingsPage() {
                 </Select>
               </div>
               <div>
-                <Label>Role</Label>
-                <Select value={inviteForm.role} onValueChange={(v) => setInviteForm({ ...inviteForm, role: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                <Label>Role preset</Label>
+                <Select
+                  value={inviteForm.presetId}
+                  onValueChange={(v) =>
+                    setInviteForm({ ...inviteForm, presetId: v as RolePresetId })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="USER">User</SelectItem>
-                    <SelectItem value="DEPARTMENT_ADMIN">Department Admin</SelectItem>
+                    {WORKSPACE_ROLE_PRESETS.filter((p) => p.id !== "owner").map((preset) => (
+                      <SelectItem key={preset.id} value={preset.id}>
+                        {preset.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

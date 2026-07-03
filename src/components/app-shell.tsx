@@ -229,7 +229,7 @@ export function AppShell({
           </div>
         </header>
 
-        <main className="flex-1 p-4 sm:p-6">
+        <main className="flex-1 p-4 pb-24 sm:p-6 sm:pb-28">
           {showBreadcrumbs ? <PageBreadcrumbs segments={breadcrumbSegments} /> : null}
           {children}
         </main>

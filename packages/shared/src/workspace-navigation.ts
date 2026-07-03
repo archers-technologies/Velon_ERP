@@ -1,23 +1,20 @@
-/** Flat nav labels for workspace sidebar — used in tests to prevent duplicate CRM entries. */
+/** Flat nav labels for workspace sidebar — used in tests to prevent duplicate entries. */
 export const WORKSPACE_SIDEBAR_LABELS = [
   "Dashboard",
+  "Sales",
+  "Purchases",
   "Inventory",
-  "Billing & POS",
   "Customers",
-  "Sales CRM",
-  "Procurement",
-  "Suppliers",
+  "Vendors",
   "Accounting",
+  "HR & Payroll",
   "Reports",
-  "Documents",
-  "Alerts",
-  "Branches",
   "Settings",
 ] as const;
 
 export function workspaceNavHasDuplicateCrm(labels: readonly string[]): boolean {
-  const crm = labels.filter((l) => l === "CRM" || l === "Sales CRM");
-  return labels.includes("CRM") && labels.includes("Sales CRM");
+  const salesLike = labels.filter((l) => l === "CRM" || l === "Sales CRM" || l === "Sales");
+  return salesLike.length > 1;
 }
 
 export function normalizeWorkspacePath(pathname: string): string {
@@ -34,7 +31,7 @@ export function isWorkspaceNavItemActive(pathname: string, to: string, label: st
     return path === "/app";
   }
 
-  if (label === "Sales CRM") {
+  if (label === "Sales") {
     return path.startsWith("/app/sales-crm") || path.startsWith("/app/crm");
   }
 
@@ -42,20 +39,23 @@ export function isWorkspaceNavItemActive(pathname: string, to: string, label: st
     return path.startsWith("/app/customers");
   }
 
-  if (label === "Procurement") {
+  if (label === "Purchases") {
     return path === "/app/procurement" || path.startsWith("/app/procurement/");
   }
 
-  if (label === "Suppliers") {
+  if (label === "Vendors") {
     return path === "/app/suppliers" || path.startsWith("/app/suppliers/");
   }
 
-  if (label === "Subscription") {
-    return path === "/app/settings/billing" || path.startsWith("/app/settings/billing/");
+  if (label === "HR & Payroll") {
+    return path === "/app/hr-payroll" || path.startsWith("/app/hr-payroll/");
   }
 
   if (label === "Settings") {
     if (path === "/app/settings/billing" || path.startsWith("/app/settings/billing/")) {
+      return false;
+    }
+    if (path === "/app/hr-payroll" || path.startsWith("/app/hr-payroll/")) {
       return false;
     }
     return path === "/app/settings" || path === "/app/settings/" || path.startsWith("/app/settings/");

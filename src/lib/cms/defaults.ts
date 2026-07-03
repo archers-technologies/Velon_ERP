@@ -6,11 +6,11 @@ import {
 
 export const CMS_DEFAULTS = {
   hero: {
-    title: "Run your business from one command center",
-    subtitle: "Velon ERP unifies CRM, billing, inventory, and finance for modern teams.",
+    title: "Easy and affordable ERP for growing businesses",
+    subtitle: "Simple like Khatabook. Powerful when you need invoices, inventory, accounting, and reports.",
     cta: "Start free trial",
     ctaSecondary: "View pricing",
-    badge: "Velon-ERP · Production-ready workspace platform",
+    badge: "Velon-ERP · Easy ERP for SMBs",
   },
   features: {
     headline: "Everything your team needs to run the business",
@@ -23,8 +23,8 @@ export const CMS_DEFAULTS = {
     ],
   },
   pricing: {
-    headline: "Simple, transparent pricing",
-    subhead: "Choose a plan that fits your team size.",
+    headline: "Affordable ERP that stays simple",
+    subhead: "Cheaper and easier than traditional ERP — built for small and growing businesses.",
   },
   faq: {
     items: [

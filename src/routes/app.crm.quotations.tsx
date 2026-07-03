@@ -1,11 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { ClipboardList } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { MoreOptionsSection } from "@/components/workspace/more-options-section";
+import { ModuleEmptyState } from "@/components/workspace/module-empty-state";
 import {
   Select,
   SelectContent,
@@ -53,6 +56,7 @@ function CrmQuotationsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [busy, setBusy] = useState(false);
+  const [quoteMoreOpen, setQuoteMoreOpen] = useState(false);
   const [portalLink, setPortalLink] = useState("");
   const [form, setForm] = useState({
     customerId: "",
@@ -168,7 +172,7 @@ function CrmQuotationsPage() {
         <div className="grid gap-4 lg:grid-cols-2">
           <Card className="border-border bg-card p-6">
             <h2 className="font-semibold">New quotation</h2>
-            <form className="mt-4 grid gap-3" onSubmit={onCreate}>
+            <form className="mt-4 space-y-3" onSubmit={onCreate}>
               <div>
                 <Label>Customer</Label>
                 <Select
@@ -176,7 +180,7 @@ function CrmQuotationsPage() {
                   onValueChange={(v) => setForm({ ...form, customerId: v })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select customer" />
+                    <SelectValue placeholder="Who is this quote for?" />
                   </SelectTrigger>
                   <SelectContent>
                     {customers.map((c) => (
@@ -187,40 +191,49 @@ function CrmQuotationsPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label>Opportunity (optional)</Label>
-                <Select
-                  value={form.opportunityId}
-                  onValueChange={(v) => setForm({ ...form, opportunityId: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Optional" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {opportunities.map((o) => (
-                      <SelectItem key={o.id} value={o.id}>
-                        {o.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Expiry date</Label>
-                <Input
-                  type="date"
-                  value={form.expiryDate}
-                  onChange={(e) => setForm({ ...form, expiryDate: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label>Scope of work</Label>
-                <Input
-                  value={form.scopeOfWork}
-                  onChange={(e) => setForm({ ...form, scopeOfWork: e.target.value })}
-                />
-              </div>
-              <Button type="submit" disabled={busy} className="w-fit">
+              <MoreOptionsSection open={quoteMoreOpen} onOpenChange={setQuoteMoreOpen}>
+                <div>
+                  <Label>Linked opportunity</Label>
+                  <Select
+                    value={form.opportunityId}
+                    onValueChange={(v) => setForm({ ...form, opportunityId: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Optional" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {opportunities.map((o) => (
+                        <SelectItem key={o.id} value={o.id}>
+                          {o.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Valid until</Label>
+                  <Input
+                    type="date"
+                    value={form.expiryDate}
+                    onChange={(e) => setForm({ ...form, expiryDate: e.target.value })}
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <Label>Scope of work</Label>
+                  <Input
+                    value={form.scopeOfWork}
+                    onChange={(e) => setForm({ ...form, scopeOfWork: e.target.value })}
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <Label>Terms</Label>
+                  <Input
+                    value={form.terms}
+                    onChange={(e) => setForm({ ...form, terms: e.target.value })}
+                  />
+                </div>
+              </MoreOptionsSection>
+              <Button type="submit" disabled={busy || !form.customerId} className="w-fit">
                 Create quotation
               </Button>
             </form>
@@ -384,7 +397,14 @@ function CrmQuotationsPage() {
           </div>
         ))}
         {rows.length === 0 && (
-          <p className="p-6 text-sm text-muted-foreground">No quotations yet.</p>
+          <ModuleEmptyState
+            icon={ClipboardList}
+            title="No quotations yet"
+            description="Create a quote for a customer — then send it for approval."
+            actionLabel="Add customer first"
+            actionTo="/app/customers"
+            actionSearch={{ section: "customers" }}
+          />
         )}
       </Card>
     </div>

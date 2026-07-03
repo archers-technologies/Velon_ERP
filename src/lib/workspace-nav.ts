@@ -2,18 +2,14 @@ import type { NavGroup } from "@/components/app-shell";
 import {
   LayoutDashboard,
   Boxes,
-  Receipt,
   Users,
   Truck,
   Wallet,
-  UsersRound,
   BarChart3,
-  FileText,
-  Bell,
-  Building2,
   Settings,
-  ClipboardList,
-  CreditCard,
+  ShoppingBag,
+  ShoppingCart,
+  UserCircle,
 } from "lucide-react";
 
 export type WorkspaceNavBadges = {
@@ -26,49 +22,31 @@ function countBadge(n: number): string | undefined {
   return n > 99 ? "99+" : String(n);
 }
 
+/** Simple, flat sidebar — business words, not ERP jargon. */
 export function buildWorkspaceNavGroups(badges: WorkspaceNavBadges): NavGroup[] {
   return [
     {
-      label: "Workspace",
+      label: "Menu",
       items: [
         { label: "Dashboard", to: "/app", icon: LayoutDashboard },
+        { label: "Sales", to: "/app/sales-crm", icon: ShoppingBag },
+        { label: "Purchases", to: "/app/procurement", icon: ShoppingCart },
         { label: "Inventory", to: "/app/inventory", icon: Boxes },
-        { label: "Billing & POS", to: "/app/billing-pos", icon: Receipt },
         { label: "Customers", to: "/app/customers", icon: Users },
-        { label: "Sales CRM", to: "/app/sales-crm", icon: UsersRound },
-        { label: "Procurement", to: "/app/procurement", icon: ClipboardList },
-        { label: "Suppliers", to: "/app/suppliers", icon: Truck },
-      ],
-    },
-    {
-      label: "Finance",
-      items: [
+        { label: "Vendors", to: "/app/suppliers", icon: Truck },
         { label: "Accounting", to: "/app/accounting", icon: Wallet },
-        { label: "Reports", to: "/app/reports", icon: BarChart3 },
-        { label: "Documents", to: "/app/documents", icon: FileText },
-      ],
-    },
-    {
-      label: "Operations",
-      items: [
+        { label: "HR & Payroll", to: "/app/hr-payroll", icon: UserCircle },
         {
-          label: "Alerts",
-          to: "/app/alerts",
-          icon: Bell,
+          label: "Reports",
+          to: "/app/reports",
+          icon: BarChart3,
           badge: countBadge(badges.alerts),
         },
-        { label: "Branches", to: "/app/branches", icon: Building2 },
         {
           label: "Settings",
           to: "/app/settings",
           search: { tab: "general" },
           icon: Settings,
-        },
-        {
-          label: "Subscription",
-          to: "/app/settings/billing",
-          search: { tab: "general" },
-          icon: CreditCard,
         },
       ],
     },

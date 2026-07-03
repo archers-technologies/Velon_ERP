@@ -25,6 +25,7 @@ import {
 import { markAllNotificationsRead } from "@/lib/workspace/mutations";
 import { readWorkspaceName, saveWorkspaceName } from "@/lib/tenant-workspace";
 import { buildWorkspaceNavGroups } from "@/lib/workspace-nav";
+import { QuickCreateFab } from "@/components/workspace/quick-create-fab";
 import {
   NotificationDropdown,
   type NotificationPreview,
@@ -191,7 +192,7 @@ function WorkspaceShellInner({
   return (
     <AppShell
       brand={workspaceName}
-      accent="Workspace"
+      accent="Easy ERP"
       groups={navGroups}
       initials={initials}
       title={title}
@@ -208,6 +209,7 @@ function WorkspaceShellInner({
       sidebarLogoUrl={sidebarLogo}
     >
       {children}
+      <QuickCreateFab />
     </AppShell>
   );
 }

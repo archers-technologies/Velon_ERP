@@ -200,6 +200,14 @@ export {
   type DashboardErrorKind,
 } from "./workspace-navigation";
 
+export {
+  WORKSPACE_ROLE_PRESETS,
+  backendRoleToPresetLabel,
+  rolePresetById,
+  type RolePreset,
+  type RolePresetId,
+} from "./role-presets";
+
 export { isAdminNavItemActive } from "./admin-navigation";
 
 export {

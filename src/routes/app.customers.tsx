@@ -1,12 +1,15 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MoreOptionsSection } from "@/components/workspace/more-options-section";
+import { ModuleEmptyState } from "@/components/workspace/module-empty-state";
 import {
   Select,
   SelectContent,
@@ -68,6 +71,7 @@ function CustomersPage() {
   const [activities, setActivities] = useState<CrmActivity[]>([]);
   const [search, setSearch] = useState("");
   const [busy, setBusy] = useState(false);
+  const [customerMoreOpen, setCustomerMoreOpen] = useState(false);
 
   const [customerForm, setCustomerForm] = useState({
     companyName: "",
@@ -194,12 +198,9 @@ function CustomersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-          Master data
-        </p>
         <h1 className="text-2xl font-semibold tracking-tight">Customers</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Manage customer records, contacts, notes, and account information.
+          Add the people and businesses you sell to — takes less than a minute.
         </p>
       </div>
 
@@ -233,38 +234,45 @@ function CustomersPage() {
           {canWrite && (
             <Card className="border-border bg-card p-6">
               <h2 className="font-semibold">New customer</h2>
-              <form className="mt-4 grid gap-3 sm:grid-cols-2" onSubmit={onCreateCustomer}>
+              <form className="mt-4 space-y-3" onSubmit={onCreateCustomer}>
                 <div>
-                  <Label>Company name</Label>
+                  <Label>Name / company</Label>
                   <Input
                     value={customerForm.companyName}
                     onChange={(e) => setCustomerForm({ ...customerForm, companyName: e.target.value })}
+                    placeholder="e.g. Acme Traders"
                     required
                   />
                 </div>
-                <div>
-                  <Label>Email</Label>
-                  <Input
-                    type="email"
-                    value={customerForm.email}
-                    onChange={(e) => setCustomerForm({ ...customerForm, email: e.target.value })}
-                  />
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <Label>Phone</Label>
+                    <Input
+                      value={customerForm.phone}
+                      onChange={(e) => setCustomerForm({ ...customerForm, phone: e.target.value })}
+                      placeholder="Mobile number"
+                    />
+                  </div>
+                  <div>
+                    <Label>Email</Label>
+                    <Input
+                      type="email"
+                      value={customerForm.email}
+                      onChange={(e) => setCustomerForm({ ...customerForm, email: e.target.value })}
+                      placeholder="Optional"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <Label>Phone</Label>
-                  <Input
-                    value={customerForm.phone}
-                    onChange={(e) => setCustomerForm({ ...customerForm, phone: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label>Country</Label>
-                  <Input
-                    value={customerForm.country}
-                    onChange={(e) => setCustomerForm({ ...customerForm, country: e.target.value })}
-                  />
-                </div>
-                <Button type="submit" disabled={busy} className="sm:col-span-2 w-fit">
+                <MoreOptionsSection open={customerMoreOpen} onOpenChange={setCustomerMoreOpen}>
+                  <div>
+                    <Label>Country</Label>
+                    <Input
+                      value={customerForm.country}
+                      onChange={(e) => setCustomerForm({ ...customerForm, country: e.target.value })}
+                    />
+                  </div>
+                </MoreOptionsSection>
+                <Button type="submit" disabled={busy} className="w-fit">
                   Add customer
                 </Button>
               </form>
@@ -318,7 +326,12 @@ function CustomersPage() {
               </div>
             ))}
             {customers.length === 0 && (
-              <p className="p-6 text-sm text-muted-foreground">No customers yet.</p>
+              <ModuleEmptyState
+                icon={Users}
+                title="No customers yet"
+                description="Add your first customer above — then you can create invoices and quotes for them."
+                actionLabel="Add customer"
+              />
             )}
           </Card>
         </TabsContent>

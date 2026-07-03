@@ -39,6 +39,7 @@ import { Route as AppSalesCrmRouteImport } from './routes/app.sales-crm'
 import { Route as AppReportsRouteImport } from './routes/app.reports'
 import { Route as AppProcurementRouteImport } from './routes/app.procurement'
 import { Route as AppInventoryRouteImport } from './routes/app.inventory'
+import { Route as AppHrPayrollRouteImport } from './routes/app.hr-payroll'
 import { Route as AppDocumentsRouteImport } from './routes/app.documents'
 import { Route as AppCustomersRouteImport } from './routes/app.customers'
 import { Route as AppCrmRouteImport } from './routes/app.crm'
@@ -224,6 +225,11 @@ const AppProcurementRoute = AppProcurementRouteImport.update({
 const AppInventoryRoute = AppInventoryRouteImport.update({
   id: '/inventory',
   path: '/inventory',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppHrPayrollRoute = AppHrPayrollRouteImport.update({
+  id: '/hr-payroll',
+  path: '/hr-payroll',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDocumentsRoute = AppDocumentsRouteImport.update({
@@ -449,6 +455,7 @@ export interface FileRoutesByFullPath {
   '/app/crm': typeof AppCrmRouteWithChildren
   '/app/customers': typeof AppCustomersRoute
   '/app/documents': typeof AppDocumentsRoute
+  '/app/hr-payroll': typeof AppHrPayrollRoute
   '/app/inventory': typeof AppInventoryRouteWithChildren
   '/app/procurement': typeof AppProcurementRoute
   '/app/reports': typeof AppReportsRoute
@@ -514,6 +521,7 @@ export interface FileRoutesByTo {
   '/app/branches': typeof AppBranchesRoute
   '/app/customers': typeof AppCustomersRoute
   '/app/documents': typeof AppDocumentsRoute
+  '/app/hr-payroll': typeof AppHrPayrollRoute
   '/app/procurement': typeof AppProcurementRoute
   '/app/reports': typeof AppReportsRoute
   '/app/sales-crm': typeof AppSalesCrmRoute
@@ -581,6 +589,7 @@ export interface FileRoutesById {
   '/app/crm': typeof AppCrmRouteWithChildren
   '/app/customers': typeof AppCustomersRoute
   '/app/documents': typeof AppDocumentsRoute
+  '/app/hr-payroll': typeof AppHrPayrollRoute
   '/app/inventory': typeof AppInventoryRouteWithChildren
   '/app/procurement': typeof AppProcurementRoute
   '/app/reports': typeof AppReportsRoute
@@ -651,6 +660,7 @@ export interface FileRouteTypes {
     | '/app/crm'
     | '/app/customers'
     | '/app/documents'
+    | '/app/hr-payroll'
     | '/app/inventory'
     | '/app/procurement'
     | '/app/reports'
@@ -716,6 +726,7 @@ export interface FileRouteTypes {
     | '/app/branches'
     | '/app/customers'
     | '/app/documents'
+    | '/app/hr-payroll'
     | '/app/procurement'
     | '/app/reports'
     | '/app/sales-crm'
@@ -782,6 +793,7 @@ export interface FileRouteTypes {
     | '/app/crm'
     | '/app/customers'
     | '/app/documents'
+    | '/app/hr-payroll'
     | '/app/inventory'
     | '/app/procurement'
     | '/app/reports'
@@ -1044,6 +1056,13 @@ declare module '@tanstack/react-router' {
       path: '/inventory'
       fullPath: '/app/inventory'
       preLoaderRoute: typeof AppInventoryRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/hr-payroll': {
+      id: '/app/hr-payroll'
+      path: '/hr-payroll'
+      fullPath: '/app/hr-payroll'
+      preLoaderRoute: typeof AppHrPayrollRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/documents': {
@@ -1404,6 +1423,7 @@ interface AppRouteChildren {
   AppCrmRoute: typeof AppCrmRouteWithChildren
   AppCustomersRoute: typeof AppCustomersRoute
   AppDocumentsRoute: typeof AppDocumentsRoute
+  AppHrPayrollRoute: typeof AppHrPayrollRoute
   AppInventoryRoute: typeof AppInventoryRouteWithChildren
   AppProcurementRoute: typeof AppProcurementRoute
   AppReportsRoute: typeof AppReportsRoute
@@ -1423,6 +1443,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppCrmRoute: AppCrmRouteWithChildren,
   AppCustomersRoute: AppCustomersRoute,
   AppDocumentsRoute: AppDocumentsRoute,
+  AppHrPayrollRoute: AppHrPayrollRoute,
   AppInventoryRoute: AppInventoryRouteWithChildren,
   AppProcurementRoute: AppProcurementRoute,
   AppReportsRoute: AppReportsRoute,
