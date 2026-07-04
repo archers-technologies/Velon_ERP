@@ -127,13 +127,78 @@ describeIfDb("Billing — Razorpay and manual bank transfer (e2e)", () => {
     const webhookSecret = "whsec_test_billing";
     let orderId = "";
     const paymentId = `pay_${tag}`;
+    /** Snapshot so we can restore platform plan prices after pinning known test amounts. */
+    let starterPlanSnapshot: {
+      monthlyPrice: unknown;
+      annualPrice: unknown;
+      currency: string;
+      indiaMonthlyPrice: unknown | null;
+      indiaAnnualPrice: unknown | null;
+      globalMonthlyPrice: unknown | null;
+      globalAnnualPrice: unknown | null;
+    } | null = null;
 
-    beforeAll(() => {
+    beforeAll(async () => {
       process.env.RAZORPAY_ENABLED = "true";
       process.env.RAZORPAY_KEY_ID = "rzp_test_key";
       process.env.RAZORPAY_KEY_SECRET = keySecret;
       process.env.RAZORPAY_WEBHOOK_SECRET = webhookSecret;
       process.env.RAZORPAY_CURRENCY = "INR";
+
+      // Pin STARTER regional prices so assertions are independent of admin-edited catalog data.
+      starterPlanSnapshot = await prisma.planDefinition.findUnique({
+        where: { plan: "STARTER" },
+        select: {
+          monthlyPrice: true,
+          annualPrice: true,
+          currency: true,
+          indiaMonthlyPrice: true,
+          indiaAnnualPrice: true,
+          globalMonthlyPrice: true,
+          globalAnnualPrice: true,
+        },
+      });
+      await prisma.planDefinition.upsert({
+        where: { plan: "STARTER" },
+        update: {
+          monthlyPrice: 49,
+          annualPrice: 539,
+          currency: "INR",
+          indiaMonthlyPrice: 49,
+          indiaAnnualPrice: 539,
+          globalMonthlyPrice: 49,
+          globalAnnualPrice: 539,
+        },
+        create: {
+          plan: "STARTER",
+          displayName: "Starter",
+          monthlyPrice: 49,
+          annualPrice: 539,
+          currency: "INR",
+          indiaMonthlyPrice: 49,
+          indiaAnnualPrice: 539,
+          globalMonthlyPrice: 49,
+          globalAnnualPrice: 539,
+          seatLimit: 5,
+          storageLimitGb: 10,
+          invoiceLimitMo: 500,
+          branchLimit: 1,
+          trialDays: 14,
+          isEnabled: true,
+          moduleHrm: true,
+          moduleCrm: true,
+          moduleFinance: false,
+          moduleInventory: true,
+          moduleManufacturing: false,
+          description: "E2E pinned Starter plan",
+        },
+      });
+
+      // Ensure billing tenants use India regional pricing (INR table, not USD×FX).
+      await prisma.workspace.updateMany({
+        where: { tenantId: { in: [tenantId, otherTenantId] } },
+        data: { countryCode: "IN", currency: "INR" },
+      });
 
       setRazorpayOrderCreatorForTests(async (input) => {
         orderId = `order_${input.receipt}`;
@@ -154,6 +219,20 @@ describeIfDb("Billing — Razorpay and manual bank transfer (e2e)", () => {
       await prisma.subscriptionInvoice.deleteMany({
         where: { tenantId: { in: [tenantId, otherTenantId] } },
       });
+      if (starterPlanSnapshot) {
+        await prisma.planDefinition.update({
+          where: { plan: "STARTER" },
+          data: {
+            monthlyPrice: starterPlanSnapshot.monthlyPrice as number,
+            annualPrice: starterPlanSnapshot.annualPrice as number,
+            currency: starterPlanSnapshot.currency,
+            indiaMonthlyPrice: starterPlanSnapshot.indiaMonthlyPrice as number | null,
+            indiaAnnualPrice: starterPlanSnapshot.indiaAnnualPrice as number | null,
+            globalMonthlyPrice: starterPlanSnapshot.globalMonthlyPrice as number | null,
+            globalAnnualPrice: starterPlanSnapshot.globalAnnualPrice as number | null,
+          },
+        });
+      }
       process.env.RAZORPAY_ENABLED = "false";
       delete process.env.RAZORPAY_KEY_ID;
       delete process.env.RAZORPAY_KEY_SECRET;

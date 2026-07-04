@@ -1,6 +1,29 @@
 {
-  "printWidth": 100,
   "semi": true,
-  "singleQuote": false,
-  "trailingComma": "all"
+  "singleQuote": true,
+  "jsxSingleQuote": false,
+  "trailingComma": "all",
+  "printWidth": 100,
+  "tabWidth": 2,
+  "useTabs": false,
+  "arrowParens": "always",
+  "endOfLine": "lf",
+  "bracketSpacing": true,
+  "bracketSameLine": false,
+  "singleAttributePerLine": true,
+  "plugins": ["@ianvs/prettier-plugin-sort-imports", "prettier-plugin-tailwindcss"],
+  "importOrder": [
+    "^react$",
+    "^react-dom$",
+    "^react/(.*)$",
+    "^@nestjs/(.*)$",
+    "<BUILTIN_MODULES>",
+    "<THIRD_PARTY_MODULES>",
+    "^@velon/(.*)$",
+    "^@/(.*)$",
+    "^[.]"
+  ],
+  "importOrderTypeScriptVersion": "5.8.3",
+  "importOrderParserPlugins": ["typescript", "jsx", "decorators-legacy"],
+  "importOrderCaseSensitive": false
 }

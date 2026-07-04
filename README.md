@@ -28,9 +28,11 @@ It serves three audiences from a single monorepo:
 
 ## Repository layout
 
+Code is organized by **bounded context** (business domain folders such as `crm/`, `billing/`, `inventory/`), not by technical layers. See [docs/MONOREPO.md](docs/MONOREPO.md) and [docs/CONVENTIONS.md](docs/CONVENTIONS.md).
+
 ```
 Velon_ERP/
-├── apps/api/              # NestJS API (@velon/api)
+├── apps/api/              # NestJS API (@velon/api) — one folder per domain
 ├── packages/
 │   ├── database/          # Prisma schema, migrations, seed (@velon/database)
 │   └── shared/            # Shared types, permissions, plans (@velon/shared)
@@ -92,7 +94,10 @@ Demo login (when demo seed is enabled): any non–super-admin email with passwor
 | `npm run build` | Build shared, database, API, and web |
 | `npm run typecheck` | TypeScript check (web) |
 | `npm run lint` | ESLint |
-| `npm test` | Unit + security tests (API) |
+| `npm run format` | Prettier write (quotes, attributes, import order) |
+| `npm run format:check` | Prettier check (CI) |
+| `npm test` | Unit tests with mocks (no database writes) |
+| `npm run test:all` | Unit + security e2e (needs `DATABASE_URL_TEST`) |
 | `npm run db:migrate` | Prisma migrate (dev) |
 | `npm run db:seed` | Seed super admin / optional tenant |
 | `npm run db:studio` | Prisma Studio |

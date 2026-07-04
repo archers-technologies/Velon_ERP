@@ -28,7 +28,7 @@ Documentation is split by topic. Start with the tech stack if you need to know *
 | [SECURITY.md](./SECURITY.md) | Security controls |
 | [TESTING.md](./TESTING.md) | Unit, security, and e2e tests |
 | [OPERATIONS.md](./OPERATIONS.md) | Backup, health, demo cleanup |
-| [CONVENTIONS.md](./CONVENTIONS.md) | How to extend the codebase |
+| [CONVENTIONS.md](./CONVENTIONS.md) | How to extend the codebase (domain folders, formatting) |
 
 ## End-user documentation
 

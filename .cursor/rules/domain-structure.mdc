@@ -1,0 +1,31 @@
+---
+description: Velon DDD folder layout, naming, and package boundaries for greppable monorepo structure
+alwaysApply: true
+---
+
+# Domain structure
+
+Organize by **bounded context** (business language), not by technical layer.
+
+## Packages
+
+| Path | Responsibility |
+|------|----------------|
+| `packages/shared` | Permissions, plans, roles, nav, shared types only |
+| `packages/database` | Prisma schema, migrations, seed |
+| `apps/api/src/{context}/` | Nest feature module per domain |
+| `src/` (web) | Routes, components, `@/` API clients |
+
+## Naming
+
+- API files: `{context}` or `{context}-{aggregate}` prefix, role suffix last (`.service.ts`, `.controller.ts`, `.repositories.ts`, `.dto.ts`, `.spec.ts`).
+- Web: domain UI in `components/{context}/`, helpers in `lib/{context}/` or `lib/api/`, routes stay URL-shaped.
+- Web imports use `@/` absolute paths. Same-context API imports use `./`; cross-context use `../other-context/`.
+
+## Placement
+
+- New tenant feature → API module under `apps/api/src/<context>/`, shared permissions, web routes + `lib/`, isolation tests.
+- Platform-only → `platform/` + `/admin` routes, never mixed into tenant modules.
+- No god `utils/` files; keep helpers next to their context.
+
+Use the `velon-domain-structure`, `domain-driven-design`, and `clean-ddd-hexagonal` skills when adding or moving modules.

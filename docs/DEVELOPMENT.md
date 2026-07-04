@@ -58,6 +58,8 @@ npm run db:cleanup-demo    # Remove demo seed data
 npm run stack:logs         # Docker logs
 npm run typecheck
 npm run lint
+npm run format              # Prettier (single quotes, import order, attributes)
+npm run format:check
 ```
 
 ## Accounts after seed

@@ -1,0 +1,38 @@
+---
+description: Prettier and import style for Velon (single quotes, attribute layout, import order)
+alwaysApply: true
+---
+
+# Code formatting
+
+Use the root Prettier config (`.prettierrc`). Do not override style per file.
+
+## Style
+
+- Single quotes in JS/TS (`singleQuote: true`); double quotes in JSX attributes (`jsxSingleQuote: false`).
+- Semicolons on; trailing commas `all`; print width 100; 2-space indent; LF endings.
+- One JSX/HTML attribute per line (`singleAttributePerLine`).
+- Tailwind classes sorted via `prettier-plugin-tailwindcss`.
+
+## Imports
+
+Prettier (`@ianvs/prettier-plugin-sort-imports`) orders imports as:
+
+1. `react` / `react-dom`
+2. `@nestjs/*`
+3. Node builtins
+4. Third-party packages
+5. `@velon/*` workspace packages
+6. `@/*` web absolute paths
+7. Relative imports (`./`, `../`)
+
+Keep type-only imports as `import type` where appropriate. Prefer `@/` on the web over deep relative paths.
+
+## Commands
+
+```bash
+npm run format        # write
+npm run format:check  # CI / verify
+```
+
+Run format on touched files before finishing a change set when style would otherwise drift.

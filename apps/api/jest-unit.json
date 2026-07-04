@@ -4,6 +4,7 @@
   "testEnvironment": "node",
   "roots": ["<rootDir>/src", "<rootDir>/../../packages/shared/src"],
   "testRegex": ".*\\.spec\\.ts$",
+  "setupFiles": ["<rootDir>/src/test-utils/setup-unit.ts"],
   "moduleNameMapper": {
     "^@velon/shared$": "<rootDir>/../../packages/shared/src/index.ts",
     "^@velon/database$": "<rootDir>/../../packages/database/src/index.ts"
@@ -20,5 +21,6 @@
       }
     ]
   },
-  "testPathIgnorePatterns": ["/node_modules/", "/dist/", ".e2e-spec.ts"]
+  "testPathIgnorePatterns": ["/node_modules/", "/dist/", ".e2e-spec.ts"],
+  "clearMocks": true
 }
