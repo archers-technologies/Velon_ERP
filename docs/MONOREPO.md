@@ -1,0 +1,76 @@
+# Monorepo structure
+
+**Audience:** Engineers  
+**Last updated:** July 2026
+
+Velon uses **npm workspaces** (`apps/*`, `packages/*`).
+
+## Layout
+
+```
+Velon_ERP/
+├── apps/
+│   └── api/                    # @velon/api — NestJS
+│       ├── src/
+│       │   ├── auth/
+│       │   ├── billing/
+│       │   ├── crm/
+│       │   ├── inventory/
+│       │   ├── procurement/
+│       │   ├── sales/
+│       │   ├── suppliers/
+│       │   ├── workspace/
+│       │   ├── tenant-admin/
+│       │   ├── tenant-resources/
+│       │   ├── tenants/
+│       │   ├── platform/
+│       │   ├── cms/
+│       │   ├── audit/
+│       │   ├── notifications/
+│       │   ├── common/         # Tenant context, repositories, mail, filters
+│       │   ├── config/         # Env validation
+│       │   ├── prisma/
+│       │   ├── redis/
+│       │   └── mongo/
+│       ├── test/               # e2e / security suites
+│       └── Dockerfile.api
+├── packages/
+│   ├── database/               # @velon/database
+│   │   └── prisma/
+│   │       ├── schema.prisma
+│   │       ├── migrations/
+│   │       └── seed.ts
+│   └── shared/                 # @velon/shared
+│       └── src/                # Roles, permissions, plans, localization, nav
+├── src/                        # Web application (root package @velon/web)
+│   ├── routes/                 # File-based TanStack routes
+│   ├── components/
+│   ├── lib/                    # API clients, auth helpers, invoicing
+│   ├── contexts/
+│   └── erp/
+├── scripts/                    # bootstrap-local, backup, release verify
+├── docs/
+├── docker-compose.yml
+├── vite.config.ts
+├── vercel.json
+├── railway.json                # API-only Railway service
+└── railway.web.json            # Combined web+API (when used)
+```
+
+## Packages
+
+| Package | Name | Responsibility |
+|---------|------|----------------|
+| Root web | `@velon/web` | UI, routing, client-side API calls |
+| API | `@velon/api` | Business logic, auth, integrations |
+| Database | `@velon/database` | Prisma schema, migrations, seed |
+| Shared | `@velon/shared` | Cross-cutting types and policy (imported by web and API) |
+
+The web Vite config aliases `@velon/shared` to TypeScript source so the browser loads ESM without stale CJS bundles.
+
+## Related docs
+
+- [Tech stack by category](./TECH-STACK.md)
+- [Shared package](./SHARED-PACKAGE.md)
+- [Frontend](./FRONTEND.md)
+- [Conventions](./CONVENTIONS.md)
