@@ -7,14 +7,26 @@
 
 | Component | Platform | Config                                                                                                   |
 | --------- | -------- | -------------------------------------------------------------------------------------------------------- |
-| Web       | Vercel   | [`frontend/vercel.json`](../frontend/vercel.json) — TanStack Start + Nitro (see [Vercel](#vercel-web-ui)) |
+| Web       | Vercel   | [`vercel.json`](../vercel.json) — TanStack Start + Nitro (see [Vercel](#vercel-web-ui)) |
 | API       | Railway  | `railway.json` — `backend/Dockerfile.api`, migrate deploy pre-command, healthcheck `/api/v1/health/live` |
 
 Set `VITE_API_URL` on Vercel to the public Railway API origin.
 
 ## Vercel (web UI)
 
-The frontend is an npm workspace package. Nitro (Vercel preset) writes the deployable **Build Output API** bundle to `frontend/.vercel/output/` during `vite build`. Vercel must use **`frontend`** as the project root so that path resolves correctly.
+Nitro (Vercel preset) writes the deployable **Build Output API** bundle to `frontend/.vercel/output/` during `vite build`. Because the Vercel project uses the **repository root** as its Root Directory, `npm run build:vercel` copies that folder to `.vercel/output/` at the repo root where Vercel expects it.
+
+**Critical:** The project must use the **TanStack Start** framework preset, not **Vite**. A Vite preset makes Vercel look for a static `dist/` folder and fails even when the Nitro build succeeds.
+
+### `vercel.json` (repo root)
+
+| Field | Value |
+| ----- | ----- |
+| `framework` | `tanstack-start` |
+| `installCommand` | `npm ci` |
+| `buildCommand` | `npm run build:vercel` |
+
+Do **not** add `outputDirectory` — Nitro emits the Build Output API layout automatically.
 
 ### Dashboard settings
 
@@ -22,14 +34,12 @@ In **Vercel → Project → Settings → General**:
 
 | Setting | Value | Notes |
 | ------- | ----- | ----- |
-| **Root Directory** | `frontend` | Required. Do not leave empty (repo root). |
-| **Framework Preset** | TanStack Start | Also set in `frontend/vercel.json`. |
-| **Install Command** | `cd .. && npm ci` | Installs all workspaces from the monorepo root. |
-| **Build Command** | `npm run build` | Runs `vite build` in `@velon/frontend`. |
-| **Output Directory** | *(empty / default)* | **Do not set** `output`, `dist`, `.vercel/output`, or any custom path. Nitro emits the Build Output API layout; a manual output directory breaks detection. |
-| **Node.js Version** | 22.x or newer | Matches Nitro’s Vercel runtime expectations. |
-
-`frontend/vercel.json` mirrors the install and build commands above. Framework preset is declared there so Git deploys stay reproducible.
+| **Root Directory** | `.` (repo root) | Default for this monorepo. |
+| **Framework Preset** | TanStack Start | Overridden by `vercel.json#framework` on deploy. |
+| **Build Command** | `npm run build:vercel` | Builds frontend + syncs `.vercel/output` to repo root. |
+| **Install Command** | `npm ci` | Installs all workspaces. |
+| **Output Directory** | *(empty / default)* | **Never** set `dist`, `output`, or `.vercel/output` here. |
+| **Node.js Version** | 22.x or newer | Project currently uses 24.x. |
 
 ### Environment variables
 
@@ -46,8 +56,9 @@ Only `VITE_*` variables belong on Vercel. Secrets and database URLs stay on Rail
 
 | Symptom | Fix |
 | ------- | --- |
-| `No Output Directory named "output" found` | Clear **Output Directory** in the dashboard (override wins over `vercel.json`). Confirm **Root Directory** is `frontend`. |
-| Build succeeds but deploy fails | Ensure `framework` is `tanstack-start` and `outputDirectory` is **not** set in `vercel.json`. |
+| `No Output Directory named "dist" found` | Framework preset is **Vite** instead of **TanStack Start**. Deploy with root `vercel.json` (`framework: tanstack-start`) and clear **Output Directory** in the dashboard. |
+| `No Output Directory named "output" found` | Clear **Output Directory** in the dashboard. Do not set it manually. |
+| Build succeeds but deploy fails | Confirm `buildCommand` is `npm run build:vercel` and `.vercel/output/` exists at repo root after build. |
 | `Could not find workspace` / missing `@velon/shared` | Install must run from monorepo root: `cd .. && npm ci`. |
 | API calls fail in production | Set `VITE_API_URL` to the Railway API URL; confirm Railway `CORS_ORIGINS` includes your Vercel domain. |
 
@@ -57,11 +68,11 @@ From the repository root:
 
 ```bash
 npm ci
-VERCEL=1 npm run build:web
-ls frontend/.vercel/output
+npm run build:vercel
+ls .vercel/output
 ```
 
-You should see `static/`, `functions/`, and `nitro.json` under `frontend/.vercel/output/`.
+You should see `static/`, `functions/`, and `nitro.json` under `.vercel/output/` at the **repo root**.
 
 ## Combined Railway stack
 

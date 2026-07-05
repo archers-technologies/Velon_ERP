@@ -180,7 +180,7 @@ See [Business modules](./BUSINESS-MODULES.md).
 
 | Category              | Technology                 | Purpose                                                     |
 | --------------------- | -------------------------- | ----------------------------------------------------------- |
-| **Web hosting**       | Vercel                     | Marketing + app UI (`frontend/vercel.json`, TanStack Start) |
+| **Web hosting**       | Vercel                     | Marketing + app UI (`vercel.json`, TanStack Start)          |
 | **API hosting**       | Railway                    | Nest API, migrations, healthchecks (`railway.json`)         |
 | **Optional combined** | Railway + Nitro proxy      | Single service with `/api` proxy (`RAILWAY_STACK=combined`) |
 | **Health checks**     | HTTP `/api/v1/health/live` | Railway liveness                                            |
@@ -225,7 +225,7 @@ See [Operations](./OPERATIONS.md) and [Local development](./DEVELOPMENT.md).
 | Database schema | `@velon/database` (`packages/database/`)    |
 | Shared policy   | `@velon/shared` (`packages/shared-kernel/`) |
 | Local infra     | `docker-compose.yml`                        |
-| Web deploy      | `frontend/vercel.json`                      |
+| Web deploy      | `vercel.json`                               |
 | API deploy      | `railway.json`                              |
 
 ---
