@@ -4,7 +4,7 @@ import { getRedisUrl } from '../config/env';
 import { EmailDeliveryService } from './email-delivery.service';
 import type { EmailQueueJobData } from './email-queue.types';
 
-const QUEUE_NAME = 'velon:email:send';
+const QUEUE_NAME = 'velon-email-send';
 const MAX_RETRIES = 3;
 
 @Injectable()
@@ -19,17 +19,21 @@ export class EmailQueueService implements OnModuleInit, OnModuleDestroy {
     if (process.env.NODE_ENV === 'test') return;
     if (!process.env.REDIS_URL?.trim()) return;
 
-    const connection = { url: getRedisUrl() };
-    this.queue = new Queue<EmailQueueJobData>(QUEUE_NAME, { connection });
+    try {
+      const connection = { url: getRedisUrl() };
+      this.queue = new Queue<EmailQueueJobData>(QUEUE_NAME, { connection });
 
-    this.worker = new Worker<EmailQueueJobData>(QUEUE_NAME, async (job) => this.processJob(job), {
-      connection,
-      concurrency: 5,
-    });
+      this.worker = new Worker<EmailQueueJobData>(QUEUE_NAME, async (job) => this.processJob(job), {
+        connection,
+        concurrency: 5,
+      });
 
-    this.worker.on('failed', (job, err) => {
-      this.log.warn(`Email job ${job?.id} failed: ${String(err)}`);
-    });
+      this.worker.on('failed', (job, err) => {
+        this.log.warn(`Email job ${job?.id} failed: ${String(err)}`);
+      });
+    } catch (err) {
+      this.log.error(`Email queue failed to start: ${String(err)}`);
+    }
   }
 
   async onModuleDestroy() {

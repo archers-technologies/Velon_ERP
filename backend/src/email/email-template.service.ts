@@ -9,7 +9,11 @@ export class EmailTemplateService implements OnModuleInit {
 
   async onModuleInit() {
     if (process.env.NODE_ENV === 'test') return;
-    await this.seedDefaults();
+    try {
+      await this.seedDefaults();
+    } catch (err) {
+      console.error(`Email template seed failed: ${String(err)}`);
+    }
   }
 
   async seedDefaults() {
