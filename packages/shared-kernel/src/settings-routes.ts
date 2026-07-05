@@ -4,6 +4,7 @@ export const SETTINGS_USER_TABS = [
   'printers',
   'profile',
   'security',
+  'email',
 ] as const;
 
 export type SettingsUserTab = (typeof SETTINGS_USER_TABS)[number];

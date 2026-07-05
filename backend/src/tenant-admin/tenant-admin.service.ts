@@ -9,12 +9,14 @@ import {
 import * as bcrypt from 'bcrypt';
 import { InvitationStatus, UserRole } from '@velon/database';
 import { getCountryByCode, getCurrencySymbol, normalizeVelonRole, VelonRole } from '@velon/shared';
+import { EMAIL_EVENT_TYPES } from '@velon/shared';
 import { AuditService } from '../audit/audit.service';
 import { AuthService } from '../auth/auth.service';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { assertPasswordAllowed } from '../auth/password-policy.util';
 import { getActiveTenantContext } from '../common/tenant-context.storage';
 import { cleanupUsersWithoutMemberships } from '../common/tenant-lifecycle.util';
+import { EmailLifecycleService } from '../email/email-lifecycle.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import type {
@@ -28,7 +30,6 @@ import type {
   UpdateMemberRoleDto,
   UpdateWorkspaceDto,
 } from './dto/tenant-admin.dto';
-import { InvitationMailer } from './invitation-mailer';
 import { SeatsService } from './seats.service';
 import {
   assertAssignableRole,
@@ -47,7 +48,7 @@ export class TenantAdminService {
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
     private readonly seats: SeatsService,
-    private readonly mailer: InvitationMailer,
+    private readonly emailLifecycle: EmailLifecycleService,
     private readonly auth: AuthService,
     private readonly redis: RedisService,
   ) {}
@@ -447,6 +448,21 @@ export class TenantAdminService {
       userAgent: reqMeta?.ua,
     });
 
+    const workspace = await this.prisma.client.workspace.findUnique({ where: { tenantId } });
+    void this.emailLifecycle
+      .emit(EMAIL_EVENT_TYPES.TENANT_USER_ROLE_UPDATED, 'membership', membershipId, {
+        tenantId,
+        membershipId,
+        userId: membership.userId,
+        email: updated.user.email,
+        newRole: dto.role,
+        context: this.emailLifecycle.buildBaseContext({
+          user: { name: updated.user.name ?? updated.user.email, email: updated.user.email },
+          workspace: { name: workspace?.name ?? 'your workspace' },
+        }),
+      })
+      .catch(() => undefined);
+
     return mapMembership(updated);
   }
 
@@ -676,14 +692,22 @@ export class TenantAdminService {
 
     const origin = reqMeta?.appOrigin ?? process.env.APP_ORIGIN ?? 'http://localhost:5173';
     const inviteUrl = `${origin.replace(/\/$/, '')}/invite/${token}`;
-    const mail = await this.mailer.sendInvite({
-      to: email,
-      fullName: dto.fullName.trim(),
-      workspaceName: workspace?.name ?? tenant.name,
-      inviterName: inviter.name ?? inviter.email,
-      inviteUrl,
-      expiresAt,
-    });
+    const emailResult = await this.emailLifecycle.emit(
+      EMAIL_EVENT_TYPES.TENANT_USER_INVITED,
+      'invitation',
+      invitation.id,
+      {
+        tenantId,
+        inviteId: invitation.id,
+        email,
+        inviteUrl,
+        context: this.emailLifecycle.buildBaseContext({
+          workspace: { name: workspace?.name ?? tenant.name },
+          tenant: { name: tenant.name },
+          inviteUrl,
+        }),
+      },
+    );
 
     await this.audit.log({
       actorId: user.id,
@@ -700,8 +724,7 @@ export class TenantAdminService {
       id: invitation.id,
       email,
       expiresAt: expiresAt.toISOString(),
-      delivered: mail.delivered,
-      ...(mail.devUrl ? { devInviteUrl: mail.devUrl } : {}),
+      delivered: emailResult.processed,
     };
   }
 
@@ -756,18 +779,25 @@ export class TenantAdminService {
     ]);
     const origin = reqMeta?.appOrigin ?? process.env.APP_ORIGIN ?? 'http://localhost:5173';
     const inviteUrl = `${origin.replace(/\/$/, '')}/invite/${token}`;
-    const mail = await this.mailer.sendInvite({
-      to: inv.email,
-      fullName: inv.fullName,
-      workspaceName: workspace?.name ?? tenant.name,
-      inviterName: inviter.name ?? inviter.email,
-      inviteUrl,
-      expiresAt,
-    });
+    const emailResult = await this.emailLifecycle.emit(
+      EMAIL_EVENT_TYPES.TENANT_USER_INVITED,
+      'invitation',
+      `${inv.id}:resend:${Date.now()}`,
+      {
+        tenantId,
+        inviteId: inv.id,
+        email: inv.email,
+        inviteUrl,
+        context: this.emailLifecycle.buildBaseContext({
+          workspace: { name: workspace?.name ?? tenant.name },
+          tenant: { name: tenant.name },
+          inviteUrl,
+        }),
+      },
+    );
     return {
       ok: true,
-      delivered: mail.delivered,
-      ...(mail.devUrl ? { devInviteUrl: mail.devUrl } : {}),
+      delivered: emailResult.processed,
     };
   }
 

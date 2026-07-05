@@ -3,6 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AuditModule } from '../audit/audit.module';
 import { BillingModule } from '../billing/billing.module';
+import { EmailModule } from '../email/email.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { PermissionGuard } from './guards/permission.guard';
@@ -17,6 +18,7 @@ import { SignupOtpService } from './signup-otp.service';
       secret: process.env.JWT_ACCESS_SECRET ?? 'dev-only-change-in-env',
     }),
     AuditModule,
+    EmailModule,
     forwardRef(() => BillingModule),
   ],
   controllers: [AuthController],

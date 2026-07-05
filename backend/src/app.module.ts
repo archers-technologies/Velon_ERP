@@ -16,6 +16,7 @@ import { HealthModule } from './health/health.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { MongoModule } from './mongo/mongo.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { EmailModule } from './email/email.module';
 import { PlatformModule } from './platform/platform.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProcurementModule } from './procurement/procurement.module';
@@ -55,6 +56,7 @@ import { WorkspaceModule } from './workspace/workspace.module';
     CmsModule,
     AuditModule,
     NotificationsModule,
+    EmailModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

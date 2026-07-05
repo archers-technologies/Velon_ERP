@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { AlertTriangle, CheckCircle2, ChevronDown, Clock, Mail, Radio } from 'lucide-react';
 import { toast } from 'sonner';
 import { VELON_CONTACT_EMAIL } from '@velon/shared';
@@ -559,6 +559,15 @@ function AdminSettingsPage() {
           Outbound identity for system and support messages.
         </p>
         <div className="mt-6 space-y-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              asChild
+              type="button"
+              variant="secondary"
+            >
+              <Link to="/admin/settings/email">Manage email templates</Link>
+            </Button>
+          </div>
           <div className="space-y-2">
             <Label htmlFor="support-email">Outbound support sender</Label>
             <div className="flex max-w-xl flex-col gap-3 sm:flex-row sm:items-center">

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AuditModule } from '../audit/audit.module';
+import { EmailModule } from '../email/email.module';
 import { BillingPricingService } from './billing-pricing.service';
 import { BillingController } from './billing.controller';
 import { BillingService } from './billing.service';
@@ -10,7 +11,7 @@ import { SubscriptionAccessService } from './subscription-access.service';
 import { SubscriptionService } from './subscription.service';
 
 @Module({
-  imports: [AuditModule],
+  imports: [AuditModule, EmailModule],
   controllers: [BillingController, RazorpayWebhookController],
   providers: [
     BillingService,

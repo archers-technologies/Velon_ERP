@@ -14,6 +14,7 @@ import {
   TRIAL_DAYS_DEFAULT,
 } from '@velon/shared';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailLifecycleService } from '../email/email-lifecycle.service';
 import { BillingPricingService } from './billing-pricing.service';
 import type { CheckoutSession } from './providers/payment-provider.types';
 
@@ -41,6 +42,7 @@ export class SubscriptionService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly pricing: BillingPricingService,
+    private readonly emailLifecycle: EmailLifecycleService,
   ) {}
 
   async ensureForTenant(
@@ -242,10 +244,12 @@ export class SubscriptionService {
 
   async cancelAtPeriodEnd(tenantId: string) {
     const sub = await this.ensureForTenant(tenantId);
-    return this.prisma.client.subscription.update({
+    const updated = await this.prisma.client.subscription.update({
       where: { id: sub.id },
       data: { cancelAtPeriodEnd: true },
     });
+    void this.emailLifecycle.notifySubscriptionCancelled(tenantId, sub.id).catch(() => undefined);
+    return updated;
   }
 
   async resumeSubscription(tenantId: string) {
@@ -429,6 +433,7 @@ export class SubscriptionService {
     });
 
     await this.syncTenantFromSubscription(payment.tenantId);
+    void this.emailLifecycle.notifyPaymentSucceeded(paymentId).catch(() => undefined);
     return { id: paymentId, status: SubscriptionPaymentStatus.SUCCEEDED, alreadyVerified: false };
   }
 

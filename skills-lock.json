@@ -7,6 +7,12 @@
       "skillPath": "skills/clean-ddd-hexagonal/SKILL.md",
       "computedHash": "223df951adb9adf655b139221d4a3b68a314f5a0c24c8bc137a754ce9dee5713"
     },
+    "database-backup-restore": {
+      "source": "aj-geddes/useful-ai-prompts",
+      "sourceType": "github",
+      "skillPath": "skills/database-backup-restore/SKILL.md",
+      "computedHash": "bdbc61e96b90807f3c2c82f9fefa82b01194282752e9937d3937653fc97f33a9"
+    },
     "domain-driven-design": {
       "source": "wondelai/skills",
       "sourceType": "github",

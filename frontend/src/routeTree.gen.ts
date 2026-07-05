@@ -76,6 +76,7 @@ import { Route as AppCrmProposalsRouteImport } from './routes/app.crm.proposals'
 import { Route as AppCrmPipelinesRouteImport } from './routes/app.crm.pipelines'
 import { Route as AppCrmOpportunitiesRouteImport } from './routes/app.crm.opportunities'
 import { Route as AppCrmLeadsRouteImport } from './routes/app.crm.leads'
+import { Route as AdminSettingsEmailRouteImport } from './routes/admin.settings.email'
 
 const UnavailableRoute = UnavailableRouteImport.update({
   id: '/unavailable',
@@ -412,6 +413,11 @@ const AppCrmLeadsRoute = AppCrmLeadsRouteImport.update({
   path: '/leads',
   getParentRoute: () => AppCrmRoute,
 } as any)
+const AdminSettingsEmailRoute = AdminSettingsEmailRouteImport.update({
+  id: '/email',
+  path: '/email',
+  getParentRoute: () => AdminSettingsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -440,7 +446,7 @@ export interface FileRoutesByFullPath {
   '/admin/integrations': typeof AdminIntegrationsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/sales-partners': typeof AdminSalesPartnersRoute
-  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/settings': typeof AdminSettingsRouteWithChildren
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/tenants': typeof AdminTenantsRoute
   '/admin/unavailable': typeof AdminUnavailableRoute
@@ -467,6 +473,7 @@ export interface FileRoutesByFullPath {
   '/quote/$token': typeof QuoteTokenRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
+  '/admin/settings/email': typeof AdminSettingsEmailRoute
   '/app/crm/leads': typeof AppCrmLeadsRoute
   '/app/crm/opportunities': typeof AppCrmOpportunitiesRoute
   '/app/crm/pipelines': typeof AppCrmPipelinesRoute
@@ -507,7 +514,7 @@ export interface FileRoutesByTo {
   '/admin/integrations': typeof AdminIntegrationsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/sales-partners': typeof AdminSalesPartnersRoute
-  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/settings': typeof AdminSettingsRouteWithChildren
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/tenants': typeof AdminTenantsRoute
   '/admin/unavailable': typeof AdminUnavailableRoute
@@ -531,6 +538,7 @@ export interface FileRoutesByTo {
   '/quote/$token': typeof QuoteTokenRoute
   '/admin': typeof AdminIndexRoute
   '/app': typeof AppIndexRoute
+  '/admin/settings/email': typeof AdminSettingsEmailRoute
   '/app/crm/leads': typeof AppCrmLeadsRoute
   '/app/crm/opportunities': typeof AppCrmOpportunitiesRoute
   '/app/crm/pipelines': typeof AppCrmPipelinesRoute
@@ -574,7 +582,7 @@ export interface FileRoutesById {
   '/admin/integrations': typeof AdminIntegrationsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/sales-partners': typeof AdminSalesPartnersRoute
-  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/settings': typeof AdminSettingsRouteWithChildren
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/admin/tenants': typeof AdminTenantsRoute
   '/admin/unavailable': typeof AdminUnavailableRoute
@@ -601,6 +609,7 @@ export interface FileRoutesById {
   '/quote/$token': typeof QuoteTokenRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
+  '/admin/settings/email': typeof AdminSettingsEmailRoute
   '/app/crm/leads': typeof AppCrmLeadsRoute
   '/app/crm/opportunities': typeof AppCrmOpportunitiesRoute
   '/app/crm/pipelines': typeof AppCrmPipelinesRoute
@@ -672,6 +681,7 @@ export interface FileRouteTypes {
     | '/quote/$token'
     | '/admin/'
     | '/app/'
+    | '/admin/settings/email'
     | '/app/crm/leads'
     | '/app/crm/opportunities'
     | '/app/crm/pipelines'
@@ -736,6 +746,7 @@ export interface FileRouteTypes {
     | '/quote/$token'
     | '/admin'
     | '/app'
+    | '/admin/settings/email'
     | '/app/crm/leads'
     | '/app/crm/opportunities'
     | '/app/crm/pipelines'
@@ -805,6 +816,7 @@ export interface FileRouteTypes {
     | '/quote/$token'
     | '/admin/'
     | '/app/'
+    | '/admin/settings/email'
     | '/app/crm/leads'
     | '/app/crm/opportunities'
     | '/app/crm/pipelines'
@@ -1317,8 +1329,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCrmLeadsRouteImport
       parentRoute: typeof AppCrmRoute
     }
+    '/admin/settings/email': {
+      id: '/admin/settings/email'
+      path: '/email'
+      fullPath: '/admin/settings/email'
+      preLoaderRoute: typeof AdminSettingsEmailRouteImport
+      parentRoute: typeof AdminSettingsRoute
+    }
   }
 }
+
+interface AdminSettingsRouteChildren {
+  AdminSettingsEmailRoute: typeof AdminSettingsEmailRoute
+}
+
+const AdminSettingsRouteChildren: AdminSettingsRouteChildren = {
+  AdminSettingsEmailRoute: AdminSettingsEmailRoute,
+}
+
+const AdminSettingsRouteWithChildren = AdminSettingsRoute._addFileChildren(
+  AdminSettingsRouteChildren,
+)
 
 interface AdminRouteChildren {
   AdminAlertsLogsRoute: typeof AdminAlertsLogsRoute
@@ -1328,7 +1359,7 @@ interface AdminRouteChildren {
   AdminIntegrationsRoute: typeof AdminIntegrationsRoute
   AdminReportsRoute: typeof AdminReportsRoute
   AdminSalesPartnersRoute: typeof AdminSalesPartnersRoute
-  AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminSettingsRoute: typeof AdminSettingsRouteWithChildren
   AdminSubscriptionsRoute: typeof AdminSubscriptionsRoute
   AdminTenantsRoute: typeof AdminTenantsRoute
   AdminUnavailableRoute: typeof AdminUnavailableRoute
@@ -1345,7 +1376,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminIntegrationsRoute: AdminIntegrationsRoute,
   AdminReportsRoute: AdminReportsRoute,
   AdminSalesPartnersRoute: AdminSalesPartnersRoute,
-  AdminSettingsRoute: AdminSettingsRoute,
+  AdminSettingsRoute: AdminSettingsRouteWithChildren,
   AdminSubscriptionsRoute: AdminSubscriptionsRoute,
   AdminTenantsRoute: AdminTenantsRoute,
   AdminUnavailableRoute: AdminUnavailableRoute,

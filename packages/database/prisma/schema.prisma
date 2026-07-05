@@ -159,6 +159,26 @@ enum CrmQuotationApprovalAction {
   COMMENT
 }
 
+enum EmailTemplateCategory {
+  TRANSACTIONAL
+  MARKETING
+  ONBOARDING
+  BILLING
+  SECURITY
+  SUPPORT
+}
+
+enum EmailLogStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  OPENED
+  CLICKED
+  BOUNCED
+  FAILED
+  SKIPPED
+}
+
 model User {
   id           String    @id @default(cuid())
   email        String    @unique
@@ -200,6 +220,8 @@ model User {
   purchaseRequestsApproved   PurchaseRequest[]    @relation("PurchaseRequestApprovedBy")
   purchaseOrdersApproved     PurchaseOrder[]      @relation("PurchaseOrderApprovedBy")
   supplierThreadsAuthored    SupplierThread[]     @relation("SupplierThreadAuthor")
+  emailPreferences           EmailPreference[]
+  emailLogs                  EmailLog[]           @relation("EmailLogUser")
 
   @@index([role])
 }
@@ -1438,4 +1460,87 @@ model BillingWebhookEvent {
 
   @@index([provider, processed])
   @@index([createdAt])
+}
+
+/// CRM email lifecycle — templates, logs, preferences, and domain events.
+model EmailTemplate {
+  id          String               @id @default(cuid())
+  key         String               @unique
+  name        String
+  category    EmailTemplateCategory
+  subject     String
+  previewText String?
+  htmlBody    String               @db.Text
+  textBody    String               @db.Text
+  isActive    Boolean              @default(true)
+  version     Int                  @default(1)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+}
+
+model EmailLog {
+  id                String         @id @default(cuid())
+  tenantId          String?
+  userId            String?
+  customerId        String?
+  invoiceId         String?
+  paymentId         String?
+  subscriptionId    String?
+  templateKey       String
+  idempotencyKey    String?        @unique
+  toEmail           String
+  fromEmail         String
+  subject           String
+  status            EmailLogStatus @default(QUEUED)
+  provider          String?
+  providerMessageId String?
+  errorMessage      String?
+  metadata          Json?
+  sentAt            DateTime?
+  createdAt         DateTime       @default(now())
+
+  user User? @relation("EmailLogUser", fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([customerId])
+  @@index([templateKey])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model EmailPreference {
+  id                         String    @id @default(cuid())
+  userId                     String
+  tenantId                   String?
+  transactionalEnabled       Boolean   @default(true)
+  billingAlertsEnabled       Boolean   @default(true)
+  securityAlertsEnabled      Boolean   @default(true)
+  productUpdatesOptIn        Boolean   @default(false)
+  marketingOptIn             Boolean   @default(false)
+  trainingAnnouncementsOptIn Boolean   @default(false)
+  preferenceToken            String    @unique @default(cuid())
+  unsubscribedAt             DateTime?
+  createdAt                  DateTime  @default(now())
+  updatedAt                  DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tenantId])
+  @@index([userId])
+}
+
+model EmailEvent {
+  id          String    @id @default(cuid())
+  eventType   String
+  entityType  String
+  entityId    String
+  tenantId    String?
+  payloadJson Json
+  processedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@unique([eventType, entityId])
+  @@index([processedAt])
+  @@index([tenantId])
 }

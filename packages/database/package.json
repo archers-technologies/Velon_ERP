@@ -12,13 +12,13 @@
     }
   },
   "scripts": {
-    "generate": "prisma generate",
-    "migrate:dev": "prisma migrate dev",
-    "migrate:deploy": "prisma migrate deploy",
+    "generate": "node --env-file=../../.env ../../node_modules/.bin/prisma generate",
+    "migrate:dev": "node --env-file=../../.env ../../node_modules/.bin/prisma migrate dev",
+    "migrate:deploy": "node --env-file=../../.env ../../node_modules/.bin/prisma migrate deploy",
     "migrate:verify": "node scripts/verify-migrate-deploy.mjs",
     "seed": "tsx prisma/seed.ts",
     "cleanup:demo": "node scripts/cleanup-demo-data.mjs",
-    "studio": "prisma studio",
+    "studio": "node --env-file=../../.env ../../node_modules/.bin/prisma studio",
     "build": "tsc -p tsconfig.json"
   },
   "dependencies": {

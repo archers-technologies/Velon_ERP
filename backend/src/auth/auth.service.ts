@@ -28,6 +28,7 @@ import { SubscriptionService } from '../billing/subscription.service';
 import { VelonLogger } from '../common/logger.service';
 import { signupEmailBlockReason } from '../common/tenant-lifecycle.util';
 import { getAuthOtpSecret, getJwtAccessSecret } from '../config/env';
+import { EmailLifecycleService } from '../email/email-lifecycle.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import type { AuthSessionResponse, TokenIssueContext } from './auth.types';
@@ -58,6 +59,7 @@ export class AuthService {
     private readonly log: VelonLogger,
     @Inject(forwardRef(() => SubscriptionService))
     private readonly subscriptions: SubscriptionService,
+    private readonly emailLifecycle: EmailLifecycleService,
   ) {}
 
   private hashRefresh(token: string) {
@@ -440,13 +442,22 @@ export class AuthService {
 
       await this.redis.bumpRevision();
       try {
-        await this.subscriptions.ensureForTenant(result.tenant.id, {
+        const sub = await this.subscriptions.ensureForTenant(result.tenant.id, {
           trialEndsAt: renewal,
           currentPeriodEnd: renewal,
         });
+        void this.emailLifecycle.notifyTrialStarted(
+          result.tenant.id,
+          sub.id,
+          sub.plan,
+        );
       } catch (err) {
         this.log.dbFailure('subscription.provision', err, { tenantId: result.tenant.id });
       }
+
+      void this.emailLifecycle.notifySignup(result).catch((err) => {
+        this.log.authFailure('signup.email_trigger', { reason: String(err) });
+      });
       await this.audit.log({
         actorId: result.user.id,
         tenantId: result.tenant.id,

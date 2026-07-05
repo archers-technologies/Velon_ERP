@@ -8,6 +8,7 @@ import { PaymentProvider, SubscriptionPaymentStatus } from '@velon/database';
 import { AuditService } from '../audit/audit.service';
 import { assertRazorpayConfigured, assertRazorpayWebhookConfigured } from '../config/razorpay.env';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailLifecycleService } from '../email/email-lifecycle.service';
 import {
   verifyRazorpayPaymentSignature,
   verifyRazorpayWebhookSignature,
@@ -36,6 +37,7 @@ export class RazorpayBillingService {
     private readonly prisma: PrismaService,
     private readonly subscriptions: SubscriptionService,
     private readonly audit: AuditService,
+    private readonly emailLifecycle: EmailLifecycleService,
   ) {}
 
   async verifyCheckoutPayment(
@@ -182,6 +184,7 @@ export class RazorpayBillingService {
         entityId: payment.id,
         metadata: { eventType, paymentId: entity.id, orderId: entity.order_id },
       });
+      void this.emailLifecycle.notifyPaymentFailed(payment.id).catch(() => undefined);
     }
 
     await this.markWebhookProcessed(webhookRecord.id);

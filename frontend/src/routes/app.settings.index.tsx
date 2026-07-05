@@ -57,8 +57,9 @@ import {
   type ReceiptFormat,
 } from '@/lib/shared/printer-settings';
 import { updateCompanyProfile, updateWorkspaceSettings } from '@/lib/tenants/admin-api';
+import { EmailPreferencesPanel } from '@/components/email/email-preferences-panel';
 
-const settingsTabs = ['general', 'regional', 'printers', 'profile', 'security'] as const;
+const settingsTabs = ['general', 'regional', 'printers', 'profile', 'security', 'email'] as const;
 type SettingsTab = (typeof settingsTabs)[number];
 
 export const Route = createFileRoute('/app/settings/')({
@@ -300,6 +301,12 @@ function SettingsPage() {
           >
             Security
           </TabsTrigger>
+          <TabsTrigger
+            value="email"
+            className="rounded-md text-xs sm:text-sm"
+          >
+            Email
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent
@@ -527,6 +534,15 @@ function SettingsPage() {
           className="mt-6 outline-none"
         >
           <WorkspaceSecurityPanel canDeleteWorkspace={isWorkspaceOwner} />
+        </TabsContent>
+
+        <TabsContent
+          value="email"
+          className="mt-6 outline-none"
+        >
+          <Card className="border-border bg-card p-6">
+            <EmailPreferencesPanel />
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

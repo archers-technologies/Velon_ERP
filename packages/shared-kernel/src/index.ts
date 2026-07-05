@@ -5,6 +5,18 @@ export const API_VERSION = 'v1';
 export { VELON_CONTACT_ADDRESS, VELON_CONTACT_EMAIL, VELON_CONTACT_PHONE } from './velon-contact';
 
 export {
+  EMAIL_EVENT_TYPES,
+  EMAIL_TEMPLATE_KEYS,
+  MARKETING_TEMPLATE_KEYS,
+  TRANSACTIONAL_TEMPLATE_KEYS,
+  type EmailEventType,
+  type EmailLogStatus,
+  type EmailMergeContext,
+  type EmailTemplateCategory,
+  type EmailTemplateKey,
+} from './email-types';
+
+export {
   COUNTRY_CATALOG,
   CURRENCY_SYMBOLS,
   DATE_FORMAT_OPTIONS,
