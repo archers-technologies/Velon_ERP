@@ -1,0 +1,33 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": ".",
+  "testEnvironment": "node",
+  "roots": ["<rootDir>/src", "<rootDir>/../packages/shared-kernel/src"],
+  "testRegex": ".*\\.spec\\.ts$",
+  "setupFiles": ["<rootDir>/src/test-utils/setup-unit.ts"],
+  "moduleNameMapper": {
+    "^@velon/shared$": "<rootDir>/../packages/shared-kernel/src/index.ts",
+    "^@velon/shared/(.*)$": "<rootDir>/../packages/shared-kernel/src/$1.ts",
+    "^@velon/database$": "<rootDir>/../packages/database/src/index.ts"
+  },
+  "transform": {
+    "^.+\\.(t|j)s$": [
+      "ts-jest",
+      {
+        "tsconfig": {
+          "module": "commonjs",
+          "esModuleInterop": true,
+          "types": ["jest", "node"],
+          "paths": {
+            "@velon/database": ["../packages/database/src/index.ts"],
+            "@velon/shared": ["../packages/shared-kernel/src/index.ts"],
+            "@velon/shared/*": ["../packages/shared-kernel/src/*"]
+          },
+          "baseUrl": "."
+        }
+      }
+    ]
+  },
+  "testPathIgnorePatterns": ["/node_modules/", "/dist/", ".e2e-spec.ts"],
+  "clearMocks": true
+}

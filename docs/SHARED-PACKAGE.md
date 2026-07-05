@@ -3,7 +3,7 @@
 **Audience:** Engineers  
 **Last updated:** July 2026
 
-`@velon/shared` is the single source of truth for policies used by both API and web.
+`@velon/shared` (folder `packages/shared-kernel`) is the single source of truth for policies used by both backend and frontend.
 
 ## Export areas
 
@@ -26,7 +26,7 @@ When adding a permission or plan rule, update shared first, then API guards and 
 
 ## Location
 
-`packages/shared/src/` — entry `index.ts`. The web Vite config aliases `@velon/shared` to TypeScript source for ESM in the browser.
+`packages/shared-kernel/src/` — entry `index.ts`. The web Vite config aliases `@velon/shared` to TypeScript source for ESM in the browser.
 
 ## Related docs
 

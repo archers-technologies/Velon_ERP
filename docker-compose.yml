@@ -51,7 +51,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: apps/api/Dockerfile
+      dockerfile: backend/Dockerfile
     container_name: velon-api
     restart: unless-stopped
     ports:
@@ -73,7 +73,7 @@ services:
   web:
     build:
       context: .
-      dockerfile: Dockerfile.web
+      dockerfile: frontend/Dockerfile.web
     container_name: velon-web
     restart: unless-stopped
     ports:

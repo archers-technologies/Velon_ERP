@@ -41,9 +41,9 @@ type JwtPayload = {
 | `DEPARTMENT_ADMIN` | tenant | Department-scoped write |
 | `USER` / `TENANT_USER` | tenant | Limited read/write |
 
-Permissions are declared in `ROLE_PERMISSIONS` (`packages/shared/src/index.ts`) using strings such as `crm:*`, `inventory:read`, `users:invite`. Wildcard matching supports `module:*` prefixes.
+Permissions are declared in `ROLE_PERMISSIONS` (`packages/shared-kernel/src/index.ts`) using strings such as `crm:*`, `inventory:read`, `users:invite`. Wildcard matching supports `module:*` prefixes.
 
-Workspace UI exposes **role presets** (Owner, Admin, Manager, Accountant, Sales, Inventory, Viewer) mapped to backend roles for invitations (`packages/shared/src/role-presets.ts`).
+Workspace UI exposes **role presets** (Owner, Admin, Manager, Accountant, Sales, Inventory, Viewer) mapped to backend roles for invitations (`packages/shared-kernel/src/role-presets.ts`).
 
 ## Guards (NestJS)
 
@@ -61,7 +61,7 @@ Decorators: `@CurrentUser()`, `@CurrentTenant()`, `@RequirePermission()`, `@Role
 
 ## Portal routing (web)
 
-Super-admin credentials route to `/admin`. Tenant users route to `/app`. Portal access helpers live under `src/lib/auth/`.
+Super-admin credentials route to `/admin`. Tenant users route to `/app`. Portal access helpers live under `frontend/src/lib/auth/`.
 
 ## Tech used in this category
 

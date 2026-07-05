@@ -11,5 +11,5 @@ package-lock.json
 routeTree.gen.ts
 *.min.js
 *.min.css
-apps/api/test/fixtures
+backend/test/fixtures
 packages/database/prisma/migrations

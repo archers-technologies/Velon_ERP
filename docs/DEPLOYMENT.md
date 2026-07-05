@@ -8,7 +8,7 @@
 | Component | Platform | Config |
 |-----------|----------|--------|
 | Web | Vercel | `vercel.json` — TanStack Start, `npm run build:web` |
-| API | Railway | `railway.json` — `apps/api/Dockerfile.api`, migrate deploy pre-command, healthcheck `/api/v1/health/live` |
+| API | Railway | `railway.json` — `backend/Dockerfile.api`, migrate deploy pre-command, healthcheck `/api/v1/health/live` |
 
 Set `VITE_API_URL` on Vercel to the public Railway API origin.
 
@@ -22,8 +22,8 @@ Root `npm run build`:
 
 1. `@velon/shared`
 2. `@velon/database`
-3. `@velon/api`
-4. Vite web build
+3. `@velon/backend`
+4. `@velon/frontend`
 
 API-only: `npm run build:api`  
 Web-only: `npm run build:web`

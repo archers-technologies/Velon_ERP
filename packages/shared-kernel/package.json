@@ -1,0 +1,30 @@
+{
+  "name": "@velon/shared",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./signup-verification": {
+      "types": "./dist/signup-verification.d.ts",
+      "require": "./dist/signup-verification.js",
+      "default": "./dist/signup-verification.js"
+    },
+    "./password-reset-verification": {
+      "types": "./dist/password-reset-verification.d.ts",
+      "require": "./dist/password-reset-verification.js",
+      "default": "./dist/password-reset-verification.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}

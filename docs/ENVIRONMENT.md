@@ -13,7 +13,7 @@
 | `JWT_REFRESH_SECRET` | Refresh token signing |
 | `AUTH_OTP_SECRET` | OTP HMAC secret |
 
-Validated in `apps/api/src/config/env.ts` on API boot.
+Validated in `backend/src/config/env.ts` on API boot.
 
 ## Local / app URLs
 

@@ -73,7 +73,7 @@ For live request/response schemas, run the API and open Swagger.
 
 ## Client integration
 
-Web clients live under `src/lib/api/` and call `API_V1_BASE` from `src/lib/api/config.ts`.
+Web clients live under `frontend/src/lib/api/` and call `API_V1_BASE` from `frontend/src/lib/api/config.ts`.
 
 In development, Vite proxies `/api` → `INTERNAL_API_ORIGIN` (default `http://127.0.0.1:3001`), so the browser can use same-origin `/api/v1`.
 

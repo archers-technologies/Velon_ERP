@@ -8,12 +8,12 @@ Code is organized by **bounded context** (business domain folder). Agents should
 ## Adding a tenant-scoped feature
 
 1. Add Prisma models with `tenantId` and migrate (`packages/database`).
-2. Create a Nest module under `apps/api/src/<context>/` (folder name = domain language).
+2. Create a Nest module under `backend/src/<context>/` (folder name = domain language).
 3. Name files `{context}` or `{context}-{aggregate}` with a role suffix (`.module.ts`, `.controller.ts`, `.service.ts`, `.repositories.ts`, `.dto.ts`, `.spec.ts`).
 4. Extend `TenantScopedRepository` for data access.
 5. Protect controllers with JWT + tenant scope + `@RequirePermission(...)`.
 6. Add permission strings to `@velon/shared` and role maps.
-7. Add web routes under `src/routes/app.*.tsx`, domain UI under `src/components/<context>/` when needed, and clients/helpers under `src/lib/api/` or `src/lib/<context>/` using `@/` imports.
+7. Add web routes under `frontend/src/routes/app.*.tsx`, domain UI under `frontend/src/components/<context>/`, and clients/helpers under `frontend/src/lib/<context>/` (shared HTTP client only in `lib/api/`) using `@/` imports.
 8. Add isolation e2e coverage.
 
 ## Adding a platform-only feature

@@ -22,7 +22,7 @@ This document lists **what technology is used in each category** of the Velon ER
 | Category | Technology | Purpose |
 |----------|------------|---------|
 | **UI library** | React 19 | Component model |
-| **Routing** | TanStack Router | File-based routes (`src/routes/`) |
+| **Routing** | TanStack Router | File-based routes (`frontend/src/routes/`) |
 | **App framework** | TanStack Start | Full-stack capable web app entry |
 | **Server state** | TanStack Query | API data fetching and cache |
 | **Forms** | React Hook Form | Form state and submission |
@@ -46,7 +46,7 @@ This document lists **what technology is used in each category** of the Velon ER
 | **Optional edge build** | `@cloudflare/vite-plugin` | Non-Vercel Cloudflare builds |
 | **Config helper** | `@lovable.dev/vite-tanstack-config` | Shared Vite + TanStack defaults |
 
-**Location:** root package `@velon/web` — `src/`, `vite.config.ts`
+**Location:** `frontend/` — package `@velon/frontend` (`frontend/src/`, `frontend/vite.config.ts`)
 
 ---
 
@@ -72,7 +72,7 @@ This document lists **what technology is used in each category** of the Velon ER
 | **Mail (SMTP)** | Nodemailer | Transactional email when SMTP is configured |
 | **Mail (API)** | Resend | Preferred mail on Railway / production |
 
-**Location:** `apps/api` — package `@velon/api`
+**Location:** `backend` — package `@velon/backend`
 
 ---
 
@@ -97,7 +97,7 @@ This document lists **what technology is used in each category** of the Velon ER
 | **Shared library** | TypeScript package `@velon/shared` | Roles, permissions, plans, seats, billing policy, localization, navigation helpers |
 | **Package manager link** | npm workspaces (`*`) | Web and API both depend on shared |
 
-**Location:** `packages/shared/src/`
+**Location:** `packages/shared-kernel/src/`
 
 ---
 
@@ -144,7 +144,7 @@ See [Business modules](./BUSINESS-MODULES.md).
 
 | Category | Technology | Purpose |
 |----------|------------|---------|
-| **HTTP** | `fetch` / API helpers under `src/lib/api/` | REST calls to `/api/v1` |
+| **HTTP** | `fetch` / API helpers under `frontend/src/lib/api/` | REST calls to `/api/v1` |
 | **Dev proxy** | Vite `server.proxy` `/api` → API | Same-origin API in local dev |
 | **API versioning** | Path prefix `/api/v1` | Stable public contract |
 | **API docs** | Swagger UI | Interactive exploration |
@@ -171,7 +171,7 @@ See [Business modules](./BUSINESS-MODULES.md).
 | **Postgres image** | `postgres:16-alpine` | Local DB |
 | **Redis image** | `redis:7-alpine` | Local cache |
 | **Mongo image** | `mongo:7` (profile `mongo`) | Optional local Mongo |
-| **API image** | `apps/api/Dockerfile` / `Dockerfile.api` | Containerized API |
+| **API image** | `backend/Dockerfile` / `Dockerfile.api` | Containerized API |
 | **Web image** | `Dockerfile.web` (compose profile `full`) | Containerized web |
 
 ---
@@ -200,7 +200,7 @@ See [Deployment](./DEPLOYMENT.md).
 | **Billing** | Razorpay client/webhook, subscription guards |
 | **CMS** | Platform-editable site content for marketing pages |
 | **Workspace UX** | Quick actions, onboarding checklist, role presets (React) |
-| **Invoicing UI** | A4 templates, QR generation (`src/lib/invoicing/`) |
+| **Invoicing UI** | A4 templates, QR generation (`frontend/src/lib/sales/invoicing/`) |
 
 ---
 
@@ -220,10 +220,10 @@ See [Operations](./OPERATIONS.md) and [Local development](./DEVELOPMENT.md).
 
 | Category | Primary package / path |
 |----------|------------------------|
-| Frontend | `@velon/web` (`src/`) |
-| Backend API | `@velon/api` (`apps/api/`) |
+| Frontend | `@velon/frontend` (`frontend/src/`) |
+| Backend API | `@velon/backend` (`backend/`) |
 | Database schema | `@velon/database` (`packages/database/`) |
-| Shared policy | `@velon/shared` (`packages/shared/`) |
+| Shared policy | `@velon/shared` (`packages/shared-kernel/`) |
 | Local infra | `docker-compose.yml` |
 | Web deploy | `vercel.json` |
 | API deploy | `railway.json` |

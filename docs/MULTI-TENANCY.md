@@ -19,7 +19,7 @@ At launch: **one tenant = one workspace = one company profile**.
 ## Isolation rules
 
 1. **JWT carries `tenantId`** for tenant-scoped sessions. Clients must not supply tenant identity for authorization.
-2. **`TenantScopedRepository`** injects `tenantId` into every `where` clause from async local storage (`apps/api/src/common/repositories/tenant-scoped.repository.ts`).
+2. **`TenantScopedRepository`** injects `tenantId` into every `where` clause from async local storage (`backend/src/common/repositories/tenant-scoped.repository.ts`).
 3. **E2E security suites** assert cross-tenant reads/writes fail for CRM, inventory, quotations, tenant-admin, and related modules.
 4. **Demo / seed data** is tagged with `seedSource` (`demo`, `e2e`, `seed`) and excluded from production platform lists via `@velon/shared` helpers (`productionTenantWhere`, `isDemoSeedSource`).
 

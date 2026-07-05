@@ -14,25 +14,25 @@
 | `npm run test:release-flow` | Release-flow e2e subset | Yes |
 | `npm run verify:release` | Release readiness script | No |
 
-Shared specs live in `packages/shared/src/*.spec.ts` (permissions, navigation, password policy, billing).
+Shared specs live in `packages/shared-kernel/src/*.spec.ts` (permissions, navigation, password policy, billing).
 
 ## Unit tests (safe default)
 
 Unit tests exercise **service public APIs** with injected mocks for Prisma, Redis, mail, and repositories. They never open a real database connection for assertions.
 
-- Setup: `apps/api/src/test-utils/setup-unit.ts` (clears `DATABASE_URL`, sets JWT/OTP secrets)
-- Fixtures: `apps/api/src/test-utils/fixtures.ts` (dummy tenant/user IDs)
-- Mocks: `apps/api/src/test-utils/mocks.ts` (`createMockPrisma`, `createRepoMock`, …)
+- Setup: `backend/src/test-utils/setup-unit.ts` (clears `DATABASE_URL`, sets JWT/OTP secrets)
+- Fixtures: `backend/src/test-utils/fixtures.ts` (dummy tenant/user IDs)
+- Mocks: `backend/src/test-utils/mocks.ts` (`createMockPrisma`, `createRepoMock`, …)
 
 Coverage includes auth, CRM, inventory, sales, procurement, suppliers, billing access, seats, workspace context, tenants, platform, CMS, health, audit, and tenant resources.
 
 ## E2e / security tests
 
-E2e suites under `apps/api/test/` write through the real API stack. Set `DATABASE_URL_TEST` to a **separate** Postgres database so local/dev data is not polluted. If unset, e2e warns and uses `DATABASE_URL`.
+E2e suites under `backend/test/` write through the real API stack. Set `DATABASE_URL_TEST` to a **separate** Postgres database so local/dev data is not polluted. If unset, e2e warns and uses `DATABASE_URL`.
 
 ## Layout
 
-API tests use Jest configs under `apps/api/`:
+API tests use Jest configs under `backend/`:
 
 - `jest-unit.json` — unit tests (mocked boundaries)
 - `test/jest-e2e.json` — e2e / security suites

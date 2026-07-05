@@ -65,7 +65,7 @@ else
   echo "Skip seed — set SUPER_ADMIN_PASSWORD in .env, then: npm run db:seed"
 fi
 
-npm run build -w @velon/api
+npm run build -w @velon/backend
 npm run verify:release
 
 echo ""

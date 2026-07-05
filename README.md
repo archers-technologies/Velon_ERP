@@ -32,15 +32,15 @@ Code is organized by **bounded context** (business domain folders such as `crm/`
 
 ```
 Velon_ERP/
-├── apps/api/              # NestJS API (@velon/api) — one folder per domain
+├── frontend/              # React UI (@velon/frontend) — domain folders under src/
+├── backend/               # NestJS API (@velon/backend) — one folder per domain
 ├── packages/
-│   ├── database/          # Prisma schema, migrations, seed (@velon/database)
-│   └── shared/            # Shared types, permissions, plans (@velon/shared)
-├── src/                   # Web app (marketing, /app workspace, /admin)
+│   ├── shared-kernel/     # Shared policy & types (@velon/shared)
+│   └── database/          # Prisma schema, migrations, seed (@velon/database)
 ├── scripts/               # Bootstrap, backup, release checks
 ├── docs/                  # Technical and user documentation
 ├── docker-compose.yml     # Local Postgres + Redis (+ optional Mongo / full stack)
-└── package.json           # npm workspaces root
+└── package.json           # npm workspaces root (orchestrator only)
 ```
 
 ---
