@@ -1,13 +1,13 @@
-import { Injectable } from "@nestjs/common";
-import { Prisma } from "@velon/database";
-import { PrismaService } from "../prisma/prisma.service";
-import { TenantScopedRepository } from "../common/repositories/tenant-scoped.repository";
+import { Injectable } from '@nestjs/common';
+import { Prisma } from '@velon/database';
+import { TenantScopedRepository } from '../common/repositories/tenant-scoped.repository';
+import { PrismaService } from '../prisma/prisma.service';
 
 const orderInclude = {
   customer: { select: { id: true, companyName: true, email: true } },
   quotation: { select: { id: true, quotationNumber: true, status: true, salesOrderId: true } },
   opportunity: { select: { id: true, title: true, opportunityCode: true } },
-  items: { orderBy: { description: "asc" as const } },
+  items: { orderBy: { description: 'asc' as const } },
 };
 
 @Injectable()
@@ -20,7 +20,7 @@ export class SalesOrderRepository extends TenantScopedRepository {
     return this.prisma.client.salesOrder.findMany({
       where: this.where(),
       include: orderInclude,
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -45,7 +45,7 @@ export class SalesOrderRepository extends TenantScopedRepository {
         create: { tenantId: this.tenantId, year, lastNumber: 1 },
         update: { lastNumber: { increment: 1 } },
       });
-      const num = String(seq.lastNumber).padStart(6, "0");
+      const num = String(seq.lastNumber).padStart(6, '0');
       return `SO-${year}-${num}`;
     });
   }

@@ -3,13 +3,13 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
-} from "@nestjs/common";
-import { CrmQuotationStatus, Prisma, SalesOrderStatus } from "@velon/database";
-import { canReadSales, canWriteSales, normalizeVelonRole } from "@velon/shared";
-import { AuditService } from "../audit/audit.service";
-import type { AuthenticatedUser } from "../auth/auth.types";
-import { PrismaService } from "../prisma/prisma.service";
-import { SalesOrderRepository } from "./sales.repositories";
+} from '@nestjs/common';
+import { CrmQuotationStatus, Prisma, SalesOrderStatus } from '@velon/database';
+import { canReadSales, canWriteSales, normalizeVelonRole } from '@velon/shared';
+import { AuditService } from '../audit/audit.service';
+import type { AuthenticatedUser } from '../auth/auth.types';
+import { PrismaService } from '../prisma/prisma.service';
+import { SalesOrderRepository } from './sales.repositories';
 
 type AuditMeta = { ip?: string; ua?: string };
 
@@ -23,13 +23,13 @@ export class SalesService {
 
   private assertRead(user: AuthenticatedUser) {
     if (!canReadSales(normalizeVelonRole(user.role))) {
-      throw new ForbiddenException("Insufficient permissions.");
+      throw new ForbiddenException('Insufficient permissions.');
     }
   }
 
   private assertWrite(user: AuthenticatedUser) {
     if (!canWriteSales(normalizeVelonRole(user.role))) {
-      throw new ForbiddenException("Insufficient permissions.");
+      throw new ForbiddenException('Insufficient permissions.');
     }
   }
 
@@ -41,38 +41,34 @@ export class SalesService {
   async getOrder(user: AuthenticatedUser, id: string) {
     this.assertRead(user);
     const row = await this.orders.findById(id);
-    if (!row) throw new NotFoundException("Sales order not found.");
+    if (!row) throw new NotFoundException('Sales order not found.');
     return row;
   }
 
-  async createFromQuotation(
-    user: AuthenticatedUser,
-    quotationId: string,
-    meta: AuditMeta,
-  ) {
+  async createFromQuotation(user: AuthenticatedUser, quotationId: string, meta: AuditMeta) {
     this.assertWrite(user);
     if (!user.tenantId || !user.workspaceId) {
-      throw new BadRequestException("Tenant workspace context is required.");
+      throw new BadRequestException('Tenant workspace context is required.');
     }
 
     const quotation = await this.prisma.client.crmQuotation.findFirst({
       where: { id: quotationId, tenantId: user.tenantId },
-      include: { items: { orderBy: { position: "asc" } } },
+      include: { items: { orderBy: { position: 'asc' } } },
     });
 
-    if (!quotation) throw new NotFoundException("Quotation not found.");
+    if (!quotation) throw new NotFoundException('Quotation not found.');
     if (quotation.status !== CrmQuotationStatus.APPROVED) {
-      throw new BadRequestException("Only approved quotations can be converted to sales orders.");
+      throw new BadRequestException('Only approved quotations can be converted to sales orders.');
     }
     if (quotation.salesOrderId) {
-      throw new BadRequestException("Quotation has already been converted to a sales order.");
+      throw new BadRequestException('Quotation has already been converted to a sales order.');
     }
 
     const workspace = await this.prisma.client.workspace.findFirst({
       where: { id: user.workspaceId, tenantId: user.tenantId },
     });
     if (!workspace) {
-      throw new BadRequestException("Workspace does not match tenant context.");
+      throw new BadRequestException('Workspace does not match tenant context.');
     }
 
     const year = new Date().getFullYear();
@@ -116,7 +112,9 @@ export class SalesService {
         },
         include: {
           customer: { select: { id: true, companyName: true, email: true } },
-          quotation: { select: { id: true, quotationNumber: true, status: true, salesOrderId: true } },
+          quotation: {
+            select: { id: true, quotationNumber: true, status: true, salesOrderId: true },
+          },
           opportunity: { select: { id: true, title: true, opportunityCode: true } },
           items: true,
         },
@@ -133,8 +131,8 @@ export class SalesService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "sales.order_created_from_quotation",
-      entityType: "sales_order",
+      action: 'sales.order_created_from_quotation',
+      entityType: 'sales_order',
       entityId: created.id,
       metadata: {
         quotationId: quotation.id,

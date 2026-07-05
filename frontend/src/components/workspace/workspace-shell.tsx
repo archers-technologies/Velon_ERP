@@ -1,37 +1,36 @@
-import type { ReactNode } from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { normalizeExternalUrl, type LogoNav } from "@/lib/shared/logo-navigation";
-import { AppShell } from "@/components/workspace/app-shell";
-import { usePlatformRealtime } from "@/hooks/use-platform-realtime";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { MapPin, Moon, Sun } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { AppShell } from '@/components/workspace/app-shell';
 import {
-  WorkspaceCurrencyProvider,
-  workspaceBooksCurrencyLine,
+  NotificationDropdown,
+  type NotificationPreview,
+} from '@/components/workspace/notification-dropdown';
+import { QuickCreateFab } from '@/components/workspace/quick-create-fab';
+import { WorkspaceUserMenu } from '@/components/workspace/workspace-user-menu';
+import {
   useWorkspaceCurrency,
-} from "@/contexts/workspace-currency";
+  workspaceBooksCurrencyLine,
+  WorkspaceCurrencyProvider,
+} from '@/contexts/workspace-currency';
 import {
-  WorkspacePreferencesProvider,
   useWorkspacePreferences,
-} from "@/contexts/workspace-preferences";
-import { WorkspaceUserMenu } from "@/components/workspace/workspace-user-menu";
+  WorkspacePreferencesProvider,
+} from '@/contexts/workspace-preferences';
 import {
-  WorkspaceUserProfileProvider,
   useWorkspaceUserProfile,
-} from "@/contexts/workspace-user-profile";
+  WorkspaceUserProfileProvider,
+} from '@/contexts/workspace-user-profile';
+import { usePlatformRealtime } from '@/hooks/use-platform-realtime';
+import { normalizeExternalUrl, type LogoNav } from '@/lib/shared/logo-navigation';
 import {
   loadWorkspaceAlerts,
   loadWorkspaceIdentity,
   loadWorkspaceNavBadges,
-} from "@/lib/workspace/loaders";
-import { markAllNotificationsRead } from "@/lib/workspace/mutations";
-import { readWorkspaceName, saveWorkspaceName } from "@/lib/workspace/tenant-workspace";
-import { buildWorkspaceNavGroups } from "@/lib/workspace/nav";
-import { QuickCreateFab } from "@/components/workspace/quick-create-fab";
-import {
-  NotificationDropdown,
-  type NotificationPreview,
-} from "@/components/workspace/notification-dropdown";
-import { Button } from "@/components/ui/button";
-import { Sun, Moon, MapPin } from "lucide-react";
+} from '@/lib/workspace/loaders';
+import { markAllNotificationsRead } from '@/lib/workspace/mutations';
+import { buildWorkspaceNavGroups } from '@/lib/workspace/nav';
+import { readWorkspaceName, saveWorkspaceName } from '@/lib/workspace/tenant-workspace';
 
 function WorkspaceHeaderToolbar({
   alertCount,
@@ -51,33 +50,39 @@ function WorkspaceHeaderToolbar({
   return (
     <div className="flex min-w-0 items-center justify-end gap-1.5 sm:gap-2 md:gap-3">
       <span
-        className="rounded-md border border-border bg-muted/50 px-2 py-1 font-mono text-[10px] font-semibold text-foreground md:hidden"
+        className="border-border bg-muted/50 text-foreground rounded-md border px-2 py-1 font-mono text-[10px] font-semibold md:hidden"
         title={books}
       >
-        {preset === "CUSTOM" ? customSymbol.trim() || "?" : preset}
+        {preset === 'CUSTOM' ? customSymbol.trim() || '?' : preset}
       </span>
       <div className="hidden min-w-0 flex-col items-end text-right 2xl:flex">
-        <span className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground">
+        <span className="text-muted-foreground text-[9px] font-medium tracking-wider uppercase">
           Books in
         </span>
         <span
-          className="max-w-[220px] truncate text-[11px] font-semibold leading-tight"
+          className="max-w-[220px] truncate text-[11px] leading-tight font-semibold"
           title={books}
         >
           {books}
         </span>
       </div>
-      <div className="hidden h-8 w-px bg-border 2xl:block" aria-hidden />
       <div
-        className="hidden min-w-0 items-center gap-1.5 text-muted-foreground 2xl:flex"
+        className="bg-border hidden h-8 w-px 2xl:block"
+        aria-hidden
+      />
+      <div
+        className="text-muted-foreground hidden min-w-0 items-center gap-1.5 2xl:flex"
         title={locationTitle}
       >
-        <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
-        <div className="min-w-0 flex flex-col items-end text-right">
-          <span className="max-w-[min(42vw,200px)] truncate text-[11px] font-medium text-foreground">
+        <MapPin
+          className="h-3.5 w-3.5 shrink-0"
+          aria-hidden
+        />
+        <div className="flex min-w-0 flex-col items-end text-right">
+          <span className="text-foreground max-w-[min(42vw,200px)] truncate text-[11px] font-medium">
             {locationPrimary}
           </span>
-          <span className="max-w-[min(42vw,200px)] truncate text-[10px] text-muted-foreground">
+          <span className="text-muted-foreground max-w-[min(42vw,200px)] truncate text-[10px]">
             {region}
           </span>
         </div>
@@ -88,9 +93,9 @@ function WorkspaceHeaderToolbar({
         className="shrink-0 rounded-lg"
         type="button"
         onClick={toggleTheme}
-        aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+        aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
       >
-        {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
       </Button>
       <NotificationDropdown
         items={notifications}
@@ -116,13 +121,15 @@ function WorkspaceShellInner({
   const getNavBadgesFn = loadWorkspaceNavBadges;
   const getWorkspaceAlertsFn = loadWorkspaceAlerts;
   const { initials, profile } = useWorkspaceUserProfile();
-  const [workspaceName, setWorkspaceName] = useState("Workspace");
+  const [workspaceName, setWorkspaceName] = useState('Workspace');
   const [tenantWebsite, setTenantWebsite] = useState<string | null>(null);
   const [navBadges, setNavBadges] = useState({ billingOpen: 0, alerts: 0 });
   const [notifications, setNotifications] = useState<NotificationPreview[]>([]);
 
   const refreshNavBadges = useCallback(() => {
-    void getNavBadgesFn().then(setNavBadges).catch(() => undefined);
+    void getNavBadgesFn()
+      .then(setNavBadges)
+      .catch(() => undefined);
   }, [getNavBadgesFn]);
 
   const refreshNotifications = useCallback(() => {
@@ -158,16 +165,16 @@ function WorkspaceShellInner({
     sync();
 
     const onNameChange = () => sync();
-    window.addEventListener("velon-workspace-name-changed", onNameChange);
+    window.addEventListener('velon-workspace-name-changed', onNameChange);
 
     const onWebsiteChange = (event: Event) => {
       const website = (event as CustomEvent<{ website?: string | null }>).detail?.website ?? null;
       setTenantWebsite(normalizeExternalUrl(website));
     };
-    window.addEventListener("velon-workspace-website-changed", onWebsiteChange);
+    window.addEventListener('velon-workspace-website-changed', onWebsiteChange);
 
     void getWorkspaceIdentityFn().then((identity) => {
-      if (identity.name && identity.name !== "Workspace") {
+      if (identity.name && identity.name !== 'Workspace') {
         saveWorkspaceName(identity.name);
         setWorkspaceName(identity.name);
       }
@@ -175,19 +182,19 @@ function WorkspaceShellInner({
     });
 
     return () => {
-      window.removeEventListener("velon-workspace-name-changed", onNameChange);
-      window.removeEventListener("velon-workspace-website-changed", onWebsiteChange);
+      window.removeEventListener('velon-workspace-name-changed', onNameChange);
+      window.removeEventListener('velon-workspace-website-changed', onWebsiteChange);
     };
   }, [getWorkspaceIdentityFn]);
 
   const sidebarLogo =
-    profile.workspaceLogoDataUrl && profile.workspaceLogoAspect === "square"
+    profile.workspaceLogoDataUrl && profile.workspaceLogoAspect === 'square'
       ? profile.workspaceLogoDataUrl
       : undefined;
 
   const navGroups = useMemo(() => buildWorkspaceNavGroups(navBadges), [navBadges]);
 
-  const logoNav = useMemo((): LogoNav => ({ type: "workspace" }), []);
+  const logoNav = useMemo((): LogoNav => ({ type: 'workspace' }), []);
 
   return (
     <AppShell
@@ -227,7 +234,10 @@ export function WorkspaceShell({
     <WorkspaceUserProfileProvider>
       <WorkspaceCurrencyProvider>
         <WorkspacePreferencesProvider>
-          <WorkspaceShellInner title={title} subtitle={subtitle}>
+          <WorkspaceShellInner
+            title={title}
+            subtitle={subtitle}
+          >
             {children}
           </WorkspaceShellInner>
         </WorkspacePreferencesProvider>

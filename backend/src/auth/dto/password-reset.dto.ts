@@ -1,5 +1,5 @@
-import { IsEmail, IsString, Matches, MinLength } from "class-validator";
-import { IsVelonPassword } from "../validators/is-velon-password.decorator";
+import { IsEmail, IsString, Matches, MinLength } from 'class-validator';
+import { IsVelonPassword } from '../validators/is-velon-password.decorator';
 
 export class RequestPasswordResetDto {
   @IsEmail()
@@ -11,7 +11,7 @@ export class VerifyPasswordResetOtpDto {
   email!: string;
 
   @IsString()
-  @Matches(/^\d{6}$/, { message: "Enter the 6-digit verification code" })
+  @Matches(/^\d{6}$/, { message: 'Enter the 6-digit verification code' })
   code!: string;
 }
 
@@ -30,4 +30,4 @@ export class CompletePasswordResetDto {
 }
 
 export const PASSWORD_RESET_GENERIC_MESSAGE =
-  "If an account exists for this email, we have sent a verification code.";
+  'If an account exists for this email, we have sent a verification code.';

@@ -1,5 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { CrmQuotationStatus } from "@velon/database";
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   IsArray,
   IsDateString,
@@ -10,8 +10,8 @@ import {
   Min,
   MinLength,
   ValidateNested,
-} from "class-validator";
-import { Type } from "class-transformer";
+} from 'class-validator';
+import { CrmQuotationStatus } from '@velon/database';
 
 export class CrmQuotationQueryDto {
   @ApiPropertyOptional()

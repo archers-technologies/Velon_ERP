@@ -6,34 +6,34 @@ import {
   useMemo,
   useState,
   type ReactNode,
-} from "react";
+} from 'react';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
+} from '@/components/ui/select';
 
-const STORAGE_PRESET = "velon-admin-currency-preset";
-const STORAGE_CUSTOM = "velon-admin-currency-custom-symbol";
+const STORAGE_PRESET = 'velon-admin-currency-preset';
+const STORAGE_CUSTOM = 'velon-admin-currency-custom-symbol';
 
-export type AdminCurrencyPreset = "INR" | "USD" | "EUR" | "GBP" | "AED" | "CUSTOM";
+export type AdminCurrencyPreset = 'INR' | 'USD' | 'EUR' | 'GBP' | 'AED' | 'CUSTOM';
 
 const PRESET_META: Record<
-  Exclude<AdminCurrencyPreset, "CUSTOM">,
+  Exclude<AdminCurrencyPreset, 'CUSTOM'>,
   { currency: string; locale: string }
 > = {
-  INR: { currency: "INR", locale: "en-IN" },
-  USD: { currency: "USD", locale: "en-US" },
-  EUR: { currency: "EUR", locale: "de-DE" },
-  GBP: { currency: "GBP", locale: "en-GB" },
-  AED: { currency: "AED", locale: "en-AE" },
+  INR: { currency: 'INR', locale: 'en-IN' },
+  USD: { currency: 'USD', locale: 'en-US' },
+  EUR: { currency: 'EUR', locale: 'de-DE' },
+  GBP: { currency: 'GBP', locale: 'en-GB' },
+  AED: { currency: 'AED', locale: 'en-AE' },
 };
 
 function isPreset(v: string): v is AdminCurrencyPreset {
-  return v === "INR" || v === "USD" || v === "EUR" || v === "GBP" || v === "AED" || v === "CUSTOM";
+  return v === 'INR' || v === 'USD' || v === 'EUR' || v === 'GBP' || v === 'AED' || v === 'CUSTOM';
 }
 
 type AdminCurrencyContextValue = {
@@ -47,8 +47,8 @@ type AdminCurrencyContextValue = {
 const AdminCurrencyContext = createContext<AdminCurrencyContextValue | null>(null);
 
 export function AdminCurrencyProvider({ children }: { children: ReactNode }) {
-  const [preset, setPresetState] = useState<AdminCurrencyPreset>("INR");
-  const [customSymbol, setCustomSymbolState] = useState("₹");
+  const [preset, setPresetState] = useState<AdminCurrencyPreset>('INR');
+  const [customSymbol, setCustomSymbolState] = useState('₹');
 
   useEffect(() => {
     try {
@@ -81,15 +81,15 @@ export function AdminCurrencyProvider({ children }: { children: ReactNode }) {
 
   const formatCurrency = useCallback(
     (amount: number) => {
-      if (preset === "CUSTOM") {
-        const sym = customSymbol.trim() || "₹";
-        return `${sym}${new Intl.NumberFormat("en-IN", {
+      if (preset === 'CUSTOM') {
+        const sym = customSymbol.trim() || '₹';
+        return `${sym}${new Intl.NumberFormat('en-IN', {
           minimumFractionDigits: 0,
           maximumFractionDigits: 2,
         }).format(amount)}`;
       }
       const m = PRESET_META[preset];
-      return new Intl.NumberFormat(m.locale, { style: "currency", currency: m.currency }).format(
+      return new Intl.NumberFormat(m.locale, { style: 'currency', currency: m.currency }).format(
         amount,
       );
     },
@@ -106,21 +106,21 @@ export function AdminCurrencyProvider({ children }: { children: ReactNode }) {
 
 export function useAdminCurrency(): AdminCurrencyContextValue {
   const ctx = useContext(AdminCurrencyContext);
-  if (!ctx) throw new Error("useAdminCurrency must be used within AdminCurrencyProvider");
+  if (!ctx) throw new Error('useAdminCurrency must be used within AdminCurrencyProvider');
   return ctx;
 }
 
-const PRESET_BOOKS_IN: Record<Exclude<AdminCurrencyPreset, "CUSTOM">, string> = {
-  INR: "Indian Rupee · INR (₹)",
-  USD: "US Dollar · USD ($)",
-  EUR: "Euro · EUR (€)",
-  GBP: "Pound sterling · GBP (£)",
-  AED: "UAE Dirham · AED",
+const PRESET_BOOKS_IN: Record<Exclude<AdminCurrencyPreset, 'CUSTOM'>, string> = {
+  INR: 'Indian Rupee · INR (₹)',
+  USD: 'US Dollar · USD ($)',
+  EUR: 'Euro · EUR (€)',
+  GBP: 'Pound sterling · GBP (£)',
+  AED: 'UAE Dirham · AED',
 };
 
 export function adminBooksCurrencyLine(preset: AdminCurrencyPreset, customSymbol: string): string {
-  if (preset === "CUSTOM") {
-    const sym = customSymbol.trim() || "—";
+  if (preset === 'CUSTOM') {
+    const sym = customSymbol.trim() || '—';
     return `Custom symbol · ${sym}`;
   }
   return PRESET_BOOKS_IN[preset];
@@ -131,9 +131,12 @@ export function AdminCurrencySelect() {
 
   return (
     <div className="hidden shrink-0 items-center gap-2 md:flex">
-      <Select value={preset} onValueChange={(v) => setPreset(v as AdminCurrencyPreset)}>
+      <Select
+        value={preset}
+        onValueChange={(v) => setPreset(v as AdminCurrencyPreset)}
+      >
         <SelectTrigger
-          className="h-9 w-[132px] rounded-lg border-border bg-muted/60 text-xs"
+          className="border-border bg-muted/60 h-9 w-[132px] rounded-lg text-xs"
           aria-label="Display currency"
         >
           <SelectValue placeholder="Currency" />
@@ -147,12 +150,12 @@ export function AdminCurrencySelect() {
           <SelectItem value="CUSTOM">Custom symbol…</SelectItem>
         </SelectContent>
       </Select>
-      {preset === "CUSTOM" && (
+      {preset === 'CUSTOM' && (
         <Input
           value={customSymbol}
           onChange={(e) => setCustomSymbol(e.target.value)}
           maxLength={6}
-          className="h-9 w-[72px] rounded-lg border-border bg-muted/60 px-2 text-xs"
+          className="border-border bg-muted/60 h-9 w-[72px] rounded-lg px-2 text-xs"
           placeholder="₹"
           aria-label="Custom currency symbol"
         />

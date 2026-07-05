@@ -1,18 +1,21 @@
-import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { toast } from "sonner";
-import { useMemo, useState } from "react";
-import { createInventoryItem, updateInventoryItem } from "@/lib/workspace/mutations";
-import { loadInventory } from "@/lib/workspace/loaders";
-import type { InventoryRecord } from "@/lib/types/workspace-ui";
-import { useWorkspaceCurrency } from "@/contexts/workspace-currency";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useMemo, useState } from 'react';
+import { createFileRoute, useRouter } from '@tanstack/react-router';
+import {
+  Layers,
+  ListFilter,
+  MapPin,
+  Package,
+  Pencil,
+  Plus,
+  RefreshCw,
+  ScanBarcode,
+  TrendingDown,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -20,14 +23,17 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -35,25 +41,19 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import {
-  Package,
-  Plus,
-  ScanBarcode,
-  RefreshCw,
-  MapPin,
-  TrendingDown,
-  Layers,
-  ListFilter,
-  Pencil,
-} from "lucide-react";
+} from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useWorkspaceCurrency } from '@/contexts/workspace-currency';
+import type { InventoryRecord } from '@/lib/types/workspace-ui';
+import { loadInventory } from '@/lib/workspace/loaders';
+import { createInventoryItem, updateInventoryItem } from '@/lib/workspace/mutations';
 
 type InventoryListSort =
-  | "name_asc"
-  | "order_value_desc"
-  | "order_value_asc"
-  | "price_asc"
-  | "price_desc";
+  | 'name_asc'
+  | 'order_value_desc'
+  | 'order_value_asc'
+  | 'price_asc'
+  | 'price_desc';
 
 function extensionValue(item: InventoryRecord): number {
   return item.quantity * item.unitPrice;
@@ -62,38 +62,38 @@ function extensionValue(item: InventoryRecord): number {
 function sortInventoryRows(rows: InventoryRecord[], sort: InventoryListSort): InventoryRecord[] {
   const arr = [...rows];
   switch (sort) {
-    case "name_asc":
+    case 'name_asc':
       return arr.sort((a, b) => a.name.localeCompare(b.name));
-    case "order_value_desc":
+    case 'order_value_desc':
       return arr.sort((a, b) => extensionValue(b) - extensionValue(a));
-    case "order_value_asc":
+    case 'order_value_asc':
       return arr.sort((a, b) => extensionValue(a) - extensionValue(b));
-    case "price_asc":
+    case 'price_asc':
       return arr.sort((a, b) => a.unitPrice - b.unitPrice);
-    case "price_desc":
+    case 'price_desc':
       return arr.sort((a, b) => b.unitPrice - a.unitPrice);
     default:
       return arr;
   }
 }
 
-function stockBadgeClass(level: InventoryRecord["stockLevel"]) {
+function stockBadgeClass(level: InventoryRecord['stockLevel']) {
   switch (level) {
-    case "healthy":
-      return "border-success/30 bg-success/10 text-success";
-    case "low":
-      return "border-warning/40 bg-warning/15 text-warning-foreground";
-    case "critical":
-      return "border-destructive/30 bg-destructive/10 text-destructive";
+    case 'healthy':
+      return 'border-success/30 bg-success/10 text-success';
+    case 'low':
+      return 'border-warning/40 bg-warning/15 text-warning-foreground';
+    case 'critical':
+      return 'border-destructive/30 bg-destructive/10 text-destructive';
     default:
-      return "border-border";
+      return 'border-border';
   }
 }
 
-function abcBadgeClass(tier: InventoryRecord["abcClass"]) {
-  if (tier === "A") return "border-foreground bg-foreground text-background";
-  if (tier === "B") return "border-border bg-muted/50";
-  return "border-border text-muted-foreground";
+function abcBadgeClass(tier: InventoryRecord['abcClass']) {
+  if (tier === 'A') return 'border-foreground bg-foreground text-background';
+  if (tier === 'B') return 'border-border bg-muted/50';
+  return 'border-border text-muted-foreground';
 }
 
 /** Heuristic suggested replenishment units based on reorder levels. */
@@ -106,7 +106,7 @@ function needsReplenishment(item: InventoryRecord): boolean {
   return item.quantity <= item.reorderPoint;
 }
 
-export const Route = createFileRoute("/app/inventory/")({
+export const Route = createFileRoute('/app/inventory/')({
   loader: () => loadInventory(),
   component: InventoryPage,
 });
@@ -115,14 +115,14 @@ function InventoryPage() {
   const router = useRouter();
   const { formatCurrency } = useWorkspaceCurrency();
   const items = Route.useLoaderData();
-  const [listSort, setListSort] = useState<InventoryListSort>("name_asc");
+  const [listSort, setListSort] = useState<InventoryListSort>('name_asc');
 
   const sortedItems = useMemo(() => sortInventoryRows(items, listSort), [items, listSort]);
 
   const stats = useMemo(() => {
     const totalSkus = items.length;
     const belowReorder = items.filter(needsReplenishment).length;
-    const critical = items.filter((i) => i.stockLevel === "critical").length;
+    const critical = items.filter((i) => i.stockLevel === 'critical').length;
     const locations = new Set(items.map((i) => i.site)).size;
     return { totalSkus, belowReorder, critical, locations };
   }, [items]);
@@ -138,14 +138,14 @@ function InventoryPage() {
 
   const abcCounts = useMemo(() => {
     return {
-      A: items.filter((i) => i.abcClass === "A").length,
-      B: items.filter((i) => i.abcClass === "B").length,
-      C: items.filter((i) => i.abcClass === "C").length,
+      A: items.filter((i) => i.abcClass === 'A').length,
+      B: items.filter((i) => i.abcClass === 'B').length,
+      C: items.filter((i) => i.abcClass === 'C').length,
     };
   }, [items]);
 
   const abcTotal = abcCounts.A + abcCounts.B + abcCounts.C || 1;
-  const slowMovers = useMemo(() => sortedItems.filter((i) => i.velocity === "slow"), [sortedItems]);
+  const slowMovers = useMemo(() => sortedItems.filter((i) => i.velocity === 'slow'), [sortedItems]);
 
   const reorderQueue = useMemo(
     () =>
@@ -158,31 +158,31 @@ function InventoryPage() {
   const [open, setOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryRecord | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [name, setName] = useState("");
-  const [site, setSite] = useState("");
-  const [quantity, setQuantity] = useState("0");
-  const [sku, setSku] = useState("");
-  const [safetyStock, setSafetyStock] = useState("5");
-  const [reorderPoint, setReorderPoint] = useState("15");
-  const [unitPrice, setUnitPrice] = useState("24");
-  const [abcClass, setAbcClass] = useState<InventoryRecord["abcClass"]>("B");
-  const [velocity, setVelocity] = useState<InventoryRecord["velocity"]>("medium");
+  const [name, setName] = useState('');
+  const [site, setSite] = useState('');
+  const [quantity, setQuantity] = useState('0');
+  const [sku, setSku] = useState('');
+  const [safetyStock, setSafetyStock] = useState('5');
+  const [reorderPoint, setReorderPoint] = useState('15');
+  const [unitPrice, setUnitPrice] = useState('24');
+  const [abcClass, setAbcClass] = useState<InventoryRecord['abcClass']>('B');
+  const [velocity, setVelocity] = useState<InventoryRecord['velocity']>('medium');
   const [batchTracked, setBatchTracked] = useState(false);
-  const [variantParent, setVariantParent] = useState("");
+  const [variantParent, setVariantParent] = useState('');
 
   function resetInventoryForm() {
     setEditingItem(null);
-    setName("");
-    setSite("");
-    setQuantity("0");
-    setSku("");
-    setSafetyStock("5");
-    setReorderPoint("15");
-    setUnitPrice("24");
-    setAbcClass("B");
-    setVelocity("medium");
+    setName('');
+    setSite('');
+    setQuantity('0');
+    setSku('');
+    setSafetyStock('5');
+    setReorderPoint('15');
+    setUnitPrice('24');
+    setAbcClass('B');
+    setVelocity('medium');
     setBatchTracked(false);
-    setVariantParent("");
+    setVariantParent('');
   }
 
   function openAddDialog() {
@@ -202,7 +202,7 @@ function InventoryPage() {
     setAbcClass(item.abcClass);
     setVelocity(item.velocity);
     setBatchTracked(item.batchTracked);
-    setVariantParent(item.variantParent ?? "");
+    setVariantParent(item.variantParent ?? '');
     setOpen(true);
   }
 
@@ -228,16 +228,16 @@ function InventoryPage() {
 
       if (editingItem) {
         await updateInventoryItem(editingItem.id, data);
-        toast.success("SKU updated");
+        toast.success('SKU updated');
       } else {
         await createInventoryItem(data);
-        toast.success("SKU added — stock status derived from safety & reorder levels");
+        toast.success('SKU added — stock status derived from safety & reorder levels');
       }
       setOpen(false);
       resetInventoryForm();
       await router.invalidate();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not save product");
+      toast.error(e instanceof Error ? e.message : 'Could not save product');
     } finally {
       setSubmitting(false);
     }
@@ -245,44 +245,53 @@ function InventoryPage() {
 
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="desk" className="space-y-6">
+      <Tabs
+        defaultValue="desk"
+        className="space-y-6"
+      >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <TabsList className="h-9 w-fit">
             <TabsTrigger value="desk">Stock desk</TabsTrigger>
             <TabsTrigger value="optimize">Optimization & accuracy</TabsTrigger>
           </TabsList>
-          <p className="max-w-xl text-xs text-muted-foreground sm:text-right">
+          <p className="text-muted-foreground max-w-xl text-xs sm:text-right">
             Live balances across locations · Reorder when on-hand hits policy thresholds ·
             Scan-ready SKUs · ABC tiers for where to focus counts and capital.
           </p>
         </div>
 
-        <TabsContent value="desk" className="mt-0 space-y-6 outline-none">
+        <TabsContent
+          value="desk"
+          className="mt-0 space-y-6 outline-none"
+        >
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[
               {
-                label: "Total SKUs",
+                label: 'Total SKUs',
                 value: stats.totalSkus.toLocaleString(),
-                hint: "Active items",
+                hint: 'Active items',
               },
               {
-                label: "Below reorder",
+                label: 'Below reorder',
                 value: String(stats.belowReorder),
-                hint: "Auto PO candidates",
+                hint: 'Auto PO candidates',
               },
               {
-                label: "Critical SKUs",
+                label: 'Critical SKUs',
                 value: String(stats.critical),
-                hint: "At or under safety stock",
+                hint: 'At or under safety stock',
               },
-              { label: "Locations", value: String(stats.locations), hint: "Warehouses on file" },
+              { label: 'Locations', value: String(stats.locations), hint: 'Warehouses on file' },
             ].map((kpi) => (
-              <Card key={kpi.label} className="border-border bg-card p-5">
-                <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              <Card
+                key={kpi.label}
+                className="border-border bg-card p-5"
+              >
+                <div className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
                   {kpi.label}
                 </div>
                 <div className="mt-2 text-3xl font-semibold tracking-tight">{kpi.value}</div>
-                <div className="mt-1 text-[11px] text-muted-foreground">{kpi.hint}</div>
+                <div className="text-muted-foreground mt-1 text-[11px]">{kpi.hint}</div>
               </Card>
             ))}
           </div>
@@ -290,16 +299,16 @@ function InventoryPage() {
           <div className="grid gap-6 lg:grid-cols-3">
             <Card className="border-border bg-card p-5 lg:col-span-2">
               <div className="mb-4 flex items-center gap-2 text-sm font-semibold">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
+                <MapPin className="text-muted-foreground h-4 w-4" />
                 Multi-location snapshot
               </div>
-              <div className="overflow-x-auto rounded-lg border border-border">
+              <div className="border-border overflow-x-auto rounded-lg border">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/40 hover:bg-muted/40">
-                      <TableHead className="text-[10px] uppercase tracking-wider">Site</TableHead>
-                      <TableHead className="text-[10px] uppercase tracking-wider">SKUs</TableHead>
-                      <TableHead className="text-[10px] uppercase tracking-wider">
+                      <TableHead className="text-[10px] tracking-wider uppercase">Site</TableHead>
+                      <TableHead className="text-[10px] tracking-wider uppercase">SKUs</TableHead>
+                      <TableHead className="text-[10px] tracking-wider uppercase">
                         Units on hand
                       </TableHead>
                     </TableRow>
@@ -319,31 +328,37 @@ function InventoryPage() {
 
             <Card className="border-border bg-card p-5">
               <div className="mb-3 flex items-center gap-2 text-sm font-semibold">
-                <RefreshCw className="h-4 w-4 text-muted-foreground" />
+                <RefreshCw className="text-muted-foreground h-4 w-4" />
                 Replenishment queue
               </div>
-              <p className="mb-4 text-xs text-muted-foreground">
+              <p className="text-muted-foreground mb-4 text-xs">
                 When on-hand crosses reorder, Velon drafts purchase suggestions from live stock
                 below).
               </p>
               {reorderQueue.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   All SKUs above reorder — no drafts pending.
                 </p>
               ) : (
                 <ul className="space-y-3 text-sm">
                   {reorderQueue.map((item) => (
-                    <li key={item.id} className="rounded-lg border border-border bg-background p-3">
+                    <li
+                      key={item.id}
+                      className="border-border bg-background rounded-lg border p-3"
+                    >
                       <div className="font-medium">{item.name}</div>
-                      <div className="mt-1 text-xs text-muted-foreground">{item.sku}</div>
+                      <div className="text-muted-foreground mt-1 text-xs">{item.sku}</div>
                       <div className="mt-2 flex items-center justify-between text-xs">
                         <span>
-                          Suggested PO qty:{" "}
-                          <span className="font-semibold text-foreground">
+                          Suggested PO qty:{' '}
+                          <span className="text-foreground font-semibold">
                             {suggestedReorderUnits(item)}
                           </span>
                         </span>
-                        <Badge variant="outline" className={stockBadgeClass(item.stockLevel)}>
+                        <Badge
+                          variant="outline"
+                          className={stockBadgeClass(item.stockLevel)}
+                        >
                           {item.stockLevel}
                         </Badge>
                       </div>
@@ -363,7 +378,7 @@ function InventoryPage() {
           >
             <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
               <DialogHeader>
-                <DialogTitle>{editingItem ? "Edit SKU" : "Add SKU"}</DialogTitle>
+                <DialogTitle>{editingItem ? 'Edit SKU' : 'Add SKU'}</DialogTitle>
                 <DialogDescription>
                   Set safety stock and reorder point — status (healthy / low / critical) is computed
                   automatically.
@@ -451,7 +466,7 @@ function InventoryPage() {
                     <Label>ABC class</Label>
                     <Select
                       value={abcClass}
-                      onValueChange={(v) => setAbcClass(v as InventoryRecord["abcClass"])}
+                      onValueChange={(v) => setAbcClass(v as InventoryRecord['abcClass'])}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -468,7 +483,7 @@ function InventoryPage() {
                   <Label>Velocity</Label>
                   <Select
                     value={velocity}
-                    onValueChange={(v) => setVelocity(v as InventoryRecord["velocity"])}
+                    onValueChange={(v) => setVelocity(v as InventoryRecord['velocity'])}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -489,7 +504,11 @@ function InventoryPage() {
                 </label>
               </div>
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setOpen(false)}
+                >
                   Cancel
                 </Button>
                 <Button
@@ -498,23 +517,26 @@ function InventoryPage() {
                   className="bg-foreground text-background hover:bg-foreground/90"
                   onClick={handleSaveInventory}
                 >
-                  {submitting ? "Saving…" : editingItem ? "Update SKU" : "Save SKU"}
+                  {submitting ? 'Saving…' : editingItem ? 'Update SKU' : 'Save SKU'}
                 </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
 
-          <Card className="border-border bg-card p-0 overflow-hidden">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-5">
+          <Card className="border-border bg-card overflow-hidden p-0">
+            <div className="border-border flex flex-wrap items-center justify-between gap-3 border-b p-5">
               <div>
                 <h2 className="text-lg font-semibold">Inventory list</h2>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   Table for ops · Cards on small screens
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <div className="flex items-center gap-2">
-                  <ListFilter className="h-4 w-4 text-muted-foreground" aria-hidden />
+                  <ListFilter
+                    className="text-muted-foreground h-4 w-4"
+                    aria-hidden
+                  />
                   <Select
                     value={listSort}
                     onValueChange={(v) => setListSort(v as InventoryListSort)}
@@ -545,30 +567,30 @@ function InventoryPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/40 hover:bg-muted/40">
-                    <TableHead className="w-[100px] text-[10px] uppercase tracking-wider">
+                    <TableHead className="w-[100px] text-[10px] tracking-wider uppercase">
                       SKU
                     </TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider">Product</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider">Location</TableHead>
-                    <TableHead className="text-right text-[10px] uppercase tracking-wider">
+                    <TableHead className="text-[10px] tracking-wider uppercase">Product</TableHead>
+                    <TableHead className="text-[10px] tracking-wider uppercase">Location</TableHead>
+                    <TableHead className="text-right text-[10px] tracking-wider uppercase">
                       On hand
                     </TableHead>
-                    <TableHead className="text-right text-[10px] uppercase tracking-wider">
+                    <TableHead className="text-right text-[10px] tracking-wider uppercase">
                       Safety
                     </TableHead>
-                    <TableHead className="text-right text-[10px] uppercase tracking-wider">
+                    <TableHead className="text-right text-[10px] tracking-wider uppercase">
                       Reorder
                     </TableHead>
-                    <TableHead className="text-right text-[10px] uppercase tracking-wider">
+                    <TableHead className="text-right text-[10px] tracking-wider uppercase">
                       Unit price
                     </TableHead>
-                    <TableHead className="text-right text-[10px] uppercase tracking-wider">
+                    <TableHead className="text-right text-[10px] tracking-wider uppercase">
                       Ext. value
                     </TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider">ABC</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider">Scan</TableHead>
-                    <TableHead className="text-[10px] uppercase tracking-wider">Status</TableHead>
-                    <TableHead className="text-right text-[10px] uppercase tracking-wider">
+                    <TableHead className="text-[10px] tracking-wider uppercase">ABC</TableHead>
+                    <TableHead className="text-[10px] tracking-wider uppercase">Scan</TableHead>
+                    <TableHead className="text-[10px] tracking-wider uppercase">Status</TableHead>
+                    <TableHead className="text-right text-[10px] tracking-wider uppercase">
                       Actions
                     </TableHead>
                   </TableRow>
@@ -580,7 +602,7 @@ function InventoryPage() {
                       <TableCell>
                         <div className="font-medium">{item.name}</div>
                         {item.variantParent ? (
-                          <div className="text-[11px] text-muted-foreground">
+                          <div className="text-muted-foreground text-[11px]">
                             {item.variantParent}
                           </div>
                         ) : null}
@@ -589,13 +611,13 @@ function InventoryPage() {
                       <TableCell className="text-right font-semibold tabular-nums">
                         {item.quantity}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums text-muted-foreground">
+                      <TableCell className="text-muted-foreground text-right tabular-nums">
                         {item.safetyStock}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums text-muted-foreground">
+                      <TableCell className="text-muted-foreground text-right tabular-nums">
                         {item.reorderPoint}
                       </TableCell>
-                      <TableCell className="text-right text-xs tabular-nums text-muted-foreground">
+                      <TableCell className="text-muted-foreground text-right text-xs tabular-nums">
                         {formatCurrency(item.unitPrice)}
                       </TableCell>
                       <TableCell className="text-right text-xs font-medium tabular-nums">
@@ -611,11 +633,11 @@ function InventoryPage() {
                       </TableCell>
                       <TableCell>
                         {item.batchTracked ? (
-                          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                          <span className="text-muted-foreground inline-flex items-center gap-1 text-xs">
                             <ScanBarcode className="h-3.5 w-3.5" /> Lot
                           </span>
                         ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
+                          <span className="text-muted-foreground text-xs">—</span>
                         )}
                       </TableCell>
                       <TableCell>
@@ -645,9 +667,12 @@ function InventoryPage() {
 
             <div className="grid gap-3 p-5 md:hidden">
               {sortedItems.map((item) => (
-                <div key={item.id} className="rounded-xl border border-border bg-background p-4">
+                <div
+                  key={item.id}
+                  className="border-border bg-background rounded-xl border p-4"
+                >
                   <div className="flex items-center justify-between gap-2">
-                    <Package className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <Package className="text-muted-foreground h-4 w-4 shrink-0" />
                     <Badge
                       variant="outline"
                       className={`text-[10px] capitalize ${stockBadgeClass(item.stockLevel)}`}
@@ -655,19 +680,19 @@ function InventoryPage() {
                       {item.stockLevel}
                     </Badge>
                   </div>
-                  <div className="mt-2 font-mono text-[11px] text-muted-foreground">{item.sku}</div>
+                  <div className="text-muted-foreground mt-2 font-mono text-[11px]">{item.sku}</div>
                   <div className="mt-1 font-medium">{item.name}</div>
-                  <div className="mt-1 text-xs text-muted-foreground">{item.site}</div>
-                  <div className="mt-2 text-[11px] text-muted-foreground">
-                    {formatCurrency(item.unitPrice)} each · ext.{" "}
+                  <div className="text-muted-foreground mt-1 text-xs">{item.site}</div>
+                  <div className="text-muted-foreground mt-2 text-[11px]">
+                    {formatCurrency(item.unitPrice)} each · ext.{' '}
                     {formatCurrency(extensionValue(item))}
                   </div>
                   <div className="mt-3 flex flex-wrap items-end justify-between gap-2">
                     <div>
-                      <div className="text-[10px] uppercase text-muted-foreground">On hand</div>
+                      <div className="text-muted-foreground text-[10px] uppercase">On hand</div>
                       <div className="text-2xl font-semibold tabular-nums">{item.quantity}</div>
                     </div>
-                    <div className="text-right text-xs text-muted-foreground">
+                    <div className="text-muted-foreground text-right text-xs">
                       Safety {item.safetyStock} · Reorder {item.reorderPoint}
                     </div>
                   </div>
@@ -686,19 +711,22 @@ function InventoryPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="optimize" className="mt-0 space-y-6 outline-none">
+        <TabsContent
+          value="optimize"
+          className="mt-0 space-y-6 outline-none"
+        >
           <div className="grid gap-6 lg:grid-cols-2">
             <Card className="border-border bg-card p-6">
               <div className="mb-4 flex items-center gap-2 text-sm font-semibold">
-                <Layers className="h-4 w-4 text-muted-foreground" />
+                <Layers className="text-muted-foreground h-4 w-4" />
                 ABC analysis
               </div>
-              <p className="mb-4 text-xs text-muted-foreground">
+              <p className="text-muted-foreground mb-4 text-xs">
                 Prioritize cycle counts and purchasing focus on A SKUs (roughly the 80/20 of value
                 motion in this workspace).
               </p>
               <div className="space-y-3">
-                {(["A", "B", "C"] as const).map((tier) => {
+                {(['A', 'B', 'C'] as const).map((tier) => {
                   const n = abcCounts[tier];
                   const pct = Math.round((n / abcTotal) * 100);
                   return (
@@ -706,10 +734,13 @@ function InventoryPage() {
                       <div className="mb-1 flex justify-between text-sm">
                         <span className="text-muted-foreground">Class {tier}</span>
                         <span className="font-semibold">
-                          {n} SKU{n === 1 ? "" : "s"} · {pct}%
+                          {n} SKU{n === 1 ? '' : 's'} · {pct}%
                         </span>
                       </div>
-                      <Progress value={pct} className="h-1.5" />
+                      <Progress
+                        value={pct}
+                        className="h-1.5"
+                      />
                     </div>
                   );
                 })}
@@ -718,10 +749,10 @@ function InventoryPage() {
 
             <Card className="border-border bg-card p-6">
               <div className="mb-4 flex items-center gap-2 text-sm font-semibold">
-                <RefreshCw className="h-4 w-4 text-muted-foreground" />
+                <RefreshCw className="text-muted-foreground h-4 w-4" />
                 Cycle counting plan
               </div>
-              <p className="mb-4 text-xs text-muted-foreground">
+              <p className="text-muted-foreground mb-4 text-xs">
                 Rotate small slices of stock on a cadence instead of one annual wall-to-wall count —
                 less disruption, tighter trust in the ledger.
               </p>
@@ -729,10 +760,10 @@ function InventoryPage() {
                 {bySite.map((loc, i) => (
                   <li
                     key={loc.site}
-                    className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2"
+                    className="border-border bg-background flex items-center justify-between rounded-lg border px-3 py-2"
                   >
                     <span className="font-medium">{loc.site}</span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-muted-foreground text-xs">
                       Slot {i + 1} · {loc.skus} SKUs · est. 25 min
                     </span>
                   </li>
@@ -743,15 +774,15 @@ function InventoryPage() {
 
           <Card className="border-border bg-card p-6">
             <div className="mb-4 flex items-center gap-2 text-sm font-semibold">
-              <TrendingDown className="h-4 w-4 text-muted-foreground" />
+              <TrendingDown className="text-muted-foreground h-4 w-4" />
               Slow-moving and excess risk
             </div>
             {slowMovers.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 No slow movers flagged in this catalog slice.
               </p>
             ) : (
-              <div className="overflow-x-auto rounded-lg border border-border">
+              <div className="border-border overflow-x-auto rounded-lg border">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/40 hover:bg-muted/40">
@@ -767,7 +798,10 @@ function InventoryPage() {
                         <TableCell className="font-mono text-xs">{item.sku}</TableCell>
                         <TableCell>{item.name}</TableCell>
                         <TableCell>
-                          <Badge variant="outline" className="text-[10px]">
+                          <Badge
+                            variant="outline"
+                            className="text-[10px]"
+                          >
                             {item.velocity}
                           </Badge>
                         </TableCell>

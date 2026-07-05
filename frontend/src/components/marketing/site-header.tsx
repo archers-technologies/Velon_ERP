@@ -1,31 +1,26 @@
-import { useState } from "react";
-import { Link } from "@tanstack/react-router";
-import { Menu } from "lucide-react";
-import { BrandLogoLink } from "@/components/marketing/brand-logo-link";
-import { VelonLogoMark } from "@/components/marketing/velon-logo-mark";
-import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { loginSearch } from "@/lib/auth/login-utils";
+import { useState } from 'react';
+import { Link } from '@tanstack/react-router';
+import { Menu } from 'lucide-react';
+import { BrandLogoLink } from '@/components/marketing/brand-logo-link';
+import { VelonLogoMark } from '@/components/marketing/velon-logo-mark';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { loginSearch } from '@/lib/auth/login-utils';
 
 const NAV_LINKS = [
-  { to: "/features", label: "Features" },
-  { to: "/industries", label: "Industries" },
-  { to: "/pricing", label: "Pricing" },
-  { to: "/about", label: "About" },
-  { to: "/contact", label: "Contact" },
-  { to: "/help", label: "Help" },
+  { to: '/features', label: 'Features' },
+  { to: '/industries', label: 'Industries' },
+  { to: '/pricing', label: 'Pricing' },
+  { to: '/about', label: 'About' },
+  { to: '/contact', label: 'Contact' },
+  { to: '/help', label: 'Help' },
 ] as const;
 
 export function SiteHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
+    <header className="border-border/60 bg-background/80 sticky top-0 z-50 border-b backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
         <BrandLogoLink className="flex shrink-0 items-center gap-2.5">
           <VelonLogoMark size="sm" />
@@ -34,24 +29,36 @@ export function SiteHeader() {
           </span>
         </BrandLogoLink>
 
-        <nav className="hidden items-center gap-8 text-sm font-medium text-muted-foreground md:flex">
+        <nav className="text-muted-foreground hidden items-center gap-8 text-sm font-medium md:flex">
           {NAV_LINKS.map((link) => (
-            <Link key={link.to} to={link.to} className="hover:text-foreground">
+            <Link
+              key={link.to}
+              to={link.to}
+              className="hover:text-foreground"
+            >
               {link.label}
             </Link>
           ))}
         </nav>
 
         <div className="flex shrink-0 items-center gap-2">
-          <Button size="sm" variant="outline" className="border-border" asChild>
-            <Link to="/login" search={loginSearch({ tab: "signin" })}>
+          <Button
+            size="sm"
+            variant="outline"
+            className="border-border"
+            asChild
+          >
+            <Link
+              to="/login"
+              search={loginSearch({ tab: 'signin' })}
+            >
               Login
             </Link>
           </Button>
 
           <Button
             size="sm"
-            className="hidden bg-foreground text-background hover:bg-foreground/90 md:inline-flex"
+            className="bg-foreground text-background hover:bg-foreground/90 hidden md:inline-flex"
             asChild
           >
             <Link to="/contact">Contact sales</Link>
@@ -70,8 +77,14 @@ export function SiteHeader() {
         </div>
       </div>
 
-      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent side="right" className="w-[min(100vw-2rem,20rem)]">
+      <Sheet
+        open={mobileOpen}
+        onOpenChange={setMobileOpen}
+      >
+        <SheetContent
+          side="right"
+          className="w-[min(100vw-2rem,20rem)]"
+        >
           <SheetHeader>
             <SheetTitle>Menu</SheetTitle>
           </SheetHeader>
@@ -80,18 +93,21 @@ export function SiteHeader() {
               <Link
                 key={link.to}
                 to={link.to}
-                className="rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-lg px-3 py-2.5 text-sm font-medium"
                 onClick={() => setMobileOpen(false)}
               >
                 {link.label}
               </Link>
             ))}
-            <div className="mt-4 border-t border-border pt-4">
+            <div className="border-border mt-4 border-t pt-4">
               <Button
-                className="w-full bg-foreground text-background hover:bg-foreground/90"
+                className="bg-foreground text-background hover:bg-foreground/90 w-full"
                 asChild
               >
-                <Link to="/contact" onClick={() => setMobileOpen(false)}>
+                <Link
+                  to="/contact"
+                  onClick={() => setMobileOpen(false)}
+                >
                   Contact sales
                 </Link>
               </Button>

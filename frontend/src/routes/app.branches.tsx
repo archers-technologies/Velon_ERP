@@ -1,57 +1,24 @@
-import * as React from "react";
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { toast } from "sonner";
-import { loadBranchesWorkspace } from "@/lib/workspace/loaders";
+import * as React from 'react';
+import { createFileRoute, Link, useRouter } from '@tanstack/react-router';
 import {
-  createInventoryWarehouse,
-  updateInventoryWarehouse,
-} from "@/lib/inventory/api";
-import { getSessionMembershipRole } from "@/lib/auth/session";
-import { canManageInventory, normalizeVelonRole } from "@velon/shared";
-import type { BranchOperationalTask } from "@/lib/types/workspace-ui";
-import { useDismissiblePanel } from "@/hooks/use-dismissible-panel";
-import { useWorkspaceCurrency } from "@/contexts/workspace-currency";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Store,
-  Building2,
-  ScanBarcode,
-  PackagePlus,
-  Smartphone,
   AlertTriangle,
   ArrowUpRight,
-  Truck,
-  Receipt,
+  Building2,
   FileStack,
   ListFilter,
+  PackagePlus,
   Plus,
-} from "lucide-react";
+  Receipt,
+  ScanBarcode,
+  Smartphone,
+  Store,
+  Truck,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { canManageInventory, normalizeVelonRole } from '@velon/shared';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -59,17 +26,47 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
+import { Switch } from '@/components/ui/switch';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { useWorkspaceCurrency } from '@/contexts/workspace-currency';
+import { useDismissiblePanel } from '@/hooks/use-dismissible-panel';
+import { getSessionMembershipRole } from '@/lib/auth/session';
+import { createInventoryWarehouse, updateInventoryWarehouse } from '@/lib/inventory/api';
+import type { BranchOperationalTask } from '@/lib/types/workspace-ui';
+import { loadBranchesWorkspace } from '@/lib/workspace/loaders';
 
-export const Route = createFileRoute("/app/branches")({
+export const Route = createFileRoute('/app/branches')({
   loader: () => loadBranchesWorkspace(),
   component: BranchesPage,
 });
 
-type RoleLens = "store_ops" | "area_manager";
+type RoleLens = 'store_ops' | 'area_manager';
 
 type BranchForm = {
   name: string;
@@ -81,27 +78,27 @@ type BranchForm = {
   isActive: boolean;
 };
 
-function statusStyles(status: "healthy" | "watch" | "critical"): string {
-  if (status === "healthy") return "border-success/35 bg-success/10 text-success";
-  if (status === "critical") return "border-destructive/40 bg-destructive/10 text-destructive";
-  return "border-warning/45 bg-warning/15 text-warning-foreground";
+function statusStyles(status: 'healthy' | 'watch' | 'critical'): string {
+  if (status === 'healthy') return 'border-success/35 bg-success/10 text-success';
+  if (status === 'critical') return 'border-destructive/40 bg-destructive/10 text-destructive';
+  return 'border-warning/45 bg-warning/15 text-warning-foreground';
 }
 
 function stockLevelClass(level: string): string {
-  if (level === "critical") return "text-destructive";
-  if (level === "low") return "text-warning-foreground";
-  return "text-muted-foreground";
+  if (level === 'critical') return 'text-destructive';
+  if (level === 'low') return 'text-warning-foreground';
+  return 'text-muted-foreground';
 }
 
 type BranchListSort =
-  | "name_asc"
-  | "order_value_desc"
-  | "order_value_asc"
-  | "price_asc"
-  | "price_desc";
+  | 'name_asc'
+  | 'order_value_desc'
+  | 'order_value_asc'
+  | 'price_asc'
+  | 'price_desc';
 
 function branchOrderValue(b: { kind: string; salesMtd: number }): number {
-  return b.kind === "store" ? b.salesMtd : 0;
+  return b.kind === 'store' ? b.salesMtd : 0;
 }
 
 function branchAvgUnitPrice(b: { lines: { quantity: number; unitPrice: number }[] }): number {
@@ -121,15 +118,15 @@ function sortBranches<
 >(rows: T[], sort: BranchListSort): T[] {
   const arr = [...rows];
   switch (sort) {
-    case "name_asc":
+    case 'name_asc':
       return arr.sort((a, b) => a.name.localeCompare(b.name));
-    case "order_value_desc":
+    case 'order_value_desc':
       return arr.sort((a, b) => branchOrderValue(b) - branchOrderValue(a));
-    case "order_value_asc":
+    case 'order_value_asc':
       return arr.sort((a, b) => branchOrderValue(a) - branchOrderValue(b));
-    case "price_asc":
+    case 'price_asc':
       return arr.sort((a, b) => branchAvgUnitPrice(a) - branchAvgUnitPrice(b));
-    case "price_desc":
+    case 'price_desc':
       return arr.sort((a, b) => branchAvgUnitPrice(b) - branchAvgUnitPrice(a));
     default:
       return arr;
@@ -143,15 +140,15 @@ function sortBranchSkuLines<L extends { name: string; quantity: number; unitPric
   const arr = [...lines];
   const ext = (l: L) => l.quantity * l.unitPrice;
   switch (sort) {
-    case "name_asc":
+    case 'name_asc':
       return arr.sort((a, b) => a.name.localeCompare(b.name));
-    case "order_value_desc":
+    case 'order_value_desc':
       return arr.sort((a, b) => ext(b) - ext(a));
-    case "order_value_asc":
+    case 'order_value_asc':
       return arr.sort((a, b) => ext(a) - ext(b));
-    case "price_asc":
+    case 'price_asc':
       return arr.sort((a, b) => a.unitPrice - b.unitPrice);
-    case "price_desc":
+    case 'price_desc':
       return arr.sort((a, b) => b.unitPrice - a.unitPrice);
     default:
       return arr;
@@ -159,12 +156,12 @@ function sortBranchSkuLines<L extends { name: string; quantity: number; unitPric
 }
 
 const emptyBranchForm = (): BranchForm => ({
-  name: "",
-  code: "",
-  address: "",
-  phone: "",
-  email: "",
-  manager: "",
+  name: '',
+  code: '',
+  address: '',
+  phone: '',
+  email: '',
+  manager: '',
   isActive: true,
 });
 
@@ -172,19 +169,19 @@ function BranchesPage() {
   const router = useRouter();
   const { formatCurrency } = useWorkspaceCurrency();
   const data = Route.useLoaderData();
-  const canManage = canManageInventory(normalizeVelonRole(getSessionMembershipRole() ?? "USER"));
-  const [roleLens, setRoleLens] = React.useState<RoleLens>("area_manager");
+  const canManage = canManageInventory(normalizeVelonRole(getSessionMembershipRole() ?? 'USER'));
+  const [roleLens, setRoleLens] = React.useState<RoleLens>('area_manager');
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
-  const [branchListSort, setBranchListSort] = React.useState<BranchListSort>("name_asc");
-  const [branchLineSort, setBranchLineSort] = React.useState<BranchListSort>("name_asc");
+  const [branchListSort, setBranchListSort] = React.useState<BranchListSort>('name_asc');
+  const [branchLineSort, setBranchLineSort] = React.useState<BranchListSort>('name_asc');
   const [createOpen, setCreateOpen] = React.useState(false);
   const [editId, setEditId] = React.useState<string | null>(null);
   const [branchForm, setBranchForm] = React.useState<BranchForm>(emptyBranchForm);
   const [branchBusy, setBranchBusy] = React.useState(false);
-  const alertsDismiss = useDismissiblePanel("velon-dismiss:app:branches:alerts");
+  const alertsDismiss = useDismissiblePanel('velon-dismiss:app:branches:alerts');
 
   const visibleBranches = React.useMemo(() => {
-    if (roleLens === "store_ops") return data.branches.filter((b) => b.isActive !== false);
+    if (roleLens === 'store_ops') return data.branches.filter((b) => b.isActive !== false);
     return data.branches;
   }, [data.branches, roleLens]);
 
@@ -206,7 +203,7 @@ function BranchesPage() {
   );
 
   React.useEffect(() => {
-    setBranchLineSort("name_asc");
+    setBranchLineSort('name_asc');
   }, [selectedId]);
 
   function openCreateBranch() {
@@ -219,11 +216,11 @@ function BranchesPage() {
     setEditId(branch.id);
     setBranchForm({
       name: branch.name,
-      code: branch.code ?? "",
-      address: branch.address ?? "",
-      phone: branch.phone ?? "",
-      email: branch.email ?? "",
-      manager: branch.manager ?? "",
+      code: branch.code ?? '',
+      address: branch.address ?? '',
+      phone: branch.phone ?? '',
+      email: branch.email ?? '',
+      manager: branch.manager ?? '',
       isActive: branch.isActive !== false,
     });
     setCreateOpen(true);
@@ -244,15 +241,15 @@ function BranchesPage() {
       };
       if (editId) {
         await updateInventoryWarehouse(editId, body);
-        toast.success("Branch updated");
+        toast.success('Branch updated');
       } else {
         await createInventoryWarehouse(body);
-        toast.success("Branch created");
+        toast.success('Branch created');
       }
       setCreateOpen(false);
       await router.invalidate();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not save branch");
+      toast.error(e instanceof Error ? e.message : 'Could not save branch');
     } finally {
       setBranchBusy(false);
     }
@@ -261,69 +258,72 @@ function BranchesPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="inline-flex h-9 items-center rounded-lg border border-border bg-muted/40 p-1">
+        <div className="border-border bg-muted/40 inline-flex h-9 items-center rounded-lg border p-1">
           <Button
             type="button"
-            variant={roleLens === "store_ops" ? "secondary" : "ghost"}
+            variant={roleLens === 'store_ops' ? 'secondary' : 'ghost'}
             size="sm"
             className="rounded-md px-3"
-            onClick={() => setRoleLens("store_ops")}
+            onClick={() => setRoleLens('store_ops')}
           >
             <Store className="mr-1.5 h-3.5 w-3.5" />
             Store ops
           </Button>
           <Button
             type="button"
-            variant={roleLens === "area_manager" ? "secondary" : "ghost"}
+            variant={roleLens === 'area_manager' ? 'secondary' : 'ghost'}
             size="sm"
             className="rounded-md px-3"
-            onClick={() => setRoleLens("area_manager")}
+            onClick={() => setRoleLens('area_manager')}
           >
             <Building2 className="mr-1.5 h-3.5 w-3.5" />
             Area view
           </Button>
         </div>
-        <p className="max-w-xl text-xs text-muted-foreground">
-          {roleLens === "store_ops"
-            ? "Receive, pick, and adjust with barcode-first flows — minimal chrome for floor tablets."
-            : "Compare locations, stock health, and POS-linked sales on one surface."}
+        <p className="text-muted-foreground max-w-xl text-xs">
+          {roleLens === 'store_ops'
+            ? 'Receive, pick, and adjust with barcode-first flows — minimal chrome for floor tablets.'
+            : 'Compare locations, stock health, and POS-linked sales on one surface.'}
         </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {[
           {
-            label: "Network MTD sales",
+            label: 'Network MTD sales',
             value: formatCurrency(data.kpis.networkMtdSales),
-            hint: "POS revenue attributed network-wide (MTD)",
+            hint: 'POS revenue attributed network-wide (MTD)',
           },
           {
-            label: "POS sales today",
+            label: 'POS sales today',
             value: formatCurrency(data.kpis.posLinkedSalesToday),
-            hint: "Live decrement path to Inventory",
+            hint: 'Live decrement path to Inventory',
           },
           {
-            label: "Open operational tasks",
-            value: String(roleLens === "area_manager" ? data.kpis.openTasks : visibleTasks.length),
-            hint: "GRNs, picks, PRs, expenses",
+            label: 'Open operational tasks',
+            value: String(roleLens === 'area_manager' ? data.kpis.openTasks : visibleTasks.length),
+            hint: 'GRNs, picks, PRs, expenses',
           },
           {
-            label: "Low / critical SKUs",
+            label: 'Low / critical SKUs',
             value: String(data.kpis.lowStockSkusNetwork),
-            hint: "Across store locations",
+            hint: 'Across store locations',
           },
           {
-            label: "Locations in watch",
+            label: 'Locations in watch',
             value: String(data.kpis.storesInWatch),
-            hint: "Needs attention today",
+            hint: 'Needs attention today',
           },
         ].map((k) => (
-          <Card key={k.label} className="border-border bg-card p-5">
-            <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          <Card
+            key={k.label}
+            className="border-border bg-card p-5"
+          >
+            <div className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
               {k.label}
             </div>
             <div className="mt-2 text-2xl font-semibold tracking-tight">{k.value}</div>
-            <div className="mt-1 text-[11px] text-muted-foreground">{k.hint}</div>
+            <div className="text-muted-foreground mt-1 text-[11px]">{k.hint}</div>
           </Card>
         ))}
       </div>
@@ -331,7 +331,7 @@ function BranchesPage() {
       {data.alerts.length > 0 && !alertsDismiss.dismissed ? (
         <Card className="border-warning/30 bg-warning/10 p-4">
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2 text-sm font-semibold text-warning-foreground">
+            <div className="text-warning-foreground flex items-center gap-2 text-sm font-semibold">
               <AlertTriangle className="h-4 w-4" />
               Operational signals
             </div>
@@ -339,13 +339,13 @@ function BranchesPage() {
               type="button"
               size="sm"
               variant="ghost"
-              className="h-8 text-xs text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground h-8 text-xs"
               onClick={alertsDismiss.dismiss}
             >
               Dismiss
             </Button>
           </div>
-          <ul className="list-inside list-disc space-y-1 text-sm text-muted-foreground">
+          <ul className="text-muted-foreground list-inside list-disc space-y-1 text-sm">
             {data.alerts.map((a) => (
               <li key={a}>{a}</li>
             ))}
@@ -356,49 +356,81 @@ function BranchesPage() {
       <Card className="border-border bg-muted/20 p-4">
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <span className="text-sm font-semibold">Quick actions</span>
-          <Badge variant="outline" className="text-[10px] font-normal">
+          <Badge
+            variant="outline"
+            className="text-[10px] font-normal"
+          >
             Pin favorites in production
           </Badge>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button size="sm" className="rounded-lg bg-foreground text-background hover:bg-foreground/90" asChild>
+          <Button
+            size="sm"
+            className="bg-foreground text-background hover:bg-foreground/90 rounded-lg"
+            asChild
+          >
             <Link to="/app/inventory">
               <ScanBarcode className="mr-1.5 h-3.5 w-3.5" />
               Receive item
             </Link>
           </Button>
-          <Button size="sm" variant="outline" className="rounded-lg" asChild>
+          <Button
+            size="sm"
+            variant="outline"
+            className="rounded-lg"
+            asChild
+          >
             <Link to="/app/inventory">
               <PackagePlus className="mr-1.5 h-3.5 w-3.5" />
               Stock adjustment
             </Link>
           </Button>
-          <Button size="sm" variant="outline" className="rounded-lg" asChild>
+          <Button
+            size="sm"
+            variant="outline"
+            className="rounded-lg"
+            asChild
+          >
             <Link to="/app/suppliers">
               <Truck className="mr-1.5 h-3.5 w-3.5" />
               New PO
             </Link>
           </Button>
-          <Button size="sm" variant="outline" className="rounded-lg" asChild>
+          <Button
+            size="sm"
+            variant="outline"
+            className="rounded-lg"
+            asChild
+          >
             <Link to="/app/billing-pos">
               <Receipt className="mr-1.5 h-3.5 w-3.5" />
               POS checkout
             </Link>
           </Button>
-          <Button size="sm" variant="outline" className="rounded-lg" asChild>
+          <Button
+            size="sm"
+            variant="outline"
+            className="rounded-lg"
+            asChild
+          >
             <Link to="/app/inventory">
               Live stock
               <ArrowUpRight className="ml-1.5 h-3.5 w-3.5" />
             </Link>
           </Button>
-          <Button size="sm" variant="outline" className="rounded-lg" asChild>
+          <Button
+            size="sm"
+            variant="outline"
+            className="rounded-lg"
+            asChild
+          >
             <Link to="/app/documents">
               <FileStack className="mr-1.5 h-3.5 w-3.5" />
               Documents
             </Link>
           </Button>
         </div>
-        <div className="mt-3 flex items-start gap-2 text-xs text-muted-foreground">
+        <div className="text-muted-foreground mt-3 flex items-start gap-2 text-xs">
           <Smartphone className="mt-0.5 h-4 w-4 shrink-0" />
           Responsive layout: primary actions stay thumb-reachable on phones; scanner hardware binds
           to the same receive flow.
@@ -410,16 +442,23 @@ function BranchesPage() {
           <h2 className="text-lg font-semibold">Locations</h2>
           <div className="flex flex-wrap items-center gap-2">
             {canManage ? (
-              <Button size="sm" className="rounded-lg" onClick={openCreateBranch}>
+              <Button
+                size="sm"
+                className="rounded-lg"
+                onClick={openCreateBranch}
+              >
                 <Plus className="mr-1.5 h-3.5 w-3.5" />
                 Create branch
               </Button>
             ) : null}
-            <span className="text-xs text-muted-foreground max-sm:hidden">
+            <span className="text-muted-foreground text-xs max-sm:hidden">
               Tap a card for SKU-level stock and tasks
             </span>
             <div className="flex items-center gap-2">
-              <ListFilter className="h-4 w-4 text-muted-foreground" aria-hidden />
+              <ListFilter
+                className="text-muted-foreground h-4 w-4"
+                aria-hidden
+              />
               <Select
                 value={branchListSort}
                 onValueChange={(v) => setBranchListSort(v as BranchListSort)}
@@ -456,13 +495,13 @@ function BranchesPage() {
                 className="text-left"
                 onClick={() => setSelectedId(branch.id)}
               >
-                <Card className="h-full border-border bg-card p-5 transition-colors hover:border-foreground/25 hover:bg-muted/10">
+                <Card className="border-border bg-card hover:border-foreground/25 hover:bg-muted/10 h-full p-5 transition-colors">
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <div className="text-sm font-semibold">{branch.name}</div>
-                      <div className="mt-0.5 text-[11px] text-muted-foreground">
-                        {branch.code ? `${branch.code} · ` : ""}Retail / warehouse
-                        {branch.isActive === false ? " · Inactive" : ""}
+                      <div className="text-muted-foreground mt-0.5 text-[11px]">
+                        {branch.code ? `${branch.code} · ` : ''}Retail / warehouse
+                        {branch.isActive === false ? ' · Inactive' : ''}
                       </div>
                     </div>
                     <Badge
@@ -475,13 +514,16 @@ function BranchesPage() {
                   <div className="mt-4 text-2xl font-semibold tabular-nums">
                     {formatCurrency(branch.salesMtd)}
                   </div>
-                  <div className="mt-1 text-xs text-muted-foreground">MTD sales (branch)</div>
-                  <div className="mt-4 flex justify-between text-[11px] text-muted-foreground">
+                  <div className="text-muted-foreground mt-1 text-xs">MTD sales (branch)</div>
+                  <div className="text-muted-foreground mt-4 flex justify-between text-[11px]">
                     <span>Stock health</span>
-                    <span className="font-medium text-foreground">{clamped}%</span>
+                    <span className="text-foreground font-medium">{clamped}%</span>
                   </div>
-                  <Progress value={clamped} className="mt-1.5 h-1.5" />
-                  <div className="mt-2 flex flex-wrap gap-2 text-[10px] text-muted-foreground">
+                  <Progress
+                    value={clamped}
+                    className="mt-1.5 h-1.5"
+                  />
+                  <div className="text-muted-foreground mt-2 flex flex-wrap gap-2 text-[10px]">
                     <span>{branch.skusTracked} SKUs</span>
                     <span>·</span>
                     <span>{branch.batchTrackedSkus} batch-tracked</span>
@@ -496,7 +538,10 @@ function BranchesPage() {
       <Card className="border-border bg-card p-5">
         <div className="mb-3 flex items-center justify-between gap-2">
           <h3 className="text-sm font-semibold">Pending tasks · approvals</h3>
-          <Badge variant="outline" className="text-[10px] font-normal">
+          <Badge
+            variant="outline"
+            className="text-[10px] font-normal"
+          >
             Curated for this lens
           </Badge>
         </div>
@@ -506,35 +551,38 @@ function BranchesPage() {
             return (
               <div
                 key={t.id}
-                className="flex items-start justify-between gap-3 rounded-xl border border-border bg-muted/15 px-3 py-2.5 text-sm"
+                className="border-border bg-muted/15 flex items-start justify-between gap-3 rounded-xl border px-3 py-2.5 text-sm"
               >
                 <div>
-                  <div className="font-medium leading-snug">{t.title}</div>
-                  <div className="text-[11px] text-muted-foreground">{b?.name ?? "Location"}</div>
+                  <div className="leading-snug font-medium">{t.title}</div>
+                  <div className="text-muted-foreground text-[11px]">{b?.name ?? 'Location'}</div>
                 </div>
                 <Badge
                   variant="outline"
-                  className={`shrink-0 text-[10px] capitalize ${t.priority === "high" ? "border-destructive/30 text-destructive" : ""}`}
+                  className={`shrink-0 text-[10px] capitalize ${t.priority === 'high' ? 'border-destructive/30 text-destructive' : ''}`}
                 >
-                  {t.kind.replaceAll("_", " ")}
+                  {t.kind.replaceAll('_', ' ')}
                 </Badge>
               </div>
             );
           })}
         </div>
         {visibleTasks.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No tasks in this view.</p>
+          <p className="text-muted-foreground text-sm">No tasks in this view.</p>
         ) : null}
       </Card>
 
-      <Sheet open={Boolean(selected)} onOpenChange={(o) => !o && setSelectedId(null)}>
+      <Sheet
+        open={Boolean(selected)}
+        onOpenChange={(o) => !o && setSelectedId(null)}
+      >
         <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
           {selected ? (
             <>
               <SheetHeader>
                 <SheetTitle>{selected.name}</SheetTitle>
                 <SheetDescription>
-                  Sites: {selected.inventorySites.join(", ") || "—"} · real-time inventory slice
+                  Sites: {selected.inventorySites.join(', ') || '—'} · real-time inventory slice
                 </SheetDescription>
               </SheetHeader>
               <div className="mt-6 space-y-4 px-1">
@@ -545,18 +593,25 @@ function BranchesPage() {
                   >
                     {selected.operationalStatus}
                   </Badge>
-                  <Badge variant="outline" className="text-[10px] font-normal">
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] font-normal"
+                  >
                     {selected.batchTrackedSkus} lot / serial SKUs
                   </Badge>
                   {canManage ? (
-                    <Button size="sm" variant="outline" onClick={() => openEditBranch(selected)}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => openEditBranch(selected)}
+                    >
                       Edit branch
                     </Button>
                   ) : null}
                 </div>
 
                 {(selected.address || selected.phone || selected.email || selected.manager) && (
-                  <div className="rounded-lg border border-border bg-muted/15 p-3 text-xs text-muted-foreground">
+                  <div className="border-border bg-muted/15 text-muted-foreground rounded-lg border p-3 text-xs">
                     {selected.address ? <div>{selected.address}</div> : null}
                     {selected.phone ? <div>Tel: {selected.phone}</div> : null}
                     {selected.email ? <div>{selected.email}</div> : null}
@@ -565,88 +620,92 @@ function BranchesPage() {
                 )}
 
                 <>
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div>
-                        <div className="text-[11px] font-medium uppercase text-muted-foreground">
-                          SKU availability
-                        </div>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          Barcode scan on receive ties to these rows — auto-reorder suggestions fire
-                          when quantity ≤ reorder point.
-                        </p>
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <div className="text-muted-foreground text-[11px] font-medium uppercase">
+                        SKU availability
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <ListFilter className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
-                        <Select
-                          value={branchLineSort}
-                          onValueChange={(v) => setBranchLineSort(v as BranchListSort)}
-                        >
-                          <SelectTrigger className="h-8 w-[180px] rounded-lg text-[11px]">
-                            <SelectValue placeholder="Sort" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="name_asc">Name (A–Z)</SelectItem>
-                            <SelectItem value="order_value_desc">
-                              Ext. value (high → low)
-                            </SelectItem>
-                            <SelectItem value="order_value_asc">Ext. value (low → high)</SelectItem>
-                            <SelectItem value="price_asc">Unit price (low → high)</SelectItem>
-                            <SelectItem value="price_desc">Unit price (high → low)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                      <p className="text-muted-foreground mt-1 text-xs">
+                        Barcode scan on receive ties to these rows — auto-reorder suggestions fire
+                        when quantity ≤ reorder point.
+                      </p>
                     </div>
-                    <div className="overflow-x-auto rounded-lg border border-border">
-                      <Table>
-                        <TableHeader>
-                          <TableRow className="bg-muted/40 hover:bg-muted/40">
-                            <TableHead className="text-[10px] uppercase">SKU</TableHead>
-                            <TableHead className="text-[10px] uppercase">Item</TableHead>
-                            <TableHead className="text-[10px] uppercase text-right">Qty</TableHead>
-                            <TableHead className="text-[10px] uppercase text-right">Unit</TableHead>
-                            <TableHead className="text-[10px] uppercase text-right">Ext.</TableHead>
-                            <TableHead className="text-[10px] uppercase">Level</TableHead>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <ListFilter
+                        className="text-muted-foreground h-3.5 w-3.5"
+                        aria-hidden
+                      />
+                      <Select
+                        value={branchLineSort}
+                        onValueChange={(v) => setBranchLineSort(v as BranchListSort)}
+                      >
+                        <SelectTrigger className="h-8 w-[180px] rounded-lg text-[11px]">
+                          <SelectValue placeholder="Sort" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="name_asc">Name (A–Z)</SelectItem>
+                          <SelectItem value="order_value_desc">Ext. value (high → low)</SelectItem>
+                          <SelectItem value="order_value_asc">Ext. value (low → high)</SelectItem>
+                          <SelectItem value="price_asc">Unit price (low → high)</SelectItem>
+                          <SelectItem value="price_desc">Unit price (high → low)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="border-border overflow-x-auto rounded-lg border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-muted/40 hover:bg-muted/40">
+                          <TableHead className="text-[10px] uppercase">SKU</TableHead>
+                          <TableHead className="text-[10px] uppercase">Item</TableHead>
+                          <TableHead className="text-right text-[10px] uppercase">Qty</TableHead>
+                          <TableHead className="text-right text-[10px] uppercase">Unit</TableHead>
+                          <TableHead className="text-right text-[10px] uppercase">Ext.</TableHead>
+                          <TableHead className="text-[10px] uppercase">Level</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {selected.lines.length === 0 ? (
+                          <TableRow>
+                            <TableCell
+                              colSpan={6}
+                              className="text-muted-foreground text-sm"
+                            >
+                              No inventory rows mapped to this branch yet.
+                            </TableCell>
                           </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {selected.lines.length === 0 ? (
-                            <TableRow>
-                              <TableCell colSpan={6} className="text-sm text-muted-foreground">
-                                No inventory rows mapped to this branch yet.
+                        ) : (
+                          sortedBranchLines.map((line) => (
+                            <TableRow key={line.id}>
+                              <TableCell className="font-mono text-xs">{line.sku}</TableCell>
+                              <TableCell className="max-w-[160px] text-xs">{line.name}</TableCell>
+                              <TableCell className="text-right text-xs font-semibold tabular-nums">
+                                {line.quantity}
+                              </TableCell>
+                              <TableCell className="text-muted-foreground text-right text-xs tabular-nums">
+                                {formatCurrency(line.unitPrice)}
+                              </TableCell>
+                              <TableCell className="text-right text-xs font-medium tabular-nums">
+                                {formatCurrency(line.quantity * line.unitPrice)}
+                              </TableCell>
+                              <TableCell
+                                className={`text-xs capitalize ${stockLevelClass(line.stockLevel)}`}
+                              >
+                                {line.stockLevel}
+                                {line.batchTracked ? ' · batch' : ''}
                               </TableCell>
                             </TableRow>
-                          ) : (
-                            sortedBranchLines.map((line) => (
-                              <TableRow key={line.id}>
-                                <TableCell className="font-mono text-xs">{line.sku}</TableCell>
-                                <TableCell className="max-w-[160px] text-xs">{line.name}</TableCell>
-                                <TableCell className="text-right text-xs font-semibold tabular-nums">
-                                  {line.quantity}
-                                </TableCell>
-                                <TableCell className="text-right text-xs tabular-nums text-muted-foreground">
-                                  {formatCurrency(line.unitPrice)}
-                                </TableCell>
-                                <TableCell className="text-right text-xs font-medium tabular-nums">
-                                  {formatCurrency(line.quantity * line.unitPrice)}
-                                </TableCell>
-                                <TableCell
-                                  className={`text-xs capitalize ${stockLevelClass(line.stockLevel)}`}
-                                >
-                                  {line.stockLevel}
-                                  {line.batchTracked ? " · batch" : ""}
-                                </TableCell>
-                              </TableRow>
-                            ))
-                          )}
-                        </TableBody>
-                      </Table>
-                    </div>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </>
 
                 <Separator />
 
                 <div>
-                  <div className="mb-2 text-xs font-semibold uppercase text-muted-foreground">
+                  <div className="text-muted-foreground mb-2 text-xs font-semibold uppercase">
                     Tasks here
                   </div>
                   <ul className="space-y-2 text-sm">
@@ -655,7 +714,7 @@ function BranchesPage() {
                       .map((t) => (
                         <li
                           key={t.id}
-                          className="rounded-lg border border-border bg-background px-3 py-2"
+                          className="border-border bg-background rounded-lg border px-3 py-2"
                         >
                           {t.title}
                         </li>
@@ -668,10 +727,13 @@ function BranchesPage() {
         </SheetContent>
       </Sheet>
 
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+      <Dialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+      >
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{editId ? "Edit branch" : "Create branch"}</DialogTitle>
+            <DialogTitle>{editId ? 'Edit branch' : 'Create branch'}</DialogTitle>
             <DialogDescription>
               Branches are tenant-scoped locations backed by your workspace warehouse records.
             </DialogDescription>
@@ -730,11 +792,17 @@ function BranchesPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setCreateOpen(false)}
+            >
               Cancel
             </Button>
-            <Button disabled={branchBusy || !branchForm.name.trim()} onClick={saveBranch}>
-              {editId ? "Save changes" : "Create branch"}
+            <Button
+              disabled={branchBusy || !branchForm.name.trim()}
+              onClick={saveBranch}
+            >
+              {editId ? 'Save changes' : 'Create branch'}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,12 +1,6 @@
-import * as bcrypt from "bcrypt";
-import {
-  IndustryTemplate,
-  PrismaClient,
-  UserRole,
-  type Tenant,
-  type User,
-} from "@velon/database";
-import * as crypto from "crypto";
+import * as crypto from 'crypto';
+import * as bcrypt from 'bcrypt';
+import { IndustryTemplate, PrismaClient, UserRole, type Tenant, type User } from '@velon/database';
 
 const prisma = new PrismaClient();
 
@@ -22,9 +16,9 @@ function slugify(value: string): string {
   return (
     value
       .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "")
-      .slice(0, 40) || "tenant"
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 40) || 'tenant'
   );
 }
 
@@ -35,19 +29,19 @@ export async function seedTenantUser(input: {
   seedSource?: string;
 }): Promise<SeededTenant> {
   const email = input.email.toLowerCase();
-  const password = input.password ?? "TestPass123!";
+  const password = input.password ?? 'TestPass123!';
   const passwordHash = await bcrypt.hash(password, 10);
-  const slug = `${slugify(input.companyName)}-${crypto.randomBytes(2).toString("hex")}`;
+  const slug = `${slugify(input.companyName)}-${crypto.randomBytes(2).toString('hex')}`;
   const renewal = new Date();
   renewal.setDate(renewal.getDate() + 30);
-  const seedSource = input.seedSource ?? "e2e";
+  const seedSource = input.seedSource ?? 'e2e';
 
   const result = await prisma.$transaction(async (tx) => {
     const user = await tx.user.create({
       data: {
         email,
         passwordHash,
-        name: "Test Owner",
+        name: 'Test Owner',
         role: UserRole.USER,
         seedSource,
       },
@@ -57,8 +51,8 @@ export async function seedTenantUser(input: {
       data: {
         name: input.companyName,
         slug,
-        tenantCode: `TNT-${crypto.randomBytes(3).toString("hex").toUpperCase()}`,
-        country: "India",
+        tenantCode: `TNT-${crypto.randomBytes(3).toString('hex').toUpperCase()}`,
+        country: 'India',
         industryTemplate: IndustryTemplate.SERVICES,
         renewalDate: renewal,
         seedSource,
@@ -70,8 +64,8 @@ export async function seedTenantUser(input: {
         tenantId: tenant.id,
         legalName: input.companyName,
         email,
-        phone: "+91 9999999999",
-        country: "India",
+        phone: '+91 9999999999',
+        country: 'India',
         industry: IndustryTemplate.SERVICES,
       },
     });

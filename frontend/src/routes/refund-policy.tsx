@@ -1,16 +1,16 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { LegalPageFromCms } from "@/components/marketing/legal-page-from-cms";
-import { loadPublicSiteContentSafe } from "@/lib/cms/load-public";
-import type { CmsLegalPage } from "@/lib/cms/defaults";
+import { createFileRoute } from '@tanstack/react-router';
+import { LegalPageFromCms } from '@/components/marketing/legal-page-from-cms';
+import type { CmsLegalPage } from '@/lib/cms/defaults';
+import { loadPublicSiteContentSafe } from '@/lib/cms/load-public';
 
-export const Route = createFileRoute("/refund-policy")({
+export const Route = createFileRoute('/refund-policy')({
   loader: () => loadPublicSiteContentSafe(),
   head: () => ({
     meta: [
-      { title: "Refund Policy · Velon-ERP" },
+      { title: 'Refund Policy · Velon-ERP' },
       {
-        name: "description",
-        content: "Refund eligibility and process for Velon-ERP subscriptions.",
+        name: 'description',
+        content: 'Refund eligibility and process for Velon-ERP subscriptions.',
       },
     ],
   }),
@@ -25,9 +25,9 @@ function RefundPolicyPage() {
     <LegalPageFromCms
       page={page}
       relatedLinks={[
-        { label: "Terms of Service", to: "/terms" },
-        { label: "Privacy Policy", to: "/privacy" },
-        { label: "Contact", to: "/contact" },
+        { label: 'Terms of Service', to: '/terms' },
+        { label: 'Privacy Policy', to: '/privacy' },
+        { label: 'Contact', to: '/contact' },
       ]}
     />
   );

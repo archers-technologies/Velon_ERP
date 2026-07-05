@@ -6,25 +6,25 @@
  * Usage:
  *   node packages/database/scripts/cleanup-demo-data.mjs [--dry-run]
  */
-import { config } from "dotenv";
-import { resolve, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
-import { PrismaClient } from "@prisma/client";
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { PrismaClient } from '@prisma/client';
+import { config } from 'dotenv';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-config({ path: resolve(__dirname, "../../../.env") });
+config({ path: resolve(__dirname, '../../../.env') });
 
-const dryRun = process.argv.includes("--dry-run");
+const dryRun = process.argv.includes('--dry-run');
 const prisma = new PrismaClient();
 
 async function main() {
   const demoUsers = await prisma.user.findMany({
-    where: { seedSource: { in: ["demo", "e2e"] } },
+    where: { seedSource: { in: ['demo', 'e2e'] } },
     select: { id: true, email: true, seedSource: true },
   });
 
   const demoTenants = await prisma.tenant.findMany({
-    where: { seedSource: { in: ["demo", "e2e"] } },
+    where: { seedSource: { in: ['demo', 'e2e'] } },
     select: { id: true, name: true, tenantCode: true, seedSource: true },
   });
 
@@ -32,9 +32,10 @@ async function main() {
     `Found ${demoTenants.length} demo/e2e tenant(s) and ${demoUsers.length} demo/e2e user(s) (seedSource only).`,
   );
   if (dryRun) {
-    for (const t of demoTenants) console.log(`  tenant: ${t.tenantCode} · ${t.name} · ${t.seedSource}`);
+    for (const t of demoTenants)
+      console.log(`  tenant: ${t.tenantCode} · ${t.name} · ${t.seedSource}`);
     for (const u of demoUsers) console.log(`  user: ${u.email} · ${u.seedSource}`);
-    console.log("Dry run — no records deleted.");
+    console.log('Dry run — no records deleted.');
     return;
   }
 
@@ -49,7 +50,7 @@ async function main() {
     console.log(`Deleted user ${user.email}`);
   }
 
-  console.log("Cleanup complete.");
+  console.log('Cleanup complete.');
 }
 
 main()

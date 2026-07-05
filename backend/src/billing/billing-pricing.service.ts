@@ -1,13 +1,13 @@
-import { Injectable } from "@nestjs/common";
-import { BillingInterval, TenantPlan } from "@velon/database";
+import { Injectable } from '@nestjs/common';
+import { BillingInterval, TenantPlan } from '@velon/database';
 import {
   planRegionalPricesFromDefinition,
   resolvePlanPrice,
   type PlanRegionalPrices,
   type ResolvedPlanPrice,
-} from "@velon/shared";
-import { PrismaService } from "../prisma/prisma.service";
-import { PlanDefinitionService } from "./plan-definition.service";
+} from '@velon/shared';
+import { PrismaService } from '../prisma/prisma.service';
+import { PlanDefinitionService } from './plan-definition.service';
 
 export type TenantBillingContext = {
   billingCountry: string;
@@ -27,8 +27,8 @@ export class BillingPricingService {
       select: { countryCode: true, currency: true },
     });
     return {
-      billingCountry: workspace?.countryCode ?? "IN",
-      billingCurrency: workspace?.currency ?? "INR",
+      billingCountry: workspace?.countryCode ?? 'IN',
+      billingCurrency: workspace?.currency ?? 'INR',
     };
   }
 

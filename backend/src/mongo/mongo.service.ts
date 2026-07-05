@@ -1,6 +1,6 @@
-import { Injectable, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
-import { Db, MongoClient } from "mongodb";
-import { getMongoConnectionConfig, isMongoEnabled } from "./mongo.config";
+import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Db, MongoClient } from 'mongodb';
+import { getMongoConnectionConfig, isMongoEnabled } from './mongo.config';
 
 @Injectable()
 export class MongoService implements OnModuleInit, OnModuleDestroy {

@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { Check, ChevronsUpDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState } from 'react';
+import { Check, ChevronsUpDown } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   Command,
   CommandEmpty,
@@ -8,9 +8,9 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 
 export type SearchableSelectOption = { value: string; label: string };
 
@@ -31,9 +31,9 @@ export function SearchableSelect({
   value,
   onChange,
   options,
-  placeholder = "Select…",
-  searchPlaceholder = "Search…",
-  emptyMessage = "No results found.",
+  placeholder = 'Select…',
+  searchPlaceholder = 'Search…',
+  emptyMessage = 'No results found.',
   required,
   className,
 }: Props) {
@@ -41,7 +41,10 @@ export function SearchableSelect({
   const selected = options.find((option) => option.value === value);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      open={open}
+      onOpenChange={setOpen}
+    >
       <PopoverTrigger asChild>
         <Button
           id={id}
@@ -51,8 +54,8 @@ export function SearchableSelect({
           aria-expanded={open}
           aria-required={required}
           className={cn(
-            "h-10 w-full justify-between bg-background font-normal shadow-sm",
-            !selected && "text-muted-foreground",
+            'bg-background h-10 w-full justify-between font-normal shadow-sm',
+            !selected && 'text-muted-foreground',
             className,
           )}
         >
@@ -60,7 +63,10 @@ export function SearchableSelect({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+      <PopoverContent
+        className="w-[var(--radix-popover-trigger-width)] p-0"
+        align="start"
+      >
         <Command>
           <CommandInput placeholder={searchPlaceholder} />
           <CommandList className="max-h-64">
@@ -77,8 +83,8 @@ export function SearchableSelect({
                 >
                   <Check
                     className={cn(
-                      "mr-2 h-4 w-4 shrink-0",
-                      value === option.value ? "opacity-100" : "opacity-0",
+                      'mr-2 h-4 w-4 shrink-0',
+                      value === option.value ? 'opacity-100' : 'opacity-0',
                     )}
                   />
                   <span className="truncate">{option.label}</span>

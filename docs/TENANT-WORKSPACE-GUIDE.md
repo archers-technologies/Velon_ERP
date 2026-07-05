@@ -29,22 +29,22 @@ A step-by-step guide for business owners and team members who run day-to-day ope
 
 Velon ERP has two sides:
 
-| Area | Who it is for | What you do there |
-|------|---------------|-------------------|
-| **Public website** | Anyone browsing | Learn about Velon, view pricing, book a demo |
-| **Tenant workspace** (`/app`) | Your team only | Run your business — sales, stock, customers, money, reports |
+| Area                          | Who it is for   | What you do there                                           |
+| ----------------------------- | --------------- | ----------------------------------------------------------- |
+| **Public website**            | Anyone browsing | Learn about Velon, view pricing, book a demo                |
+| **Tenant workspace** (`/app`) | Your team only  | Run your business — sales, stock, customers, money, reports |
 
 **Tenant workspace** is your private command center inside Velon. Think of it as your company's office in the app.
 
 ### Key ideas (in plain language)
 
-| Term | What it means |
-|------|---------------|
-| **Tenant** | Your company as a Velon customer (billing and legal entity) |
-| **Workspace** | Your company's operational environment — where all business data lives |
-| **Company profile** | Your business identity on invoices and documents (name, address, tax ID, logo) |
-| **Seat** | One licensed user slot on your plan |
-| **Role preset** | A simple job title (Sales, Accountant, Viewer, etc.) that controls what someone can do |
+| Term                | What it means                                                                          |
+| ------------------- | -------------------------------------------------------------------------------------- |
+| **Tenant**          | Your company as a Velon customer (billing and legal entity)                            |
+| **Workspace**       | Your company's operational environment — where all business data lives                 |
+| **Company profile** | Your business identity on invoices and documents (name, address, tax ID, logo)         |
+| **Seat**            | One licensed user slot on your plan                                                    |
+| **Role preset**     | A simple job title (Sales, Accountant, Viewer, etc.) that controls what someone can do |
 
 At launch, each company has **one tenant = one workspace = one company profile**.
 
@@ -103,30 +103,30 @@ If your session expires, Velon asks you to sign in again. Use the **Sign in agai
 
 The sidebar uses everyday business words — not heavy ERP jargon:
 
-| Menu item | Path | What it is for |
-|-----------|------|----------------|
-| **Dashboard** | `/app` | Today's overview and shortcuts |
-| **Sales** | `/app/sales-crm` | Leads, opportunities, quotations, proposals |
-| **Purchases** | `/app/procurement` | Buying stock from vendors |
-| **Inventory** | `/app/inventory` | Products, categories, warehouses, stock |
-| **Customers** | `/app/customers` | Customer records, contacts, activities, notes |
-| **Vendors** | `/app/suppliers` | Supplier records and purchase orders |
-| **Accounting** | `/app/accounting` | Money in, money out, journals, bank feed |
-| **HR & Payroll** | `/app/hr-payroll` | Team, departments, branches (people hub) |
-| **Reports** | `/app/reports` | Financial reports and charts |
-| **Settings** | `/app/settings` | Your preferences and workspace configuration |
+| Menu item        | Path               | What it is for                                |
+| ---------------- | ------------------ | --------------------------------------------- |
+| **Dashboard**    | `/app`             | Today's overview and shortcuts                |
+| **Sales**        | `/app/sales-crm`   | Leads, opportunities, quotations, proposals   |
+| **Purchases**    | `/app/procurement` | Buying stock from vendors                     |
+| **Inventory**    | `/app/inventory`   | Products, categories, warehouses, stock       |
+| **Customers**    | `/app/customers`   | Customer records, contacts, activities, notes |
+| **Vendors**      | `/app/suppliers`   | Supplier records and purchase orders          |
+| **Accounting**   | `/app/accounting`  | Money in, money out, journals, bank feed      |
+| **HR & Payroll** | `/app/hr-payroll`  | Team, departments, branches (people hub)      |
+| **Reports**      | `/app/reports`     | Financial reports and charts                  |
+| **Settings**     | `/app/settings`    | Your preferences and workspace configuration  |
 
 The **Reports** item may show a badge when there are unread alerts.
 
 ### Top header
 
-| Control | What it does |
-|---------|--------------|
-| **Books in** | Shows the currency used across invoices and reports |
-| **Location** | Your business city and region (on larger screens) |
-| **Sun / Moon** | Switch between light and dark mode |
-| **Bell** | Open recent notifications; link to all alerts |
-| **Profile avatar** | Your account menu (profile, settings, sign out) |
+| Control            | What it does                                        |
+| ------------------ | --------------------------------------------------- |
+| **Books in**       | Shows the currency used across invoices and reports |
+| **Location**       | Your business city and region (on larger screens)   |
+| **Sun / Moon**     | Switch between light and dark mode                  |
+| **Bell**           | Open recent notifications; link to all alerts       |
+| **Profile avatar** | Your account menu (profile, settings, sign out)     |
 
 ### Profile menu (top right)
 
@@ -147,19 +147,19 @@ On mobile it appears as a round button; on desktop it shows **Quick create** wit
 
 ## 5. Your dashboard — start here every day
 
-The dashboard answers: *"What is happening in my business right now?"*
+The dashboard answers: _"What is happening in my business right now?"_
 
 ### Getting started checklist
 
 New workspaces see a **Getting started** card with five steps:
 
-| Step | Why it matters | Where it takes you |
-|------|----------------|-------------------|
-| Add company details | Name, phone, and address appear on invoices | Settings → Workspace admin → Company |
-| Add first customer | You need buyers before you can sell | Customers |
-| Add first product or service | Define what you sell or stock | Inventory → Products |
-| Create first invoice | Bill a customer and track payment | Billing & POS |
-| Invite team member | Give staff their own login | Settings → Workspace admin → Invitations |
+| Step                         | Why it matters                              | Where it takes you                       |
+| ---------------------------- | ------------------------------------------- | ---------------------------------------- |
+| Add company details          | Name, phone, and address appear on invoices | Settings → Workspace admin → Company     |
+| Add first customer           | You need buyers before you can sell         | Customers                                |
+| Add first product or service | Define what you sell or stock               | Inventory → Products                     |
+| Create first invoice         | Bill a customer and track payment           | Billing & POS                            |
+| Invite team member           | Give staff their own login                  | Settings → Workspace admin → Invitations |
 
 - Progress is shown as a bar (e.g. `2/5`).
 - Completed steps are crossed out with a green check.
@@ -172,12 +172,12 @@ The checklist hides automatically when all steps are done.
 
 Four cards give you a quick health check:
 
-| Card | Meaning |
-|------|---------|
-| **Customers** | How many active customers you have |
+| Card            | Meaning                                  |
+| --------------- | ---------------------------------------- |
+| **Customers**   | How many active customers you have       |
 | **Open quotes** | Quotations waiting for customer approval |
-| **Products** | Items in your catalog |
-| **Low stock** | Products that need restocking |
+| **Products**    | Items in your catalog                    |
+| **Low stock**   | Products that need restocking            |
 
 ### Needs your attention
 
@@ -192,16 +192,16 @@ When relevant, a panel links you to:
 
 Both use the same six daily actions. Use whichever is closer on screen.
 
-| Action | What it does | Goes to |
-|--------|--------------|---------|
-| **Create Invoice** | Bill a customer | Billing & POS |
-| **Add Customer** | Save a new buyer | Customers |
-| **Add Product** | List something you sell or stock | Inventory → Products |
-| **Record Payment** | Log money received or paid | Billing & POS |
-| **Create Quotation** | Send a price quote | Sales → Quotations |
-| **Add Purchase** | Buy stock from a vendor | Purchases |
+| Action               | What it does                     | Goes to              |
+| -------------------- | -------------------------------- | -------------------- |
+| **Create Invoice**   | Bill a customer                  | Billing & POS        |
+| **Add Customer**     | Save a new buyer                 | Customers            |
+| **Add Product**      | List something you sell or stock | Inventory → Products |
+| **Record Payment**   | Log money received or paid       | Billing & POS        |
+| **Create Quotation** | Send a price quote               | Sales → Quotations   |
+| **Add Purchase**     | Buy stock from a vendor          | Purchases            |
 
-**Tip:** On the dashboard, quick actions appear as a grid under *"What do you want to do today?"* On other pages, use the **Quick create** floating button.
+**Tip:** On the dashboard, quick actions appear as a grid under _"What do you want to do today?"_ On other pages, use the **Quick create** floating button.
 
 ---
 
@@ -211,14 +211,14 @@ Both use the same six daily actions. Use whichever is closer on screen.
 
 Opens the **Sales CRM** area. The sales pipeline is organized in tabs:
 
-| Tab | Purpose |
-|-----|---------|
-| **Leads** | New prospects not yet qualified |
-| **Opportunities** | Active deals in your pipeline |
-| **Quotations** | Formal price quotes for customers |
-| **Proposals** | Detailed proposals sent to prospects |
-| **Pipelines** | Visual view of deal stages |
-| **Templates** | Reusable quote and proposal templates |
+| Tab               | Purpose                               |
+| ----------------- | ------------------------------------- |
+| **Leads**         | New prospects not yet qualified       |
+| **Opportunities** | Active deals in your pipeline         |
+| **Quotations**    | Formal price quotes for customers     |
+| **Proposals**     | Detailed proposals sent to prospects  |
+| **Pipelines**     | Visual view of deal stages            |
+| **Templates**     | Reusable quote and proposal templates |
 
 **Typical flow:** Lead → Opportunity → Quotation → Invoice (in Billing)
 
@@ -241,11 +241,11 @@ Use **Add Purchase** from Quick Create to jump here quickly.
 
 Track what you sell and what you hold in stock.
 
-| Sub-area | Path | Purpose |
-|----------|------|---------|
-| Products | `/app/inventory/products` | Your product and service catalog |
+| Sub-area   | Path                        | Purpose                            |
+| ---------- | --------------------------- | ---------------------------------- |
+| Products   | `/app/inventory/products`   | Your product and service catalog   |
 | Categories | `/app/inventory/categories` | Group products for easier browsing |
-| Warehouses | `/app/inventory/warehouses` | Storage locations |
+| Warehouses | `/app/inventory/warehouses` | Storage locations                  |
 
 Empty modules show a friendly **empty state** with a button to add your first item.
 
@@ -257,12 +257,12 @@ Enable **low stock email alerts** in Settings → General to get notified when s
 
 Your customer relationship hub. Four tabs:
 
-| Tab | Purpose |
-|-----|---------|
-| **Customers** | Company and individual buyer records |
-| **Contacts** | People linked to customer accounts |
-| **Activities** | Calls, meetings, follow-ups |
-| **Notes** | Free-form notes on accounts |
+| Tab            | Purpose                              |
+| -------------- | ------------------------------------ |
+| **Customers**  | Company and individual buyer records |
+| **Contacts**   | People linked to customer accounts   |
+| **Activities** | Calls, meetings, follow-ups          |
+| **Notes**      | Free-form notes on accounts          |
 
 **Adding a customer:**
 
@@ -302,14 +302,14 @@ Pair this with **Reports** for a full financial picture.
 
 A people hub that links to team management (full payroll features roll out over time):
 
-| Card | Links to |
-|------|----------|
-| **Team members** | Workspace admin → Users |
-| **Departments** | Workspace admin → Departments |
+| Card              | Links to                      |
+| ----------------- | ----------------------------- |
+| **Team members**  | Workspace admin → Users       |
+| **Departments**   | Workspace admin → Departments |
 | **Invite people** | Workspace admin → Invitations |
-| **Branches** | Branches module |
+| **Branches**      | Branches module               |
 
-Use this when you think *"I need to manage my team"* rather than digging through settings.
+Use this when you think _"I need to manage my team"_ rather than digging through settings.
 
 ---
 
@@ -349,12 +349,12 @@ Printer settings (receipt format, auto-print) are under **Settings → Printers*
 
 ### Other tools (available from navigation or links)
 
-| Module | Path | Purpose |
-|--------|------|---------|
-| Documents | `/app/documents` | File and document management |
-| AI Copilot | `/app/ai-copilot` | AI assistant for business questions |
-| Automations | `/app/automations` | Workflow automation |
-| Alerts | `/app/alerts` | Full notification history |
+| Module      | Path               | Purpose                             |
+| ----------- | ------------------ | ----------------------------------- |
+| Documents   | `/app/documents`   | File and document management        |
+| AI Copilot  | `/app/ai-copilot`  | AI assistant for business questions |
+| Automations | `/app/automations` | Workflow automation                 |
+| Alerts      | `/app/alerts`      | Full notification history           |
 
 ---
 
@@ -370,30 +370,30 @@ Only **Owners** and **Admins** can open **Workspace admin** (`/app/settings/admi
 
 ### Admin tabs
 
-| Tab | What you manage |
-|-----|-----------------|
-| **Company** | Legal name, email, phone, address, industry, website, tax ID, logo |
-| **Workspace** | Workspace name, timezone, currency, language |
-| **Users** | Active team members, roles, enable/disable |
-| **Departments** | Team groups (e.g. Sales, Warehouse) |
-| **Seats** | Plan, seats used, seats remaining |
-| **Invitations** | Pending invites; send new ones |
-| **Security** | Security policies for the workspace |
-| **Audit** | Who did what and when |
+| Tab             | What you manage                                                    |
+| --------------- | ------------------------------------------------------------------ |
+| **Company**     | Legal name, email, phone, address, industry, website, tax ID, logo |
+| **Workspace**   | Workspace name, timezone, currency, language                       |
+| **Users**       | Active team members, roles, enable/disable                         |
+| **Departments** | Team groups (e.g. Sales, Warehouse)                                |
+| **Seats**       | Plan, seats used, seats remaining                                  |
+| **Invitations** | Pending invites; send new ones                                     |
+| **Security**    | Security policies for the workspace                                |
+| **Audit**       | Who did what and when                                              |
 
 ### Role presets
 
 When inviting someone, pick a **role preset** instead of technical permission names:
 
-| Role | Best for | Can access |
-|------|----------|------------|
-| **Owner** | Business owner | Everything — billing, users, all modules |
-| **Admin** | Office manager / IT lead | Users, settings, reports |
-| **Manager** | Team lead | Sales, purchases, inventory |
-| **Accountant** | Finance staff | Accounting, reports, payments |
-| **Sales** | Sales reps | Customers, quotations, invoices |
-| **Inventory** | Warehouse staff | Products, stock, purchases |
-| **Viewer** | Read-only stakeholders | View reports and records only |
+| Role           | Best for                 | Can access                               |
+| -------------- | ------------------------ | ---------------------------------------- |
+| **Owner**      | Business owner           | Everything — billing, users, all modules |
+| **Admin**      | Office manager / IT lead | Users, settings, reports                 |
+| **Manager**    | Team lead                | Sales, purchases, inventory              |
+| **Accountant** | Finance staff            | Accounting, reports, payments            |
+| **Sales**      | Sales reps               | Customers, quotations, invoices          |
+| **Inventory**  | Warehouse staff          | Products, stock, purchases               |
+| **Viewer**     | Read-only stakeholders   | View reports and records only            |
 
 You can change a person's role anytime from the **Users** tab.
 
@@ -432,13 +432,13 @@ Settings are split so everyday users are not overwhelmed by admin screens.
 
 Available to everyone. Five tabs:
 
-| Tab | What you configure |
-|-----|-------------------|
-| **General** | Low stock alerts, daily summary email, dark mode, reset preferences |
-| **Business localization** | Country, currency, timezone, date/number formats, address, tax ID |
-| **Printers** | Receipt format (A4, thermal, etc.), auto-print on charge, test print |
-| **My profile** | Your display name, email, avatar |
-| **Security** | Password and account security |
+| Tab                       | What you configure                                                   |
+| ------------------------- | -------------------------------------------------------------------- |
+| **General**               | Low stock alerts, daily summary email, dark mode, reset preferences  |
+| **Business localization** | Country, currency, timezone, date/number formats, address, tax ID    |
+| **Printers**              | Receipt format (A4, thermal, etc.), auto-print on charge, test print |
+| **My profile**            | Your display name, email, avatar                                     |
+| **Security**              | Password and account security                                        |
 
 **Business localization** changes apply workspace-wide when saved by an Owner.
 
@@ -482,25 +482,25 @@ Enable in **Settings → General**:
 
 ## 11. Common tasks — quick reference
 
-| I want to… | Go to… |
-|------------|--------|
-| See today's business snapshot | Dashboard (`/app`) |
-| Bill a customer | Quick Create → **Create Invoice** or Billing & POS |
-| Add a new buyer | Quick Create → **Add Customer** or Customers |
-| Send a price quote | Quick Create → **Create Quotation** or Sales → Quotations |
-| Add something I sell | Quick Create → **Add Product** or Inventory → Products |
-| Buy stock from a supplier | Quick Create → **Add Purchase** or Purchases |
-| Record a payment | Quick Create → **Record Payment** or Billing & POS |
-| Update company name or logo | Settings → Workspace admin → Company |
-| Change currency or timezone | Settings → Business localization (or Workspace admin → Workspace) |
-| Invite a colleague | Settings → Workspace admin → Invitations |
-| Check seat usage | Settings → Workspace admin → Seats |
-| Manage my team | HR & Payroll or Settings → Workspace admin |
-| View financial reports | Reports |
-| Switch dark / light mode | Sun/Moon icon in header, or Settings → General |
-| Update my name or photo | Profile menu → My Profile |
-| Sign out | Profile menu → Sign out |
-| Upgrade plan or pay invoice | Settings → Subscription & billing |
+| I want to…                    | Go to…                                                            |
+| ----------------------------- | ----------------------------------------------------------------- |
+| See today's business snapshot | Dashboard (`/app`)                                                |
+| Bill a customer               | Quick Create → **Create Invoice** or Billing & POS                |
+| Add a new buyer               | Quick Create → **Add Customer** or Customers                      |
+| Send a price quote            | Quick Create → **Create Quotation** or Sales → Quotations         |
+| Add something I sell          | Quick Create → **Add Product** or Inventory → Products            |
+| Buy stock from a supplier     | Quick Create → **Add Purchase** or Purchases                      |
+| Record a payment              | Quick Create → **Record Payment** or Billing & POS                |
+| Update company name or logo   | Settings → Workspace admin → Company                              |
+| Change currency or timezone   | Settings → Business localization (or Workspace admin → Workspace) |
+| Invite a colleague            | Settings → Workspace admin → Invitations                          |
+| Check seat usage              | Settings → Workspace admin → Seats                                |
+| Manage my team                | HR & Payroll or Settings → Workspace admin                        |
+| View financial reports        | Reports                                                           |
+| Switch dark / light mode      | Sun/Moon icon in header, or Settings → General                    |
+| Update my name or photo       | Profile menu → My Profile                                         |
+| Sign out                      | Profile menu → Sign out                                           |
+| Upgrade plan or pay invoice   | Settings → Subscription & billing                                 |
 
 ---
 
@@ -538,17 +538,17 @@ It sits at the bottom-right so you can reach it with your thumb. Open it only wh
 
 ## 13. Glossary
 
-| Term | Definition |
-|------|------------|
-| **AR** | Accounts receivable — money customers owe you |
-| **AP** | Accounts payable — money you owe vendors |
-| **CRM** | Customer relationship management — leads, deals, quotes |
-| **POS** | Point of sale — in-store or counter sales |
-| **SKU** | Stock keeping unit — a unique product identifier |
-| **Pipeline** | Stages a sales deal moves through before it is won or lost |
-| **Quotation** | A formal price offer sent to a customer before invoicing |
-| **Seat** | One paid user license on your Velon plan |
-| **Workspace** | Your company's private area inside Velon at `/app` |
+| Term          | Definition                                                 |
+| ------------- | ---------------------------------------------------------- |
+| **AR**        | Accounts receivable — money customers owe you              |
+| **AP**        | Accounts payable — money you owe vendors                   |
+| **CRM**       | Customer relationship management — leads, deals, quotes    |
+| **POS**       | Point of sale — in-store or counter sales                  |
+| **SKU**       | Stock keeping unit — a unique product identifier           |
+| **Pipeline**  | Stages a sales deal moves through before it is won or lost |
+| **Quotation** | A formal price offer sent to a customer before invoicing   |
+| **Seat**      | One paid user license on your Velon plan                   |
+| **Workspace** | Your company's private area inside Velon at `/app`         |
 
 ---
 
@@ -560,4 +560,4 @@ It sits at the bottom-right so you can reach it with your thumb. Open it only wh
 
 ---
 
-*This guide describes the tenant workspace as implemented in Velon ERP. Some modules are actively being expanded; empty states and placeholder KPIs indicate areas still being connected to live data.*
+_This guide describes the tenant workspace as implemented in Velon ERP. Some modules are actively being expanded; empty states and placeholder KPIs indicate areas still being connected to live data._

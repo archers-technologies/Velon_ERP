@@ -7,4 +7,4 @@ export {
   passwordStrengthMessage,
   type PasswordRuleId,
   type PasswordRuleStatus,
-} from "@velon/shared";
+} from '@velon/shared';

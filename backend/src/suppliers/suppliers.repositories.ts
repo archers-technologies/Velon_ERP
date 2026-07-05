@@ -1,7 +1,7 @@
-import { Injectable } from "@nestjs/common";
-import { Prisma } from "@velon/database";
-import { PrismaService } from "../prisma/prisma.service";
-import { TenantScopedRepository } from "../common/repositories/tenant-scoped.repository";
+import { Injectable } from '@nestjs/common';
+import { Prisma } from '@velon/database';
+import { TenantScopedRepository } from '../common/repositories/tenant-scoped.repository';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class SupplierRepository extends TenantScopedRepository {
@@ -14,9 +14,9 @@ export class SupplierRepository extends TenantScopedRepository {
     const q = opts?.search?.trim();
     if (q) {
       OR.push(
-        { name: { contains: q, mode: "insensitive" } },
-        { code: { contains: q, mode: "insensitive" } },
-        { email: { contains: q, mode: "insensitive" } },
+        { name: { contains: q, mode: 'insensitive' } },
+        { code: { contains: q, mode: 'insensitive' } },
+        { email: { contains: q, mode: 'insensitive' } },
       );
     }
     return this.prisma.client.supplier.findMany({
@@ -24,15 +24,15 @@ export class SupplierRepository extends TenantScopedRepository {
         ...this.where(opts?.status ? { status: opts.status as never } : {}),
         ...(OR.length ? { OR } : {}),
       },
-      include: { contacts: { orderBy: { isPrimary: "desc" } } },
-      orderBy: { name: "asc" },
+      include: { contacts: { orderBy: { isPrimary: 'desc' } } },
+      orderBy: { name: 'asc' },
     });
   }
 
   findById(id: string) {
     return this.prisma.client.supplier.findFirst({
       where: this.where({ id }),
-      include: { contacts: { orderBy: { isPrimary: "desc" } } },
+      include: { contacts: { orderBy: { isPrimary: 'desc' } } },
     });
   }
 
@@ -40,7 +40,7 @@ export class SupplierRepository extends TenantScopedRepository {
     return this.prisma.client.supplier.findFirst({ where: this.where({ code }) });
   }
 
-  create(data: Omit<Prisma.SupplierUncheckedCreateInput, "tenantId">) {
+  create(data: Omit<Prisma.SupplierUncheckedCreateInput, 'tenantId'>) {
     return this.prisma.client.supplier.create({
       data: { ...data, tenantId: this.tenantId },
       include: { contacts: true },
@@ -65,7 +65,7 @@ export class SupplierContactRepository extends TenantScopedRepository {
   findBySupplier(supplierId: string) {
     return this.prisma.client.supplierContact.findMany({
       where: this.where({ supplierId }),
-      orderBy: { isPrimary: "desc" },
+      orderBy: { isPrimary: 'desc' },
     });
   }
 
@@ -73,8 +73,10 @@ export class SupplierContactRepository extends TenantScopedRepository {
     return this.prisma.client.supplierContact.findFirst({ where: this.where({ id }) });
   }
 
-  create(data: Omit<Prisma.SupplierContactUncheckedCreateInput, "tenantId">) {
-    return this.prisma.client.supplierContact.create({ data: { ...data, tenantId: this.tenantId } });
+  create(data: Omit<Prisma.SupplierContactUncheckedCreateInput, 'tenantId'>) {
+    return this.prisma.client.supplierContact.create({
+      data: { ...data, tenantId: this.tenantId },
+    });
   }
 
   update(id: string, data: Prisma.SupplierContactUncheckedUpdateInput) {
@@ -95,7 +97,7 @@ export class SupplierThreadRepository extends TenantScopedRepository {
   findBySupplier(supplierId: string) {
     return this.prisma.client.supplierThread.findMany({
       where: this.where({ supplierId }),
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
       include: { author: { select: { id: true, name: true, email: true } } },
     });
   }
@@ -103,12 +105,12 @@ export class SupplierThreadRepository extends TenantScopedRepository {
   findManyForTenant() {
     return this.prisma.client.supplierThread.findMany({
       where: this.where(),
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
       take: 200,
     });
   }
 
-  create(data: Omit<Prisma.SupplierThreadUncheckedCreateInput, "tenantId">) {
+  create(data: Omit<Prisma.SupplierThreadUncheckedCreateInput, 'tenantId'>) {
     return this.prisma.client.supplierThread.create({
       data: { ...data, tenantId: this.tenantId },
       include: { author: { select: { id: true, name: true, email: true } } },

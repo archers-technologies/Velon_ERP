@@ -1,7 +1,7 @@
-import type { AuditService } from "../../src/audit/audit.service";
-import type { PrismaService } from "../../src/prisma/prisma.service";
-import type { RedisService } from "../../src/redis/redis.service";
-import type { VelonLogger } from "../../src/common/logger.service";
+import type { AuditService } from '../../src/audit/audit.service';
+import type { VelonLogger } from '../../src/common/logger.service';
+import type { PrismaService } from '../../src/prisma/prisma.service';
+import type { RedisService } from '../../src/redis/redis.service';
 
 type MockModel = {
   findUnique: jest.Mock;
@@ -36,7 +36,7 @@ export function createMockPrismaClient(overrides: Record<string, unknown> = {}) 
   const client: Record<string, unknown> = {
     $connect: jest.fn(),
     $disconnect: jest.fn(),
-    $queryRaw: jest.fn().mockResolvedValue([{ "?column?": 1 }]),
+    $queryRaw: jest.fn().mockResolvedValue([{ '?column?': 1 }]),
     user: model(),
     refreshToken: model(),
     tenant: model(),
@@ -57,7 +57,7 @@ export function createMockPrismaClient(overrides: Record<string, unknown> = {}) 
   };
 
   client.$transaction = jest.fn(async (arg: unknown) => {
-    if (typeof arg === "function") {
+    if (typeof arg === 'function') {
       return (arg as (tx: unknown) => Promise<unknown>)(client);
     }
     if (Array.isArray(arg)) {
@@ -104,9 +104,9 @@ export function createMockAudit(): {
   listRecent: jest.Mock;
 } {
   return {
-    log: jest.fn().mockResolvedValue({ id: "audit-1" }),
-    logLogin: jest.fn().mockResolvedValue({ id: "audit-1" }),
-    logLogout: jest.fn().mockResolvedValue({ id: "audit-1" }),
+    log: jest.fn().mockResolvedValue({ id: 'audit-1' }),
+    logLogin: jest.fn().mockResolvedValue({ id: 'audit-1' }),
+    logLogout: jest.fn().mockResolvedValue({ id: 'audit-1' }),
     listRecent: jest.fn().mockResolvedValue([]),
   };
 }
@@ -121,7 +121,7 @@ export function createMockRedis(): {
     getRevision: jest.fn().mockResolvedValue(1),
     bumpRevision: jest.fn().mockResolvedValue(2),
     publish: jest.fn().mockResolvedValue(undefined),
-    client: { ping: jest.fn().mockResolvedValue("PONG") },
+    client: { ping: jest.fn().mockResolvedValue('PONG') },
   };
 }
 
@@ -135,15 +135,17 @@ export function createMockLogger(): VelonLogger {
 }
 
 /** Generic repository mock with common CRUD methods. */
-export function createRepoMock(methods: string[] = [
-  "findMany",
-  "findById",
-  "findByIdAny",
-  "create",
-  "update",
-  "delete",
-  "count",
-]): Record<string, jest.Mock> {
+export function createRepoMock(
+  methods: string[] = [
+    'findMany',
+    'findById',
+    'findByIdAny',
+    'create',
+    'update',
+    'delete',
+    'count',
+  ],
+): Record<string, jest.Mock> {
   const repo: Record<string, jest.Mock> = {};
   for (const method of methods) {
     repo[method] = jest.fn();

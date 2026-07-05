@@ -3,8 +3,9 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
-} from "@nestjs/common";
-import { CrmActivityStatus, CrmCustomerStatus, CrmNoteTargetType } from "@velon/database";
+} from '@nestjs/common';
+import * as crypto from 'crypto';
+import { CrmActivityStatus, CrmCustomerStatus, CrmNoteTargetType } from '@velon/database';
 import {
   canManageCrmActivities,
   canManageCrmCustomers,
@@ -12,16 +13,15 @@ import {
   canWriteCrmActivities,
   canWriteCrmRecords,
   normalizeVelonRole,
-} from "@velon/shared";
-import * as crypto from "crypto";
-import { AuditService } from "../audit/audit.service";
-import type { AuthenticatedUser } from "../auth/auth.types";
+} from '@velon/shared';
+import { AuditService } from '../audit/audit.service';
+import type { AuthenticatedUser } from '../auth/auth.types';
 import {
   CrmActivityRepository,
   CrmContactRepository,
   CrmCustomerRepository,
   CrmNoteRepository,
-} from "./crm.repositories";
+} from './crm.repositories';
 import type {
   AssignCrmActivityDto,
   CreateCrmActivityDto,
@@ -36,7 +36,7 @@ import type {
   UpdateCrmContactDto,
   UpdateCrmCustomerDto,
   UpdateCrmNoteDto,
-} from "./dto/crm.dto";
+} from './dto/crm.dto';
 
 type AuditMeta = { ip?: string; ua?: string };
 
@@ -55,29 +55,29 @@ export class CrmService {
   }
 
   private assertRead(user: AuthenticatedUser) {
-    if (!canReadCrm(this.role(user))) throw new ForbiddenException("CRM access denied.");
+    if (!canReadCrm(this.role(user))) throw new ForbiddenException('CRM access denied.');
   }
 
   private assertWrite(user: AuthenticatedUser) {
     if (!canWriteCrmRecords(this.role(user))) {
-      throw new ForbiddenException("Insufficient permissions to modify CRM records.");
+      throw new ForbiddenException('Insufficient permissions to modify CRM records.');
     }
   }
 
   private assertManageCustomers(user: AuthenticatedUser) {
     if (!canManageCrmCustomers(this.role(user))) {
-      throw new ForbiddenException("Tenant Owner permissions required.");
+      throw new ForbiddenException('Tenant Owner permissions required.');
     }
   }
 
   private assertWriteActivities(user: AuthenticatedUser) {
     if (!canWriteCrmActivities(this.role(user))) {
-      throw new ForbiddenException("Insufficient permissions for CRM activities.");
+      throw new ForbiddenException('Insufficient permissions for CRM activities.');
     }
   }
 
   private customerCode() {
-    return `CUS-${crypto.randomBytes(3).toString("hex").toUpperCase()}`;
+    return `CUS-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
   }
 
   private mapCustomer(row: { archivedAt: Date | null; [key: string]: unknown }) {
@@ -95,7 +95,7 @@ export class CrmService {
       .findMany({
         search: query.search,
         status: query.status,
-        includeArchived: query.includeArchived === "true",
+        includeArchived: query.includeArchived === 'true',
       })
       .then((rows) => rows.map((r) => this.mapCustomer(r)));
   }
@@ -103,9 +103,9 @@ export class CrmService {
   async getCustomer(user: AuthenticatedUser, id: string) {
     this.assertRead(user);
     const row = await this.customers.findById(id, true);
-    if (!row) throw new NotFoundException("Customer not found.");
+    if (!row) throw new NotFoundException('Customer not found.');
     if (row.archivedAt && !canManageCrmCustomers(this.role(user))) {
-      throw new NotFoundException("Customer not found.");
+      throw new NotFoundException('Customer not found.');
     }
     return this.mapCustomer(row);
   }
@@ -130,8 +130,8 @@ export class CrmService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.customer_created",
-      entityType: "crm_customer",
+      action: 'crm.customer_created',
+      entityType: 'crm_customer',
       entityId: row.id,
       ipAddress: meta.ip,
       userAgent: meta.ua,
@@ -147,7 +147,7 @@ export class CrmService {
   ) {
     this.assertWrite(user);
     const existing = await this.customers.findByIdAny(id);
-    if (!existing) throw new NotFoundException("Customer not found.");
+    if (!existing) throw new NotFoundException('Customer not found.');
     const row = await this.customers.update(id, {
       ...(dto.companyName !== undefined ? { companyName: dto.companyName.trim() } : {}),
       ...(dto.legalName !== undefined ? { legalName: dto.legalName?.trim() || null } : {}),
@@ -164,8 +164,8 @@ export class CrmService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.customer_updated",
-      entityType: "crm_customer",
+      action: 'crm.customer_updated',
+      entityType: 'crm_customer',
       entityId: id,
       ipAddress: meta.ip,
       userAgent: meta.ua,
@@ -176,8 +176,8 @@ export class CrmService {
   async archiveCustomer(user: AuthenticatedUser, id: string, meta: AuditMeta) {
     this.assertManageCustomers(user);
     const existing = await this.customers.findByIdAny(id);
-    if (!existing) throw new NotFoundException("Customer not found.");
-    if (existing.archivedAt) throw new BadRequestException("Customer is already archived.");
+    if (!existing) throw new NotFoundException('Customer not found.');
+    if (existing.archivedAt) throw new BadRequestException('Customer is already archived.');
     await this.customers.update(id, {
       archivedAt: new Date(),
       status: CrmCustomerStatus.INACTIVE,
@@ -186,8 +186,8 @@ export class CrmService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.customer_updated",
-      entityType: "crm_customer",
+      action: 'crm.customer_updated',
+      entityType: 'crm_customer',
       entityId: id,
       metadata: { archived: true },
       ipAddress: meta.ip,
@@ -199,8 +199,8 @@ export class CrmService {
   async restoreCustomer(user: AuthenticatedUser, id: string, meta: AuditMeta) {
     this.assertManageCustomers(user);
     const existing = await this.customers.findByIdAny(id);
-    if (!existing) throw new NotFoundException("Customer not found.");
-    if (!existing.archivedAt) throw new BadRequestException("Customer is not archived.");
+    if (!existing) throw new NotFoundException('Customer not found.');
+    if (!existing.archivedAt) throw new BadRequestException('Customer is not archived.');
     await this.customers.update(id, {
       archivedAt: null,
       status: CrmCustomerStatus.ACTIVE,
@@ -209,8 +209,8 @@ export class CrmService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.customer_updated",
-      entityType: "crm_customer",
+      action: 'crm.customer_updated',
+      entityType: 'crm_customer',
       entityId: id,
       metadata: { restored: true },
       ipAddress: meta.ip,
@@ -222,13 +222,13 @@ export class CrmService {
   async deleteCustomer(user: AuthenticatedUser, id: string, meta: AuditMeta) {
     this.assertManageCustomers(user);
     const existing = await this.customers.findByIdAny(id);
-    if (!existing) throw new NotFoundException("Customer not found.");
+    if (!existing) throw new NotFoundException('Customer not found.');
     await this.customers.delete(id);
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.customer_deleted",
-      entityType: "crm_customer",
+      action: 'crm.customer_deleted',
+      entityType: 'crm_customer',
       entityId: id,
       ipAddress: meta.ip,
       userAgent: meta.ua,
@@ -243,16 +243,16 @@ export class CrmService {
     return this.contacts.findMany({
       search: query.search,
       customerId: query.customerId,
-      includeArchived: query.includeArchived === "true",
+      includeArchived: query.includeArchived === 'true',
     });
   }
 
   async getContact(user: AuthenticatedUser, id: string) {
     this.assertRead(user);
     const row = await this.contacts.findById(id, true);
-    if (!row) throw new NotFoundException("Contact not found.");
+    if (!row) throw new NotFoundException('Contact not found.');
     if (row.archivedAt && !canManageCrmCustomers(this.role(user))) {
-      throw new NotFoundException("Contact not found.");
+      throw new NotFoundException('Contact not found.');
     }
     return row;
   }
@@ -260,7 +260,7 @@ export class CrmService {
   async createContact(user: AuthenticatedUser, dto: CreateCrmContactDto, meta: AuditMeta) {
     this.assertWrite(user);
     const customer = await this.customers.findById(dto.customerId);
-    if (!customer) throw new BadRequestException("Customer not found.");
+    if (!customer) throw new BadRequestException('Customer not found.');
     const row = await this.contacts.create({
       customerId: dto.customerId,
       firstName: dto.firstName.trim(),
@@ -277,8 +277,8 @@ export class CrmService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.contact_created",
-      entityType: "crm_contact",
+      action: 'crm.contact_created',
+      entityType: 'crm_contact',
       entityId: row.id,
       ipAddress: meta.ip,
       userAgent: meta.ua,
@@ -294,7 +294,7 @@ export class CrmService {
   ) {
     this.assertWrite(user);
     const existing = await this.contacts.findByIdAny(id);
-    if (!existing) throw new NotFoundException("Contact not found.");
+    if (!existing) throw new NotFoundException('Contact not found.');
     const row = await this.contacts.update(id, {
       ...(dto.firstName !== undefined ? { firstName: dto.firstName.trim() } : {}),
       ...(dto.lastName !== undefined ? { lastName: dto.lastName.trim() } : {}),
@@ -309,8 +309,8 @@ export class CrmService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.contact_updated",
-      entityType: "crm_contact",
+      action: 'crm.contact_updated',
+      entityType: 'crm_contact',
       entityId: id,
       ipAddress: meta.ip,
       userAgent: meta.ua,
@@ -321,13 +321,13 @@ export class CrmService {
   async archiveContact(user: AuthenticatedUser, id: string, meta: AuditMeta) {
     this.assertWrite(user);
     const existing = await this.contacts.findByIdAny(id);
-    if (!existing) throw new NotFoundException("Contact not found.");
+    if (!existing) throw new NotFoundException('Contact not found.');
     await this.contacts.update(id, { archivedAt: new Date(), updatedById: user.id });
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.contact_updated",
-      entityType: "crm_contact",
+      action: 'crm.contact_updated',
+      entityType: 'crm_contact',
       entityId: id,
       metadata: { archived: true },
       ipAddress: meta.ip,
@@ -339,13 +339,13 @@ export class CrmService {
   async restoreContact(user: AuthenticatedUser, id: string, meta: AuditMeta) {
     this.assertWrite(user);
     const existing = await this.contacts.findByIdAny(id);
-    if (!existing) throw new NotFoundException("Contact not found.");
+    if (!existing) throw new NotFoundException('Contact not found.');
     await this.contacts.update(id, { archivedAt: null, updatedById: user.id });
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.contact_updated",
-      entityType: "crm_contact",
+      action: 'crm.contact_updated',
+      entityType: 'crm_contact',
       entityId: id,
       metadata: { restored: true },
       ipAddress: meta.ip,
@@ -391,8 +391,8 @@ export class CrmService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.note_added",
-      entityType: "crm_note",
+      action: 'crm.note_added',
+      entityType: 'crm_note',
       entityId: row.id,
       ipAddress: meta.ip,
       userAgent: meta.ua,
@@ -403,16 +403,16 @@ export class CrmService {
   async updateNote(user: AuthenticatedUser, id: string, dto: UpdateCrmNoteDto, meta: AuditMeta) {
     this.assertRead(user);
     const existing = await this.notes.findById(id);
-    if (!existing) throw new NotFoundException("Note not found.");
+    if (!existing) throw new NotFoundException('Note not found.');
     if (existing.createdById !== user.id && !canWriteCrmRecords(this.role(user))) {
-      throw new ForbiddenException("You can only edit your own notes.");
+      throw new ForbiddenException('You can only edit your own notes.');
     }
     const row = await this.notes.update(id, dto.content.trim());
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.note_added",
-      entityType: "crm_note",
+      action: 'crm.note_added',
+      entityType: 'crm_note',
       entityId: id,
       metadata: { updated: true },
       ipAddress: meta.ip,
@@ -424,16 +424,16 @@ export class CrmService {
   async deleteNote(user: AuthenticatedUser, id: string, meta: AuditMeta) {
     this.assertRead(user);
     const existing = await this.notes.findById(id);
-    if (!existing) throw new NotFoundException("Note not found.");
+    if (!existing) throw new NotFoundException('Note not found.');
     if (existing.createdById !== user.id && !canWriteCrmRecords(this.role(user))) {
-      throw new ForbiddenException("You can only delete your own notes.");
+      throw new ForbiddenException('You can only delete your own notes.');
     }
     await this.notes.delete(id);
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.note_added",
-      entityType: "crm_note",
+      action: 'crm.note_added',
+      entityType: 'crm_note',
       entityId: id,
       metadata: { deleted: true },
       ipAddress: meta.ip,
@@ -459,18 +459,18 @@ export class CrmService {
   async getActivity(user: AuthenticatedUser, id: string) {
     this.assertRead(user);
     const row = await this.activities.findById(id);
-    if (!row) throw new NotFoundException("Activity not found.");
+    if (!row) throw new NotFoundException('Activity not found.');
     return row;
   }
 
   async createActivity(user: AuthenticatedUser, dto: CreateCrmActivityDto, meta: AuditMeta) {
     this.assertWriteActivities(user);
     const customer = await this.customers.findById(dto.customerId);
-    if (!customer) throw new BadRequestException("Customer not found.");
+    if (!customer) throw new BadRequestException('Customer not found.');
     if (dto.contactId) {
       const contact = await this.contacts.findById(dto.contactId);
       if (!contact || contact.customerId !== dto.customerId) {
-        throw new BadRequestException("Contact not found for this customer.");
+        throw new BadRequestException('Contact not found for this customer.');
       }
     }
     const row = await this.activities.create({
@@ -488,8 +488,8 @@ export class CrmService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.activity_created",
-      entityType: "crm_activity",
+      action: 'crm.activity_created',
+      entityType: 'crm_activity',
       entityId: row.id,
       ipAddress: meta.ip,
       userAgent: meta.ua,
@@ -504,10 +504,10 @@ export class CrmService {
     meta: AuditMeta,
   ) {
     if (!canManageCrmActivities(this.role(user))) {
-      throw new ForbiddenException("Insufficient permissions to assign activities.");
+      throw new ForbiddenException('Insufficient permissions to assign activities.');
     }
     const existing = await this.activities.findById(id);
-    if (!existing) throw new NotFoundException("Activity not found.");
+    if (!existing) throw new NotFoundException('Activity not found.');
     const row = await this.activities.update(id, {
       ownerId: dto.ownerId,
       updatedById: user.id,
@@ -515,8 +515,8 @@ export class CrmService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.activity_created",
-      entityType: "crm_activity",
+      action: 'crm.activity_created',
+      entityType: 'crm_activity',
       entityId: id,
       metadata: { assigned: dto.ownerId },
       ipAddress: meta.ip,
@@ -528,9 +528,9 @@ export class CrmService {
   async completeActivity(user: AuthenticatedUser, id: string, meta: AuditMeta) {
     this.assertWriteActivities(user);
     const existing = await this.activities.findById(id);
-    if (!existing) throw new NotFoundException("Activity not found.");
+    if (!existing) throw new NotFoundException('Activity not found.');
     if (existing.status !== CrmActivityStatus.OPEN) {
-      throw new BadRequestException("Activity is not open.");
+      throw new BadRequestException('Activity is not open.');
     }
     const row = await this.activities.update(id, {
       status: CrmActivityStatus.COMPLETED,
@@ -539,8 +539,8 @@ export class CrmService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.activity_completed",
-      entityType: "crm_activity",
+      action: 'crm.activity_completed',
+      entityType: 'crm_activity',
       entityId: id,
       ipAddress: meta.ip,
       userAgent: meta.ua,
@@ -551,9 +551,9 @@ export class CrmService {
   async cancelActivity(user: AuthenticatedUser, id: string, meta: AuditMeta) {
     this.assertWriteActivities(user);
     const existing = await this.activities.findById(id);
-    if (!existing) throw new NotFoundException("Activity not found.");
+    if (!existing) throw new NotFoundException('Activity not found.');
     if (existing.status !== CrmActivityStatus.OPEN) {
-      throw new BadRequestException("Activity is not open.");
+      throw new BadRequestException('Activity is not open.');
     }
     const row = await this.activities.update(id, {
       status: CrmActivityStatus.CANCELLED,
@@ -562,8 +562,8 @@ export class CrmService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.activity_cancelled",
-      entityType: "crm_activity",
+      action: 'crm.activity_cancelled',
+      entityType: 'crm_activity',
       entityId: id,
       ipAddress: meta.ip,
       userAgent: meta.ua,
@@ -579,7 +579,7 @@ export class CrmService {
   ) {
     this.assertWriteActivities(user);
     const existing = await this.activities.findById(id);
-    if (!existing) throw new NotFoundException("Activity not found.");
+    if (!existing) throw new NotFoundException('Activity not found.');
     const row = await this.activities.update(id, {
       ...(dto.contactId !== undefined ? { contactId: dto.contactId || null } : {}),
       ...(dto.type !== undefined ? { type: dto.type } : {}),
@@ -592,8 +592,8 @@ export class CrmService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.activity_created",
-      entityType: "crm_activity",
+      action: 'crm.activity_created',
+      entityType: 'crm_activity',
       entityId: id,
       metadata: { updated: true },
       ipAddress: meta.ip,

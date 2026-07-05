@@ -1,24 +1,26 @@
-import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import type { TenantRecord } from "@/lib/types/workspace-ui";
+import { useEffect, useMemo, useState } from 'react';
+import { createFileRoute, useRouter } from '@tanstack/react-router';
 import {
-  createAdminTenant,
-  deleteAdminTenant,
-  loadAdminTenants,
-  resetTenantSubscription,
-  updateAdminTenant,
-} from "@/lib/platform/admin-loaders";
-import { useClientAdminLoader } from "@/lib/platform/use-client-admin-loader";
-import { tenantWorkspaceHost } from "@/lib/workspace/tenant-workspace";
-import { toast } from "sonner";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
-import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
+  Activity,
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  Ban,
+  Eye,
+  Info,
+  KeyRound,
+  MoreHorizontal,
+  Pencil,
+  PlayCircle,
+  Plus,
+  RefreshCw,
+  Search,
+  ShieldAlert,
+  ShieldCheck,
+  Trash2,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { TENANT_STATUS_COLUMN_HELP } from '@velon/shared';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,7 +30,10 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -36,14 +41,25 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import {
   Sheet,
   SheetContent,
@@ -51,59 +67,43 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
+} from '@/components/ui/sheet';
+import { Switch } from '@/components/ui/switch';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { TenantStatusPill } from '@/components/workspace/tenant-status-pill';
+import { useAdminCurrency } from '@/contexts/admin-currency';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { TenantStatusPill } from "@/components/workspace/tenant-status-pill";
-import { useAdminCurrency } from "@/contexts/admin-currency";
-import type { IndustryTemplate, TenantHealth, TenantPlan, TenantStatus } from "@/lib/platform/admin-demo";
-import { INDUSTRY_TEMPLATES } from "@/lib/platform/admin-demo";
-import { TENANT_STATUS_COLUMN_HELP } from "@velon/shared";
-import { cn } from "@/lib/utils";
+  INDUSTRY_TEMPLATES,
+  type IndustryTemplate,
+  type TenantHealth,
+  type TenantPlan,
+  type TenantStatus,
+} from '@/lib/platform/admin-demo';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
-  Plus,
-  Search,
-  MoreHorizontal,
-  Eye,
-  Pencil,
-  KeyRound,
-  Ban,
-  PlayCircle,
-  ShieldCheck,
-  ShieldAlert,
-  Activity,
-  ArrowDown,
-  ArrowUp,
-  ArrowUpDown,
-  RefreshCw,
-  Trash2,
-  Info,
-} from "lucide-react";
+  createAdminTenant,
+  deleteAdminTenant,
+  loadAdminTenants,
+  resetTenantSubscription,
+  updateAdminTenant,
+} from '@/lib/platform/admin-loaders';
+import { useClientAdminLoader } from '@/lib/platform/use-client-admin-loader';
+import type { TenantRecord } from '@/lib/types/workspace-ui';
+import { cn } from '@/lib/utils';
+import { tenantWorkspaceHost } from '@/lib/workspace/tenant-workspace';
 
-export const Route = createFileRoute("/admin/tenants")({
+export const Route = createFileRoute('/admin/tenants')({
   loader: () => loadAdminTenants(),
   component: AdminTenantsPage,
 });
 
 function healthLabel(h: TenantHealth) {
   switch (h) {
-    case "healthy":
-      return "Healthy";
-    case "degraded":
-      return "Degraded";
-    case "critical":
-      return "Critical";
+    case 'healthy':
+      return 'Healthy';
+    case 'degraded':
+      return 'Degraded';
+    case 'critical':
+      return 'Critical';
     default:
       return h;
   }
@@ -111,32 +111,32 @@ function healthLabel(h: TenantHealth) {
 
 function healthDotClass(h: TenantHealth) {
   switch (h) {
-    case "healthy":
-      return "bg-emerald-500";
-    case "degraded":
-      return "bg-amber-500";
-    case "critical":
-      return "bg-red-500";
+    case 'healthy':
+      return 'bg-emerald-500';
+    case 'degraded':
+      return 'bg-amber-500';
+    case 'critical':
+      return 'bg-red-500';
     default:
-      return "bg-muted-foreground";
+      return 'bg-muted-foreground';
   }
 }
 
 function slugPreviewFromName(name: string) {
   const s = name
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
     .slice(0, 48);
-  return s || "tenant";
+  return s || 'tenant';
 }
 
 function formatShortDate(iso: string) {
   try {
-    return new Date(iso + "T12:00:00").toLocaleDateString(undefined, {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
+    return new Date(iso + 'T12:00:00').toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
     });
   } catch {
     return iso;
@@ -148,36 +148,36 @@ type DetailDraft = {
   status: TenantStatus;
   users: number;
   mrr: number;
-  modules: TenantRecord["modules"];
+  modules: TenantRecord['modules'];
 };
 
 type TenantSortColumn =
-  | "tenantCode"
-  | "name"
-  | "workspace"
-  | "plan"
-  | "status"
-  | "health"
-  | "createdAt"
-  | "lastActive"
-  | "users"
-  | "storage"
-  | "mrr";
+  | 'tenantCode'
+  | 'name'
+  | 'workspace'
+  | 'plan'
+  | 'status'
+  | 'health'
+  | 'createdAt'
+  | 'lastActive'
+  | 'users'
+  | 'storage'
+  | 'mrr';
 
 function planRank(p: TenantPlan): number {
   switch (p) {
-    case "Starter":
+    case 'Starter':
       return 1;
-    case "Growth":
+    case 'Growth':
       return 2;
-    case "Enterprise":
+    case 'Enterprise':
       return 3;
     default:
       return 0;
   }
 }
 
-const STATUS_SORT_ORDER: TenantStatus[] = ["Active", "Trial", "Past due", "Suspended"];
+const STATUS_SORT_ORDER: TenantStatus[] = ['Active', 'Trial', 'Past due', 'Suspended'];
 
 function statusRank(s: TenantStatus): number {
   const i = STATUS_SORT_ORDER.indexOf(s);
@@ -186,11 +186,11 @@ function statusRank(s: TenantStatus): number {
 
 function healthRank(h: TenantHealth): number {
   switch (h) {
-    case "healthy":
+    case 'healthy':
       return 1;
-    case "degraded":
+    case 'degraded':
       return 2;
-    case "critical":
+    case 'critical':
       return 3;
     default:
       return 0;
@@ -200,15 +200,15 @@ function healthRank(h: TenantHealth): number {
 /** Lower = more recently active (demo labels). */
 function lastActiveSortMinutes(label: string): number {
   const l = label.toLowerCase();
-  if (l.includes("just now")) return 0;
+  if (l.includes('just now')) return 0;
   const min = /(\d+)\s*min/.exec(l);
   if (min) return Number(min[1]);
   const hr = /(\d+)\s*hr/.exec(l);
   if (hr) return Number(hr[1]) * 60;
-  if (l.includes("yesterday")) return 24 * 60 + 1;
+  if (l.includes('yesterday')) return 24 * 60 + 1;
   const days = /(\d+)\s*days?/.exec(l);
   if (days) return 24 * 60 * (Number(days[1]) + 1);
-  if (l.includes("suspended")) return 365 * 24 * 60;
+  if (l.includes('suspended')) return 365 * 24 * 60;
   return 999_999;
 }
 
@@ -221,37 +221,37 @@ function compareTenants(
   const dir = desc ? -1 : 1;
   let cmp = 0;
   switch (col) {
-    case "tenantCode":
+    case 'tenantCode':
       cmp = a.tenantCode.localeCompare(b.tenantCode);
       break;
-    case "name":
+    case 'name':
       cmp = a.name.localeCompare(b.name);
       break;
-    case "workspace":
+    case 'workspace':
       cmp = tenantWorkspaceHost(a.slug).localeCompare(tenantWorkspaceHost(b.slug));
       break;
-    case "plan":
+    case 'plan':
       cmp = planRank(a.plan) - planRank(b.plan);
       break;
-    case "status":
+    case 'status':
       cmp = statusRank(a.status) - statusRank(b.status);
       break;
-    case "health":
+    case 'health':
       cmp = healthRank(a.health) - healthRank(b.health);
       break;
-    case "createdAt":
+    case 'createdAt':
       cmp = a.createdAt.localeCompare(b.createdAt);
       break;
-    case "lastActive":
+    case 'lastActive':
       cmp = lastActiveSortMinutes(a.lastActiveLabel) - lastActiveSortMinutes(b.lastActiveLabel);
       break;
-    case "users":
+    case 'users':
       cmp = a.users - b.users;
       break;
-    case "storage":
+    case 'storage':
       cmp = a.storageUsedGb / a.storageCapGb - b.storageUsedGb / b.storageCapGb;
       break;
-    case "mrr":
+    case 'mrr':
       cmp = a.mrr - b.mrr;
       break;
     default:
@@ -270,33 +270,39 @@ function StatusColumnHeader({
   sortDesc: boolean;
   onSort: (c: TenantSortColumn) => void;
 }) {
-  const active = sortColumn === "status";
+  const active = sortColumn === 'status';
   return (
     <th
       scope="col"
-      aria-sort={active ? (sortDesc ? "descending" : "ascending") : "none"}
-      className="whitespace-nowrap px-4 py-2 text-left font-medium sm:px-5 sm:py-3"
+      aria-sort={active ? (sortDesc ? 'descending' : 'ascending') : 'none'}
+      className="px-4 py-2 text-left font-medium whitespace-nowrap sm:px-5 sm:py-3"
     >
       <div className="inline-flex items-center gap-1">
         <button
           type="button"
-          onClick={() => onSort("status")}
+          onClick={() => onSort('status')}
           aria-label={
             active
-              ? `Status: sorted ${sortDesc ? "descending" : "ascending"}, click to reverse`
-              : "Sort by Status"
+              ? `Status: sorted ${sortDesc ? 'descending' : 'ascending'}, click to reverse`
+              : 'Sort by Status'
           }
           className={cn(
-            "group inline-flex max-w-full items-center gap-1 rounded-md py-1 pr-1 text-left text-[10px] uppercase tracking-[0.12em] text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground",
-            active && "text-foreground",
+            'group text-muted-foreground hover:bg-muted/80 hover:text-foreground inline-flex max-w-full items-center gap-1 rounded-md py-1 pr-1 text-left text-[10px] tracking-[0.12em] uppercase transition-colors',
+            active && 'text-foreground',
           )}
         >
           <span className="min-w-0 truncate">Status</span>
           {active ? (
             sortDesc ? (
-              <ArrowDown className="h-3.5 w-3.5 shrink-0 text-foreground" aria-hidden />
+              <ArrowDown
+                className="text-foreground h-3.5 w-3.5 shrink-0"
+                aria-hidden
+              />
             ) : (
-              <ArrowUp className="h-3.5 w-3.5 shrink-0 text-foreground" aria-hidden />
+              <ArrowUp
+                className="text-foreground h-3.5 w-3.5 shrink-0"
+                aria-hidden
+              />
             )
           ) : (
             <ArrowUpDown
@@ -310,13 +316,16 @@ function StatusColumnHeader({
             <TooltipTrigger asChild>
               <button
                 type="button"
-                className="rounded-md p-0.5 text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+                className="text-muted-foreground hover:bg-muted/80 hover:text-foreground rounded-md p-0.5"
                 aria-label="Status column help"
               >
                 <Info className="h-3.5 w-3.5" />
               </button>
             </TooltipTrigger>
-            <TooltipContent side="top" className="max-w-xs text-left leading-snug">
+            <TooltipContent
+              side="top"
+              className="max-w-xs text-left leading-snug"
+            >
               {TENANT_STATUS_COLUMN_HELP}
             </TooltipContent>
           </Tooltip>
@@ -343,28 +352,34 @@ function SortableTh({
   return (
     <th
       scope="col"
-      aria-sort={active ? (sortDesc ? "descending" : "ascending") : "none"}
-      className="whitespace-nowrap px-4 py-2 text-left font-medium sm:px-5 sm:py-3"
+      aria-sort={active ? (sortDesc ? 'descending' : 'ascending') : 'none'}
+      className="px-4 py-2 text-left font-medium whitespace-nowrap sm:px-5 sm:py-3"
     >
       <button
         type="button"
         onClick={() => onSort(column)}
         aria-label={
           active
-            ? `${label}: sorted ${sortDesc ? "descending" : "ascending"}, click to reverse`
+            ? `${label}: sorted ${sortDesc ? 'descending' : 'ascending'}, click to reverse`
             : `Sort by ${label}`
         }
         className={cn(
-          "group inline-flex max-w-full items-center gap-1 rounded-md py-1 pr-1 text-left text-[10px] uppercase tracking-[0.12em] text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground",
-          active && "text-foreground",
+          'group text-muted-foreground hover:bg-muted/80 hover:text-foreground inline-flex max-w-full items-center gap-1 rounded-md py-1 pr-1 text-left text-[10px] tracking-[0.12em] uppercase transition-colors',
+          active && 'text-foreground',
         )}
       >
         <span className="min-w-0 truncate">{label}</span>
         {active ? (
           sortDesc ? (
-            <ArrowDown className="h-3.5 w-3.5 shrink-0 text-foreground" aria-hidden />
+            <ArrowDown
+              className="text-foreground h-3.5 w-3.5 shrink-0"
+              aria-hidden
+            />
           ) : (
-            <ArrowUp className="h-3.5 w-3.5 shrink-0 text-foreground" aria-hidden />
+            <ArrowUp
+              className="text-foreground h-3.5 w-3.5 shrink-0"
+              aria-hidden
+            />
           )
         ) : (
           <ArrowUpDown
@@ -387,29 +402,29 @@ function AdminTenantsPage() {
     (rows) => rows.length === 0,
   );
 
-  const [q, setQ] = useState("");
-  const [planFilter, setPlanFilter] = useState<"all" | TenantPlan>("all");
-  const [statusFilter, setStatusFilter] = useState<"all" | TenantStatus>("all");
-  const [sortColumn, setSortColumn] = useState<TenantSortColumn>("tenantCode");
+  const [q, setQ] = useState('');
+  const [planFilter, setPlanFilter] = useState<'all' | TenantPlan>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | TenantStatus>('all');
+  const [sortColumn, setSortColumn] = useState<TenantSortColumn>('tenantCode');
   const [sortDesc, setSortDesc] = useState(false);
 
   const [openWizard, setOpenWizard] = useState(false);
   const [wizardStep, setWizardStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
-  const [name, setName] = useState("");
-  const [country, setCountry] = useState("");
-  const [slugOverride, setSlugOverride] = useState("");
-  const [industryTemplate, setIndustryTemplate] = useState<IndustryTemplate>("Retail");
-  const [users, setUsers] = useState("10");
-  const [mrr, setMrr] = useState("99");
-  const [plan, setPlan] = useState<TenantPlan>("Growth");
-  const [status, setStatus] = useState<TenantStatus>("Trial");
+  const [name, setName] = useState('');
+  const [country, setCountry] = useState('');
+  const [slugOverride, setSlugOverride] = useState('');
+  const [industryTemplate, setIndustryTemplate] = useState<IndustryTemplate>('Retail');
+  const [users, setUsers] = useState('10');
+  const [mrr, setMrr] = useState('99');
+  const [plan, setPlan] = useState<TenantPlan>('Growth');
+  const [status, setStatus] = useState<TenantStatus>('Trial');
 
   const [detailId, setDetailId] = useState<string | null>(null);
   const [detailSaving, setDetailSaving] = useState(false);
   const [draft, setDraft] = useState<DetailDraft | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<TenantRecord | null>(null);
-  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deleting, setDeleting] = useState(false);
 
   const detailTenant = useMemo(
@@ -436,8 +451,8 @@ function AdminTenantsPage() {
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     return tenants.filter((t) => {
-      if (planFilter !== "all" && t.plan !== planFilter) return false;
-      if (statusFilter !== "all" && t.status !== statusFilter) return false;
+      if (planFilter !== 'all' && t.plan !== planFilter) return false;
+      if (statusFilter !== 'all' && t.status !== statusFilter) return false;
       if (!s) return true;
       const host = tenantWorkspaceHost(t.slug).toLowerCase();
       return (
@@ -453,9 +468,9 @@ function AdminTenantsPage() {
 
   const healthSummary = useMemo(() => {
     return {
-      healthy: filtered.filter((t) => t.health === "healthy").length,
-      degraded: filtered.filter((t) => t.health === "degraded").length,
-      critical: filtered.filter((t) => t.health === "critical").length,
+      healthy: filtered.filter((t) => t.health === 'healthy').length,
+      degraded: filtered.filter((t) => t.health === 'degraded').length,
+      critical: filtered.filter((t) => t.health === 'critical').length,
     };
   }, [filtered]);
 
@@ -475,14 +490,14 @@ function AdminTenantsPage() {
 
   function resetWizard() {
     setWizardStep(0);
-    setName("");
-    setCountry("");
-    setSlugOverride("");
-    setIndustryTemplate("Retail");
-    setUsers("10");
-    setMrr("99");
-    setPlan("Growth");
-    setStatus("Trial");
+    setName('');
+    setCountry('');
+    setSlugOverride('');
+    setIndustryTemplate('Retail');
+    setUsers('10');
+    setMrr('99');
+    setPlan('Growth');
+    setStatus('Trial');
   }
 
   async function handleCreateTenant() {
@@ -498,12 +513,12 @@ function AdminTenantsPage() {
         slug: slugOverride.trim() || undefined,
         industryTemplate,
       });
-      toast.success("Tenant provisioned and saved to the platform database.");
+      toast.success('Tenant provisioned and saved to the platform database.');
       setOpenWizard(false);
       resetWizard();
       await router.invalidate();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not create tenant");
+      toast.error(e instanceof Error ? e.message : 'Could not create tenant');
     } finally {
       setSubmitting(false);
     }
@@ -520,10 +535,10 @@ function AdminTenantsPage() {
         mrr: draft.mrr,
         modules: draft.modules,
       });
-      toast.success("Tenant saved");
+      toast.success('Tenant saved');
       await router.invalidate();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not save");
+      toast.error(e instanceof Error ? e.message : 'Could not save');
     } finally {
       setDetailSaving(false);
     }
@@ -531,21 +546,21 @@ function AdminTenantsPage() {
 
   async function setSuspended(id: string, suspend: boolean) {
     try {
-      await updateAdminTenant(id, { status: suspend ? "Suspended" : "Active" });
-      toast.success(suspend ? "Tenant suspended" : "Tenant reactivated");
+      await updateAdminTenant(id, { status: suspend ? 'Suspended' : 'Active' });
+      toast.success(suspend ? 'Tenant suspended' : 'Tenant reactivated');
       await router.invalidate();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Update failed");
+      toast.error(e instanceof Error ? e.message : 'Update failed');
     }
   }
 
   async function resetSubscription(id: string) {
     try {
       await resetTenantSubscription(id);
-      toast.success("Subscription reset (+30 day renewal)");
+      toast.success('Subscription reset (+30 day renewal)');
       await router.invalidate();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Reset failed");
+      toast.error(e instanceof Error ? e.message : 'Reset failed');
     }
   }
 
@@ -557,10 +572,10 @@ function AdminTenantsPage() {
       if (detailId === deleteTarget.id) setDetailId(null);
       toast.success(`${deleteTarget.name} deleted`);
       setDeleteTarget(null);
-      setDeleteConfirmText("");
+      setDeleteConfirmText('');
       await router.invalidate();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not delete tenant");
+      toast.error(e instanceof Error ? e.message : 'Could not delete tenant');
     } finally {
       setDeleting(false);
     }
@@ -570,18 +585,18 @@ function AdminTenantsPage() {
     <div className="space-y-6">
       <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
         <Card className="border-border bg-card p-4 sm:p-5">
-          <p className="text-xs font-medium text-muted-foreground">
+          <p className="text-muted-foreground text-xs font-medium">
             Command center for isolated workspaces — search, filter, and act on billing, access, and
             health in one surface.
           </p>
           <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
             <div className="relative min-w-0 flex-1 sm:max-w-md">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
               <Input
                 placeholder="Search name, code, subdomain, region, plan…"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                className="h-9 rounded-lg border-border bg-muted/40 pl-9"
+                className="border-border bg-muted/40 h-9 rounded-lg pl-9"
               />
             </div>
             <div className="flex flex-wrap gap-2">
@@ -619,7 +634,7 @@ function AdminTenantsPage() {
         </Card>
         <Button
           type="button"
-          className="h-10 shrink-0 rounded-lg bg-foreground text-background hover:bg-foreground/90 lg:self-end"
+          className="bg-foreground text-background hover:bg-foreground/90 h-10 shrink-0 rounded-lg lg:self-end"
           onClick={() => {
             resetWizard();
             setOpenWizard(true);
@@ -634,7 +649,7 @@ function AdminTenantsPage() {
         onOpenChange={(open) => {
           if (!open && !deleting) {
             setDeleteTarget(null);
-            setDeleteConfirmText("");
+            setDeleteConfirmText('');
           }
         }}
       >
@@ -642,16 +657,16 @@ function AdminTenantsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete tenant?</AlertDialogTitle>
             <AlertDialogDescription asChild>
-              <div className="space-y-3 text-sm text-muted-foreground">
+              <div className="text-muted-foreground space-y-3 text-sm">
                 <p>
-                  This soft-deletes{" "}
-                  <span className="font-medium text-foreground">{deleteTarget?.name}</span> (
-                  <span className="font-mono text-xs">{deleteTarget?.tenantCode}</span>) and suspends
-                  workspace access. Billing and audit records are retained.
+                  This soft-deletes{' '}
+                  <span className="text-foreground font-medium">{deleteTarget?.name}</span> (
+                  <span className="font-mono text-xs">{deleteTarget?.tenantCode}</span>) and
+                  suspends workspace access. Billing and audit records are retained.
                 </p>
                 <p>
-                  Type <span className="font-mono text-foreground">DELETE</span> or the tenant code{" "}
-                  <span className="font-mono text-foreground">{deleteTarget?.tenantCode}</span> to
+                  Type <span className="text-foreground font-mono">DELETE</span> or the tenant code{' '}
+                  <span className="text-foreground font-mono">{deleteTarget?.tenantCode}</span> to
                   confirm.
                 </p>
                 <Input
@@ -669,7 +684,7 @@ function AdminTenantsPage() {
               disabled={
                 deleting ||
                 !deleteTarget ||
-                (deleteConfirmText !== "DELETE" &&
+                (deleteConfirmText !== 'DELETE' &&
                   deleteConfirmText.trim() !== deleteTarget.tenantCode)
               }
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -678,7 +693,7 @@ function AdminTenantsPage() {
                 void confirmDeleteTenant();
               }}
             >
-              {deleting ? "Deleting…" : "Delete tenant"}
+              {deleting ? 'Deleting…' : 'Delete tenant'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -725,11 +740,11 @@ function AdminTenantsPage() {
                   id="tn-slug"
                   value={slugOverride}
                   onChange={(e) => setSlugOverride(e.target.value)}
-                  placeholder={slugPreviewFromName(name || "your-business")}
+                  placeholder={slugPreviewFromName(name || 'your-business')}
                 />
-                <p className="text-[11px] text-muted-foreground">
-                  Host preview:{" "}
-                  <span className="font-mono text-foreground">
+                <p className="text-muted-foreground text-[11px]">
+                  Host preview:{' '}
+                  <span className="text-foreground font-mono">
                     {tenantWorkspaceHost(slugForCreate)}
                   </span>
                 </p>
@@ -745,13 +760,16 @@ function AdminTenantsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     {INDUSTRY_TEMPLATES.map((ind) => (
-                      <SelectItem key={ind} value={ind}>
+                      <SelectItem
+                        key={ind}
+                        value={ind}
+                      >
                         {ind}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-muted-foreground text-[11px]">
                   Seeds default module flags (Finance, CRM, HRM, Inventory, Manufacturing) for the
                   tenant workspace.
                 </p>
@@ -759,14 +777,17 @@ function AdminTenantsPage() {
             </div>
           ) : (
             <div className="grid gap-3 py-2">
-              <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
-                <span className="font-medium text-foreground">{name.trim() || "—"}</span> ·{" "}
+              <div className="border-border bg-muted/30 text-muted-foreground rounded-lg border p-3 text-xs">
+                <span className="text-foreground font-medium">{name.trim() || '—'}</span> ·{' '}
                 {tenantWorkspaceHost(slugForCreate)} · {industryTemplate}
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label>Plan</Label>
-                  <Select value={plan} onValueChange={(v) => setPlan(v as TenantPlan)}>
+                  <Select
+                    value={plan}
+                    onValueChange={(v) => setPlan(v as TenantPlan)}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -779,7 +800,10 @@ function AdminTenantsPage() {
                 </div>
                 <div className="space-y-1.5">
                   <Label>Lifecycle status</Label>
-                  <Select value={status} onValueChange={(v) => setStatus(v as TenantStatus)}>
+                  <Select
+                    value={status}
+                    onValueChange={(v) => setStatus(v as TenantStatus)}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -815,7 +839,11 @@ function AdminTenantsPage() {
             </div>
           )}
           <DialogFooter className="gap-2 sm:gap-0">
-            <Button type="button" variant="outline" onClick={() => setOpenWizard(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpenWizard(false)}
+            >
               Cancel
             </Button>
             {wizardStep === 0 ? (
@@ -829,7 +857,11 @@ function AdminTenantsPage() {
               </Button>
             ) : (
               <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                <Button type="button" variant="ghost" onClick={() => setWizardStep(0)}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setWizardStep(0)}
+                >
                   Back
                 </Button>
                 <Button
@@ -838,7 +870,7 @@ function AdminTenantsPage() {
                   className="bg-foreground text-background hover:bg-foreground/90"
                   onClick={handleCreateTenant}
                 >
-                  {submitting ? "Provisioning…" : "Create tenant"}
+                  {submitting ? 'Provisioning…' : 'Create tenant'}
                 </Button>
               </div>
             )}
@@ -852,7 +884,10 @@ function AdminTenantsPage() {
           if (!o) setDetailId(null);
         }}
       >
-        <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-lg">
+        <SheetContent
+          side="right"
+          className="w-full overflow-y-auto sm:max-w-lg"
+        >
           {detailTenant && draft ? (
             <>
               <SheetHeader>
@@ -863,7 +898,10 @@ function AdminTenantsPage() {
               </SheetHeader>
               <div className="mt-6 space-y-6">
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline" className="rounded-md font-normal">
+                  <Badge
+                    variant="outline"
+                    className="rounded-md font-normal"
+                  >
                     {detailTenant.industryTemplate}
                   </Badge>
                   {detailTenant.isolationVerified ? (
@@ -871,14 +909,17 @@ function AdminTenantsPage() {
                       <ShieldCheck className="h-3 w-3" /> Row-level isolation verified
                     </Badge>
                   ) : (
-                    <Badge variant="destructive" className="gap-1 rounded-md font-normal">
+                    <Badge
+                      variant="destructive"
+                      className="gap-1 rounded-md font-normal"
+                    >
                       <ShieldAlert className="h-3 w-3" /> Isolation review required
                     </Badge>
                   )}
                 </div>
 
                 <div>
-                  <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <h4 className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
                     Subscription
                   </h4>
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -925,7 +966,7 @@ function AdminTenantsPage() {
                         value={detailTenant.renewalDate}
                         className="font-mono text-xs"
                       />
-                      <p className="text-[11px] text-muted-foreground">
+                      <p className="text-muted-foreground text-[11px]">
                         Renewal date from subscription reset and billing operations.
                       </p>
                     </div>
@@ -961,24 +1002,27 @@ function AdminTenantsPage() {
                 <Separator />
 
                 <div>
-                  <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <h4 className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
                     Module access
                   </h4>
-                  <p className="mt-1 text-[11px] text-muted-foreground">
+                  <p className="text-muted-foreground mt-1 text-[11px]">
                     Module flags per tenant — persisted with tenant record and aligned to plan
                     entitlements.
                   </p>
                   <ul className="mt-3 space-y-3">
                     {(
                       [
-                        ["hrm", "HRM & payroll"],
-                        ["crm", "CRM & pipeline"],
-                        ["finance", "Finance & GL"],
-                        ["inventory", "Inventory & WMS"],
-                        ["manufacturing", "Manufacturing"],
+                        ['hrm', 'HRM & payroll'],
+                        ['crm', 'CRM & pipeline'],
+                        ['finance', 'Finance & GL'],
+                        ['inventory', 'Inventory & WMS'],
+                        ['manufacturing', 'Manufacturing'],
                       ] as const
                     ).map(([key, label]) => (
-                      <li key={key} className="flex items-center justify-between gap-3">
+                      <li
+                        key={key}
+                        className="flex items-center justify-between gap-3"
+                      >
                         <span className="text-sm">{label}</span>
                         <Switch
                           checked={draft.modules[key]}
@@ -996,7 +1040,7 @@ function AdminTenantsPage() {
                 <Separator />
 
                 <div>
-                  <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <h4 className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
                     Usage & caps
                   </h4>
                   <div className="mt-3 space-y-2">
@@ -1019,17 +1063,21 @@ function AdminTenantsPage() {
                 <Separator />
 
                 <div>
-                  <h4 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <h4 className="text-muted-foreground flex items-center gap-1.5 text-xs font-semibold tracking-wide uppercase">
                     <Activity className="h-3.5 w-3.5" /> Usage
                   </h4>
-                  <p className="mt-2 text-xs text-muted-foreground">
+                  <p className="text-muted-foreground mt-2 text-xs">
                     {detailTenant.users} active seats · Last active {detailTenant.lastActiveLabel} ·
                     MRR tracked in subscriptions.
                   </p>
                 </div>
               </div>
               <SheetFooter className="mt-8 flex-col gap-2 sm:flex-row">
-                <Button type="button" variant="outline" onClick={() => setDetailId(null)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setDetailId(null)}
+                >
                   Close
                 </Button>
                 <Button
@@ -1038,7 +1086,7 @@ function AdminTenantsPage() {
                   disabled={detailSaving}
                   onClick={persistDetail}
                 >
-                  {detailSaving ? "Saving…" : "Save changes"}
+                  {detailSaving ? 'Saving…' : 'Save changes'}
                 </Button>
               </SheetFooter>
             </>
@@ -1047,19 +1095,19 @@ function AdminTenantsPage() {
       </Sheet>
 
       <Card className="border-border bg-card">
-        <div className="flex flex-col gap-2 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+        <div className="border-border flex flex-col gap-2 border-b p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
           <div>
             <div className="text-sm font-semibold">All tenants</div>
-            <div className="text-xs text-muted-foreground">
-              {filtered.length} of {tenants.length} shown ·{" "}
+            <div className="text-muted-foreground text-xs">
+              {filtered.length} of {tenants.length} shown ·{' '}
               <span className="text-emerald-700 dark:text-emerald-400">
                 {healthSummary.healthy} healthy
               </span>
-              {" · "}
+              {' · '}
               <span className="text-amber-700 dark:text-amber-400">
                 {healthSummary.degraded} degraded
               </span>
-              {" · "}
+              {' · '}
               <span className="text-red-700 dark:text-red-400">
                 {healthSummary.critical} critical
               </span>
@@ -1067,7 +1115,7 @@ function AdminTenantsPage() {
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-[1100px] w-full text-sm">
+          <table className="w-full min-w-[1100px] text-sm">
             <thead className="bg-muted/40 text-muted-foreground">
               <tr>
                 <SortableTh
@@ -1147,142 +1195,157 @@ function AdminTenantsPage() {
                 />
                 <th
                   scope="col"
-                  className="whitespace-nowrap px-4 py-3 text-left text-[10px] font-medium uppercase tracking-[0.12em] sm:px-5"
+                  className="px-4 py-3 text-left text-[10px] font-medium tracking-[0.12em] whitespace-nowrap uppercase sm:px-5"
                 />
               </tr>
             </thead>
             <tbody>
               {sortedTenants.length === 0 ? (
                 <tr>
-                  <td colSpan={12} className="px-4 py-10 text-center text-sm text-muted-foreground">
+                  <td
+                    colSpan={12}
+                    className="text-muted-foreground px-4 py-10 text-center text-sm"
+                  >
                     {tenants.length === 0
-                      ? "No tenants yet. New tenants will appear here after signup or Super Admin creation."
-                      : "No tenants match your filters."}
+                      ? 'No tenants yet. New tenants will appear here after signup or Super Admin creation.'
+                      : 'No tenants match your filters.'}
                   </td>
                 </tr>
               ) : (
                 sortedTenants.map((t) => {
-                const pct = Math.min(100, (t.storageUsedGb / t.storageCapGb) * 100);
-                return (
-                  <tr key={t.id} className="border-t border-border hover:bg-muted/30">
-                    <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-muted-foreground sm:px-5">
-                      {t.tenantCode}
-                    </td>
-                    <td className="min-w-[140px] px-4 py-3 sm:px-5">
-                      <div className="font-medium">{t.name}</div>
-                      <div className="text-[10px] text-muted-foreground">
-                        {t.country}
-                        {t.currency ? ` · ${t.currency}` : ""}
-                      </div>
-                    </td>
-                    <td className="max-w-[200px] truncate px-4 py-3 font-mono text-xs text-muted-foreground sm:max-w-[240px] sm:px-5">
-                      {tenantWorkspaceHost(t.slug)}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 sm:px-5">
-                      <Badge
-                        variant="outline"
-                        className={`rounded-md border-border font-normal ${t.plan === "Enterprise" ? "border-foreground bg-foreground text-background" : ""}`}
-                      >
-                        {t.plan}
-                      </Badge>
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 sm:px-5">
-                      <TenantStatusPill status={t.status} />
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 sm:px-5">
-                      <span className="inline-flex items-center gap-1.5 text-xs">
-                        <span
-                          className={cn("h-2 w-2 shrink-0 rounded-full", healthDotClass(t.health))}
-                        />
-                        <span className="text-muted-foreground">{healthLabel(t.health)}</span>
-                      </span>
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-muted-foreground sm:px-5">
-                      {formatShortDate(t.createdAt)}
-                    </td>
-                    <td className="max-w-[120px] truncate px-4 py-3 text-xs text-muted-foreground sm:px-5">
-                      {t.lastActiveLabel}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 sm:px-5">{t.users}</td>
-                    <td className="min-w-[100px] px-4 py-3 sm:px-5">
-                      <div className="flex flex-col gap-1">
-                        <Progress value={pct} className="h-1 max-w-[88px]" />
-                        <span className="text-[10px] text-muted-foreground">
-                          {t.storageUsedGb.toFixed(0)} / {t.storageCapGb} GB
+                  const pct = Math.min(100, (t.storageUsedGb / t.storageCapGb) * 100);
+                  return (
+                    <tr
+                      key={t.id}
+                      className="border-border hover:bg-muted/30 border-t"
+                    >
+                      <td className="text-muted-foreground px-4 py-3 font-mono text-xs whitespace-nowrap sm:px-5">
+                        {t.tenantCode}
+                      </td>
+                      <td className="min-w-[140px] px-4 py-3 sm:px-5">
+                        <div className="font-medium">{t.name}</div>
+                        <div className="text-muted-foreground text-[10px]">
+                          {t.country}
+                          {t.currency ? ` · ${t.currency}` : ''}
+                        </div>
+                      </td>
+                      <td className="text-muted-foreground max-w-[200px] truncate px-4 py-3 font-mono text-xs sm:max-w-[240px] sm:px-5">
+                        {tenantWorkspaceHost(t.slug)}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap sm:px-5">
+                        <Badge
+                          variant="outline"
+                          className={`border-border rounded-md font-normal ${t.plan === 'Enterprise' ? 'border-foreground bg-foreground text-background' : ''}`}
+                        >
+                          {t.plan}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap sm:px-5">
+                        <TenantStatusPill status={t.status} />
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap sm:px-5">
+                        <span className="inline-flex items-center gap-1.5 text-xs">
+                          <span
+                            className={cn(
+                              'h-2 w-2 shrink-0 rounded-full',
+                              healthDotClass(t.health),
+                            )}
+                          />
+                          <span className="text-muted-foreground">{healthLabel(t.health)}</span>
                         </span>
-                      </div>
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 font-medium sm:px-5">
-                      {formatCurrency(t.mrr)}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 sm:px-5">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-8 w-8"
-                            aria-label="Row actions"
+                      </td>
+                      <td className="text-muted-foreground px-4 py-3 whitespace-nowrap sm:px-5">
+                        {formatShortDate(t.createdAt)}
+                      </td>
+                      <td className="text-muted-foreground max-w-[120px] truncate px-4 py-3 text-xs sm:px-5">
+                        {t.lastActiveLabel}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap sm:px-5">{t.users}</td>
+                      <td className="min-w-[100px] px-4 py-3 sm:px-5">
+                        <div className="flex flex-col gap-1">
+                          <Progress
+                            value={pct}
+                            className="h-1 max-w-[88px]"
+                          />
+                          <span className="text-muted-foreground text-[10px]">
+                            {t.storageUsedGb.toFixed(0)} / {t.storageCapGb} GB
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 font-medium whitespace-nowrap sm:px-5">
+                        {formatCurrency(t.mrr)}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap sm:px-5">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8"
+                              aria-label="Row actions"
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent
+                            align="end"
+                            className="w-52"
                           >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-52">
-                          <DropdownMenuItem
-                            onSelect={() => {
-                              setDetailId(t.id);
-                            }}
-                          >
-                            <Eye className="mr-2 h-4 w-4" /> View details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onSelect={() => {
-                              setDetailId(t.id);
-                            }}
-                          >
-                            <Pencil className="mr-2 h-4 w-4" /> Edit tenant
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onSelect={() => void resetSubscription(t.id)}>
-                            <RefreshCw className="mr-2 h-4 w-4" /> Reset subscription
-                          </DropdownMenuItem>
-                          {t.status === "Suspended" ? (
-                            <DropdownMenuItem onSelect={() => void setSuspended(t.id, false)}>
-                              <PlayCircle className="mr-2 h-4 w-4" /> Resume tenant
+                            <DropdownMenuItem
+                              onSelect={() => {
+                                setDetailId(t.id);
+                              }}
+                            >
+                              <Eye className="mr-2 h-4 w-4" /> View details
                             </DropdownMenuItem>
-                          ) : (
+                            <DropdownMenuItem
+                              onSelect={() => {
+                                setDetailId(t.id);
+                              }}
+                            >
+                              <Pencil className="mr-2 h-4 w-4" /> Edit tenant
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onSelect={() => void resetSubscription(t.id)}>
+                              <RefreshCw className="mr-2 h-4 w-4" /> Reset subscription
+                            </DropdownMenuItem>
+                            {t.status === 'Suspended' ? (
+                              <DropdownMenuItem onSelect={() => void setSuspended(t.id, false)}>
+                                <PlayCircle className="mr-2 h-4 w-4" /> Resume tenant
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                onSelect={() => void setSuspended(t.id, true)}
+                              >
+                                <Ban className="mr-2 h-4 w-4" /> Suspend tenant
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuSeparator />
                             <DropdownMenuItem
                               className="text-destructive focus:text-destructive"
-                              onSelect={() => void setSuspended(t.id, true)}
+                              onSelect={() => setDeleteTarget(t)}
                             >
-                              <Ban className="mr-2 h-4 w-4" /> Suspend tenant
+                              <Trash2 className="mr-2 h-4 w-4" /> Delete tenant
                             </DropdownMenuItem>
-                          )}
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="text-destructive focus:text-destructive"
-                            onSelect={() => setDeleteTarget(t)}
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" /> Delete tenant
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </td>
-                  </tr>
-                );
-              })
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
         {filtered.length === 0 && tenants.length > 0 ? (
-          <div className="p-8 text-center text-sm text-muted-foreground">
+          <div className="text-muted-foreground p-8 text-center text-sm">
             No tenants match your filters.
           </div>
         ) : null}
       </Card>
 
-      <p className="text-center text-[11px] text-muted-foreground">
+      <p className="text-muted-foreground text-center text-[11px]">
         Drag-and-drop dashboard widgets are planned; this list is optimized for mobile horizontal
         scroll and dense ops review.
       </p>

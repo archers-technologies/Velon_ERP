@@ -5,14 +5,14 @@
 
 ## Core entities
 
-| Entity | Role |
-|--------|------|
-| **Tenant** | Billing and legal customer; plan, status, health, isolation flags |
-| **Workspace** | Operational environment (currency, timezone, locale, slug) |
-| **CompanyProfile** | Legal name, tax ID, logo, address for documents |
-| **TenantMembership** | User ↔ tenant link with role and optional department |
-| **Department** | Optional org structure within a tenant |
-| **Subscription** | Trial / active / past-due / suspended / cancelled lifecycle |
+| Entity               | Role                                                              |
+| -------------------- | ----------------------------------------------------------------- |
+| **Tenant**           | Billing and legal customer; plan, status, health, isolation flags |
+| **Workspace**        | Operational environment (currency, timezone, locale, slug)        |
+| **CompanyProfile**   | Legal name, tax ID, logo, address for documents                   |
+| **TenantMembership** | User ↔ tenant link with role and optional department              |
+| **Department**       | Optional org structure within a tenant                            |
+| **Subscription**     | Trial / active / past-due / suspended / cancelled lifecycle       |
 
 At launch: **one tenant = one workspace = one company profile**.
 

@@ -1,19 +1,14 @@
-import {
-  CallHandler,
-  ExecutionContext,
-  Injectable,
-  NestInterceptor,
-} from "@nestjs/common";
-import type { Request } from "express";
-import type { Observable } from "rxjs";
-import { map } from "rxjs/operators";
+import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
+import type { Request } from 'express';
+import type { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 @Injectable()
 export class ApiResponseInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const req = context.switchToHttp().getRequest<Request | undefined>();
-    const path = req?.path ?? req?.url ?? "";
-    if (path.includes("/health")) {
+    const path = req?.path ?? req?.url ?? '';
+    if (path.includes('/health')) {
       return next.handle();
     }
 
@@ -23,10 +18,10 @@ export class ApiResponseInterceptor implements NestInterceptor {
           return { success: true };
         }
         if (
-          typeof data === "object" &&
+          typeof data === 'object' &&
           data !== null &&
-          "success" in data &&
-          typeof (data as { success: unknown }).success === "boolean"
+          'success' in data &&
+          typeof (data as { success: unknown }).success === 'boolean'
         ) {
           return data;
         }

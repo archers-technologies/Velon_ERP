@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
-import { useRouter } from "@tanstack/react-router";
-import { apiGetPlatformSync } from "@/lib/api/client";
-import { isApiEnabled } from "@/lib/api/config";
+import { useEffect, useRef, useState } from 'react';
+import { useRouter } from '@tanstack/react-router';
+import { apiGetPlatformSync } from '@/lib/api/client';
+import { isApiEnabled } from '@/lib/api/config';
 
 export type PlatformSyncState = {
   revision: number;

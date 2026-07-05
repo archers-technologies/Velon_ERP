@@ -1,9 +1,19 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
-import { toast } from "sonner";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { useState } from 'react';
+import { createFileRoute, Link } from '@tanstack/react-router';
+import { ArrowLeft, CreditCard, IndianRupee, Landmark, RefreshCw, Zap } from 'lucide-react';
+import { toast } from 'sonner';
+import {
+  canManageWorkspaceBilling,
+  normalizeVelonRole,
+  parseSettingsUserTab,
+  settingsBillingSearch,
+  VelonRole,
+  yearlyPriceFromMonthly,
+} from '@velon/shared';
+import { SettingsWorkspaceShortcuts } from '@/components/settings/settings-workspace-shortcuts';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -11,20 +21,19 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { TenantStatusPill } from "@/components/workspace/tenant-status-pill";
-import type { TenantStatus } from "@/lib/platform/admin-demo";
-import { getSessionMembershipRole } from "@/lib/auth/session";
-import { formatApiError } from "@/lib/auth/login-utils";
-import { normalizeVelonRole, canManageWorkspaceBilling, parseSettingsUserTab, settingsBillingSearch, VelonRole, yearlyPriceFromMonthly } from "@velon/shared";
-import { SettingsWorkspaceShortcuts } from "@/components/settings/settings-workspace-shortcuts";
+} from '@/components/ui/select';
+import { TenantStatusPill } from '@/components/workspace/tenant-status-pill';
+import { useWorkspaceCurrency } from '@/contexts/workspace-currency';
+import { formatApiError } from '@/lib/auth/login-utils';
+import { getSessionMembershipRole } from '@/lib/auth/session';
+import { openRazorpayCheckout } from '@/lib/billing/razorpay-checkout';
 import {
   cancelBillingCheckout,
   cancelTenantSubscription,
@@ -41,13 +50,11 @@ import {
   type BillingPaymentConfig,
   type SubscriptionInvoiceView,
   type SubscriptionPaymentView,
-} from "@/lib/billing/subscription-api";
-import { openRazorpayCheckout } from "@/lib/billing/razorpay-checkout";
-import { CreditCard, ArrowLeft, RefreshCw, Landmark, IndianRupee, Zap } from "lucide-react";
-import { formatCurrency } from "@/lib/shared/format-money";
-import { useWorkspaceCurrency } from "@/contexts/workspace-currency";
+} from '@/lib/billing/subscription-api';
+import type { TenantStatus } from '@/lib/platform/admin-demo';
+import { formatCurrency } from '@/lib/shared/format-money';
 
-export const Route = createFileRoute("/app/settings/billing")({
+export const Route = createFileRoute('/app/settings/billing')({
   validateSearch: (search: Record<string, unknown>) => ({
     tab: parseSettingsUserTab(search.tab),
   }),
@@ -65,7 +72,7 @@ export const Route = createFileRoute("/app/settings/billing")({
   component: BillingPortalPage,
 });
 
-type PlanId = "STARTER" | "GROWTH" | "ENTERPRISE";
+type PlanId = 'STARTER' | 'GROWTH' | 'ENTERPRISE';
 
 function BillingPortalPage() {
   const initial = Route.useLoaderData();
@@ -79,7 +86,7 @@ function BillingPortalPage() {
   const [busy, setBusy] = useState(false);
   const [payDialogOpen, setPayDialogOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<PlanId>(subscription.plan as PlanId);
-  const [interval, setInterval] = useState<"MONTHLY" | "YEARLY">(subscription.billingInterval);
+  const [interval, setInterval] = useState<'MONTHLY' | 'YEARLY'>(subscription.billingInterval);
   const role = normalizeVelonRole(getSessionMembershipRole() ?? VelonRole.USER);
   const canAccessBilling = canManageWorkspaceBilling(role);
   const isOwner = role === VelonRole.TENANT_OWNER;
@@ -88,11 +95,18 @@ function BillingPortalPage() {
     return (
       <div className="mx-auto max-w-4xl space-y-6 p-6">
         <Card className="border-border bg-card p-8 text-center">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Tenant Owner or Tenant Admin access is required to view subscription and billing.
           </p>
-          <Button asChild variant="outline" className="mt-4">
-            <Link to="/app/settings" search={{ tab: "general" }}>
+          <Button
+            asChild
+            variant="outline"
+            className="mt-4"
+          >
+            <Link
+              to="/app/settings"
+              search={{ tab: 'general' }}
+            >
               Back to settings
             </Link>
           </Button>
@@ -101,24 +115,24 @@ function BillingPortalPage() {
     );
   }
 
-  const pendingPayment = payments.find((p) => p.status === "PENDING");
+  const pendingPayment = payments.find((p) => p.status === 'PENDING');
   const pendingBankTransfer =
-    pendingPayment?.provider === "BANK_TRANSFER" ? pendingPayment : undefined;
+    pendingPayment?.provider === 'BANK_TRANSFER' ? pendingPayment : undefined;
   const razorpayEnabled = paymentConfig.razorpay.enabled && Boolean(paymentConfig.razorpay.keyId);
   const selectedPlanMeta = plans.find((p) => p.id === selectedPlan);
   const displayCurrency =
     selectedPlanMeta?.currency ?? subscription.currency ?? moneyFormat.currencyCode;
 
   const subscriptionNeedsPayment =
-    subscription.status === "TRIAL" ||
-    subscription.status === "PAST_DUE" ||
-    subscription.status === "SUSPENDED" ||
+    subscription.status === 'TRIAL' ||
+    subscription.status === 'PAST_DUE' ||
+    subscription.status === 'SUSPENDED' ||
     !access.allowsWorkspace;
 
   const checkoutAmount =
-    interval === "YEARLY"
+    interval === 'YEARLY'
       ? (selectedPlanMeta?.annualPrice ??
-          yearlyPriceFromMonthly(selectedPlanMeta?.monthlyPrice ?? subscription.mrr))
+        yearlyPriceFromMonthly(selectedPlanMeta?.monthlyPrice ?? subscription.mrr))
       : (selectedPlanMeta?.monthlyPrice ?? subscription.mrr);
 
   const payNowBlocked = !razorpayEnabled && Boolean(pendingBankTransfer);
@@ -140,7 +154,7 @@ function BillingPortalPage() {
     try {
       await changeTenantSubscriptionPlan(selectedPlan, interval);
       await refresh();
-      toast.success("Plan updated");
+      toast.success('Plan updated');
     } catch (err) {
       toast.error(formatApiError(err));
     } finally {
@@ -155,12 +169,12 @@ function BillingPortalPage() {
       const result = await startBillingCheckout({
         plan: selectedPlan,
         billingInterval: interval,
-        provider: "BANK_TRANSFER",
+        provider: 'BANK_TRANSFER',
         idempotencyKey: crypto.randomUUID(),
       });
       const instructions =
         result.session.instructions ??
-        "Bank transfer request created. Include your workspace code in the payment reference.";
+        'Bank transfer request created. Include your workspace code in the payment reference.';
       toast.success(instructions);
       setPayDialogOpen(false);
       await refresh();
@@ -178,12 +192,12 @@ function BillingPortalPage() {
       const result = await startBillingCheckout({
         plan: selectedPlan,
         billingInterval: interval,
-        provider: "RAZORPAY",
+        provider: 'RAZORPAY',
         idempotencyKey: crypto.randomUUID(),
       });
       const checkout = result.razorpay ?? result.session.razorpay;
       if (!checkout?.keyId || !checkout.orderId) {
-        throw new Error("Razorpay checkout is not available");
+        throw new Error('Razorpay checkout is not available');
       }
 
       setPayDialogOpen(false);
@@ -196,7 +210,7 @@ function BillingPortalPage() {
         planLabel: selectedPlanMeta?.displayName ?? selectedPlan,
         onDismiss: () => {
           void cancelBillingCheckout(checkout.orderId).finally(() => {
-            toast.message("Payment cancelled — you can try again");
+            toast.message('Payment cancelled — you can try again');
             setBusy(false);
           });
         },
@@ -208,7 +222,7 @@ function BillingPortalPage() {
               razorpay_signature: response.razorpay_signature,
             });
             await refresh();
-            toast.success("Payment verified — subscription activated");
+            toast.success('Payment verified — subscription activated');
           } catch (err) {
             toast.error(formatApiError(err));
           } finally {
@@ -229,7 +243,7 @@ function BillingPortalPage() {
       return;
     }
     if (pendingBankTransfer) {
-      toast.error("A bank transfer is already pending admin approval.");
+      toast.error('A bank transfer is already pending admin approval.');
       return;
     }
     setPayDialogOpen(true);
@@ -241,7 +255,7 @@ function BillingPortalPage() {
     try {
       await cancelTenantSubscription();
       await refresh();
-      toast.success("Subscription will cancel at period end");
+      toast.success('Subscription will cancel at period end');
     } catch (err) {
       toast.error(formatApiError(err));
     } finally {
@@ -255,7 +269,7 @@ function BillingPortalPage() {
     try {
       await resumeTenantSubscription();
       await refresh();
-      toast.success("Subscription resumed");
+      toast.success('Subscription resumed');
     } catch (err) {
       toast.error(formatApiError(err));
     } finally {
@@ -269,46 +283,51 @@ function BillingPortalPage() {
         <div>
           <Link
             to="/app/settings"
-            search={{ tab: "general" }}
-            className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+            search={{ tab: 'general' }}
+            className="text-muted-foreground hover:text-foreground mb-2 inline-flex items-center gap-1 text-sm"
           >
             <ArrowLeft className="h-4 w-4" /> Settings
           </Link>
           <h1 className="text-2xl font-semibold tracking-tight">Subscription & Billing</h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Manage your Velon ERP plan, invoices, and payment history.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => void refresh()} disabled={busy}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => void refresh()}
+          disabled={busy}
+        >
           <RefreshCw className="mr-2 h-4 w-4" /> Refresh
         </Button>
       </div>
 
       {isOwner && subscriptionNeedsPayment ? (
-        <Card className="border-primary/40 bg-gradient-to-br from-primary/10 via-primary/5 to-background p-6 shadow-sm">
+        <Card className="border-primary/40 from-primary/10 via-primary/5 to-background bg-gradient-to-br p-6 shadow-sm">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <Zap className="h-5 w-5 text-primary" />
+                <Zap className="text-primary h-5 w-5" />
                 <h2 className="text-lg font-semibold">Pay now to activate your workspace</h2>
               </div>
-              <p className="text-sm text-muted-foreground">
-                {selectedPlanMeta?.displayName ?? subscription.planDisplayName} ·{" "}
-                {interval === "YEARLY" ? "Yearly billing" : "Monthly billing"}
-                {subscription.trialEndsAt ? ` · Trial ends ${subscription.trialEndsAt}` : ""}
+              <p className="text-muted-foreground text-sm">
+                {selectedPlanMeta?.displayName ?? subscription.planDisplayName} ·{' '}
+                {interval === 'YEARLY' ? 'Yearly billing' : 'Monthly billing'}
+                {subscription.trialEndsAt ? ` · Trial ends ${subscription.trialEndsAt}` : ''}
               </p>
               <p className="pt-1 text-3xl font-bold tracking-tight">
                 {formatCurrency(checkoutAmount, { currencyCode: displayCurrency })}
-                <span className="text-base font-normal text-muted-foreground">
-                  {interval === "YEARLY" ? "/yr" : "/mo"}
+                <span className="text-muted-foreground text-base font-normal">
+                  {interval === 'YEARLY' ? '/yr' : '/mo'}
                 </span>
               </p>
               {razorpayEnabled ? (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   Pay instantly with card, UPI, or netbanking via Razorpay.
                 </p>
               ) : (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   Online checkout is unavailable — use bank transfer and wait for platform approval.
                 </p>
               )}
@@ -323,7 +342,7 @@ function BillingPortalPage() {
             </Button>
           </div>
           {pendingBankTransfer && razorpayEnabled ? (
-            <p className="mt-4 text-xs text-muted-foreground">
+            <p className="text-muted-foreground mt-4 text-xs">
               You have a pending bank transfer request. Pay now online to activate immediately
               instead of waiting for admin approval.
             </p>
@@ -340,14 +359,17 @@ function BillingPortalPage() {
       <SettingsWorkspaceShortcuts />
 
       {isOwner && !subscriptionNeedsPayment ? (
-        <Card className="flex flex-wrap items-center justify-between gap-3 border-border bg-muted/30 p-4">
+        <Card className="border-border bg-muted/30 flex flex-wrap items-center justify-between gap-3 p-4">
           <div>
             <p className="text-sm font-medium">Renew or change your plan</p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Update billing or pay for the next period before renewal.
             </p>
           </div>
-          <Button onClick={onPayNow} disabled={busy || payNowBlocked}>
+          <Button
+            onClick={onPayNow}
+            disabled={busy || payNowBlocked}
+          >
             Pay now
           </Button>
         </Card>
@@ -355,8 +377,8 @@ function BillingPortalPage() {
 
       {pendingBankTransfer && !razorpayEnabled ? (
         <Card className="border-amber-500/30 bg-amber-500/5 p-4 text-sm">
-          <p className="font-medium text-foreground">Payment pending approval</p>
-          <p className="mt-1 text-muted-foreground">
+          <p className="text-foreground font-medium">Payment pending approval</p>
+          <p className="text-muted-foreground mt-1">
             Your bank transfer request (
             {formatCurrency(pendingBankTransfer.amount, {
               currencyCode: pendingBankTransfer.currency,
@@ -369,14 +391,14 @@ function BillingPortalPage() {
       <Card className="p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-sm text-muted-foreground">Current plan</p>
+            <p className="text-muted-foreground text-sm">Current plan</p>
             <h2 className="text-xl font-semibold">{subscription.planDisplayName}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="text-muted-foreground mt-1 text-sm">
               {formatWorkspaceAmount(subscription.mrr)}/mo · Renews {subscription.currentPeriodEnd}
-              {subscription.trialEndsAt ? ` · Trial ends ${subscription.trialEndsAt}` : ""}
+              {subscription.trialEndsAt ? ` · Trial ends ${subscription.trialEndsAt}` : ''}
             </p>
             {subscription.seatLimit != null ? (
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="text-muted-foreground mt-1 text-xs">
                 Seat limit: {subscription.seatLimit} users
               </p>
             ) : null}
@@ -399,14 +421,20 @@ function BillingPortalPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <p className="text-sm font-medium">Plan</p>
-              <Select value={selectedPlan} onValueChange={(v) => setSelectedPlan(v as PlanId)}>
+              <Select
+                value={selectedPlan}
+                onValueChange={(v) => setSelectedPlan(v as PlanId)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {plans.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.displayName} —{" "}
+                    <SelectItem
+                      key={p.id}
+                      value={p.id}
+                    >
+                      {p.displayName} —{' '}
                       {formatCurrency(p.monthlyPrice, { currencyCode: displayCurrency })}/mo
                     </SelectItem>
                   ))}
@@ -415,7 +443,10 @@ function BillingPortalPage() {
             </div>
             <div className="space-y-2">
               <p className="text-sm font-medium">Billing interval</p>
-              <Select value={interval} onValueChange={(v) => setInterval(v as "MONTHLY" | "YEARLY")}>
+              <Select
+                value={interval}
+                onValueChange={(v) => setInterval(v as 'MONTHLY' | 'YEARLY')}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -427,10 +458,17 @@ function BillingPortalPage() {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={() => void onChangePlan()} disabled={busy}>
+            <Button
+              variant="outline"
+              onClick={() => void onChangePlan()}
+              disabled={busy}
+            >
               Save plan selection
             </Button>
-            <Button onClick={onPayNow} disabled={busy || payNowBlocked}>
+            <Button
+              onClick={onPayNow}
+              disabled={busy || payNowBlocked}
+            >
               Pay now
             </Button>
             {razorpayEnabled ? (
@@ -452,17 +490,25 @@ function BillingPortalPage() {
               Bank transfer
             </Button>
             {subscription.cancelAtPeriodEnd ? (
-              <Button variant="secondary" onClick={() => void onResume()} disabled={busy}>
+              <Button
+                variant="secondary"
+                onClick={() => void onResume()}
+                disabled={busy}
+              >
                 Resume subscription
               </Button>
             ) : (
-              <Button variant="ghost" onClick={() => void onCancel()} disabled={busy}>
+              <Button
+                variant="ghost"
+                onClick={() => void onCancel()}
+                disabled={busy}
+              >
                 Cancel at period end
               </Button>
             )}
           </div>
           {pendingBankTransfer && !razorpayEnabled ? (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               A bank transfer is already pending review. Wait for approval before submitting another
               request.
             </p>
@@ -470,14 +516,17 @@ function BillingPortalPage() {
         </Card>
       )}
 
-      <Dialog open={payDialogOpen} onOpenChange={setPayDialogOpen}>
+      <Dialog
+        open={payDialogOpen}
+        onOpenChange={setPayDialogOpen}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Choose how to pay</DialogTitle>
             <DialogDescription>
-              {selectedPlanMeta?.displayName ?? subscription.planDisplayName} ·{" "}
+              {selectedPlanMeta?.displayName ?? subscription.planDisplayName} ·{' '}
               {formatCurrency(checkoutAmount, { currencyCode: displayCurrency })}
-              {interval === "YEARLY" ? "/yr" : "/mo"}
+              {interval === 'YEARLY' ? '/yr' : '/mo'}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-2">
@@ -492,7 +541,7 @@ function BillingPortalPage() {
               </Button>
             ) : null}
             <Button
-              variant={razorpayEnabled ? "outline" : "default"}
+              variant={razorpayEnabled ? 'outline' : 'default'}
               className="h-12 w-full justify-start gap-3 text-base"
               onClick={() => void onRequestManualPayment()}
               disabled={busy || Boolean(pendingBankTransfer)}
@@ -501,7 +550,7 @@ function BillingPortalPage() {
               Request bank transfer
             </Button>
           </div>
-          <DialogFooter className="text-xs text-muted-foreground sm:justify-start">
+          <DialogFooter className="text-muted-foreground text-xs sm:justify-start">
             Bank transfers require platform admin approval. Online payment activates your
             subscription immediately.
           </DialogFooter>
@@ -509,8 +558,14 @@ function BillingPortalPage() {
       </Dialog>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <InvoiceTable title="Invoices" rows={invoices} />
-        <PaymentTable title="Payment history" rows={payments} />
+        <InvoiceTable
+          title="Invoices"
+          rows={invoices}
+        />
+        <PaymentTable
+          title="Payment history"
+          rows={payments}
+        />
       </div>
     </div>
   );
@@ -518,17 +573,17 @@ function BillingPortalPage() {
 
 function mapBillingStatus(status: string): TenantStatus {
   switch (status) {
-    case "TRIAL":
-      return "Trial";
-    case "ACTIVE":
-      return "Active";
-    case "PAST_DUE":
-      return "Past due";
-    case "SUSPENDED":
-    case "CANCELLED":
-      return "Suspended";
+    case 'TRIAL':
+      return 'Trial';
+    case 'ACTIVE':
+      return 'Active';
+    case 'PAST_DUE':
+      return 'Past due';
+    case 'SUSPENDED':
+    case 'CANCELLED':
+      return 'Suspended';
     default:
-      return "Active";
+      return 'Active';
   }
 }
 
@@ -537,11 +592,14 @@ function InvoiceTable({ title, rows }: { title: string; rows: SubscriptionInvoic
     <Card className="p-4">
       <h3 className="mb-3 font-semibold">{title}</h3>
       {rows.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No invoices yet.</p>
+        <p className="text-muted-foreground text-sm">No invoices yet.</p>
       ) : (
         <div className="space-y-2">
           {rows.map((row) => (
-            <div key={row.id} className="flex items-center justify-between text-sm">
+            <div
+              key={row.id}
+              className="flex items-center justify-between text-sm"
+            >
               <div>
                 <p className="font-medium">{row.invoiceNumber}</p>
                 <p className="text-muted-foreground">
@@ -565,14 +623,19 @@ function PaymentTable({ title, rows }: { title: string; rows: SubscriptionPaymen
     <Card className="p-4">
       <h3 className="mb-3 font-semibold">{title}</h3>
       {rows.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No payments yet.</p>
+        <p className="text-muted-foreground text-sm">No payments yet.</p>
       ) : (
         <div className="space-y-2">
           {rows.map((row) => (
-            <div key={row.id} className="flex items-center justify-between text-sm">
+            <div
+              key={row.id}
+              className="flex items-center justify-between text-sm"
+            >
               <div>
                 <p className="font-medium">{formatProvider(row.provider)}</p>
-                <p className="text-muted-foreground">{new Date(row.createdAt).toLocaleDateString()}</p>
+                <p className="text-muted-foreground">
+                  {new Date(row.createdAt).toLocaleDateString()}
+                </p>
               </div>
               <div className="text-right">
                 <p>{formatCurrency(row.amount, { currencyCode: row.currency })}</p>
@@ -587,7 +650,7 @@ function PaymentTable({ title, rows }: { title: string; rows: SubscriptionPaymen
 }
 
 function formatProvider(provider: string) {
-  if (provider === "BANK_TRANSFER") return "Bank transfer";
-  if (provider === "RAZORPAY") return "Razorpay";
-  return provider.replace(/_/g, " ");
+  if (provider === 'BANK_TRANSFER') return 'Bank transfer';
+  if (provider === 'RAZORPAY') return 'Razorpay';
+  return provider.replace(/_/g, ' ');
 }

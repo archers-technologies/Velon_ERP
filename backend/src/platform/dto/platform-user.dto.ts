@@ -1,6 +1,6 @@
-import { IsEmail, IsEnum, IsString, MinLength } from "class-validator";
-import { UserRole } from "@velon/database";
-import { IsVelonPassword } from "../../auth/validators/is-velon-password.decorator";
+import { IsEmail, IsEnum, IsString, MinLength } from 'class-validator';
+import { UserRole } from '@velon/database';
+import { IsVelonPassword } from '../../auth/validators/is-velon-password.decorator';
 
 const PLATFORM_ROLES = [UserRole.SUPER_ADMIN, UserRole.PLATFORM_SUPPORT] as const;
 

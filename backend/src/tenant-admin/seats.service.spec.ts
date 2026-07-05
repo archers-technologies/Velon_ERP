@@ -1,11 +1,11 @@
-import { ForbiddenException } from "@nestjs/common";
-import { TenantPlan } from "@velon/database";
-import { SeatsService } from "./seats.service";
-import { IDS } from "../../test/helpers/fixtures";
-import { createMockPrisma, createMockPrismaClient } from "../../test/helpers/mocks";
-import { runWithTenantContext } from "../common/tenant-context.storage";
+import { ForbiddenException } from '@nestjs/common';
+import { TenantPlan } from '@velon/database';
+import { IDS } from '../../test/helpers/fixtures';
+import { createMockPrisma, createMockPrismaClient } from '../../test/helpers/mocks';
+import { runWithTenantContext } from '../common/tenant-context.storage';
+import { SeatsService } from './seats.service';
 
-describe("SeatsService", () => {
+describe('SeatsService', () => {
   const client = createMockPrismaClient();
   const service = new SeatsService(createMockPrisma(client));
 
@@ -22,7 +22,7 @@ describe("SeatsService", () => {
 
   beforeEach(() => jest.clearAllMocks());
 
-  it("summarizes seats from active members and pending invites", async () => {
+  it('summarizes seats from active members and pending invites', async () => {
     client.tenant.findUniqueOrThrow.mockResolvedValue({ plan: TenantPlan.STARTER });
     client.tenantMembership.count.mockResolvedValue(2);
     client.tenantInvitation.count.mockResolvedValue(1);
@@ -35,21 +35,19 @@ describe("SeatsService", () => {
       pendingInvites: 1,
       reservedSeats: 3,
     });
-    expect(typeof summary.remaining).toBe("number");
+    expect(typeof summary.remaining).toBe('number');
   });
 
-  it("blocks adding a seat when plan limit is reached", async () => {
+  it('blocks adding a seat when plan limit is reached', async () => {
     client.tenant.findUniqueOrThrow.mockResolvedValue({ plan: TenantPlan.STARTER });
     // STARTER limit is typically small; reserve at/over limit
     client.tenantMembership.count.mockResolvedValue(100);
     client.tenantInvitation.count.mockResolvedValue(0);
 
-    await expect(withTenant(() => service.assertCanAddSeat())).rejects.toThrow(
-      ForbiddenException,
-    );
+    await expect(withTenant(() => service.assertCanAddSeat())).rejects.toThrow(ForbiddenException);
   });
 
-  it("syncs usersCount on tenant from active seats", async () => {
+  it('syncs usersCount on tenant from active seats', async () => {
     client.tenantMembership.count.mockResolvedValue(4);
     client.tenant.update.mockResolvedValue({});
     const active = await service.syncUsersCount(IDS.tenant);

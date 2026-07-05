@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useEffect, useMemo, useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -7,10 +7,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { NativeSelect } from "@/components/ui/native-select";
-import { SearchableSelect } from "@/components/ui/searchable-select";
+} from '@/components/ui/dialog';
+import { NativeSelect } from '@/components/ui/native-select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import {
+  applyPricingLanguage,
   countryOptions,
   currencyOptions,
   defaultPricingPreference,
@@ -20,17 +21,16 @@ import {
   PRICING_PROMPT_DISMISSED_KEY,
   readPricingPreference,
   savePricingPreference,
-  applyPricingLanguage,
   type PricingCountry,
   type PricingCurrency,
   type PricingLanguage,
   type PricingPreference,
-} from "@/lib/billing/pricing-preferences";
+} from '@/lib/billing/pricing-preferences';
 
 const languageOptions: Array<{ value: PricingLanguage; label: string }> = [
-  { value: "en", label: "English" },
-  { value: "hi", label: "Hindi" },
-  { value: "ar", label: "Arabic" },
+  { value: 'en', label: 'English' },
+  { value: 'hi', label: 'Hindi' },
+  { value: 'ar', label: 'Arabic' },
 ];
 
 export function usePricingPreference() {
@@ -49,8 +49,8 @@ export function usePricingPreference() {
       }
     }
 
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
   }, []);
 
   function updatePreference(next: PricingPreference) {
@@ -85,7 +85,7 @@ export function PricingPreferencePrompt({ skipAutoOpen = false }: { skipAutoOpen
   );
 
   function closePrompt() {
-    window.localStorage.setItem(PRICING_PROMPT_DISMISSED_KEY, "true");
+    window.localStorage.setItem(PRICING_PROMPT_DISMISSED_KEY, 'true');
     setOpen(false);
   }
 
@@ -111,14 +111,17 @@ export function PricingPreferencePrompt({ skipAutoOpen = false }: { skipAutoOpen
         <DialogHeader>
           <DialogTitle>Choose your country, currency &amp; language</DialogTitle>
           <DialogDescription>
-            Velon-ERP tailors public pricing and defaults to your region. You can change this anytime
-            from the pricing section on the homepage.
+            Velon-ERP tailors public pricing and defaults to your region. You can change this
+            anytime from the pricing section on the homepage.
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium" htmlFor="pricing-country">
+            <label
+              className="text-sm font-medium"
+              htmlFor="pricing-country"
+            >
               Country / region
             </label>
             <SearchableSelect
@@ -136,7 +139,10 @@ export function PricingPreferencePrompt({ skipAutoOpen = false }: { skipAutoOpen
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium" htmlFor="pricing-currency">
+            <label
+              className="text-sm font-medium"
+              htmlFor="pricing-currency"
+            >
               Currency
             </label>
             <NativeSelect
@@ -154,7 +160,10 @@ export function PricingPreferencePrompt({ skipAutoOpen = false }: { skipAutoOpen
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium" htmlFor="pricing-language">
+            <label
+              className="text-sm font-medium"
+              htmlFor="pricing-language"
+            >
               Language
             </label>
             <NativeSelect
@@ -170,7 +179,10 @@ export function PricingPreferencePrompt({ skipAutoOpen = false }: { skipAutoOpen
         </div>
 
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" onClick={useDetectedDefaults}>
+          <Button
+            variant="outline"
+            onClick={useDetectedDefaults}
+          >
             Use detected defaults
           </Button>
           <Button
@@ -195,14 +207,14 @@ export function PricingPreferenceControl({
   compact?: boolean;
 }) {
   const countryLabel = useMemo(
-    () => countryOptions.find((option) => option.value === preference.country)?.label ?? "India",
+    () => countryOptions.find((option) => option.value === preference.country)?.label ?? 'India',
     [preference.country],
   );
 
   return (
-    <div className="relative z-10 flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground">
+    <div className="text-muted-foreground relative z-10 flex flex-wrap items-center justify-center gap-2 text-xs">
       <span>
-        Showing {preference.currency} pricing{compact ? "" : ` for ${countryLabel}`}
+        Showing {preference.currency} pricing{compact ? '' : ` for ${countryLabel}`}
       </span>
       <SearchableSelect
         value={preference.country}

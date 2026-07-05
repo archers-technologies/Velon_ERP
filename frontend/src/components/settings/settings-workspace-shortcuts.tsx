@@ -1,7 +1,4 @@
-import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { getSessionMembershipRole } from "@/lib/auth/session";
+import { Link, useNavigate, useRouterState } from '@tanstack/react-router';
 import {
   canManageWorkspaceBilling,
   canManageWorkspaceSettings,
@@ -9,9 +6,12 @@ import {
   parseWorkspaceAdminSection,
   SETTINGS_PATHS,
   settingsBillingSearch,
-  workspaceAdminSearch,
   VelonRole,
-} from "@velon/shared";
+  workspaceAdminSearch,
+} from '@velon/shared';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { getSessionMembershipRole } from '@/lib/auth/session';
 
 export function SettingsWorkspaceShortcuts() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -27,30 +27,40 @@ export function SettingsWorkspaceShortcuts() {
   const adminSection = useRouterState({
     select: (s) => {
       if (s.location.pathname !== SETTINGS_PATHS.admin) return null;
-      return parseWorkspaceAdminSection(new URLSearchParams(s.location.searchStr).get("section"));
+      return parseWorkspaceAdminSection(new URLSearchParams(s.location.searchStr).get('section'));
     },
   });
 
   const focusAdminUsers = () => {
-    document.getElementById("workspace-admin-tabs")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    document
+      .getElementById('workspace-admin-tabs')
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   return (
     <div className="space-y-3">
       {canBilling ? (
-        <Card className="flex flex-wrap items-center justify-between gap-3 border-border bg-muted/30 p-4">
+        <Card className="border-border bg-muted/30 flex flex-wrap items-center justify-between gap-3 p-4">
           <div>
             <p className="text-sm font-medium">Subscription & billing</p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               View your plan, invoices, payment history, and payment methods.
             </p>
           </div>
           {onBillingPage ? (
-            <Button size="sm" variant="outline" disabled aria-label="You are on subscription billing">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled
+              aria-label="You are on subscription billing"
+            >
               Pay now
             </Button>
           ) : (
-            <Button asChild size="sm">
+            <Button
+              asChild
+              size="sm"
+            >
               <Link
                 to={SETTINGS_PATHS.billing}
                 search={settingsBillingSearch()}
@@ -64,10 +74,10 @@ export function SettingsWorkspaceShortcuts() {
       ) : null}
 
       {canAdmin ? (
-        <Card className="flex flex-wrap items-center justify-between gap-3 border-border bg-muted/30 p-4">
+        <Card className="border-border bg-muted/30 flex flex-wrap items-center justify-between gap-3 p-4">
           <div>
             <p className="text-sm font-medium">Workspace administration</p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Manage users, departments, seats, roles, and invitations.
             </p>
           </div>
@@ -75,13 +85,13 @@ export function SettingsWorkspaceShortcuts() {
             <Button
               size="sm"
               onClick={() => {
-                if (adminSection === "users") {
+                if (adminSection === 'users') {
                   focusAdminUsers();
                   return;
                 }
                 void navigate({
                   to: SETTINGS_PATHS.admin,
-                  search: workspaceAdminSearch("users"),
+                  search: workspaceAdminSearch('users'),
                   replace: true,
                 });
               }}
@@ -90,10 +100,13 @@ export function SettingsWorkspaceShortcuts() {
               Manage users
             </Button>
           ) : (
-            <Button asChild size="sm">
+            <Button
+              asChild
+              size="sm"
+            >
               <Link
                 to={SETTINGS_PATHS.admin}
-                search={workspaceAdminSearch("users")}
+                search={workspaceAdminSearch('users')}
                 aria-label="Manage workspace users and administration"
               >
                 Manage workspace

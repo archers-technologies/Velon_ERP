@@ -1,4 +1,10 @@
-import type { IndustryTemplate, TenantModuleFlags, TenantPlan, TenantPlatformSeed, TenantStatus } from "@/lib/platform/admin-demo";
+import type {
+  IndustryTemplate,
+  TenantModuleFlags,
+  TenantPlan,
+  TenantPlatformSeed,
+  TenantStatus,
+} from '@/lib/platform/admin-demo';
 
 export type TenantRecord = { id: string } & TenantPlatformSeed;
 
@@ -8,7 +14,7 @@ export type InvoiceRecord = {
   /** When set, ties AR to CRM customer for 360° views */
   customerId?: string;
   amt: number;
-  status: "Paid" | "Pending" | "Overdue";
+  status: 'Paid' | 'Pending' | 'Overdue';
   /** YYYY-MM-DD for KPI rollups */
   postedDate: string;
   /** Human label shown in tables */
@@ -22,15 +28,15 @@ export type InventoryRecord = {
   name: string;
   site: string;
   quantity: number;
-  stockLevel: "healthy" | "low" | "critical";
+  stockLevel: 'healthy' | 'low' | 'critical';
   /** Minimum buffer before critical exposure */
   safetyStock: number;
   /** Level at which replenishment is suggested */
   reorderPoint: number;
   /** ABC prioritization (value / focus tier) */
-  abcClass: "A" | "B" | "C";
+  abcClass: 'A' | 'B' | 'C';
   /** Demand velocity for slow-mover reviews */
-  velocity: "fast" | "medium" | "slow";
+  velocity: 'fast' | 'medium' | 'slow';
   /** Lot / batch traceability enabled */
   batchTracked: boolean;
   /** Optional parent product when this row is a variant */
@@ -39,14 +45,14 @@ export type InventoryRecord = {
   unitPrice: number;
 };
 
-export type WorkspaceAlertPriority = "critical" | "high" | "medium" | "low";
+export type WorkspaceAlertPriority = 'critical' | 'high' | 'medium' | 'low';
 
 export type WorkspaceAlertRecord = {
   id: string;
   title: string;
   detail?: string;
   priority: WorkspaceAlertPriority;
-  source: "inventory" | "invoice" | "customer" | "supplier";
+  source: 'inventory' | 'invoice' | 'customer' | 'supplier';
   entityId: string;
 };
 
@@ -54,10 +60,10 @@ export function computeStockLevel(
   quantity: number,
   safetyStock: number,
   reorderPoint: number,
-): InventoryRecord["stockLevel"] {
-  if (quantity <= safetyStock) return "critical";
-  if (quantity <= reorderPoint) return "low";
-  return "healthy";
+): InventoryRecord['stockLevel'] {
+  if (quantity <= safetyStock) return 'critical';
+  if (quantity <= reorderPoint) return 'low';
+  return 'healthy';
 }
 
 export type ContactLead = {
@@ -70,7 +76,7 @@ export type ContactLead = {
   message: string;
 };
 
-export type CustomerActivityKind = "email" | "call" | "ticket" | "note" | "visit" | "order";
+export type CustomerActivityKind = 'email' | 'call' | 'ticket' | 'note' | 'visit' | 'order';
 
 export type CustomerActivityRecord = {
   id: string;
@@ -85,7 +91,7 @@ export type CustomerRecord = {
   id: string;
   name: string;
   outstandingDue: number;
-  status: "active" | "due" | "overdue";
+  status: 'active' | 'due' | 'overdue';
   email: string;
   phone: string;
   parentCompany?: string;
@@ -100,34 +106,34 @@ export type CustomerRecord = {
   healthScore: number;
 };
 
-export type CreateCustomerInput = Pick<CustomerRecord, "name" | "outstandingDue" | "status"> &
+export type CreateCustomerInput = Pick<CustomerRecord, 'name' | 'outstandingDue' | 'status'> &
   Partial<
     Pick<
       CustomerRecord,
-      | "email"
-      | "phone"
-      | "parentCompany"
-      | "accountManager"
-      | "creditLimit"
-      | "lifetimeValue"
-      | "openOpportunities"
-      | "winRatePct"
-      | "healthScore"
+      | 'email'
+      | 'phone'
+      | 'parentCompany'
+      | 'accountManager'
+      | 'creditLimit'
+      | 'lifetimeValue'
+      | 'openOpportunities'
+      | 'winRatePct'
+      | 'healthScore'
     >
   >;
 
-export type SupplierLifecycle = "active" | "onboarding" | "blocked";
+export type SupplierLifecycle = 'active' | 'onboarding' | 'blocked';
 
-export type SupplierRiskTier = "low" | "medium" | "high";
+export type SupplierRiskTier = 'low' | 'medium' | 'high';
 
 /** Procure-to-pay lifecycle stage for a purchase order (demo). */
 export type SupplierPoStage =
-  | "draft"
-  | "sent"
-  | "acknowledged"
-  | "partial"
-  | "received"
-  | "invoiced";
+  | 'draft'
+  | 'sent'
+  | 'acknowledged'
+  | 'partial'
+  | 'received'
+  | 'invoiced';
 
 export type SupplierRecord = {
   id: string;
@@ -176,14 +182,14 @@ export type SupplierThreadRecord = {
   body: string;
 };
 
-export type CreateSupplierInput = Pick<SupplierRecord, "name"> &
-  Partial<Omit<SupplierRecord, "id" | "name">>;
+export type CreateSupplierInput = Pick<SupplierRecord, 'name'> &
+  Partial<Omit<SupplierRecord, 'id' | 'name'>>;
 
-export type CrmStage = "New" | "Qualified" | "Proposal" | "Won";
+export type CrmStage = 'New' | 'Qualified' | 'Proposal' | 'Won';
 
-export type CrmQuoteStatus = "none" | "draft" | "sent" | "viewed";
+export type CrmQuoteStatus = 'none' | 'draft' | 'sent' | 'viewed';
 
-export type CrmDealActivityKind = "call" | "email" | "meeting" | "note" | "task";
+export type CrmDealActivityKind = 'call' | 'email' | 'meeting' | 'note' | 'task';
 
 export type CrmDealActivityRecord = {
   id: string;
@@ -213,12 +219,12 @@ export type CrmLeadRecord = {
 
 export type CreateCrmLeadInput = Pick<
   CrmLeadRecord,
-  "title" | "company" | "stage" | "estimatedValue"
+  'title' | 'company' | 'stage' | 'estimatedValue'
 > &
   Partial<
     Pick<
       CrmLeadRecord,
-      "customerId" | "aiScore" | "quoteStatus" | "owner" | "nextStep" | "nextStepDue"
+      'customerId' | 'aiScore' | 'quoteStatus' | 'owner' | 'nextStep' | 'nextStepDue'
     >
   >;
 
@@ -232,7 +238,7 @@ export type JournalEntryRecord = {
   id: string;
   postedDate: string;
   memo: string;
-  sourceModule: "sales" | "purchasing" | "inventory" | "payroll" | "manual";
+  sourceModule: 'sales' | 'purchasing' | 'inventory' | 'payroll' | 'manual';
   /** Source document id when synced from ops (e.g. INV-2841, PO-4821) */
   sourceDocId?: string;
   lines: JournalEntryLine[];
@@ -245,11 +251,11 @@ export type BankFeedRecord = {
   description: string;
   /** Positive = deposit */
   amount: number;
-  matchStatus: "matched" | "suggested" | "unmatched";
+  matchStatus: 'matched' | 'suggested' | 'unmatched';
   matchedTo?: string;
 };
 
-export type ApBillStage = "pending_review" | "exception" | "approved" | "scheduled" | "paid";
+export type ApBillStage = 'pending_review' | 'exception' | 'approved' | 'scheduled' | 'paid';
 
 export type ApBillRecord = {
   id: string;
@@ -269,7 +275,7 @@ export type AccountingAuditRecord = {
   entityRef: string;
 };
 
-export type WorkspaceBranchKind = "store";
+export type WorkspaceBranchKind = 'store';
 
 export type WorkspaceBranchProfile = {
   id: string;
@@ -285,8 +291,8 @@ export type BranchOperationalTask = {
   id: string;
   branchId: string;
   title: string;
-  kind: "grn" | "pick" | "pr_approval" | "expense" | "asset" | "document";
-  priority: "high" | "normal";
+  kind: 'grn' | 'pick' | 'pr_approval' | 'expense' | 'asset' | 'document';
+  priority: 'high' | 'normal';
 };
 
 function todayIso(): string {
@@ -294,7 +300,7 @@ function todayIso(): string {
 }
 
 function addCalendarDays(isoDate: string, delta: number): string {
-  const [y, m, d] = isoDate.split("-").map(Number);
+  const [y, m, d] = isoDate.split('-').map(Number);
   const dt = new Date(y, m - 1, d);
   dt.setDate(dt.getDate() + delta);
   return dt.toISOString().slice(0, 10);
@@ -303,10 +309,10 @@ function addCalendarDays(isoDate: string, delta: number): string {
 export type TenantWizardInput = {
   name: string;
   country: string;
-  plan: TenantRecord["plan"];
+  plan: TenantRecord['plan'];
   users: number;
   mrr: number;
-  status: TenantRecord["status"];
+  status: TenantRecord['status'];
   slug?: string;
   industryTemplate: IndustryTemplate;
 };
@@ -315,21 +321,21 @@ export type PlatformRevenuePoint = { month: string; mrr: number };
 export type PlatformTenantSignupPoint = { month: string; newTenants: number };
 export type PlatformActivityItem = {
   id: string;
-  kind: "signup" | "billing" | "security" | "support" | "infra";
+  kind: 'signup' | 'billing' | 'security' | 'support' | 'infra';
   title: string;
   timeLabel: string;
-  severity: "info" | "warning" | "critical";
+  severity: 'info' | 'warning' | 'critical';
 };
 export type PlatformSystemLog = {
   id: string;
   at: string;
-  level: "info" | "warn" | "error";
+  level: 'info' | 'warn' | 'error';
   message: string;
 };
 export type PlatformModuleUsage = { module: string; pct: number };
 export type PlatformPlanSlice = { plan: string; pct: number };
 
-export type SubscriptionBillingStatus = "Active" | "Trial" | "Past due" | "Cancelled";
+export type SubscriptionBillingStatus = 'Active' | 'Trial' | 'Past due' | 'Cancelled';
 
 export type SubscriptionClientRow = {
   tenantId: string;
@@ -364,22 +370,22 @@ export type SubscriptionCouponEntry = {
   description: string;
   active: boolean;
   usesLeft?: number;
-  kind: "trial_extension" | "percent_off" | "seat_bundle";
+  kind: 'trial_extension' | 'percent_off' | 'seat_bundle';
 };
 
 export type SubscriptionInvoiceLogEntry = {
   id: string;
   clientName: string;
   amount: number;
-  status: "Paid" | "Pending" | "Failed";
+  status: 'Paid' | 'Pending' | 'Failed';
   label: string;
-  gateway: "Razorpay" | "Stripe" | "Offline";
+  gateway: 'Razorpay' | 'Stripe' | 'Offline';
 };
 
 export type SubscriptionSparkPoint = { month: string; mrr: number };
 
 function daysFromToday(isoDate: string): number {
-  const [y, m, d] = isoDate.split("-").map(Number);
+  const [y, m, d] = isoDate.split('-').map(Number);
   const target = new Date(y, m - 1, d).setHours(12, 0, 0, 0);
   const now = new Date();
   now.setHours(12, 0, 0, 0);
@@ -387,15 +393,15 @@ function daysFromToday(isoDate: string): number {
 }
 
 function tenantToBillingStatus(status: TenantStatus): SubscriptionBillingStatus {
-  if (status === "Suspended") return "Cancelled";
+  if (status === 'Suspended') return 'Cancelled';
   return status as SubscriptionBillingStatus;
 }
 
 export type SalesCommercialAlertKind =
-  | "payment_failed"
-  | "big_fish"
-  | "renewal_cluster"
-  | "credit_limit";
+  | 'payment_failed'
+  | 'big_fish'
+  | 'renewal_cluster'
+  | 'credit_limit';
 
 export type SalesCommercialAlert = {
   id: string;
@@ -408,7 +414,7 @@ export type SalesCommercialAlert = {
   secondaryAction?: { id: string; label: string };
 };
 
-export type SalesCommercialAuditKind = "pricing" | "discount" | "refund" | "override";
+export type SalesCommercialAuditKind = 'pricing' | 'discount' | 'refund' | 'override';
 
 export type SalesCommercialAuditEntry = {
   id: string;
@@ -419,7 +425,7 @@ export type SalesCommercialAuditEntry = {
   secondaryAction?: { id: string; label: string };
 };
 
-export type SalesLeakageKind = "overdue_invoice" | "stale_quote" | "trial_cap";
+export type SalesLeakageKind = 'overdue_invoice' | 'stale_quote' | 'trial_cap';
 
 export type SalesLeakageRow = {
   id: string;
@@ -445,46 +451,46 @@ export type SalesPartnerLeaderRow = {
   code: string;
   dealsClosed: number;
   commissionMtdLocal: number;
-  tier: "Gold" | "Silver" | "Bronze";
+  tier: 'Gold' | 'Silver' | 'Bronze';
   targetPct: number;
 };
 
 function inferSalesControlRegion(country: string): { id: string; label: string } {
   const c = country.toLowerCase();
-  if (c.includes("india")) return { id: "ap-south-1", label: "ap-south-1 · Mumbai" };
-  if (c.includes("united states") || c === "usa")
-    return { id: "us-east-1", label: "us-east-1 · N. Virginia" };
+  if (c.includes('india')) return { id: 'ap-south-1', label: 'ap-south-1 · Mumbai' };
+  if (c.includes('united states') || c === 'usa')
+    return { id: 'us-east-1', label: 'us-east-1 · N. Virginia' };
   if (
-    c.includes("germany") ||
-    c.includes("sweden") ||
-    c.includes("netherlands") ||
-    c.includes("france")
+    c.includes('germany') ||
+    c.includes('sweden') ||
+    c.includes('netherlands') ||
+    c.includes('france')
   )
-    return { id: "eu-west-1", label: "eu-west-1 · Ireland" };
-  if (c.includes("australia")) return { id: "ap-southeast-2", label: "ap-southeast-2 · Sydney" };
-  if (c.includes("emirates") || c.includes("uae") || c.includes("arab"))
-    return { id: "me-central-1", label: "me-central-1 · UAE" };
-  return { id: "us-east-1", label: "us-east-1 · N. Virginia" };
+    return { id: 'eu-west-1', label: 'eu-west-1 · Ireland' };
+  if (c.includes('australia')) return { id: 'ap-southeast-2', label: 'ap-southeast-2 · Sydney' };
+  if (c.includes('emirates') || c.includes('uae') || c.includes('arab'))
+    return { id: 'me-central-1', label: 'me-central-1 · UAE' };
+  return { id: 'us-east-1', label: 'us-east-1 · N. Virginia' };
 }
 
 export type AutomationDomainId =
-  | "billing"
-  | "infrastructure"
-  | "security"
-  | "lifecycle"
-  | "engagement";
+  | 'billing'
+  | 'infrastructure'
+  | 'security'
+  | 'lifecycle'
+  | 'engagement';
 
 export type AutomationStepKind =
-  | "email"
-  | "sms"
-  | "webhook"
-  | "notify"
-  | "suspend"
-  | "branch"
-  | "alert"
-  | "retry"
-  | "downgrade"
-  | "upsell";
+  | 'email'
+  | 'sms'
+  | 'webhook'
+  | 'notify'
+  | 'suspend'
+  | 'branch'
+  | 'alert'
+  | 'retry'
+  | 'downgrade'
+  | 'upsell';
 
 export type AutomationWorkflowDef = {
   id: string;
@@ -492,13 +498,13 @@ export type AutomationWorkflowDef = {
   triggerLabel: string;
   summaryLine: string;
   steps: { kind: AutomationStepKind; label: string }[];
-  status: "active" | "paused" | "draft";
+  status: 'active' | 'paused' | 'draft';
   runsPerMonthLabel: string;
   lastRunLabel: string;
   recentFailures: number;
   p95Ms: number;
   /** Short note on side-effect class for admins */
-  blastRadius: "read_only" | "notify" | "billing" | "destructive";
+  blastRadius: 'read_only' | 'notify' | 'billing' | 'destructive';
 };
 
 export type AutomationSystemPulse = {
@@ -518,7 +524,7 @@ export type AlertsHealthPulse = {
   ingestionLagMs: number;
 };
 
-export type LiveAlertSeverity = "critical" | "warning" | "info";
+export type LiveAlertSeverity = 'critical' | 'warning' | 'info';
 
 export type LiveAlertItem = {
   id: string;
@@ -531,7 +537,7 @@ export type LiveAlertItem = {
   tags: string[];
 };
 
-export type AuditEntityKind = "tenant" | "user" | "invoice" | "webhook" | "system";
+export type AuditEntityKind = 'tenant' | 'user' | 'invoice' | 'webhook' | 'system';
 
 export type AuditLogRow = {
   id: string;
@@ -544,21 +550,21 @@ export type AuditLogRow = {
   entityRef: string;
   status: string;
   diffSummary?: string;
-  tamper: "verified" | "pending";
+  tamper: 'verified' | 'pending';
 };
 
-export type CreateInventoryInput = Pick<InventoryRecord, "name" | "site" | "quantity"> &
+export type CreateInventoryInput = Pick<InventoryRecord, 'name' | 'site' | 'quantity'> &
   Partial<
     Pick<
       InventoryRecord,
-      | "sku"
-      | "safetyStock"
-      | "reorderPoint"
-      | "abcClass"
-      | "velocity"
-      | "batchTracked"
-      | "variantParent"
-      | "unitPrice"
+      | 'sku'
+      | 'safetyStock'
+      | 'reorderPoint'
+      | 'abcClass'
+      | 'velocity'
+      | 'batchTracked'
+      | 'variantParent'
+      | 'unitPrice'
     >
   >;
 

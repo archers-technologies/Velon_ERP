@@ -5,18 +5,18 @@
 
 ## Controls
 
-| Control | Implementation |
-|---------|----------------|
-| Transport | HTTPS in production; Helmet on API |
-| Auth secrets | Min length 32; placeholder values rejected in production |
-| Passwords | bcrypt hashes; shared strength policy |
-| Tokens | Short-lived access JWT; refresh tokens hashed at rest, revocable |
-| OTP | Rate-limited; codes not returned in production responses |
-| Input | ValidationPipe whitelist + forbid non-whitelisted |
-| Tenant isolation | JWT + ALS + repository scoping; e2e isolation tests |
-| Rate limits | Global throttler; stricter limits on auth endpoints |
-| Subscription | Global guard limits access when past due / suspended |
-| Demo data | Excluded from production admin metrics |
+| Control          | Implementation                                                   |
+| ---------------- | ---------------------------------------------------------------- |
+| Transport        | HTTPS in production; Helmet on API                               |
+| Auth secrets     | Min length 32; placeholder values rejected in production         |
+| Passwords        | bcrypt hashes; shared strength policy                            |
+| Tokens           | Short-lived access JWT; refresh tokens hashed at rest, revocable |
+| OTP              | Rate-limited; codes not returned in production responses         |
+| Input            | ValidationPipe whitelist + forbid non-whitelisted                |
+| Tenant isolation | JWT + ALS + repository scoping; e2e isolation tests              |
+| Rate limits      | Global throttler; stricter limits on auth endpoints              |
+| Subscription     | Global guard limits access when past due / suspended             |
+| Demo data        | Excluded from production admin metrics                           |
 
 ## Security tests
 

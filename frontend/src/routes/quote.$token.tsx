@@ -1,13 +1,13 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { customerViewPdfUrl } from "@/lib/crm/quotation-api";
-import { API_V1_BASE } from "@/lib/api/config";
+import { useEffect, useState } from 'react';
+import { createFileRoute } from '@tanstack/react-router';
+import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { API_V1_BASE } from '@/lib/api/config';
+import { customerViewPdfUrl } from '@/lib/crm/quotation-api';
 
 type CustomerView = {
   quotationNumber: string;
@@ -33,14 +33,14 @@ type CustomerView = {
   }>;
 };
 
-export const Route = createFileRoute("/quote/$token")({
+export const Route = createFileRoute('/quote/$token')({
   component: CustomerQuoteViewPage,
 });
 
 function CustomerQuoteViewPage() {
   const { token } = Route.useParams();
   const [data, setData] = useState<CustomerView | null>(null);
-  const [comment, setComment] = useState("");
+  const [comment, setComment] = useState('');
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -54,33 +54,31 @@ function CustomerQuoteViewPage() {
     setBusy(true);
     try {
       const res = await fetch(`${API_V1_BASE}/crm/customer-view/${token}/${path}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ comments: comment || undefined }),
       });
       if (!res.ok) throw new Error(await res.text());
-      toast.success("Submitted");
-      const body = await fetch(`${API_V1_BASE}/crm/customer-view/${token}`).then((r) =>
-        r.json(),
-      );
+      toast.success('Submitted');
+      const body = await fetch(`${API_V1_BASE}/crm/customer-view/${token}`).then((r) => r.json());
       setData(body.data ?? body);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed");
+      toast.error(err instanceof Error ? err.message : 'Failed');
     } finally {
       setBusy(false);
     }
   }
 
   if (!data) {
-    return <p className="p-8 text-sm text-muted-foreground">Loading quotation…</p>;
+    return <p className="text-muted-foreground p-8 text-sm">Loading quotation…</p>;
   }
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-6">
       <div>
-        <p className="text-xs uppercase tracking-wider text-muted-foreground">Quotation</p>
+        <p className="text-muted-foreground text-xs tracking-wider uppercase">Quotation</p>
         <h1 className="text-2xl font-semibold">{data.quotationNumber}</h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           From {data.company.legalName ?? data.company.name} · Rev {data.revisionNumber}
         </p>
       </div>
@@ -89,11 +87,11 @@ function CustomerQuoteViewPage() {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <p className="font-medium">{data.customer.companyName}</p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Issued {new Date(data.issueDate).toLocaleDateString()}
               {data.expiryDate
                 ? ` · Expires ${new Date(data.expiryDate).toLocaleDateString()}`
-                : ""}
+                : ''}
             </p>
           </div>
           <Badge>{data.status}</Badge>
@@ -112,7 +110,10 @@ function CustomerQuoteViewPage() {
 
       <Card className="border-border bg-card divide-y">
         {data.items.map((item, i) => (
-          <div key={i} className="flex justify-between p-4 text-sm">
+          <div
+            key={i}
+            className="flex justify-between p-4 text-sm"
+          >
             <span>
               {item.itemName} × {Number(item.quantity)}
             </span>
@@ -122,17 +123,31 @@ function CustomerQuoteViewPage() {
       </Card>
 
       <div className="flex flex-wrap gap-2">
-        <Button variant="outline" asChild>
-          <a href={customerViewPdfUrl(token)} target="_blank" rel="noreferrer">
+        <Button
+          variant="outline"
+          asChild
+        >
+          <a
+            href={customerViewPdfUrl(token)}
+            target="_blank"
+            rel="noreferrer"
+          >
             Download PDF
           </a>
         </Button>
-        {!["APPROVED", "REJECTED", "CANCELLED", "EXPIRED"].includes(data.status) && (
+        {!['APPROVED', 'REJECTED', 'CANCELLED', 'EXPIRED'].includes(data.status) && (
           <>
-            <Button disabled={busy} onClick={() => void postAction("accept")}>
+            <Button
+              disabled={busy}
+              onClick={() => void postAction('accept')}
+            >
               Accept
             </Button>
-            <Button disabled={busy} variant="ghost" onClick={() => void postAction("reject")}>
+            <Button
+              disabled={busy}
+              variant="ghost"
+              onClick={() => void postAction('reject')}
+            >
               Reject
             </Button>
           </>
@@ -151,7 +166,7 @@ function CustomerQuoteViewPage() {
           className="mt-3"
           variant="secondary"
           disabled={busy || !comment.trim()}
-          onClick={() => void postAction("comment")}
+          onClick={() => void postAction('comment')}
         >
           Send comment
         </Button>

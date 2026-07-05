@@ -1,9 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import {
-  CrmLeadSource,
-  CrmLeadStatus,
-  CrmOpportunityStatus,
-} from "@velon/database";
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsArray,
   IsDateString,
@@ -15,7 +10,8 @@ import {
   IsString,
   Min,
   MinLength,
-} from "class-validator";
+} from 'class-validator';
+import { CrmLeadSource, CrmLeadStatus, CrmOpportunityStatus } from '@velon/database';
 
 export class CreateCrmLeadDto {
   @ApiProperty()

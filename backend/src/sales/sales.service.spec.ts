@@ -1,11 +1,16 @@
-import { BadRequestException, ForbiddenException, NotFoundException } from "@nestjs/common";
-import { CrmQuotationStatus } from "@velon/database";
-import { SalesService } from "./sales.service";
-import { IDS, META, tenantOwner, tenantUser } from "../../test/helpers/fixtures";
-import { createMockAudit, createMockPrisma, createMockPrismaClient, createRepoMock } from "../../test/helpers/mocks";
+import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { CrmQuotationStatus } from '@velon/database';
+import { IDS, META, tenantOwner, tenantUser } from '../../test/helpers/fixtures';
+import {
+  createMockAudit,
+  createMockPrisma,
+  createMockPrismaClient,
+  createRepoMock,
+} from '../../test/helpers/mocks';
+import { SalesService } from './sales.service';
 
-describe("SalesService", () => {
-  const orders = createRepoMock(["findMany", "findById", "nextOrderNumber"]);
+describe('SalesService', () => {
+  const orders = createRepoMock(['findMany', 'findById', 'nextOrderNumber']);
   const client = createMockPrismaClient();
   const prisma = createMockPrisma(client);
   const audit = createMockAudit();
@@ -16,32 +21,32 @@ describe("SalesService", () => {
     service = new SalesService(orders as never, prisma, audit as never);
   });
 
-  it("denies write for read-only users", async () => {
-    await expect(
-      service.createFromQuotation(tenantUser(), IDS.quotation, META),
-    ).rejects.toThrow(ForbiddenException);
+  it('denies write for read-only users', async () => {
+    await expect(service.createFromQuotation(tenantUser(), IDS.quotation, META)).rejects.toThrow(
+      ForbiddenException,
+    );
   });
 
-  it("lists orders for permitted readers", async () => {
+  it('lists orders for permitted readers', async () => {
     orders.findMany.mockResolvedValue([{ id: IDS.salesOrder }]);
     await expect(service.listOrders(tenantOwner())).resolves.toHaveLength(1);
   });
 
-  it("returns not found for missing order", async () => {
+  it('returns not found for missing order', async () => {
     orders.findById.mockResolvedValue(null);
-    await expect(service.getOrder(tenantOwner(), "missing")).rejects.toThrow(NotFoundException);
+    await expect(service.getOrder(tenantOwner(), 'missing')).rejects.toThrow(NotFoundException);
   });
 
-  it("converts only approved quotations without an existing sales order", async () => {
+  it('converts only approved quotations without an existing sales order', async () => {
     client.crmQuotation.findFirst.mockResolvedValue({
       id: IDS.quotation,
       status: CrmQuotationStatus.DRAFT,
       salesOrderId: null,
       items: [],
     });
-    await expect(
-      service.createFromQuotation(tenantOwner(), IDS.quotation, META),
-    ).rejects.toThrow(BadRequestException);
+    await expect(service.createFromQuotation(tenantOwner(), IDS.quotation, META)).rejects.toThrow(
+      BadRequestException,
+    );
 
     client.crmQuotation.findFirst.mockResolvedValue({
       id: IDS.quotation,
@@ -49,12 +54,12 @@ describe("SalesService", () => {
       salesOrderId: IDS.salesOrder,
       items: [],
     });
-    await expect(
-      service.createFromQuotation(tenantOwner(), IDS.quotation, META),
-    ).rejects.toThrow(/already been converted/);
+    await expect(service.createFromQuotation(tenantOwner(), IDS.quotation, META)).rejects.toThrow(
+      /already been converted/,
+    );
   });
 
-  it("creates a sales order from an approved quotation", async () => {
+  it('creates a sales order from an approved quotation', async () => {
     const year = new Date().getFullYear();
     client.crmQuotation.findFirst.mockResolvedValue({
       id: IDS.quotation,
@@ -68,7 +73,7 @@ describe("SalesService", () => {
       items: [
         {
           productId: IDS.product,
-          itemName: "Widget",
+          itemName: 'Widget',
           description: null,
           quantity: 2,
           unitPrice: 50,
@@ -100,7 +105,7 @@ describe("SalesService", () => {
     const order = await service.createFromQuotation(tenantOwner(), IDS.quotation, META);
     expect(order.id).toBe(IDS.salesOrder);
     expect(audit.log).toHaveBeenCalledWith(
-      expect.objectContaining({ action: "sales.order_created_from_quotation" }),
+      expect.objectContaining({ action: 'sales.order_created_from_quotation' }),
     );
   });
 });

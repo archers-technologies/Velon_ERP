@@ -5,14 +5,14 @@
 
 ## Common tasks
 
-| Task | Command / path |
-|------|----------------|
-| DB backup | `npm run db:backup` (`scripts/backup-db.sh`) |
-| DB restore | `npm run db:restore` |
-| Rotate Postgres password | `npm run db:rotate-password` |
-| Health | `GET /api/v1/health/live`, `GET /api/v1/health/ready` |
-| Logs | Application stdout; Railway/Vercel dashboards |
-| Demo cleanup | Platform endpoint / `npm run db:cleanup-demo` |
+| Task                     | Command / path                                        |
+| ------------------------ | ----------------------------------------------------- |
+| DB backup                | `npm run db:backup` (`scripts/backup-db.sh`)          |
+| DB restore               | `npm run db:restore`                                  |
+| Rotate Postgres password | `npm run db:rotate-password`                          |
+| Health                   | `GET /api/v1/health/live`, `GET /api/v1/health/ready` |
+| Logs                     | Application stdout; Railway/Vercel dashboards         |
+| Demo cleanup             | Platform endpoint / `npm run db:cleanup-demo`         |
 
 ## Mail
 

@@ -1,20 +1,7 @@
-import { useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
-import { Shield, Trash2, Upload } from "lucide-react";
-import { useWorkspaceUserProfile } from "@/contexts/workspace-user-profile";
-import { readImageFileAsDataUrl } from "@/lib/workspace/user-profile";
-import { deleteWorkspaceAccount } from "@/lib/tenants/admin-api";
-import { apiChangePassword } from "@/lib/auth/password-reset-api";
-import { signOutWorkspace } from "@/lib/auth/sign-out";
-import { formatApiError } from "@/lib/auth/login-utils";
-import { PasswordRequirementsChecklist } from "@/components/auth/password-requirements-checklist";
-import { isPasswordStrong } from "@/lib/auth/password-policy";
-import { Card } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useEffect, useRef, useState } from 'react';
+import { Shield, Trash2, Upload } from 'lucide-react';
+import { toast } from 'sonner';
+import { PasswordRequirementsChecklist } from '@/components/auth/password-requirements-checklist';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,14 +12,27 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { useWorkspaceUserProfile } from '@/contexts/workspace-user-profile';
+import { formatApiError } from '@/lib/auth/login-utils';
+import { isPasswordStrong } from '@/lib/auth/password-policy';
+import { apiChangePassword } from '@/lib/auth/password-reset-api';
+import { signOutWorkspace } from '@/lib/auth/sign-out';
+import { deleteWorkspaceAccount } from '@/lib/tenants/admin-api';
+import { readImageFileAsDataUrl } from '@/lib/workspace/user-profile';
 
 export function WorkspaceProfileIdentityPanel() {
   const { profile, initials, patchProfile, applyWorkspaceLogo } = useWorkspaceUserProfile();
@@ -51,9 +51,9 @@ export function WorkspaceProfileIdentityPanel() {
     try {
       const dataUrl = await readImageFileAsDataUrl(file);
       patchProfile({ avatarDataUrl: dataUrl });
-      toast.success("Profile photo updated");
+      toast.success('Profile photo updated');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Upload failed");
+      toast.error(err instanceof Error ? err.message : 'Upload failed');
     }
   }
 
@@ -62,21 +62,21 @@ export function WorkspaceProfileIdentityPanel() {
     try {
       const dataUrl = await readImageFileAsDataUrl(file);
       await applyWorkspaceLogo(dataUrl, logoAspect);
-      toast.success("Workspace logo updated — accent color applied");
+      toast.success('Workspace logo updated — accent color applied');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Upload failed");
+      toast.error(err instanceof Error ? err.message : 'Upload failed');
     }
   }
 
   function saveIdentity() {
     patchProfile({ fullName: fullName.trim() || profile.fullName });
-    toast.success("Profile identity saved");
+    toast.success('Profile identity saved');
   }
 
   return (
     <Card className="border-border bg-card p-6">
       <h2 className="text-lg font-semibold">Profile identity &amp; branding</h2>
-      <p className="mt-1 text-xs text-muted-foreground">
+      <p className="text-muted-foreground mt-1 text-xs">
         Personal avatar for comments and audit trails. Workspace logo for headers and sidebar (max
         2MB JPG/PNG).
       </p>
@@ -85,15 +85,20 @@ export function WorkspaceProfileIdentityPanel() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
           <Avatar className="h-20 w-20">
             {profile.avatarDataUrl ? (
-              <AvatarImage src={profile.avatarDataUrl} alt={profile.fullName} />
+              <AvatarImage
+                src={profile.avatarDataUrl}
+                alt={profile.fullName}
+              />
             ) : null}
-            <AvatarFallback className="bg-foreground text-lg font-semibold text-background">
+            <AvatarFallback className="bg-foreground text-background text-lg font-semibold">
               {initials}
             </AvatarFallback>
           </Avatar>
           <div className="space-y-2">
             <Label>Profile picture</Label>
-            <p className="text-xs text-muted-foreground">1:1 square · shown in header and mentions</p>
+            <p className="text-muted-foreground text-xs">
+              1:1 square · shown in header and mentions
+            </p>
             <input
               ref={avatarRef}
               type="file"
@@ -116,13 +121,13 @@ export function WorkspaceProfileIdentityPanel() {
         <Separator />
         <div className="space-y-3">
           <Label>Workspace / company logo</Label>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             Wide 4:1 recommended for top headers · 1:1 square for sidebar navigation
           </p>
           <div className="flex flex-wrap gap-3">
             <Select
               value={logoAspect}
-              onValueChange={(v: "square" | "wide") => setLogoAspect(v)}
+              onValueChange={(v: 'square' | 'wide') => setLogoAspect(v)}
             >
               <SelectTrigger className="w-[180px] rounded-lg">
                 <SelectValue />
@@ -153,29 +158,29 @@ export function WorkspaceProfileIdentityPanel() {
           {profile.workspaceLogoDataUrl ? (
             <div
               className={
-                logoAspect === "wide"
-                  ? "flex h-14 max-w-md items-center justify-center rounded-lg border border-dashed border-border bg-muted/40 px-4"
-                  : "flex h-16 w-16 items-center justify-center rounded-lg border border-dashed border-border bg-muted/40"
+                logoAspect === 'wide'
+                  ? 'border-border bg-muted/40 flex h-14 max-w-md items-center justify-center rounded-lg border border-dashed px-4'
+                  : 'border-border bg-muted/40 flex h-16 w-16 items-center justify-center rounded-lg border border-dashed'
               }
             >
               <img
                 src={profile.workspaceLogoDataUrl}
                 alt="Workspace logo preview"
                 className={
-                  logoAspect === "wide"
-                    ? "max-h-10 max-w-full object-contain"
-                    : "h-12 w-12 object-contain"
+                  logoAspect === 'wide'
+                    ? 'max-h-10 max-w-full object-contain'
+                    : 'h-12 w-12 object-contain'
                 }
               />
             </div>
           ) : null}
           {profile.brandAccentHex ? (
-            <p className="text-xs text-muted-foreground">
-              Brand accent:{" "}
+            <p className="text-muted-foreground text-xs">
+              Brand accent:{' '}
               <span
                 className="inline-block h-3 w-3 rounded-full align-middle"
                 style={{ backgroundColor: profile.brandAccentHex }}
-              />{" "}
+              />{' '}
               <code className="text-foreground">{profile.brandAccentHex}</code> — applied to accent
               controls and focus states
             </p>
@@ -194,14 +199,19 @@ export function WorkspaceProfileIdentityPanel() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="profile-email">Email</Label>
-            <Input id="profile-email" value={profile.email} disabled className="rounded-lg" />
+            <Input
+              id="profile-email"
+              value={profile.email}
+              disabled
+              className="rounded-lg"
+            />
           </div>
         </div>
         <div className="flex justify-end">
           <Button
             type="button"
             size="sm"
-            className="rounded-lg bg-foreground text-background hover:bg-foreground/90"
+            className="bg-foreground text-background hover:bg-foreground/90 rounded-lg"
             onClick={saveIdentity}
           >
             Save profile
@@ -212,47 +222,51 @@ export function WorkspaceProfileIdentityPanel() {
   );
 }
 
-export function WorkspaceSecurityPanel({ canDeleteWorkspace = false }: { canDeleteWorkspace?: boolean }) {
+export function WorkspaceSecurityPanel({
+  canDeleteWorkspace = false,
+}: {
+  canDeleteWorkspace?: boolean;
+}) {
   const { profile, sessions, patchProfile, revokeOtherSessions } = useWorkspaceUserProfile();
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deletePassword, setDeletePassword] = useState("");
-  const [deleteConfirmPhrase, setDeleteConfirmPhrase] = useState("");
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteConfirmPhrase, setDeleteConfirmPhrase] = useState('');
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [passwordBusy, setPasswordBusy] = useState(false);
 
   async function changePassword() {
     if (!isPasswordStrong(newPassword)) {
-      toast.error("New password does not meet all requirements");
+      toast.error('New password does not meet all requirements');
       return;
     }
     if (newPassword !== confirmPassword) {
-      toast.error("Passwords do not match");
+      toast.error('Passwords do not match');
       return;
     }
     setPasswordBusy(true);
     try {
       await apiChangePassword(currentPassword, newPassword);
-      toast.success("Password updated. Sign in again on other devices if needed.");
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
+      toast.success('Password updated. Sign in again on other devices if needed.');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
     } catch (err) {
-      toast.error(formatApiError(err, "Could not update password"));
+      toast.error(formatApiError(err, 'Could not update password'));
     } finally {
       setPasswordBusy(false);
     }
   }
 
   async function confirmDeleteWorkspace() {
-    if (deleteConfirmPhrase.trim().toUpperCase() !== "DELETE") {
+    if (deleteConfirmPhrase.trim().toUpperCase() !== 'DELETE') {
       toast.error('Type DELETE to confirm.');
       return;
     }
     if (deletePassword.length < 8) {
-      toast.error("Enter your current password.");
+      toast.error('Enter your current password.');
       return;
     }
     setDeleteBusy(true);
@@ -261,10 +275,10 @@ export function WorkspaceSecurityPanel({ canDeleteWorkspace = false }: { canDele
         password: deletePassword,
         confirmPhrase: deleteConfirmPhrase.trim(),
       });
-      toast.success("Workspace deleted. You can register again anytime.");
+      toast.success('Workspace deleted. You can register again anytime.');
       signOutWorkspace();
     } catch (err) {
-      toast.error(formatApiError(err, "Could not delete workspace"));
+      toast.error(formatApiError(err, 'Could not delete workspace'));
     } finally {
       setDeleteBusy(false);
     }
@@ -274,7 +288,7 @@ export function WorkspaceSecurityPanel({ canDeleteWorkspace = false }: { canDele
     <div className="space-y-6">
       <Card className="border-border bg-card p-6">
         <h2 className="text-lg font-semibold">Password</h2>
-        <p className="mt-1 text-xs text-muted-foreground">
+        <p className="text-muted-foreground mt-1 text-xs">
           Verify your current password before setting a new one.
         </p>
         <Separator className="my-5" />
@@ -316,7 +330,7 @@ export function WorkspaceSecurityPanel({ canDeleteWorkspace = false }: { canDele
           <Button
             type="button"
             size="sm"
-            className="w-fit rounded-lg bg-foreground text-background hover:bg-foreground/90"
+            className="bg-foreground text-background hover:bg-foreground/90 w-fit rounded-lg"
             onClick={changePassword}
             disabled={
               passwordBusy ||
@@ -325,7 +339,7 @@ export function WorkspaceSecurityPanel({ canDeleteWorkspace = false }: { canDele
               newPassword !== confirmPassword
             }
           >
-            {passwordBusy ? "Updating…" : "Update password"}
+            {passwordBusy ? 'Updating…' : 'Update password'}
           </Button>
         </div>
       </Card>
@@ -333,7 +347,7 @@ export function WorkspaceSecurityPanel({ canDeleteWorkspace = false }: { canDele
       <Card className="border-border bg-card p-6">
         <div>
           <h2 className="text-lg font-semibold">Multi-factor authentication</h2>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="text-muted-foreground mt-1 text-xs">
             Authenticator-based MFA is not enabled for workspace accounts yet. Password and session
             controls below remain active.
           </p>
@@ -344,7 +358,7 @@ export function WorkspaceSecurityPanel({ canDeleteWorkspace = false }: { canDele
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-lg font-semibold">Connected sessions</h2>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="text-muted-foreground mt-1 text-xs">
               Devices currently signed in to your account.
             </p>
           </div>
@@ -355,7 +369,7 @@ export function WorkspaceSecurityPanel({ canDeleteWorkspace = false }: { canDele
             className="rounded-lg"
             onClick={() => {
               revokeOtherSessions();
-              toast.success("Signed out of all other sessions");
+              toast.success('Signed out of all other sessions');
             }}
           >
             <Shield className="mr-2 h-4 w-4" />
@@ -367,18 +381,18 @@ export function WorkspaceSecurityPanel({ canDeleteWorkspace = false }: { canDele
           {sessions.map((s) => (
             <li
               key={s.id}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border px-3 py-2.5"
+              className="border-border flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2.5"
             >
               <div>
                 <div className="font-medium">
                   {s.device}
                   {s.current ? (
-                    <span className="ml-2 text-xs font-normal text-success">This device</span>
+                    <span className="text-success ml-2 text-xs font-normal">This device</span>
                   ) : null}
                 </div>
-                <div className="text-xs text-muted-foreground">{s.location}</div>
+                <div className="text-muted-foreground text-xs">{s.location}</div>
               </div>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-muted-foreground text-xs">
                 {new Date(s.lastActive).toLocaleString()}
               </span>
             </li>
@@ -390,10 +404,12 @@ export function WorkspaceSecurityPanel({ canDeleteWorkspace = false }: { canDele
         <Card className="border-destructive/40 bg-card p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-destructive">Cancel subscription &amp; delete workspace</h2>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Permanently delete your company workspace, all data, and team access. You can register
-                again later with the same email.
+              <h2 className="text-destructive text-lg font-semibold">
+                Cancel subscription &amp; delete workspace
+              </h2>
+              <p className="text-muted-foreground mt-1 text-xs">
+                Permanently delete your company workspace, all data, and team access. You can
+                register again later with the same email.
               </p>
             </div>
             <AlertDialog
@@ -401,13 +417,18 @@ export function WorkspaceSecurityPanel({ canDeleteWorkspace = false }: { canDele
               onOpenChange={(open) => {
                 setDeleteOpen(open);
                 if (!open) {
-                  setDeletePassword("");
-                  setDeleteConfirmPhrase("");
+                  setDeletePassword('');
+                  setDeleteConfirmPhrase('');
                 }
               }}
             >
               <AlertDialogTrigger asChild>
-                <Button type="button" variant="destructive" size="sm" className="rounded-lg shrink-0">
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  className="shrink-0 rounded-lg"
+                >
                   <Trash2 className="mr-2 h-4 w-4" />
                   Delete workspace
                 </Button>
@@ -416,9 +437,9 @@ export function WorkspaceSecurityPanel({ canDeleteWorkspace = false }: { canDele
                 <AlertDialogHeader>
                   <AlertDialogTitle>Delete your workspace?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This removes your company workspace, billing data, inventory, CRM records, and all
-                    team members. This action cannot be undone. Type <strong>DELETE</strong> and enter
-                    your password to confirm.
+                    This removes your company workspace, billing data, inventory, CRM records, and
+                    all team members. This action cannot be undone. Type <strong>DELETE</strong> and
+                    enter your password to confirm.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <div className="grid gap-3 py-2">
@@ -455,7 +476,7 @@ export function WorkspaceSecurityPanel({ canDeleteWorkspace = false }: { canDele
                       void confirmDeleteWorkspace();
                     }}
                   >
-                    {deleteBusy ? "Deleting…" : "Delete workspace permanently"}
+                    {deleteBusy ? 'Deleting…' : 'Delete workspace permanently'}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>

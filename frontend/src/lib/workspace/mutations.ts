@@ -1,34 +1,32 @@
-import { apiFetch } from "@/lib/api/client";
+import { apiFetch } from '@/lib/api/client';
 import {
   createCrmActivity,
   createCrmCustomer,
   loadCrmCustomers,
   type CrmActivityType,
-} from "@/lib/crm/api";
+} from '@/lib/crm/api';
 import {
   createCrmLead as createCrmLeadApi,
   updateCrmLead,
   type CrmLeadStatus,
-} from "@/lib/crm/pipeline-api";
-import {
-  sendQuotation,
-} from "@/lib/crm/quotation-api";
-import { createInventoryProduct, updateInventoryStock } from "@/lib/inventory/api";
-import { createSupplier as createSupplierApi, createSupplierThread } from "@/lib/procurement/api";
+} from '@/lib/crm/pipeline-api';
+import { sendQuotation } from '@/lib/crm/quotation-api';
+import { createInventoryProduct, updateInventoryStock } from '@/lib/inventory/api';
+import { createSupplier as createSupplierApi, createSupplierThread } from '@/lib/procurement/api';
 import type {
-  CreateCustomerInput,
   CreateCrmLeadInput,
+  CreateCustomerInput,
   CrmDealActivityKind,
   CrmQuoteStatus,
   CrmStage,
-} from "@/lib/types/workspace-ui";
+} from '@/lib/types/workspace-ui';
 
 export async function markNotificationRead(id: string) {
-  return apiFetch<{ ok: boolean }>(`/workspace/notifications/${id}/read`, { method: "POST" });
+  return apiFetch<{ ok: boolean }>(`/workspace/notifications/${id}/read`, { method: 'POST' });
 }
 
 export async function markAllNotificationsRead() {
-  return apiFetch<{ ok: boolean }>("/workspace/notifications/read-all", { method: "POST" });
+  return apiFetch<{ ok: boolean }>('/workspace/notifications/read-all', { method: 'POST' });
 }
 
 /** @deprecated Use markNotificationRead */
@@ -43,31 +41,31 @@ type InventoryItemInput = {
   sku?: string;
   safetyStock?: number;
   reorderPoint?: number;
-  abcClass?: "A" | "B" | "C";
-  velocity?: "fast" | "medium" | "slow";
+  abcClass?: 'A' | 'B' | 'C';
+  velocity?: 'fast' | 'medium' | 'slow';
   batchTracked?: boolean;
   variantParent?: string;
   unitPrice?: number;
 };
 
-function mapVelocity(v?: "fast" | "medium" | "slow") {
+function mapVelocity(v?: 'fast' | 'medium' | 'slow') {
   if (!v) return undefined;
   return v.toUpperCase();
 }
 
 const CRM_STAGE_TO_LEAD_STATUS: Record<CrmStage, CrmLeadStatus> = {
-  New: "NEW",
-  Qualified: "QUALIFIED",
-  Proposal: "CONTACTED",
-  Won: "CONVERTED",
+  New: 'NEW',
+  Qualified: 'QUALIFIED',
+  Proposal: 'CONTACTED',
+  Won: 'CONVERTED',
 };
 
 const DEAL_ACTIVITY_TO_CRM_TYPE: Record<CrmDealActivityKind, CrmActivityType> = {
-  call: "CALL",
-  email: "EMAIL",
-  meeting: "MEETING",
-  note: "TASK",
-  task: "TASK",
+  call: 'CALL',
+  email: 'EMAIL',
+  meeting: 'MEETING',
+  note: 'TASK',
+  task: 'TASK',
 };
 
 export async function createInventoryItem(input: InventoryItemInput) {
@@ -108,7 +106,7 @@ type PosSaleInput = {
     qty: number;
     unitPrice: number;
   }>;
-  kind: "paid" | "due";
+  kind: 'paid' | 'due';
   customerName?: string;
 };
 
@@ -117,8 +115,8 @@ export async function commitPosSale(input: PosSaleInput): Promise<{
   total: number;
   inventoryRowsTouched: number;
 }> {
-  return apiFetch("/workspace/pos/sales", {
-    method: "POST",
+  return apiFetch('/workspace/pos/sales', {
+    method: 'POST',
     body: JSON.stringify(input),
   });
 }
@@ -128,7 +126,7 @@ export async function createCustomer(input: CreateCustomerInput) {
     companyName: input.name,
     email: input.email || undefined,
     phone: input.phone || undefined,
-    status: input.status === "active" ? "ACTIVE" : "PROSPECT",
+    status: input.status === 'active' ? 'ACTIVE' : 'PROSPECT',
   });
   return { id: customer.id, name: customer.companyName };
 }
@@ -143,7 +141,7 @@ export async function logCustomerActivity(input: {
 }) {
   return createCrmActivity({
     customerId: input.customerId,
-    type: input.type ?? "TASK",
+    type: input.type ?? 'TASK',
     title: input.title,
     description: input.description,
     activityDate: input.activityDate ?? new Date().toISOString(),
@@ -189,8 +187,10 @@ export async function createCrmLead(input: CreateCrmLeadInput) {
   const lead = await createCrmLeadApi({
     companyName: input.company,
     contactName: input.title,
-    status: CRM_STAGE_TO_LEAD_STATUS[input.stage] ?? "NEW",
-    notes: input.nextStep ? `${input.nextStep}${input.nextStepDue ? ` (due ${input.nextStepDue})` : ""}` : undefined,
+    status: CRM_STAGE_TO_LEAD_STATUS[input.stage] ?? 'NEW',
+    notes: input.nextStep
+      ? `${input.nextStep}${input.nextStepDue ? ` (due ${input.nextStepDue})` : ''}`
+      : undefined,
   });
   return lead;
 }
@@ -206,13 +206,13 @@ export async function updateCrmLeadQuoteStatus(input: {
   status: CrmQuoteStatus;
 }) {
   const { quotationId, status } = input;
-  if (status === "sent" || status === "viewed") {
+  if (status === 'sent' || status === 'viewed') {
     return sendQuotation(quotationId);
   }
-  if (status === "draft") {
+  if (status === 'draft') {
     return apiFetch(`/crm/quotations/${quotationId}`, {
-      method: "PATCH",
-      body: JSON.stringify({ status: "DRAFT" }),
+      method: 'PATCH',
+      body: JSON.stringify({ status: 'DRAFT' }),
     });
   }
   throw new Error(`Quote status "${status}" must be updated via quotation approval endpoints.`);
@@ -235,7 +235,7 @@ export async function logCrmDealActivity(input: {
     });
   }
 
-  const leads = await apiFetch<Array<{ id: string; notes: string | null }>>("/crm/leads");
+  const leads = await apiFetch<Array<{ id: string; notes: string | null }>>('/crm/leads');
   const lead = leads.find((l) => l.id === input.leadId);
   const stamp = input.at ?? new Date().toISOString();
   const line = `[${stamp.slice(0, 10)}] ${input.title}`;

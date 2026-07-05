@@ -1,17 +1,17 @@
-import { isDemoSeedSource } from "./seed-guards";
+import { isDemoSeedSource } from './seed-guards';
 
 /** Prisma-compatible filter: production tenants visible in Super Admin. */
 export function productionTenantWhere() {
   return {
     deletedAt: null,
-    OR: [{ seedSource: null }, { seedSource: { notIn: ["demo", "e2e"] } }],
+    OR: [{ seedSource: null }, { seedSource: { notIn: ['demo', 'e2e'] } }],
   };
 }
 
 /** Prisma-compatible filter: real platform staff (excludes seedSource demo/e2e only). */
 export function productionPlatformUserWhere() {
   return {
-    OR: [{ seedSource: null }, { seedSource: { notIn: ["demo", "e2e"] } }],
+    OR: [{ seedSource: null }, { seedSource: { notIn: ['demo', 'e2e'] } }],
   };
 }
 

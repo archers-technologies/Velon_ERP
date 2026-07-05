@@ -1,48 +1,55 @@
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import * as React from "react";
-import { useCallback, useMemo, useState } from "react";
-import { toast } from "sonner";
-import { commitPosSale } from "@/lib/workspace/mutations";
-import { loadPosBootstrap } from "@/lib/workspace/loaders";
-import type { PosCatalogItem, PosTicketLine } from "@/erp/pos-seed";
-import { useWorkspaceCurrency } from "@/contexts/workspace-currency";
-import type { InvoiceDocument } from "@/lib/sales/invoicing/types";
-import { printInvoiceDocument } from "@/lib/sales/invoicing/print-invoice";
-import { loadInvoiceCompanyProfile } from "@/lib/sales/invoicing/workspace-profile";
-import { getPrinterSettings, receiptFormatLabel } from "@/lib/shared/printer-settings";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import * as React from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import { createFileRoute, Link, useRouter } from '@tanstack/react-router';
+import {
+  Banknote,
+  CreditCard,
+  Gift,
+  Layers,
+  Minus,
+  Plus,
+  Printer,
+  Receipt,
+  ScanBarcode,
+  Smartphone,
+  Trash2,
+  WifiOff,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { PosVariantPickerDialog } from '@/components/inventory/pos-variant-picker-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Receipt,
-  Plus,
-  Printer,
-  Minus,
-  Trash2,
-  WifiOff,
-  ScanBarcode,
-  CreditCard,
-  Banknote,
-  Smartphone,
-  Gift,
-} from "lucide-react";
+} from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { useWorkspaceCurrency } from '@/contexts/workspace-currency';
+import type {
+  PosCatalogItem,
+  PosTicketLine,
+  PosVariantCatalogItem,
+  PosVariantOption,
+} from '@/erp/pos-seed';
+import { printInvoiceDocument } from '@/lib/sales/invoicing/print-invoice';
+import type { InvoiceDocument } from '@/lib/sales/invoicing/types';
+import { loadInvoiceCompanyProfile } from '@/lib/sales/invoicing/workspace-profile';
+import { getPrinterSettings, receiptFormatLabel } from '@/lib/shared/printer-settings';
+import { loadPosBootstrap } from '@/lib/workspace/loaders';
+import { commitPosSale } from '@/lib/workspace/mutations';
 
-export const Route = createFileRoute("/app/billing-pos")({
+export const Route = createFileRoute('/app/billing-pos')({
   loader: () => loadPosBootstrap(),
   component: BillingPosPage,
 });
 
-type PaymentMethod = "cash" | "card" | "upi" | "wallet";
+type PaymentMethod = 'cash' | 'card' | 'upi' | 'wallet';
 
 function cloneTicket(lines: PosTicketLine[]): PosTicketLine[] {
   return lines.map((l) => ({ ...l }));
@@ -51,16 +58,19 @@ function cloneTicket(lines: PosTicketLine[]): PosTicketLine[] {
 function BillingPosPage() {
   const router = useRouter();
   const { formatCurrency, moneyFormat } = useWorkspaceCurrency();
-  const { defaultTicket, catalog, customers } = Route.useLoaderData();
+  const { defaultTicket, catalog, variantCatalog, customers } = Route.useLoaderData();
 
   const [lines, setLines] = useState<PosTicketLine[]>(() => cloneTicket(defaultTicket));
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
-  const [customerId, setCustomerId] = useState<string>("walk-in");
-  const [orderNote, setOrderNote] = useState("");
+  const [variantPickerProduct, setVariantPickerProduct] = useState<PosVariantCatalogItem | null>(
+    null,
+  );
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
+  const [customerId, setCustomerId] = useState<string>('walk-in');
+  const [orderNote, setOrderNote] = useState('');
   const [busy, setBusy] = useState(false);
-  const [companyProfile, setCompanyProfile] = useState<
-    Awaited<ReturnType<typeof loadInvoiceCompanyProfile>> | null
-  >(null);
+  const [companyProfile, setCompanyProfile] = useState<Awaited<
+    ReturnType<typeof loadInvoiceCompanyProfile>
+  > | null>(null);
   const [printerSettings, setPrinterSettings] = useState(getPrinterSettings);
 
   React.useEffect(() => {
@@ -69,12 +79,12 @@ function BillingPosPage() {
       .catch(() => setCompanyProfile(null));
     setPrinterSettings(getPrinterSettings());
     const refreshPrinter = () => setPrinterSettings(getPrinterSettings());
-    window.addEventListener("focus", refreshPrinter);
-    return () => window.removeEventListener("focus", refreshPrinter);
+    window.addEventListener('focus', refreshPrinter);
+    return () => window.removeEventListener('focus', refreshPrinter);
   }, []);
 
   const customerName =
-    customerId === "walk-in" ? undefined : customers.find((c) => c.id === customerId)?.name;
+    customerId === 'walk-in' ? undefined : customers.find((c) => c.id === customerId)?.name;
 
   const subtotal = useMemo(
     () => Math.round(lines.reduce((s, l) => s + l.qty * l.unitPrice, 0) * 100) / 100,
@@ -92,35 +102,35 @@ function BillingPosPage() {
     [lines],
   );
 
-  async function settle(kind: "paid" | "due") {
+  async function settle(kind: 'paid' | 'due') {
     setBusy(true);
     try {
       const res = await commitPosSale({
         lines: salePayload(),
         kind,
-        customerName: customerName ?? "Walk-in",
+        customerName: customerName ?? 'Walk-in',
       });
-      const invLabel = kind === "paid" ? "Payment captured" : "Invoice saved as due";
+      const invLabel = kind === 'paid' ? 'Payment captured' : 'Invoice saved as due';
       const settings = getPrinterSettings();
-      if (kind === "paid" && settings.autoPrintOnCharge && settings.receiptFormat !== "none") {
+      if (kind === 'paid' && settings.autoPrintOnCharge && settings.receiptFormat !== 'none') {
         try {
           await printInvoiceDocument(buildInvoiceDoc(res.invoiceId), settings.receiptFormat);
         } catch (e) {
-          toast.error(e instanceof Error ? e.message : "Receipt print failed");
+          toast.error(e instanceof Error ? e.message : 'Receipt print failed');
         }
       }
       toast.success(`${invLabel} · ${res.invoiceId} · ${formatCurrency(res.total)}`, {
         description:
           res.inventoryRowsTouched > 0
             ? `Inventory updated for ${res.inventoryRowsTouched} stocked line(s).`
-            : "No stock-linked lines on this ticket.",
+            : 'No stock-linked lines on this ticket.',
       });
       setLines(cloneTicket(defaultTicket));
-      setCustomerId("walk-in");
-      setOrderNote("");
+      setCustomerId('walk-in');
+      setOrderNote('');
       await router.invalidate();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not complete sale");
+      toast.error(e instanceof Error ? e.message : 'Could not complete sale');
     } finally {
       setBusy(false);
     }
@@ -128,10 +138,10 @@ function BillingPosPage() {
 
   function newBill() {
     setLines(cloneTicket(defaultTicket));
-    setCustomerId("walk-in");
-    setOrderNote("");
-    toast.message("New ticket", {
-      description: defaultTicket.length ? "Default basket restored." : "Fresh empty ticket ready.",
+    setCustomerId('walk-in');
+    setOrderNote('');
+    toast.message('New ticket', {
+      description: defaultTicket.length ? 'Default basket restored.' : 'Fresh empty ticket ready.',
     });
   }
 
@@ -144,6 +154,19 @@ function BillingPosPage() {
         name: item.name,
         qty: 1,
         unitPrice: item.unitPrice,
+      },
+    ]);
+  }
+
+  function addFromVariant(product: PosVariantCatalogItem, variant: PosVariantOption) {
+    setLines((prev) => [
+      ...prev,
+      {
+        id: `line-${crypto.randomUUID()}`,
+        inventoryId: variant.inventoryId,
+        name: `${product.name} / ${variant.label}`,
+        qty: 1,
+        unitPrice: variant.unitPrice,
       },
     ]);
   }
@@ -162,15 +185,15 @@ function BillingPosPage() {
       invoiceNumber,
       invoiceDate: new Date().toISOString().slice(0, 10),
       dueDate: new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10),
-      customerName: customerName ?? "Walk-in",
+      customerName: customerName ?? 'Walk-in',
       lines: lines.map((l) => ({
         name: l.name,
         quantity: l.qty,
         unitPrice: l.unitPrice,
       })),
       currency: moneyFormat.currencyCode,
-      company: companyProfile ?? { legalName: "Velon Workspace" },
-      paymentStatus: "paid",
+      company: companyProfile ?? { legalName: 'Velon Workspace' },
+      paymentStatus: 'paid',
     }),
     [lines, customerName, moneyFormat.currencyCode, companyProfile],
   );
@@ -179,53 +202,56 @@ function BillingPosPage() {
     const settings = getPrinterSettings();
     setPrinterSettings(settings);
     if (lines.length === 0) return;
-    if (settings.receiptFormat === "none") {
-      toast.error("Receipt printing is disabled. Choose a format in Printer settings.");
+    if (settings.receiptFormat === 'none') {
+      toast.error('Receipt printing is disabled. Choose a format in Printer settings.');
       return;
     }
-    const invoiceNumber = `POS-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${Date.now().toString(36).toUpperCase()}`;
+    const invoiceNumber = `POS-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Date.now().toString(36).toUpperCase()}`;
     try {
       await printInvoiceDocument(buildInvoiceDoc(invoiceNumber), settings.receiptFormat);
       toast.success(`${receiptFormatLabel(settings.receiptFormat)} print preview opened.`);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not print receipt");
+      toast.error(e instanceof Error ? e.message : 'Could not print receipt');
     }
   }
 
   const paymentOptions: { id: PaymentMethod; label: string; icon: typeof Banknote }[] = [
-    { id: "cash", label: "Cash", icon: Banknote },
-    { id: "card", label: "Card", icon: CreditCard },
-    { id: "upi", label: "UPI", icon: Smartphone },
-    { id: "wallet", label: "Wallet / gift", icon: Gift },
+    { id: 'cash', label: 'Cash', icon: Banknote },
+    { id: 'card', label: 'Card', icon: CreditCard },
+    { id: 'upi', label: 'UPI', icon: Smartphone },
+    { id: 'wallet', label: 'Wallet / gift', icon: Gift },
   ];
 
   return (
     <div className="space-y-6">
-      <Card className="border-dashed border-border bg-muted/20 p-4 sm:p-5">
+      <Card className="border-border bg-muted/20 border-dashed p-4 sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
-          <div className="flex items-center gap-2 text-muted-foreground">
+          <div className="text-muted-foreground flex items-center gap-2">
             <WifiOff className="h-4 w-4 shrink-0" />
             <span>
-              Offline-ready POS: <span className="font-medium text-foreground">0</span> queued sales
+              Offline-ready POS: <span className="text-foreground font-medium">0</span> queued sales
               · Auto-sync when online
             </span>
           </div>
-          <Badge variant="outline" className="border-border text-[10px] font-normal">
+          <Badge
+            variant="outline"
+            className="border-border text-[10px] font-normal"
+          >
             {companyProfile?.taxId
               ? `VAT/GST ${companyProfile.taxId}`
-              : "Configure tax ID in company profile"}
+              : 'Configure tax ID in company profile'}
           </Badge>
         </div>
       </Card>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="border-border bg-card p-0 shadow-sm lg:col-span-2">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-5">
+          <div className="border-border flex flex-wrap items-center justify-between gap-3 border-b p-5">
             <h2 className="text-lg font-semibold tracking-tight">POS Quick Billing</h2>
             <Button
               type="button"
               size="sm"
-              className="rounded-lg bg-foreground text-background hover:bg-foreground/90"
+              className="bg-foreground text-background hover:bg-foreground/90 rounded-lg"
               onClick={newBill}
             >
               <Plus className="mr-1.5 h-4 w-4" /> New bill
@@ -235,15 +261,21 @@ function BillingPosPage() {
           <div className="space-y-5 p-5">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">Customer (CRM)</Label>
-                <Select value={customerId} onValueChange={setCustomerId}>
+                <Label className="text-muted-foreground text-xs">Customer (CRM)</Label>
+                <Select
+                  value={customerId}
+                  onValueChange={setCustomerId}
+                >
                   <SelectTrigger className="h-11 rounded-lg">
                     <SelectValue placeholder="Customer" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="walk-in">Walk-in</SelectItem>
                     {customers.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
+                      <SelectItem
+                        key={c.id}
+                        value={c.id}
+                      >
                         {c.name}
                       </SelectItem>
                     ))}
@@ -251,7 +283,7 @@ function BillingPosPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">Reference (optional)</Label>
+                <Label className="text-muted-foreground text-xs">Reference (optional)</Label>
                 <Input
                   className="h-11 rounded-lg"
                   placeholder="Table, order #, loyalty id…"
@@ -261,8 +293,8 @@ function BillingPosPage() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-border bg-gradient-to-b from-background to-muted/20 p-5 sm:p-6">
-              <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+            <div className="border-border from-background to-muted/20 rounded-2xl border bg-gradient-to-b p-5 sm:p-6">
+              <div className="text-muted-foreground text-[11px] font-medium tracking-[0.14em] uppercase">
                 Current ticket
               </div>
               <div className="mt-2 text-4xl font-semibold tracking-tight tabular-nums sm:text-5xl">
@@ -270,7 +302,7 @@ function BillingPosPage() {
               </div>
               <Separator className="my-5" />
               {lines.length === 0 ? (
-                <p className="py-8 text-center text-sm text-muted-foreground">
+                <p className="text-muted-foreground py-8 text-center text-sm">
                   Ticket is empty — tap a favorite below or scan a barcode (hardware integration).
                 </p>
               ) : (
@@ -278,11 +310,11 @@ function BillingPosPage() {
                   {lines.map((line) => (
                     <li
                       key={line.id}
-                      className="flex flex-col gap-3 rounded-xl border border-border/80 bg-card/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                      className="border-border/80 bg-card/80 flex flex-col gap-3 rounded-xl border px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
                     >
                       <div className="min-w-0 flex-1">
-                        <div className="font-medium leading-snug">{line.name}</div>
-                        <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                        <div className="leading-snug font-medium">{line.name}</div>
+                        <div className="text-muted-foreground mt-1 flex flex-wrap items-center gap-2 text-[11px]">
                           {line.inventoryId ? (
                             <span className="inline-flex items-center gap-1">
                               <ScanBarcode className="h-3 w-3" /> Stock-linked
@@ -297,7 +329,7 @@ function BillingPosPage() {
                         </div>
                       </div>
                       <div className="flex items-center justify-between gap-3 sm:justify-end">
-                        <div className="flex items-center rounded-lg border border-border bg-background p-0.5">
+                        <div className="border-border bg-background flex items-center rounded-lg border p-0.5">
                           <Button
                             type="button"
                             variant="ghost"
@@ -331,7 +363,7 @@ function BillingPosPage() {
                             type="button"
                             variant="ghost"
                             size="sm"
-                            className="mt-1 h-7 px-2 text-xs text-muted-foreground hover:text-destructive"
+                            className="text-muted-foreground hover:text-destructive mt-1 h-7 px-2 text-xs"
                             onClick={() => removeLine(line.id)}
                           >
                             <Trash2 className="mr-1 h-3 w-3" /> Remove
@@ -346,43 +378,62 @@ function BillingPosPage() {
 
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                <span className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
                   Favorites and quick keys
                 </span>
-                <span className="text-[10px] text-muted-foreground">
+                <span className="text-muted-foreground text-[10px]">
                   Touch-friendly · barcode SKU next
                 </span>
               </div>
-              <div className="-mx-1 flex gap-2 overflow-x-auto pb-2 pt-1">
-                {catalog.length === 0 ? (
-                  <div className="rounded-xl border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">
+              <div className="-mx-1 flex gap-2 overflow-x-auto pt-1 pb-2">
+                {catalog.length === 0 && (variantCatalog?.length ?? 0) === 0 ? (
+                  <div className="border-border text-muted-foreground rounded-xl border border-dashed px-4 py-3 text-sm">
                     No POS items yet. Add inventory first, then products appear here.
                   </div>
                 ) : (
-                  catalog.map((item) => (
-                    <Button
-                      key={item.id}
-                      type="button"
-                      variant={item.favorite ? "default" : "outline"}
-                      className={`h-auto shrink-0 flex-col gap-0.5 rounded-xl px-4 py-3 ${
-                        item.favorite ? "bg-foreground text-background hover:bg-foreground/90" : ""
-                      }`}
-                      onClick={() => addFromCatalog(item)}
-                    >
-                      <span className="max-w-[140px] truncate text-sm font-medium">
-                        {item.name}
-                      </span>
-                      <span className="text-xs opacity-80 tabular-nums">
-                        {formatCurrency(item.unitPrice)}
-                      </span>
-                    </Button>
-                  ))
+                  <>
+                    {catalog.map((item) => (
+                      <Button
+                        key={item.id}
+                        type="button"
+                        variant={item.favorite ? 'default' : 'outline'}
+                        className={`h-auto shrink-0 flex-col gap-0.5 rounded-xl px-4 py-3 ${
+                          item.favorite
+                            ? 'bg-foreground text-background hover:bg-foreground/90'
+                            : ''
+                        }`}
+                        onClick={() => addFromCatalog(item)}
+                      >
+                        <span className="max-w-[140px] truncate text-sm font-medium">
+                          {item.name}
+                        </span>
+                        <span className="text-xs tabular-nums opacity-80">
+                          {formatCurrency(item.unitPrice)}
+                        </span>
+                      </Button>
+                    ))}
+                    {(variantCatalog ?? []).map((item) => (
+                      <Button
+                        key={item.id}
+                        type="button"
+                        variant="outline"
+                        className="h-auto shrink-0 flex-col gap-0.5 rounded-xl px-4 py-3"
+                        onClick={() => setVariantPickerProduct(item)}
+                      >
+                        <span className="flex max-w-[140px] items-center gap-1 truncate text-sm font-medium">
+                          <Layers className="h-3.5 w-3.5 shrink-0" />
+                          {item.name}
+                        </span>
+                        <span className="text-xs opacity-80">{item.variantCount} variants</span>
+                      </Button>
+                    ))}
+                  </>
                 )}
               </div>
             </div>
 
             <div>
-              <Label className="text-xs text-muted-foreground">Payment method</Label>
+              <Label className="text-muted-foreground text-xs">Payment method</Label>
               <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {paymentOptions.map((opt) => {
                   const Icon = opt.icon;
@@ -391,8 +442,8 @@ function BillingPosPage() {
                     <Button
                       key={opt.id}
                       type="button"
-                      variant={active ? "default" : "outline"}
-                      className={`h-12 rounded-xl ${active ? "bg-foreground text-background hover:bg-foreground/90" : ""}`}
+                      variant={active ? 'default' : 'outline'}
+                      className={`h-12 rounded-xl ${active ? 'bg-foreground text-background hover:bg-foreground/90' : ''}`}
                       onClick={() => setPaymentMethod(opt.id)}
                     >
                       <Icon className="mr-2 h-4 w-4" />
@@ -403,7 +454,7 @@ function BillingPosPage() {
               </div>
             </div>
 
-            <p className="text-[11px] leading-relaxed text-muted-foreground">
+            <p className="text-muted-foreground text-[11px] leading-relaxed">
               Settling a ticket creates an invoice and, for stock-linked lines, decrements on-hand
               inventory in real time. Accounting entries follow the same invoice (ledger wiring in a
               full deployment).
@@ -412,26 +463,27 @@ function BillingPosPage() {
         </Card>
 
         <Card className="border-border bg-card p-0 shadow-sm">
-          <div className="border-b border-border p-5">
+          <div className="border-border border-b p-5">
             <div className="flex items-center gap-2">
-              <Receipt className="h-4 w-4 text-muted-foreground" />
+              <Receipt className="text-muted-foreground h-4 w-4" />
               <h3 className="text-sm font-semibold">Invoice actions</h3>
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Complete the sale or park it as receivable. Receipt printing is configured in Settings.
+            <p className="text-muted-foreground mt-1 text-xs">
+              Complete the sale or park it as receivable. Receipt printing is configured in
+              Settings.
             </p>
           </div>
           <div className="flex flex-col gap-2 p-5">
             <Button
               type="button"
               size="lg"
-              className="h-12 w-full rounded-xl bg-foreground text-base font-medium text-background hover:bg-foreground/90"
+              className="bg-foreground text-background hover:bg-foreground/90 h-12 w-full rounded-xl text-base font-medium"
               disabled={busy || lines.length === 0}
-              onClick={() => void settle("paid")}
+              onClick={() => void settle('paid')}
             >
               {busy
-                ? "Processing…"
-                : `Charge ${paymentOptions.find((p) => p.id === paymentMethod)?.label ?? "payment"}`}
+                ? 'Processing…'
+                : `Charge ${paymentOptions.find((p) => p.id === paymentMethod)?.label ?? 'payment'}`}
             </Button>
             <Button
               type="button"
@@ -439,7 +491,7 @@ function BillingPosPage() {
               variant="outline"
               className="h-12 w-full rounded-xl text-base font-medium"
               disabled={busy || lines.length === 0}
-              onClick={() => void settle("due")}
+              onClick={() => void settle('due')}
             >
               Save as due
             </Button>
@@ -448,25 +500,25 @@ function BillingPosPage() {
               size="lg"
               variant="outline"
               className="h-12 w-full rounded-xl text-base font-medium"
-              disabled={busy || lines.length === 0 || printerSettings.receiptFormat === "none"}
+              disabled={busy || lines.length === 0 || printerSettings.receiptFormat === 'none'}
               onClick={() => void printReceipt()}
             >
               <Printer className="mr-2 h-4 w-4" />
               Print receipt
             </Button>
-            <p className="pt-1 text-center text-[11px] text-muted-foreground">
-              Receipt:{" "}
-              <span className="font-medium text-foreground">
+            <p className="text-muted-foreground pt-1 text-center text-[11px]">
+              Receipt:{' '}
+              <span className="text-foreground font-medium">
                 {receiptFormatLabel(printerSettings.receiptFormat)}
               </span>
-              {printerSettings.autoPrintOnCharge && printerSettings.receiptFormat !== "none"
-                ? " · auto-print on charge"
-                : ""}
-              {" · "}
+              {printerSettings.autoPrintOnCharge && printerSettings.receiptFormat !== 'none'
+                ? ' · auto-print on charge'
+                : ''}
+              {' · '}
               <Link
                 to="/app/settings"
-                search={{ tab: "printers" }}
-                className="font-medium text-primary underline-offset-2 hover:underline"
+                search={{ tab: 'printers' }}
+                className="text-primary font-medium underline-offset-2 hover:underline"
               >
                 Printer settings
               </Link>
@@ -474,6 +526,20 @@ function BillingPosPage() {
           </div>
         </Card>
       </div>
+
+      <PosVariantPickerDialog
+        open={variantPickerProduct != null}
+        onOpenChange={(open) => {
+          if (!open) setVariantPickerProduct(null);
+        }}
+        product={variantPickerProduct}
+        formatCurrency={formatCurrency}
+        onSelect={(variant) => {
+          if (variantPickerProduct) {
+            addFromVariant(variantPickerProduct, variant);
+          }
+        }}
+      />
     </div>
   );
 }

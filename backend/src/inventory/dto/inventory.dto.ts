@@ -1,11 +1,7 @@
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
-  InventoryAbcClass,
-  InventoryProductStatus,
-  InventoryUom,
-  InventoryVelocity,
-} from "@velon/database";
-import {
+  IsArray,
   IsBoolean,
   IsEnum,
   IsInt,
@@ -14,7 +10,14 @@ import {
   IsString,
   Min,
   MinLength,
-} from "class-validator";
+  ValidateNested,
+} from 'class-validator';
+import {
+  InventoryAbcClass,
+  InventoryProductStatus,
+  InventoryUom,
+  InventoryVelocity,
+} from '@velon/database';
 
 export class CreateInventoryCategoryDto {
   @ApiProperty()
@@ -49,6 +52,130 @@ export class UpdateInventoryCategoryDto {
   @IsOptional()
   @IsString()
   parentId?: string;
+}
+
+export class ProductVariantOptionValueDto {
+  @ApiProperty()
+  @IsString()
+  @MinLength(1)
+  attributeName!: string;
+
+  @ApiProperty()
+  @IsString()
+  @MinLength(1)
+  value!: string;
+}
+
+export class ProductVariantAttributeInputDto {
+  @ApiProperty()
+  @IsString()
+  @MinLength(1)
+  name!: string;
+
+  @ApiProperty({ type: [String] })
+  @IsArray()
+  @IsString({ each: true })
+  values!: string[];
+}
+
+export class ProductVariantInputDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  id?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  label?: string;
+
+  @ApiProperty()
+  @IsString()
+  @MinLength(1)
+  sku!: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  barcode?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  unitPrice?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  costPrice?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  salePrice?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  quantity?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  minStock?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  reorderLevel?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  warehouseId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  imageDataUrl?: string;
+
+  @ApiPropertyOptional({ enum: InventoryProductStatus })
+  @IsOptional()
+  @IsEnum(InventoryProductStatus)
+  status?: InventoryProductStatus;
+
+  @ApiPropertyOptional({ type: [ProductVariantOptionValueDto] })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ProductVariantOptionValueDto)
+  optionValues?: ProductVariantOptionValueDto[];
+}
+
+export class ProductVariantsPayloadDto {
+  @ApiProperty()
+  @IsBoolean()
+  hasVariants!: boolean;
+
+  @ApiPropertyOptional({ type: [ProductVariantAttributeInputDto] })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ProductVariantAttributeInputDto)
+  attributes?: ProductVariantAttributeInputDto[];
+
+  @ApiPropertyOptional({ type: [ProductVariantInputDto] })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ProductVariantInputDto)
+  variants?: ProductVariantInputDto[];
 }
 
 export class CreateInventoryProductDto {
@@ -140,6 +267,17 @@ export class CreateInventoryProductDto {
   @IsInt()
   @Min(0)
   reorderPoint?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  hasVariants?: boolean;
+
+  @ApiPropertyOptional({ type: ProductVariantsPayloadDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => ProductVariantsPayloadDto)
+  variants?: ProductVariantsPayloadDto;
 }
 
 export class UpdateInventoryProductDto {
@@ -203,6 +341,17 @@ export class UpdateInventoryProductDto {
   @IsOptional()
   @IsString()
   variantParent?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  hasVariants?: boolean;
+
+  @ApiPropertyOptional({ type: ProductVariantsPayloadDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => ProductVariantsPayloadDto)
+  variants?: ProductVariantsPayloadDto;
 }
 
 export class CreateInventoryWarehouseDto {

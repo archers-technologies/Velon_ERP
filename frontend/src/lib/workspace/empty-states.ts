@@ -1,19 +1,18 @@
+import { POS_DEFAULT_TICKET_LINES, type PosCatalogItem, type PosTicketLine } from '@/erp/pos-seed';
+import type { TenantPlan as AdminTenantPlan } from '@/lib/platform/admin-demo';
 import type {
-  BranchOperationalTask,
   AccountingAuditRecord,
   ApBillRecord,
   AutomationWorkflowDef,
   BankFeedRecord,
+  BranchOperationalTask,
+  CrmDealActivityRecord,
+  CrmLeadRecord,
   CrmStage,
   CustomerActivityRecord,
   CustomerRecord,
-  CrmDealActivityRecord,
-  CrmLeadRecord,
   InventoryRecord,
   InvoiceRecord,
-  SupplierPurchaseOrder,
-  SupplierRecord,
-  SupplierThreadRecord,
   JournalEntryRecord,
   LiveAlertItem,
   SalesCommercialAlert,
@@ -26,15 +25,23 @@ import type {
   SubscriptionInvoiceLogEntry,
   SubscriptionPlanCatalogEntry,
   SubscriptionSparkPoint,
-} from "@/lib/types/workspace-ui";
-import type { TenantPlan as AdminTenantPlan } from "@/lib/platform/admin-demo";
-import { POS_DEFAULT_TICKET_LINES, type PosCatalogItem, type PosTicketLine } from "@/erp/pos-seed";
+  SupplierPurchaseOrder,
+  SupplierRecord,
+  SupplierThreadRecord,
+} from '@/lib/types/workspace-ui';
+
+/** SSR placeholder before the browser session can call the tenant API. */
+export function isSsrWorkspaceDashboardPlaceholder(
+  data: ReturnType<typeof emptyWorkspaceDashboard>,
+): boolean {
+  return data.company.name === 'Your company' && data.workspace.slug === 'workspace';
+}
 
 /** Tenant-scoped empty workspace dashboard — modules populate from PostgreSQL in Phase 2D+. */
 export function emptyWorkspaceDashboard() {
   return {
     company: {
-      name: "Your company",
+      name: 'Your company',
       email: null,
       phone: null,
       country: null,
@@ -45,27 +52,33 @@ export function emptyWorkspaceDashboard() {
       logoDataUrl: null,
     },
     workspace: {
-      name: "Workspace",
-      slug: "workspace",
-      timezone: "Asia/Kolkata",
-      countryCode: "IN",
-      currency: "INR",
-      currencySymbol: "₹",
-      dateFormat: "DD/MM/YYYY",
-      numberFormat: "en-IN",
-      language: "en",
+      name: 'Workspace',
+      slug: 'workspace',
+      timezone: 'Asia/Kolkata',
+      countryCode: 'IN',
+      currency: 'INR',
+      currencySymbol: '₹',
+      dateFormat: 'DD/MM/YYYY',
+      numberFormat: 'en-IN',
+      language: 'en',
     },
     subscription: {
-      plan: "STARTER",
-      planDisplayName: "Starter",
-      status: "TRIAL",
+      plan: 'STARTER',
+      planDisplayName: 'Starter',
+      status: 'TRIAL',
       renewalDate: new Date().toISOString().slice(0, 10),
       seatLimit: 5,
       monthlyPrice: 49,
     },
     seats: { used: 1, limit: 5, remaining: 4, unlimited: false, pendingInvites: 0 },
     team: { activeUsers: 1, departments: 0 },
-    notifications: [] as { id: string; title: string; body: string; read: boolean; createdAt: string }[],
+    notifications: [] as {
+      id: string;
+      title: string;
+      body: string;
+      read: boolean;
+      createdAt: string;
+    }[],
     recentActivity: [] as {
       id: string;
       action: string;
@@ -76,8 +89,12 @@ export function emptyWorkspaceDashboard() {
       actorName: string | null;
     }[],
     quickActions: [
-      { label: "Invite team member", to: "/app/settings/admin", search: { section: "invitations" } },
-      { label: "Company settings", to: "/app/settings/admin", search: { section: "company" } },
+      {
+        label: 'Invite team member',
+        to: '/app/settings/admin',
+        search: { section: 'invitations' },
+      },
+      { label: 'Company settings', to: '/app/settings/admin', search: { section: 'company' } },
     ],
     crmSummary: {
       customers: 0,
@@ -96,7 +113,7 @@ export function emptyWorkspaceDashboard() {
   };
 }
 
-export function emptyWorkspaceIdentity(name = "Workspace") {
+export function emptyWorkspaceIdentity(name = 'Workspace') {
   return { name, website: null as string | null };
 }
 
@@ -205,13 +222,19 @@ export function emptyFinanceReportsWorkspace() {
     alerts: [] as string[],
     netCashSeries: [] as { period: string; net: number }[],
     expenseMix: [] as { name: string; value: number }[],
-    expenseDrill: [] as import("@/lib/types/workspace-ui").FinanceExpenseDrillNode[],
+    expenseDrill: [] as import('@/lib/types/workspace-ui').FinanceExpenseDrillNode[],
     taskQueues: {
       approvals: [] as { id: string; title: string; subtitle: string }[],
       reconciliations: [] as { id: string; title: string }[],
       journals: [] as { id: string; title: string }[],
     },
-    annotations: [] as { id: string; reportKey: string; author: string; body: string; at: string }[],
+    annotations: [] as {
+      id: string;
+      reportKey: string;
+      author: string;
+      body: string;
+      at: string;
+    }[],
     catalog: [] as { id: string; title: string; category: string; hint: string }[],
   };
 }
@@ -222,9 +245,9 @@ export function emptyBranchesWorkspace() {
       id: string;
       name: string;
       code?: string;
-      kind: "store";
+      kind: 'store';
       salesMtd: number;
-      operationalStatus: "healthy" | "watch" | "critical";
+      operationalStatus: 'healthy' | 'watch' | 'critical';
       skusTracked: number;
       lowStockSkus: number;
       criticalSkus: number;
@@ -235,7 +258,16 @@ export function emptyBranchesWorkspace() {
       email?: string;
       manager?: string;
       isActive?: boolean;
-      lines: { id: string; sku: string; name: string; quantity: number; stockLevel: string; reorderPoint: number; batchTracked: boolean; unitPrice: number }[];
+      lines: {
+        id: string;
+        sku: string;
+        name: string;
+        quantity: number;
+        stockLevel: string;
+        reorderPoint: number;
+        batchTracked: boolean;
+        unitPrice: number;
+      }[];
     }[],
     tasks: [] as BranchOperationalTask[],
     alerts: [] as string[],
@@ -258,6 +290,7 @@ export function emptyPosBootstrap() {
   return {
     defaultTicket: [] as PosTicketLine[],
     catalog: [] as PosCatalogItem[],
+    variantCatalog: [] as import('@/erp/pos-seed').PosVariantCatalogItem[],
     recentTickets: [] as unknown[],
     customers: [] as { id: string; name: string }[],
   };
@@ -279,8 +312,8 @@ export function emptySubscriptionCommandCenter() {
     openTrials: 0,
     trialConversionPct: 0,
     churnPct: 0,
-    netMovementLabel: "No movement",
-    gatewayLabel: "Not configured",
+    netMovementLabel: 'No movement',
+    gatewayLabel: 'Not configured',
     dunningQueue: 0,
     revenueSparkline: [] as SubscriptionSparkPoint[],
     catalogPlans: [] as SubscriptionPlanCatalogEntry[],
@@ -295,7 +328,7 @@ export function emptySalesCommercialFloor() {
     activePaidSubscriptions: 0,
     checkoutSuccessRatePct: 0,
     pendingApprovalsCount: 0,
-    pendingApprovalsHint: "None pending",
+    pendingApprovalsHint: 'None pending',
     liveAlerts: [] as SalesCommercialAlert[],
     auditLog: [] as SalesCommercialAuditEntry[],
     leakage: [] as SalesLeakageRow[],
@@ -326,6 +359,6 @@ export function emptyAlertsLogsCommandCenter() {
       ingestionLagMs: 0,
     },
     liveAlerts: [] as LiveAlertItem[],
-    auditLogs: [] as import("@/lib/types/workspace-ui").AuditLogRow[],
+    auditLogs: [] as import('@/lib/types/workspace-ui').AuditLogRow[],
   };
 }

@@ -1,16 +1,16 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
-import { toast } from "sonner";
-import { MarketingPageShell } from "@/components/marketing/marketing-page-shell";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { submitContactInquiry } from "@/erp/erp-functions";
-import { loadPublicSiteContentSafe } from "@/lib/cms/load-public";
+import { useState } from 'react';
+import { createFileRoute } from '@tanstack/react-router';
+import { useServerFn } from '@tanstack/react-start';
+import { toast } from 'sonner';
+import { MarketingPageShell } from '@/components/marketing/marketing-page-shell';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { submitContactInquiry } from '@/erp/erp-functions';
+import { loadPublicSiteContentSafe } from '@/lib/cms/load-public';
 
-export const Route = createFileRoute("/contact")({
+export const Route = createFileRoute('/contact')({
   loader: () => loadPublicSiteContentSafe(),
   component: ContactPage,
 });
@@ -20,11 +20,11 @@ function ContactPage() {
   const contact = siteContent.contact;
   const submitFn = useServerFn(submitContactInquiry);
   const [busy, setBusy] = useState(false);
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [company, setCompany] = useState("");
-  const [phone, setPhone] = useState("");
-  const [message, setMessage] = useState("");
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [company, setCompany] = useState('');
+  const [phone, setPhone] = useState('');
+  const [message, setMessage] = useState('');
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -39,14 +39,14 @@ function ContactPage() {
           message: message.trim(),
         },
       });
-      toast.success("Thanks — your inquiry was received.");
-      setFullName("");
-      setEmail("");
-      setCompany("");
-      setPhone("");
-      setMessage("");
+      toast.success('Thanks — your inquiry was received.');
+      setFullName('');
+      setEmail('');
+      setCompany('');
+      setPhone('');
+      setMessage('');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong");
+      toast.error(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
       setBusy(false);
     }
@@ -66,7 +66,10 @@ function ContactPage() {
             <div>
               <dt className="text-muted-foreground">Email</dt>
               <dd>
-                <a href={`mailto:${contact.email}`} className="hover:underline">
+                <a
+                  href={`mailto:${contact.email}`}
+                  className="hover:underline"
+                >
                   {contact.email}
                 </a>
               </dd>
@@ -120,9 +123,9 @@ function ContactPage() {
             <Button
               type="submit"
               disabled={busy}
-              className="mt-4 bg-foreground text-background hover:bg-foreground/90"
+              className="bg-foreground text-background hover:bg-foreground/90 mt-4"
             >
-              {busy ? "Sending…" : "Send inquiry"}
+              {busy ? 'Sending…' : 'Send inquiry'}
             </Button>
           </form>
         </Card>

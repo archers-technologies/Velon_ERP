@@ -1,22 +1,22 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable } from '@nestjs/common';
 import {
   CrmActivityStatus,
   CrmActivityType,
   CrmCustomerStatus,
   CrmNoteTargetType,
   Prisma,
-} from "@velon/database";
-import { PrismaService } from "../prisma/prisma.service";
-import { TenantScopedRepository } from "../common/repositories/tenant-scoped.repository";
+} from '@velon/database';
+import { TenantScopedRepository } from '../common/repositories/tenant-scoped.repository';
+import { PrismaService } from '../prisma/prisma.service';
 
 function searchOr(fields: Prisma.CrmCustomerWhereInput[], term: string) {
   const q = term.trim();
   if (!q) return;
   fields.push(
-    { companyName: { contains: q, mode: "insensitive" } },
-    { email: { contains: q, mode: "insensitive" } },
-    { phone: { contains: q, mode: "insensitive" } },
-    { customerCode: { contains: q, mode: "insensitive" } },
+    { companyName: { contains: q, mode: 'insensitive' } },
+    { email: { contains: q, mode: 'insensitive' } },
+    { phone: { contains: q, mode: 'insensitive' } },
+    { customerCode: { contains: q, mode: 'insensitive' } },
   );
 }
 
@@ -26,13 +26,9 @@ export class CrmCustomerRepository extends TenantScopedRepository {
     super(prisma);
   }
 
-  findMany(opts: {
-    search?: string;
-    status?: CrmCustomerStatus;
-    includeArchived?: boolean;
-  }) {
+  findMany(opts: { search?: string; status?: CrmCustomerStatus; includeArchived?: boolean }) {
     const OR: Prisma.CrmCustomerWhereInput[] = [];
-    searchOr(OR, opts.search ?? "");
+    searchOr(OR, opts.search ?? '');
     return this.prisma.client.crmCustomer.findMany({
       where: {
         ...this.where({
@@ -41,7 +37,7 @@ export class CrmCustomerRepository extends TenantScopedRepository {
         }),
         ...(OR.length ? { OR } : {}),
       },
-      orderBy: { updatedAt: "desc" },
+      orderBy: { updatedAt: 'desc' },
       include: {
         createdBy: { select: { id: true, name: true, email: true } },
         updatedBy: { select: { id: true, name: true, email: true } },
@@ -68,7 +64,7 @@ export class CrmCustomerRepository extends TenantScopedRepository {
     });
   }
 
-  create(data: Omit<Prisma.CrmCustomerUncheckedCreateInput, "tenantId">) {
+  create(data: Omit<Prisma.CrmCustomerUncheckedCreateInput, 'tenantId'>) {
     return this.prisma.client.crmCustomer.create({
       data: { ...data, tenantId: this.tenantId },
       include: {
@@ -103,11 +99,11 @@ export class CrmContactRepository extends TenantScopedRepository {
     const q = opts.search?.trim();
     if (q) {
       OR.push(
-        { firstName: { contains: q, mode: "insensitive" } },
-        { lastName: { contains: q, mode: "insensitive" } },
-        { email: { contains: q, mode: "insensitive" } },
-        { phone: { contains: q, mode: "insensitive" } },
-        { mobile: { contains: q, mode: "insensitive" } },
+        { firstName: { contains: q, mode: 'insensitive' } },
+        { lastName: { contains: q, mode: 'insensitive' } },
+        { email: { contains: q, mode: 'insensitive' } },
+        { phone: { contains: q, mode: 'insensitive' } },
+        { mobile: { contains: q, mode: 'insensitive' } },
       );
     }
     return this.prisma.client.crmContact.findMany({
@@ -118,7 +114,7 @@ export class CrmContactRepository extends TenantScopedRepository {
         }),
         ...(OR.length ? { OR } : {}),
       },
-      orderBy: { updatedAt: "desc" },
+      orderBy: { updatedAt: 'desc' },
       include: {
         customer: { select: { id: true, companyName: true, customerCode: true } },
         createdBy: { select: { id: true, name: true, email: true } },
@@ -145,7 +141,7 @@ export class CrmContactRepository extends TenantScopedRepository {
     });
   }
 
-  create(data: Omit<Prisma.CrmContactUncheckedCreateInput, "tenantId">) {
+  create(data: Omit<Prisma.CrmContactUncheckedCreateInput, 'tenantId'>) {
     return this.prisma.client.crmContact.create({
       data: { ...data, tenantId: this.tenantId },
       include: {
@@ -171,7 +167,7 @@ export class CrmNoteRepository extends TenantScopedRepository {
         ...(opts.targetType ? { targetType: opts.targetType } : {}),
         ...(opts.targetId ? { targetId: opts.targetId } : {}),
       }),
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
       include: {
         createdBy: { select: { id: true, name: true, email: true } },
       },
@@ -187,7 +183,7 @@ export class CrmNoteRepository extends TenantScopedRepository {
     });
   }
 
-  create(data: Omit<Prisma.CrmNoteUncheckedCreateInput, "tenantId">) {
+  create(data: Omit<Prisma.CrmNoteUncheckedCreateInput, 'tenantId'>) {
     return this.prisma.client.crmNote.create({
       data: { ...data, tenantId: this.tenantId },
       include: {
@@ -240,7 +236,7 @@ export class CrmActivityRepository extends TenantScopedRepository {
             }
           : {}),
       }),
-      orderBy: { activityDate: "desc" },
+      orderBy: { activityDate: 'desc' },
       include: {
         customer: { select: { id: true, companyName: true } },
         contact: { select: { id: true, firstName: true, lastName: true } },
@@ -260,7 +256,7 @@ export class CrmActivityRepository extends TenantScopedRepository {
     });
   }
 
-  create(data: Omit<Prisma.CrmActivityUncheckedCreateInput, "tenantId">) {
+  create(data: Omit<Prisma.CrmActivityUncheckedCreateInput, 'tenantId'>) {
     return this.prisma.client.crmActivity.create({
       data: { ...data, tenantId: this.tenantId },
       include: {

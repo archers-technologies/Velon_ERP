@@ -1,4 +1,4 @@
-import { apiFetch } from "@/lib/api/client";
+import { apiFetch } from '@/lib/api/client';
 
 export type TenantFileRecord = {
   id: string;
@@ -11,7 +11,7 @@ export type TenantFileRecord = {
 };
 
 export async function listTenantFiles() {
-  return apiFetch<TenantFileRecord[]>("/tenant-resources/files");
+  return apiFetch<TenantFileRecord[]>('/tenant-resources/files');
 }
 
 export async function registerTenantFile(input: {
@@ -19,8 +19,8 @@ export async function registerTenantFile(input: {
   mimeType?: string;
   sizeBytes?: number;
 }) {
-  return apiFetch<TenantFileRecord>("/tenant-resources/files", {
-    method: "POST",
+  return apiFetch<TenantFileRecord>('/tenant-resources/files', {
+    method: 'POST',
     body: JSON.stringify(input),
   });
 }

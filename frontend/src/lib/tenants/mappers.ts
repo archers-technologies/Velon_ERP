@@ -1,5 +1,10 @@
-import type { TenantRecord } from "@/lib/types/workspace-ui";
-import type { IndustryTemplate, TenantHealth, TenantPlan, TenantStatus } from "@/lib/platform/admin-demo";
+import type {
+  IndustryTemplate,
+  TenantHealth,
+  TenantPlan,
+  TenantStatus,
+} from '@/lib/platform/admin-demo';
+import type { TenantRecord } from '@/lib/types/workspace-ui';
 
 type ApiTenant = {
   id: string;
@@ -22,53 +27,53 @@ type ApiTenant = {
   isolationVerified: boolean;
   createdAt: string;
   lastActiveLabel: string;
-  modules: TenantRecord["modules"];
+  modules: TenantRecord['modules'];
 };
 
 const planFromApi: Record<string, TenantPlan> = {
-  STARTER: "Starter",
-  GROWTH: "Growth",
-  ENTERPRISE: "Enterprise",
+  STARTER: 'Starter',
+  GROWTH: 'Growth',
+  ENTERPRISE: 'Enterprise',
 };
 
 const planToApi: Record<TenantPlan, string> = {
-  Starter: "STARTER",
-  Growth: "GROWTH",
-  Enterprise: "ENTERPRISE",
+  Starter: 'STARTER',
+  Growth: 'GROWTH',
+  Enterprise: 'ENTERPRISE',
 };
 
 const statusFromApi: Record<string, TenantStatus> = {
-  ACTIVE: "Active",
-  TRIAL: "Trial",
-  PAST_DUE: "Past due",
-  SUSPENDED: "Suspended",
+  ACTIVE: 'Active',
+  TRIAL: 'Trial',
+  PAST_DUE: 'Past due',
+  SUSPENDED: 'Suspended',
 };
 
 const statusToApi: Record<TenantStatus, string> = {
-  Active: "ACTIVE",
-  Trial: "TRIAL",
-  "Past due": "PAST_DUE",
-  Suspended: "SUSPENDED",
+  Active: 'ACTIVE',
+  Trial: 'TRIAL',
+  'Past due': 'PAST_DUE',
+  Suspended: 'SUSPENDED',
 };
 
 const healthFromApi: Record<string, TenantHealth> = {
-  HEALTHY: "healthy",
-  DEGRADED: "degraded",
-  CRITICAL: "critical",
+  HEALTHY: 'healthy',
+  DEGRADED: 'degraded',
+  CRITICAL: 'critical',
 };
 
 const industryFromApi: Record<string, IndustryTemplate> = {
-  RETAIL: "Retail",
-  MANUFACTURING: "Manufacturing",
-  DISTRIBUTION: "Distribution",
-  SERVICES: "Services",
+  RETAIL: 'Retail',
+  MANUFACTURING: 'Manufacturing',
+  DISTRIBUTION: 'Distribution',
+  SERVICES: 'Services',
 };
 
 const industryToApi: Record<IndustryTemplate, string> = {
-  Retail: "RETAIL",
-  Manufacturing: "MANUFACTURING",
-  Distribution: "DISTRIBUTION",
-  Services: "SERVICES",
+  Retail: 'RETAIL',
+  Manufacturing: 'MANUFACTURING',
+  Distribution: 'DISTRIBUTION',
+  Services: 'SERVICES',
 };
 
 export function mapApiTenant(row: ApiTenant): TenantRecord {
@@ -81,10 +86,10 @@ export function mapApiTenant(row: ApiTenant): TenantRecord {
     countryCode: row.countryCode ?? null,
     currency: row.currency ?? null,
     currencySymbol: row.currencySymbol ?? null,
-    plan: planFromApi[row.plan] ?? "Starter",
-    status: statusFromApi[row.status] ?? "Trial",
-    health: healthFromApi[row.health] ?? "healthy",
-    industryTemplate: industryFromApi[row.industryTemplate] ?? "Services",
+    plan: planFromApi[row.plan] ?? 'Starter',
+    status: statusFromApi[row.status] ?? 'Trial',
+    health: healthFromApi[row.health] ?? 'healthy',
+    industryTemplate: industryFromApi[row.industryTemplate] ?? 'Services',
     users: row.users,
     mrr: row.mrr,
     storageUsedGb: row.storageUsedGb,

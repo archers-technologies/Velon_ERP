@@ -1,8 +1,8 @@
-import type { LucideIcon } from "lucide-react";
-import type { ReactNode } from "react";
-import { EmptyState } from "@/components/ui/empty-state";
-import { Button } from "@/components/ui/button";
-import { Link } from "@tanstack/react-router";
+import type { ReactNode } from 'react';
+import { Link } from '@tanstack/react-router';
+import type { LucideIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 
 export function ModuleEmptyState({
   icon,
@@ -21,8 +21,15 @@ export function ModuleEmptyState({
 }) {
   const action: ReactNode =
     actionLabel && actionTo ? (
-      <Button asChild variant="default" size="sm">
-        <Link to={actionTo} search={actionSearch}>
+      <Button
+        asChild
+        variant="default"
+        size="sm"
+      >
+        <Link
+          to={actionTo}
+          search={actionSearch}
+        >
           {actionLabel}
         </Link>
       </Button>

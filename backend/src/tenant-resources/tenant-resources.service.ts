@@ -1,5 +1,5 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import type { AuthenticatedUser } from "../auth/auth.types";
+import { Injectable, NotFoundException } from '@nestjs/common';
+import type { AuthenticatedUser } from '../auth/auth.types';
 import {
   TenantAssetRepository,
   TenantAuditRepository,
@@ -7,7 +7,7 @@ import {
   TenantFileRepository,
   TenantNotificationRepository,
   TenantProjectRepository,
-} from "../common/repositories/tenant.repositories";
+} from '../common/repositories/tenant.repositories';
 
 @Injectable()
 export class TenantResourcesService {
@@ -30,7 +30,7 @@ export class TenantResourcesService {
 
   async getCustomer(_user: AuthenticatedUser, id: string) {
     const row = await this.customers.findById(id);
-    if (!row) throw new NotFoundException("Customer not found.");
+    if (!row) throw new NotFoundException('Customer not found.');
     return row;
   }
 
@@ -40,7 +40,7 @@ export class TenantResourcesService {
 
   async getProject(_user: AuthenticatedUser, id: string) {
     const row = await this.projects.findById(id);
-    if (!row) throw new NotFoundException("Project not found.");
+    if (!row) throw new NotFoundException('Project not found.');
     return row;
   }
 
@@ -54,7 +54,7 @@ export class TenantResourcesService {
 
   async getAsset(_user: AuthenticatedUser, id: string) {
     const row = await this.assets.findById(id);
-    if (!row) throw new NotFoundException("Asset not found.");
+    if (!row) throw new NotFoundException('Asset not found.');
     return row;
   }
 
@@ -68,7 +68,7 @@ export class TenantResourcesService {
 
   async getFile(_user: AuthenticatedUser, id: string) {
     const row = await this.files.findById(id);
-    if (!row) throw new NotFoundException("File not found.");
+    if (!row) throw new NotFoundException('File not found.');
     return row;
   }
 
@@ -82,7 +82,7 @@ export class TenantResourcesService {
 
   async getNotification(user: AuthenticatedUser, id: string) {
     const row = await this.notifications.findById(id);
-    if (!row || row.userId !== user.id) throw new NotFoundException("Notification not found.");
+    if (!row || row.userId !== user.id) throw new NotFoundException('Notification not found.');
     return row;
   }
 
@@ -92,7 +92,7 @@ export class TenantResourcesService {
 
   async getAuditLog(_user: AuthenticatedUser, id: string) {
     const row = await this.audit.findById(id);
-    if (!row) throw new NotFoundException("Audit log not found.");
+    if (!row) throw new NotFoundException('Audit log not found.');
     return row;
   }
 }

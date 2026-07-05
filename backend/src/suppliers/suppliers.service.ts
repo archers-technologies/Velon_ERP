@@ -1,20 +1,25 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
-import { canManageProcurement, canReadProcurement, normalizeVelonRole } from "@velon/shared";
-import * as crypto from "crypto";
-import { AuditService } from "../audit/audit.service";
-import type { AuthenticatedUser } from "../auth/auth.types";
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import * as crypto from 'crypto';
+import { canManageProcurement, canReadProcurement, normalizeVelonRole } from '@velon/shared';
+import { AuditService } from '../audit/audit.service';
+import type { AuthenticatedUser } from '../auth/auth.types';
 import {
   CreateSupplierContactDto,
   CreateSupplierDto,
   CreateSupplierThreadDto,
   UpdateSupplierContactDto,
   UpdateSupplierDto,
-} from "./dto/suppliers.dto";
+} from './dto/suppliers.dto';
 import {
   SupplierContactRepository,
   SupplierRepository,
   SupplierThreadRepository,
-} from "./suppliers.repositories";
+} from './suppliers.repositories';
 
 type AuditMeta = { ip?: string; ua?: string };
 
@@ -33,18 +38,18 @@ export class SuppliersService {
 
   private assertRead(user: AuthenticatedUser) {
     if (!canReadProcurement(this.role(user))) {
-      throw new ForbiddenException("Supplier access denied.");
+      throw new ForbiddenException('Supplier access denied.');
     }
   }
 
   private assertManage(user: AuthenticatedUser) {
     if (!canManageProcurement(this.role(user))) {
-      throw new ForbiddenException("Insufficient permissions to manage suppliers.");
+      throw new ForbiddenException('Insufficient permissions to manage suppliers.');
     }
   }
 
   private supplierCode() {
-    return `SUP-${crypto.randomBytes(3).toString("hex").toUpperCase()}`;
+    return `SUP-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
   }
 
   listSuppliers(user: AuthenticatedUser, search?: string) {
@@ -55,7 +60,7 @@ export class SuppliersService {
   async getSupplier(user: AuthenticatedUser, id: string) {
     this.assertRead(user);
     const row = await this.suppliers.findById(id);
-    if (!row) throw new NotFoundException("Supplier not found.");
+    if (!row) throw new NotFoundException('Supplier not found.');
     return row;
   }
 
@@ -63,7 +68,7 @@ export class SuppliersService {
     this.assertManage(user);
     const code = dto.code?.trim() || this.supplierCode();
     const existing = await this.suppliers.findByCode(code);
-    if (existing) throw new BadRequestException("Supplier code already exists.");
+    if (existing) throw new BadRequestException('Supplier code already exists.');
 
     const row = await this.suppliers.create({
       code,
@@ -81,8 +86,8 @@ export class SuppliersService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "procurement.supplier_created",
-      entityType: "supplier",
+      action: 'procurement.supplier_created',
+      entityType: 'supplier',
       entityId: row.id,
       metadata: { code: row.code, name: row.name },
       ipAddress: meta.ip,
@@ -100,7 +105,7 @@ export class SuppliersService {
   ) {
     this.assertManage(user);
     const row = await this.suppliers.findById(id);
-    if (!row) throw new NotFoundException("Supplier not found.");
+    if (!row) throw new NotFoundException('Supplier not found.');
 
     const updated = await this.suppliers.update(id, {
       ...(dto.name !== undefined ? { name: dto.name.trim() } : {}),
@@ -117,8 +122,8 @@ export class SuppliersService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "procurement.supplier_updated",
-      entityType: "supplier",
+      action: 'procurement.supplier_updated',
+      entityType: 'supplier',
       entityId: id,
       ipAddress: meta.ip,
       userAgent: meta.ua,
@@ -132,14 +137,10 @@ export class SuppliersService {
     return this.contacts.findBySupplier(supplierId);
   }
 
-  async createContact(
-    user: AuthenticatedUser,
-    supplierId: string,
-    dto: CreateSupplierContactDto,
-  ) {
+  async createContact(user: AuthenticatedUser, supplierId: string, dto: CreateSupplierContactDto) {
     this.assertManage(user);
     const supplier = await this.suppliers.findById(supplierId);
-    if (!supplier) throw new NotFoundException("Supplier not found.");
+    if (!supplier) throw new NotFoundException('Supplier not found.');
 
     return this.contacts.create({
       supplierId,
@@ -152,14 +153,10 @@ export class SuppliersService {
     });
   }
 
-  async updateContact(
-    user: AuthenticatedUser,
-    contactId: string,
-    dto: UpdateSupplierContactDto,
-  ) {
+  async updateContact(user: AuthenticatedUser, contactId: string, dto: UpdateSupplierContactDto) {
     this.assertManage(user);
     const row = await this.contacts.findById(contactId);
-    if (!row) throw new NotFoundException("Contact not found.");
+    if (!row) throw new NotFoundException('Contact not found.');
 
     return this.contacts.update(contactId, {
       ...(dto.firstName !== undefined ? { firstName: dto.firstName.trim() } : {}),
@@ -174,7 +171,7 @@ export class SuppliersService {
   async listThreads(user: AuthenticatedUser, supplierId: string) {
     this.assertRead(user);
     const supplier = await this.suppliers.findById(supplierId);
-    if (!supplier) throw new NotFoundException("Supplier not found.");
+    if (!supplier) throw new NotFoundException('Supplier not found.');
     return this.threads.findBySupplier(supplierId);
   }
 
@@ -186,7 +183,7 @@ export class SuppliersService {
   ) {
     this.assertManage(user);
     const supplier = await this.suppliers.findById(supplierId);
-    if (!supplier) throw new NotFoundException("Supplier not found.");
+    if (!supplier) throw new NotFoundException('Supplier not found.');
 
     const authorName = dto.authorName?.trim() || user.email;
     const row = await this.threads.create({
@@ -199,8 +196,8 @@ export class SuppliersService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "procurement.supplier_thread_posted",
-      entityType: "supplier_thread",
+      action: 'procurement.supplier_thread_posted',
+      entityType: 'supplier_thread',
       entityId: row.id,
       metadata: { supplierId, authorName },
       ipAddress: meta.ip,

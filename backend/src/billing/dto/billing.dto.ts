@@ -1,6 +1,16 @@
-import { IsBoolean, IsEnum, IsInt, IsNumber, IsOptional, IsString, Min, ValidateIf, ValidateNested } from "class-validator";
-import { Type } from "class-transformer";
-import { BillingInterval, PaymentProvider, TenantPlan } from "@velon/database";
+import { Type } from 'class-transformer';
+import {
+  IsBoolean,
+  IsEnum,
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+  ValidateIf,
+  ValidateNested,
+} from 'class-validator';
+import { BillingInterval, PaymentProvider, TenantPlan } from '@velon/database';
 
 export class ChangeTenantPlanDto {
   @IsEnum(TenantPlan)

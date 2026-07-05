@@ -1,23 +1,23 @@
-import { useMemo } from "react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { NativeSelect } from "@/components/ui/native-select";
-import { SearchableSelect } from "@/components/ui/searchable-select";
-import {
-  countryOptions,
-  currencyOptions,
-  getCountryDefaultCurrency,
-} from "@/lib/shared/country-currency-catalog";
+import { useMemo } from 'react';
 import {
   DATE_FORMAT_OPTIONS,
-  NUMBER_FORMAT_OPTIONS,
-  TIMEZONE_OPTIONS,
   defaultDateFormatForCountry,
   defaultNumberFormatForCountry,
   defaultTimezoneForCountry,
   formatCurrencyLabel,
+  NUMBER_FORMAT_OPTIONS,
+  TIMEZONE_OPTIONS,
   type CountryCode,
-} from "@velon/shared";
+} from '@velon/shared';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { NativeSelect } from '@/components/ui/native-select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
+import {
+  countryOptions,
+  currencyOptions,
+  getCountryDefaultCurrency,
+} from '@/lib/shared/country-currency-catalog';
 
 export type BusinessLocalizationValue = {
   countryCode: CountryCode | string;
@@ -38,7 +38,7 @@ type Props = {
   idPrefix?: string;
 };
 
-export function createDefaultLocalization(countryCode = "IN"): BusinessLocalizationValue {
+export function createDefaultLocalization(countryCode = 'IN'): BusinessLocalizationValue {
   const code = countryCode as CountryCode;
   return {
     countryCode: code,
@@ -46,8 +46,8 @@ export function createDefaultLocalization(countryCode = "IN"): BusinessLocalizat
     timezone: defaultTimezoneForCountry(code),
     dateFormat: defaultDateFormatForCountry(code),
     numberFormat: defaultNumberFormatForCountry(code),
-    address: "",
-    taxId: "",
+    address: '',
+    taxId: '',
   };
 }
 
@@ -57,7 +57,7 @@ export function BusinessLocalizationFields({
   showAddress = false,
   showTaxId = false,
   showFormats = true,
-  idPrefix = "biz",
+  idPrefix = 'biz',
 }: Props) {
   const countrySelectOptions = useMemo(
     () => countryOptions.map((row) => ({ value: row.value, label: row.label })),
@@ -65,7 +65,8 @@ export function BusinessLocalizationFields({
   );
 
   const currencySelectOptions = useMemo(
-    () => currencyOptions.map((row) => ({ value: row.value, label: formatCurrencyLabel(row.value) })),
+    () =>
+      currencyOptions.map((row) => ({ value: row.value, label: formatCurrencyLabel(row.value) })),
     [],
   );
 
@@ -149,7 +150,7 @@ export function BusinessLocalizationFields({
           <Label htmlFor={`${idPrefix}-address`}>Business address *</Label>
           <Input
             id={`${idPrefix}-address`}
-            value={value.address ?? ""}
+            value={value.address ?? ''}
             onChange={(e) => onChange({ ...value, address: e.target.value })}
             placeholder="Street, city, postal code"
             required
@@ -162,7 +163,7 @@ export function BusinessLocalizationFields({
           <Label htmlFor={`${idPrefix}-tax-id`}>Tax / VAT registration number</Label>
           <Input
             id={`${idPrefix}-tax-id`}
-            value={value.taxId ?? ""}
+            value={value.taxId ?? ''}
             onChange={(e) => onChange({ ...value, taxId: e.target.value })}
             placeholder="Optional"
           />

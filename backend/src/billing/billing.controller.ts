@@ -1,20 +1,19 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from "@nestjs/common";
-import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
-import { UserRole, TenantPlan } from "@velon/database";
-import { CurrentUser } from "../auth/decorators/current-user.decorator";
-import { RequirePortalScope } from "../auth/decorators/portal-scope.decorator";
-import { Roles } from "../auth/decorators/roles.decorator";
-import type { AuthenticatedUser } from "../auth/auth.types";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import { PortalScopeGuard } from "../auth/guards/portal-scope.guard";
-import { RolesGuard } from "../auth/guards/roles.guard";
-import { TenantScopeGuard } from "../auth/guards/tenant-scope.guard";
-import { BillingService } from "./billing.service";
-import { RazorpayBillingService } from "./razorpay-billing.service";
-import { SubscriptionService } from "./subscription.service";
+import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { TenantPlan, UserRole } from '@velon/database';
+import type { AuthenticatedUser } from '../auth/auth.types';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { RequirePortalScope } from '../auth/decorators/portal-scope.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { PortalScopeGuard } from '../auth/guards/portal-scope.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { TenantScopeGuard } from '../auth/guards/tenant-scope.guard';
+import { getRazorpayPublicConfig } from '../config/razorpay.env';
+import { BillingService } from './billing.service';
 import {
-  ChangeTenantPlanDto,
   CancelCheckoutDto,
+  ChangeTenantPlanDto,
   CreateCheckoutDto,
   ExtendTrialDto,
   GrantTrialDto,
@@ -22,12 +21,13 @@ import {
   TenantChangePlanDto,
   UpdatePlanDefinitionDto,
   VerifyRazorpayPaymentDto,
-} from "./dto/billing.dto";
-import { getRazorpayPublicConfig } from "../config/razorpay.env";
-import { listEnabledPaymentProviders } from "./providers";
+} from './dto/billing.dto';
+import { listEnabledPaymentProviders } from './providers';
+import { RazorpayBillingService } from './razorpay-billing.service';
+import { SubscriptionService } from './subscription.service';
 
-@ApiTags("billing")
-@Controller("billing")
+@ApiTags('billing')
+@Controller('billing')
 export class BillingController {
   constructor(
     private readonly billing: BillingService,
@@ -35,8 +35,8 @@ export class BillingController {
     private readonly razorpay: RazorpayBillingService,
   ) {}
 
-  @Get("payment-config")
-  @RequirePortalScope("tenant")
+  @Get('payment-config')
+  @RequirePortalScope('tenant')
   @UseGuards(JwtAuthGuard, PortalScopeGuard, TenantScopeGuard)
   @ApiBearerAuth()
   paymentConfig() {
@@ -51,39 +51,39 @@ export class BillingController {
     };
   }
 
-  @Get("plans")
+  @Get('plans')
   getPlans() {
     return this.billing.getPlanCatalog();
   }
 
-  @Get("plans/for-workspace")
-  @RequirePortalScope("tenant")
+  @Get('plans/for-workspace')
+  @RequirePortalScope('tenant')
   @UseGuards(JwtAuthGuard, PortalScopeGuard, TenantScopeGuard)
   @ApiBearerAuth()
   workspacePlans(@CurrentUser() user: AuthenticatedUser) {
     return this.billing.getTenantPlanCatalog(user.tenantId!);
   }
 
-  @Patch("platform/plans/:plan")
-  @RequirePortalScope("platform")
+  @Patch('platform/plans/:plan')
+  @RequirePortalScope('platform')
   @UseGuards(JwtAuthGuard, PortalScopeGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN)
   @ApiBearerAuth()
   updatePlan(
-    @Param("plan") plan: TenantPlan,
+    @Param('plan') plan: TenantPlan,
     @Body() dto: UpdatePlanDefinitionDto,
     @CurrentUser() user: { id: string },
   ) {
     return this.billing.updatePlanDefinition(plan, dto, user.id);
   }
 
-  @Get("providers")
+  @Get('providers')
   listProviders() {
     return listEnabledPaymentProviders().map((p) => ({ id: p.id }));
   }
 
-  @Get("platform/subscriptions")
-  @RequirePortalScope("platform")
+  @Get('platform/subscriptions')
+  @RequirePortalScope('platform')
   @UseGuards(JwtAuthGuard, PortalScopeGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.PLATFORM_SUPPORT)
   @ApiBearerAuth()
@@ -91,94 +91,91 @@ export class BillingController {
     return this.billing.getPlatformSubscriptionOverview();
   }
 
-  @Patch("platform/tenants/:tenantId/plan")
-  @RequirePortalScope("platform")
+  @Patch('platform/tenants/:tenantId/plan')
+  @RequirePortalScope('platform')
   @UseGuards(JwtAuthGuard, PortalScopeGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN)
   @ApiBearerAuth()
   changeTenantPlan(
-    @Param("tenantId") tenantId: string,
+    @Param('tenantId') tenantId: string,
     @Body() dto: ChangeTenantPlanDto,
     @CurrentUser() user: { id: string },
   ) {
     return this.billing.changeTenantPlan(tenantId, dto.plan, user.id);
   }
 
-  @Post("platform/tenants/:tenantId/reset")
-  @RequirePortalScope("platform")
+  @Post('platform/tenants/:tenantId/reset')
+  @RequirePortalScope('platform')
   @UseGuards(JwtAuthGuard, PortalScopeGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN)
   @ApiBearerAuth()
   resetTenantSubscription(
-    @Param("tenantId") tenantId: string,
+    @Param('tenantId') tenantId: string,
     @CurrentUser() user: { id: string },
   ) {
     return this.billing.resetTenantSubscription(tenantId, user.id);
   }
 
-  @Post("platform/tenants/:tenantId/activate")
-  @RequirePortalScope("platform")
+  @Post('platform/tenants/:tenantId/activate')
+  @RequirePortalScope('platform')
   @UseGuards(JwtAuthGuard, PortalScopeGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN)
   @ApiBearerAuth()
-  activateSubscription(@Param("tenantId") tenantId: string) {
+  activateSubscription(@Param('tenantId') tenantId: string) {
     return this.subscriptions.platformActivate(tenantId);
   }
 
-  @Post("platform/tenants/:tenantId/suspend")
-  @RequirePortalScope("platform")
+  @Post('platform/tenants/:tenantId/suspend')
+  @RequirePortalScope('platform')
   @UseGuards(JwtAuthGuard, PortalScopeGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN)
   @ApiBearerAuth()
-  suspendSubscription(@Param("tenantId") tenantId: string) {
+  suspendSubscription(@Param('tenantId') tenantId: string) {
     return this.subscriptions.platformSuspend(tenantId);
   }
 
-  @Post("platform/tenants/:tenantId/trial")
-  @RequirePortalScope("platform")
+  @Post('platform/tenants/:tenantId/trial')
+  @RequirePortalScope('platform')
   @UseGuards(JwtAuthGuard, PortalScopeGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN)
   @ApiBearerAuth()
-  grantTrial(@Param("tenantId") tenantId: string, @Body() dto: GrantTrialDto) {
+  grantTrial(@Param('tenantId') tenantId: string, @Body() dto: GrantTrialDto) {
     return this.subscriptions.platformGrantTrial(tenantId, dto.days);
   }
 
-  @Post("platform/tenants/:tenantId/trial/extend")
-  @RequirePortalScope("platform")
+  @Post('platform/tenants/:tenantId/trial/extend')
+  @RequirePortalScope('platform')
   @UseGuards(JwtAuthGuard, PortalScopeGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN)
   @ApiBearerAuth()
-  extendTrial(@Param("tenantId") tenantId: string, @Body() dto: ExtendTrialDto) {
+  extendTrial(@Param('tenantId') tenantId: string, @Body() dto: ExtendTrialDto) {
     return this.subscriptions.platformExtendTrial(tenantId, dto.days);
   }
 
-  @Post("platform/payments/:paymentId/approve")
-  @RequirePortalScope("platform")
+  @Post('platform/payments/:paymentId/approve')
+  @RequirePortalScope('platform')
   @UseGuards(JwtAuthGuard, PortalScopeGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN)
   @ApiBearerAuth()
-  approveBankTransfer(
-    @Param("paymentId") paymentId: string,
-    @CurrentUser() user: { id: string },
-  ) {
+  approveBankTransfer(@Param('paymentId') paymentId: string, @CurrentUser() user: { id: string }) {
     return this.billing.approvePendingPayment(paymentId, user.id);
   }
 
-  @Post("platform/payments/:paymentId/reject")
-  @RequirePortalScope("platform")
+  @Post('platform/payments/:paymentId/reject')
+  @RequirePortalScope('platform')
   @UseGuards(JwtAuthGuard, PortalScopeGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN)
   @ApiBearerAuth()
   rejectBankTransfer(
-    @Param("paymentId") paymentId: string,
+    @Param('paymentId') paymentId: string,
     @Body() dto: RejectPaymentDto,
     @CurrentUser() user: { id: string },
   ) {
     return this.billing.rejectPendingPayment(paymentId, user.id, dto.reason);
   }
 
-  @Get("platform/payments/pending")
-  @RequirePortalScope("platform")
+  @Get('platform/payments/pending')
+  @RequirePortalScope('platform')
   @UseGuards(JwtAuthGuard, PortalScopeGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.PLATFORM_SUPPORT)
   @ApiBearerAuth()
@@ -186,8 +183,8 @@ export class BillingController {
     return this.billing.listPendingPayments();
   }
 
-  @Get("platform/payments")
-  @RequirePortalScope("platform")
+  @Get('platform/payments')
+  @RequirePortalScope('platform')
   @UseGuards(JwtAuthGuard, PortalScopeGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.PLATFORM_SUPPORT)
   @ApiBearerAuth()
@@ -195,53 +192,49 @@ export class BillingController {
     return this.billing.listPlatformPayments();
   }
 
-  @Get("subscription")
-  @RequirePortalScope("tenant")
+  @Get('subscription')
+  @RequirePortalScope('tenant')
   @UseGuards(JwtAuthGuard, PortalScopeGuard, TenantScopeGuard)
   @ApiBearerAuth()
   tenantSubscription(@CurrentUser() user: AuthenticatedUser) {
     return this.subscriptions.getTenantSubscription(user.tenantId!);
   }
 
-  @Get("invoices")
-  @RequirePortalScope("tenant")
+  @Get('invoices')
+  @RequirePortalScope('tenant')
   @UseGuards(JwtAuthGuard, PortalScopeGuard, TenantScopeGuard)
   @ApiBearerAuth()
   tenantInvoices(@CurrentUser() user: AuthenticatedUser) {
     return this.subscriptions.listInvoices(user.tenantId!);
   }
 
-  @Get("payments")
-  @RequirePortalScope("tenant")
+  @Get('payments')
+  @RequirePortalScope('tenant')
   @UseGuards(JwtAuthGuard, PortalScopeGuard, TenantScopeGuard)
   @ApiBearerAuth()
   tenantPayments(@CurrentUser() user: AuthenticatedUser) {
     return this.subscriptions.listPayments(user.tenantId!);
   }
 
-  @Get("access")
-  @RequirePortalScope("tenant")
+  @Get('access')
+  @RequirePortalScope('tenant')
   @UseGuards(JwtAuthGuard, PortalScopeGuard, TenantScopeGuard)
   @ApiBearerAuth()
   tenantAccess(@CurrentUser() user: AuthenticatedUser) {
     return this.billing.getTenantAccessState(user.tenantId!);
   }
 
-  @Patch("subscription/plan")
-  @RequirePortalScope("tenant")
+  @Patch('subscription/plan')
+  @RequirePortalScope('tenant')
   @UseGuards(JwtAuthGuard, PortalScopeGuard, TenantScopeGuard, RolesGuard)
   @Roles(UserRole.TENANT_OWNER)
   @ApiBearerAuth()
   tenantChangePlan(@CurrentUser() user: AuthenticatedUser, @Body() dto: TenantChangePlanDto) {
-    return this.subscriptions.changePlan(
-      user.tenantId!,
-      dto.plan,
-      dto.billingInterval,
-    );
+    return this.subscriptions.changePlan(user.tenantId!, dto.plan, dto.billingInterval);
   }
 
-  @Post("subscription/cancel")
-  @RequirePortalScope("tenant")
+  @Post('subscription/cancel')
+  @RequirePortalScope('tenant')
   @UseGuards(JwtAuthGuard, PortalScopeGuard, TenantScopeGuard, RolesGuard)
   @Roles(UserRole.TENANT_OWNER)
   @ApiBearerAuth()
@@ -249,8 +242,8 @@ export class BillingController {
     return this.subscriptions.cancelAtPeriodEnd(user.tenantId!);
   }
 
-  @Post("subscription/resume")
-  @RequirePortalScope("tenant")
+  @Post('subscription/resume')
+  @RequirePortalScope('tenant')
   @UseGuards(JwtAuthGuard, PortalScopeGuard, TenantScopeGuard, RolesGuard)
   @Roles(UserRole.TENANT_OWNER)
   @ApiBearerAuth()
@@ -258,8 +251,8 @@ export class BillingController {
     return this.subscriptions.resumeSubscription(user.tenantId!);
   }
 
-  @Post("checkout")
-  @RequirePortalScope("tenant")
+  @Post('checkout')
+  @RequirePortalScope('tenant')
   @UseGuards(JwtAuthGuard, PortalScopeGuard, TenantScopeGuard, RolesGuard)
   @Roles(UserRole.TENANT_OWNER)
   @ApiBearerAuth()
@@ -274,8 +267,8 @@ export class BillingController {
     );
   }
 
-  @Post("checkout/cancel")
-  @RequirePortalScope("tenant")
+  @Post('checkout/cancel')
+  @RequirePortalScope('tenant')
   @UseGuards(JwtAuthGuard, PortalScopeGuard, TenantScopeGuard, RolesGuard)
   @Roles(UserRole.TENANT_OWNER)
   @ApiBearerAuth()
@@ -283,15 +276,12 @@ export class BillingController {
     return this.subscriptions.cancelCheckoutPayment(user.tenantId!, dto.orderId);
   }
 
-  @Post("razorpay/verify")
-  @RequirePortalScope("tenant")
+  @Post('razorpay/verify')
+  @RequirePortalScope('tenant')
   @UseGuards(JwtAuthGuard, PortalScopeGuard, TenantScopeGuard, RolesGuard)
   @Roles(UserRole.TENANT_OWNER)
   @ApiBearerAuth()
-  verifyRazorpay(
-    @CurrentUser() user: AuthenticatedUser,
-    @Body() dto: VerifyRazorpayPaymentDto,
-  ) {
+  verifyRazorpay(@CurrentUser() user: AuthenticatedUser, @Body() dto: VerifyRazorpayPaymentDto) {
     return this.razorpay.verifyCheckoutPayment(
       user.tenantId!,
       dto.razorpay_order_id,

@@ -9,27 +9,29 @@ import type {
   CustomerRecord,
   InvoiceRecord,
   JournalEntryRecord,
-} from "@/lib/types/workspace-ui";
-import { emptyAccountingWorkspace, emptyBranchesWorkspace, emptySalesCrmWorkspace } from "./empty-states";
+} from '@/lib/types/workspace-ui';
+import {
+  emptyAccountingWorkspace,
+  emptyBranchesWorkspace,
+  emptySalesCrmWorkspace,
+} from './empty-states';
 
 function asArray<T>(value: unknown): T[] {
   return Array.isArray(value) ? (value as T[]) : [];
 }
 
-function mapInvoiceStatus(status: unknown): InvoiceRecord["status"] {
-  const s = String(status ?? "").toLowerCase();
-  if (s === "paid") return "Paid";
-  if (s === "overdue") return "Overdue";
-  return "Pending";
+function mapInvoiceStatus(status: unknown): InvoiceRecord['status'] {
+  const s = String(status ?? '').toLowerCase();
+  if (s === 'paid') return 'Paid';
+  if (s === 'overdue') return 'Overdue';
+  return 'Pending';
 }
 
 function normalizeInvoice(raw: Record<string, unknown>): InvoiceRecord {
-  const id = String(raw.id ?? "");
-  const customer = String(raw.customer ?? "Walk-in");
+  const id = String(raw.id ?? '');
+  const customer = String(raw.customer ?? 'Walk-in');
   const amt = Number(raw.amt ?? raw.amount ?? 0);
-  const postedDate = String(
-    raw.postedDate ?? raw.date ?? new Date().toISOString().slice(0, 10),
-  );
+  const postedDate = String(raw.postedDate ?? raw.date ?? new Date().toISOString().slice(0, 10));
   const status = mapInvoiceStatus(raw.status);
   return {
     id,
@@ -38,17 +40,17 @@ function normalizeInvoice(raw: Record<string, unknown>): InvoiceRecord {
     status,
     postedDate,
     label: String(raw.label ?? `${id} · ${customer}`),
-    customerId: typeof raw.customerId === "string" ? raw.customerId : undefined,
+    customerId: typeof raw.customerId === 'string' ? raw.customerId : undefined,
   };
 }
 
 function journalFromSale(raw: Record<string, unknown>): JournalEntryRecord {
-  const id = String(raw.id ?? "");
-  const customer = String(raw.customer ?? "Walk-in");
+  const id = String(raw.id ?? '');
+  const customer = String(raw.customer ?? 'Walk-in');
   const amount = Number(raw.amount ?? raw.amt ?? 0);
   const date = String(raw.date ?? raw.postedDate ?? new Date().toISOString().slice(0, 10));
-  const status = String(raw.status ?? "paid").toLowerCase();
-  const paid = status === "paid";
+  const status = String(raw.status ?? 'paid').toLowerCase();
+  const paid = status === 'paid';
   const memo = String(raw.memo ?? `POS ${status} · ${customer}`);
 
   if (Array.isArray(raw.lines) && raw.lines.length > 0) {
@@ -56,10 +58,10 @@ function journalFromSale(raw: Record<string, unknown>): JournalEntryRecord {
       id,
       postedDate: date,
       memo,
-      sourceModule: (raw.sourceModule as JournalEntryRecord["sourceModule"]) ?? "sales",
-      sourceDocId: typeof raw.sourceDocId === "string" ? raw.sourceDocId : id,
-      postedBy: String(raw.postedBy ?? "POS"),
-      lines: raw.lines as JournalEntryRecord["lines"],
+      sourceModule: (raw.sourceModule as JournalEntryRecord['sourceModule']) ?? 'sales',
+      sourceDocId: typeof raw.sourceDocId === 'string' ? raw.sourceDocId : id,
+      postedBy: String(raw.postedBy ?? 'POS'),
+      lines: raw.lines as JournalEntryRecord['lines'],
     };
   }
 
@@ -67,17 +69,17 @@ function journalFromSale(raw: Record<string, unknown>): JournalEntryRecord {
     id,
     postedDate: date,
     memo,
-    sourceModule: "sales",
+    sourceModule: 'sales',
     sourceDocId: id,
-    postedBy: "POS",
+    postedBy: 'POS',
     lines: paid
       ? [
-          { account: "1000 · Cash", debit: amount, credit: 0 },
-          { account: "4000 · Sales revenue", debit: 0, credit: amount },
+          { account: '1000 · Cash', debit: amount, credit: 0 },
+          { account: '4000 · Sales revenue', debit: 0, credit: amount },
         ]
       : [
-          { account: "1200 · Accounts receivable", debit: amount, credit: 0 },
-          { account: "4000 · Sales revenue", debit: 0, credit: amount },
+          { account: '1200 · Accounts receivable', debit: amount, credit: 0 },
+          { account: '4000 · Sales revenue', debit: 0, credit: amount },
         ],
   };
 }
@@ -86,47 +88,47 @@ function normalizeAuditRow(raw: Record<string, unknown>): AccountingAuditRecord 
   const actorName = raw.actorName ?? raw.actor;
   const actorEmail = raw.actorEmail;
   const actor =
-    typeof actorName === "string" && actorName
+    typeof actorName === 'string' && actorName
       ? actorName
-      : typeof actorEmail === "string" && actorEmail
+      : typeof actorEmail === 'string' && actorEmail
         ? actorEmail
-        : "System";
+        : 'System';
   return {
-    id: String(raw.id ?? ""),
+    id: String(raw.id ?? ''),
     at: String(raw.at ?? new Date().toISOString()),
     actor,
-    action: String(raw.action ?? ""),
-    entityRef: String(raw.entityRef ?? raw.entityId ?? raw.entityType ?? "—"),
+    action: String(raw.action ?? ''),
+    entityRef: String(raw.entityRef ?? raw.entityId ?? raw.entityType ?? '—'),
   };
 }
 
 function normalizeApBill(raw: Record<string, unknown>): ApBillRecord {
-  const stage = String(raw.stage ?? "pending_review") as ApBillStage;
+  const stage = String(raw.stage ?? 'pending_review') as ApBillStage;
   return {
-    id: String(raw.id ?? ""),
-    supplierName: String(raw.supplierName ?? raw.vendor ?? "Supplier"),
-    supplierId: typeof raw.supplierId === "string" ? raw.supplierId : undefined,
+    id: String(raw.id ?? ''),
+    supplierName: String(raw.supplierName ?? raw.vendor ?? 'Supplier'),
+    supplierId: typeof raw.supplierId === 'string' ? raw.supplierId : undefined,
     amount: Number(raw.amount ?? 0),
     dueDate: String(raw.dueDate ?? new Date().toISOString().slice(0, 10)),
     stage,
-    reference: String(raw.reference ?? raw.id ?? "—"),
+    reference: String(raw.reference ?? raw.id ?? '—'),
   };
 }
 
 function normalizeBankFeed(raw: Record<string, unknown>): BankFeedRecord {
-  const matchStatus = String(raw.matchStatus ?? "matched").toLowerCase();
+  const matchStatus = String(raw.matchStatus ?? 'matched').toLowerCase();
   return {
-    id: String(raw.id ?? ""),
+    id: String(raw.id ?? ''),
     bookedDate: String(raw.bookedDate ?? raw.date ?? new Date().toISOString().slice(0, 10)),
-    description: String(raw.description ?? "Bank transaction"),
+    description: String(raw.description ?? 'Bank transaction'),
     amount: Number(raw.amount ?? 0),
     matchStatus:
-      matchStatus === "unmatched"
-        ? "unmatched"
-        : matchStatus === "suggested"
-          ? "suggested"
-          : "matched",
-    matchedTo: typeof raw.matchedTo === "string" ? raw.matchedTo : undefined,
+      matchStatus === 'unmatched'
+        ? 'unmatched'
+        : matchStatus === 'suggested'
+          ? 'suggested'
+          : 'matched',
+    matchedTo: typeof raw.matchedTo === 'string' ? raw.matchedTo : undefined,
   };
 }
 
@@ -134,7 +136,7 @@ export function normalizeAccountingWorkspace(
   raw: unknown,
 ): ReturnType<typeof emptyAccountingWorkspace> {
   const base = emptyAccountingWorkspace();
-  if (!raw || typeof raw !== "object") return base;
+  if (!raw || typeof raw !== 'object') return base;
 
   const data = raw as Record<string, unknown>;
   const kpisRaw = (data.kpis as Record<string, number>) ?? {};
@@ -162,7 +164,7 @@ export function normalizeAccountingWorkspace(
             customer: inv.customer,
             amount: inv.amt,
             date: inv.postedDate,
-            status: inv.status === "Paid" ? "paid" : "due",
+            status: inv.status === 'Paid' ? 'paid' : 'due',
           }),
         );
 
@@ -186,12 +188,12 @@ export function normalizeBranchesWorkspace(
   raw: unknown,
 ): ReturnType<typeof emptyBranchesWorkspace> {
   const base = emptyBranchesWorkspace();
-  if (!raw || typeof raw !== "object") return base;
+  if (!raw || typeof raw !== 'object') return base;
   const data = raw as Record<string, unknown>;
   const kpisRaw = (data.kpis as Partial<typeof base.kpis>) ?? {};
   return {
-    branches: asArray<typeof base.branches[number]>(data.branches),
-    tasks: asArray<typeof base.tasks[number]>(data.tasks),
+    branches: asArray<(typeof base.branches)[number]>(data.branches),
+    tasks: asArray<(typeof base.tasks)[number]>(data.tasks),
     alerts: asArray<string>(data.alerts),
     kpis: { ...base.kpis, ...kpisRaw },
   };
@@ -201,7 +203,7 @@ export function normalizeSalesCrmWorkspace(
   raw: unknown,
 ): ReturnType<typeof emptySalesCrmWorkspace> {
   const base = emptySalesCrmWorkspace();
-  if (!raw || typeof raw !== "object") return base;
+  if (!raw || typeof raw !== 'object') return base;
   const data = raw as Record<string, unknown>;
   const inventoryHealth = (data.inventoryHealth as Record<string, unknown>) ?? {};
   const stageCountsRaw = (data.stageCounts as Partial<Record<CrmStage, number>>) ?? {};
@@ -217,7 +219,7 @@ export function normalizeSalesCrmWorkspace(
       spotlightLines: asArray<string>(inventoryHealth.spotlightLines),
     },
     kpis: { ...base.kpis, ...kpisRaw },
-    tasksToday: asArray<typeof base.tasksToday[number]>(data.tasksToday),
+    tasksToday: asArray<(typeof base.tasksToday)[number]>(data.tasksToday),
     aiInsights: asArray<string>(data.aiInsights),
   };
 }

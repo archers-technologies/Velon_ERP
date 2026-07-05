@@ -1,9 +1,9 @@
-import { Module } from "@nestjs/common";
-import { AuditModule } from "../audit/audit.module";
-import { TenantAdminModule } from "../tenant-admin/tenant-admin.module";
-import { WorkspaceController } from "./workspace.controller";
-import { WorkspaceContextService } from "./workspace-context.service";
-import { WorkspaceDataService } from "./workspace-data.service";
+import { Module } from '@nestjs/common';
+import { AuditModule } from '../audit/audit.module';
+import { TenantAdminModule } from '../tenant-admin/tenant-admin.module';
+import { WorkspaceContextService } from './workspace-context.service';
+import { WorkspaceDataService } from './workspace-data.service';
+import { WorkspaceController } from './workspace.controller';
 
 @Module({
   imports: [AuditModule, TenantAdminModule],

@@ -1,7 +1,7 @@
-import { ForbiddenException, Injectable, UnauthorizedException } from "@nestjs/common";
-import type { AuthenticatedUser } from "../auth/auth.types";
-import { PrismaService } from "../prisma/prisma.service";
-import { normalizeVelonRole, type VelonRole } from "@velon/shared";
+import { ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { normalizeVelonRole, type VelonRole } from '@velon/shared';
+import type { AuthenticatedUser } from '../auth/auth.types';
+import { PrismaService } from '../prisma/prisma.service';
 
 export type WorkspaceContext = {
   tenantId: string;
@@ -58,9 +58,9 @@ export class WorkspaceContextService {
   constructor(private readonly prisma: PrismaService) {}
 
   assertTenantUser(user: AuthenticatedUser | undefined): asserts user is AuthenticatedUser {
-    if (!user) throw new UnauthorizedException("Authentication required.");
-    if (user.scope !== "tenant" || !user.tenantId || !user.workspaceId || !user.membershipId) {
-      throw new ForbiddenException("Workspace access required.");
+    if (!user) throw new UnauthorizedException('Authentication required.');
+    if (user.scope !== 'tenant' || !user.tenantId || !user.workspaceId || !user.membershipId) {
+      throw new ForbiddenException('Workspace access required.');
     }
   }
 
@@ -89,7 +89,7 @@ export class WorkspaceContextService {
       membership.tenant.workspace.id !== user.workspaceId ||
       !membership.tenant.workspace.isActive
     ) {
-      throw new ForbiddenException("Workspace membership invalid or revoked.");
+      throw new ForbiddenException('Workspace membership invalid or revoked.');
     }
 
     const ws = membership.tenant.workspace;

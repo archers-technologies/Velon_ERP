@@ -3,23 +3,22 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
-} from "@nestjs/common";
-import { CrmQuotationApprovalAction, CrmQuotationStatus } from "@velon/database";
-import { canReadCrm, canWriteCrmRecords, normalizeVelonRole } from "@velon/shared";
-import * as crypto from "crypto";
-import { AuditService } from "../audit/audit.service";
-import type { AuthenticatedUser } from "../auth/auth.types";
-import { PrismaService } from "../prisma/prisma.service";
+} from '@nestjs/common';
+import * as crypto from 'crypto';
+import { CrmQuotationApprovalAction, CrmQuotationStatus } from '@velon/database';
+import { canReadCrm, canWriteCrmRecords, normalizeVelonRole } from '@velon/shared';
+import { AuditService } from '../audit/audit.service';
+import type { AuthenticatedUser } from '../auth/auth.types';
+import { PrismaService } from '../prisma/prisma.service';
+import { CrmOpportunityRepository } from './crm-pipeline.repositories';
 import {
   CrmProposalDocumentRepository,
   CrmProposalTemplateRepository,
   CrmQuotationApprovalRepository,
   CrmQuotationItemRepository,
   CrmQuotationRepository,
-} from "./crm-quotation.repositories";
-import { CrmCustomerRepository } from "./crm.repositories";
-import { CrmOpportunityRepository } from "./crm-pipeline.repositories";
-import { ProposalPdfService } from "./proposal-pdf.service";
+} from './crm-quotation.repositories';
+import { CrmCustomerRepository } from './crm.repositories';
 import type {
   BulkAddCrmQuotationItemsDto,
   CreateCrmProposalTemplateDto,
@@ -32,12 +31,13 @@ import type {
   UpdateCrmProposalTemplateDto,
   UpdateCrmQuotationDto,
   UpdateCrmQuotationItemDto,
-} from "./dto/crm-quotation.dto";
+} from './dto/crm-quotation.dto';
+import { ProposalPdfService } from './proposal-pdf.service';
 
 type AuditMeta = { ip?: string; ua?: string };
 
 function hashPortalToken(token: string) {
-  return crypto.createHash("sha256").update(token).digest("hex");
+  return crypto.createHash('sha256').update(token).digest('hex');
 }
 
 function calcLineTotal(qty: number, unitPrice: number, discount: number, taxRate: number) {
@@ -63,13 +63,13 @@ export class CrmQuotationService {
 
   private assertRead(user: AuthenticatedUser) {
     if (!canReadCrm(normalizeVelonRole(user.role))) {
-      throw new ForbiddenException("CRM access denied.");
+      throw new ForbiddenException('CRM access denied.');
     }
   }
 
   private assertWrite(user: AuthenticatedUser) {
     if (!canWriteCrmRecords(normalizeVelonRole(user.role))) {
-      throw new ForbiddenException("Insufficient permissions to modify quotations.");
+      throw new ForbiddenException('Insufficient permissions to modify quotations.');
     }
   }
 
@@ -90,7 +90,12 @@ export class CrmQuotationService {
     subtotal = Math.round(subtotal * 100) / 100;
     tax = Math.round(tax * 100) / 100;
     const total = Math.round((subtotal - quotationDiscount + tax) * 100) / 100;
-    return this.quotations.update(quotationId, { subtotal, tax, total, discount: quotationDiscount });
+    return this.quotations.update(quotationId, {
+      subtotal,
+      tax,
+      total,
+      discount: quotationDiscount,
+    });
   }
 
   // ─── Dashboard metrics ───────────────────────────────────
@@ -103,7 +108,8 @@ export class CrmQuotationService {
     const approved = byStatus[CrmQuotationStatus.APPROVED] ?? 0;
     const rejected = byStatus[CrmQuotationStatus.REJECTED] ?? 0;
     const expired = byStatus[CrmQuotationStatus.EXPIRED] ?? 0;
-    const sent = (byStatus[CrmQuotationStatus.SENT] ?? 0) + (byStatus[CrmQuotationStatus.VIEWED] ?? 0);
+    const sent =
+      (byStatus[CrmQuotationStatus.SENT] ?? 0) + (byStatus[CrmQuotationStatus.VIEWED] ?? 0);
     const decided = approved + rejected;
     const conversionRate = decided > 0 ? Math.round((approved / decided) * 10000) / 100 : 0;
     const quotationValue = groups.reduce((s, g) => s + Number(g._sum.total ?? 0), 0);
@@ -133,17 +139,17 @@ export class CrmQuotationService {
   async getQuotation(user: AuthenticatedUser, id: string) {
     this.assertRead(user);
     const row = await this.quotations.findById(id);
-    if (!row) throw new NotFoundException("Quotation not found.");
+    if (!row) throw new NotFoundException('Quotation not found.');
     return row;
   }
 
   async createQuotation(user: AuthenticatedUser, dto: CreateCrmQuotationDto, meta: AuditMeta) {
     this.assertWrite(user);
     const customer = await this.customers.findById(dto.customerId);
-    if (!customer) throw new BadRequestException("Customer not found.");
+    if (!customer) throw new BadRequestException('Customer not found.');
     if (dto.opportunityId) {
       const opp = await this.opportunities.findById(dto.opportunityId);
-      if (!opp) throw new BadRequestException("Opportunity not found.");
+      if (!opp) throw new BadRequestException('Opportunity not found.');
     }
     const year = new Date().getFullYear();
     const quotationNumber = await this.quotations.nextQuotationNumber(year);
@@ -164,8 +170,8 @@ export class CrmQuotationService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.quotation_created",
-      entityType: "crm_quotation",
+      action: 'crm.quotation_created',
+      entityType: 'crm_quotation',
       entityId: row.id,
       ipAddress: meta.ip,
       userAgent: meta.ua,
@@ -181,14 +187,14 @@ export class CrmQuotationService {
   ) {
     this.assertWrite(user);
     const existing = await this.quotations.findByIdAny(id);
-    if (!existing) throw new NotFoundException("Quotation not found.");
+    if (!existing) throw new NotFoundException('Quotation not found.');
     const editable: CrmQuotationStatus[] = [
       CrmQuotationStatus.DRAFT,
       CrmQuotationStatus.SENT,
       CrmQuotationStatus.VIEWED,
     ];
     if (!editable.includes(existing.status)) {
-      throw new BadRequestException("Quotation cannot be edited in current status.");
+      throw new BadRequestException('Quotation cannot be edited in current status.');
     }
     const row = await this.quotations.update(id, {
       ...(dto.customerId !== undefined ? { customerId: dto.customerId } : {}),
@@ -208,8 +214,8 @@ export class CrmQuotationService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.quotation_updated",
-      entityType: "crm_quotation",
+      action: 'crm.quotation_updated',
+      entityType: 'crm_quotation',
       entityId: id,
       ipAddress: meta.ip,
       userAgent: meta.ua,
@@ -220,8 +226,8 @@ export class CrmQuotationService {
   async createFromOpportunity(user: AuthenticatedUser, opportunityId: string, meta: AuditMeta) {
     this.assertWrite(user);
     const opp = await this.opportunities.findById(opportunityId);
-    if (!opp) throw new NotFoundException("Opportunity not found.");
-    if (!opp.customerId) throw new BadRequestException("Opportunity has no customer.");
+    if (!opp) throw new NotFoundException('Opportunity not found.');
+    if (!opp.customerId) throw new BadRequestException('Opportunity has no customer.');
     const year = new Date().getFullYear();
     const quotationNumber = await this.quotations.nextQuotationNumber(year);
     const row = await this.quotations.create({
@@ -249,8 +255,8 @@ export class CrmQuotationService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.quotation_created",
-      entityType: "crm_quotation",
+      action: 'crm.quotation_created',
+      entityType: 'crm_quotation',
       entityId: row.id,
       metadata: { fromOpportunityId: opportunityId },
       ipAddress: meta.ip,
@@ -269,9 +275,9 @@ export class CrmQuotationService {
   ) {
     this.assertWrite(user);
     const q = await this.quotations.findByIdAny(quotationId);
-    if (!q) throw new NotFoundException("Quotation not found.");
+    if (!q) throw new NotFoundException('Quotation not found.');
     if (q.status !== CrmQuotationStatus.DRAFT) {
-      throw new BadRequestException("Items can only be added to draft quotations.");
+      throw new BadRequestException('Items can only be added to draft quotations.');
     }
     const max = await this.items.maxPosition(quotationId);
     const qty = dto.quantity ?? 1;
@@ -294,8 +300,8 @@ export class CrmQuotationService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.quotation_updated",
-      entityType: "crm_quotation",
+      action: 'crm.quotation_updated',
+      entityType: 'crm_quotation',
       entityId: quotationId,
       metadata: { itemAdded: row.id },
       ipAddress: meta.ip,
@@ -312,9 +318,9 @@ export class CrmQuotationService {
   ) {
     this.assertWrite(user);
     const q = await this.quotations.findByIdAny(quotationId);
-    if (!q) throw new NotFoundException("Quotation not found.");
+    if (!q) throw new NotFoundException('Quotation not found.');
     if (q.status !== CrmQuotationStatus.DRAFT) {
-      throw new BadRequestException("Items can only be added to draft quotations.");
+      throw new BadRequestException('Items can only be added to draft quotations.');
     }
     let pos = (await this.items.maxPosition(quotationId))._max.position ?? -1;
     for (const item of dto.items) {
@@ -339,8 +345,8 @@ export class CrmQuotationService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.quotation_updated",
-      entityType: "crm_quotation",
+      action: 'crm.quotation_updated',
+      entityType: 'crm_quotation',
       entityId: quotationId,
       metadata: { bulkItems: dto.items.length },
       ipAddress: meta.ip,
@@ -357,10 +363,10 @@ export class CrmQuotationService {
   ) {
     this.assertWrite(user);
     const existing = await this.items.findById(itemId);
-    if (!existing) throw new NotFoundException("Item not found.");
+    if (!existing) throw new NotFoundException('Item not found.');
     const q = await this.quotations.findByIdAny(existing.quotationId);
     if (!q || q.status !== CrmQuotationStatus.DRAFT) {
-      throw new BadRequestException("Items can only be edited on draft quotations.");
+      throw new BadRequestException('Items can only be edited on draft quotations.');
     }
     const qty = dto.quantity ?? Number(existing.quantity);
     const unitPrice = dto.unitPrice ?? Number(existing.unitPrice);
@@ -380,8 +386,8 @@ export class CrmQuotationService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.quotation_updated",
-      entityType: "crm_quotation_item",
+      action: 'crm.quotation_updated',
+      entityType: 'crm_quotation_item',
       entityId: itemId,
       ipAddress: meta.ip,
       userAgent: meta.ua,
@@ -392,18 +398,18 @@ export class CrmQuotationService {
   async removeItem(user: AuthenticatedUser, itemId: string, meta: AuditMeta) {
     this.assertWrite(user);
     const existing = await this.items.findById(itemId);
-    if (!existing) throw new NotFoundException("Item not found.");
+    if (!existing) throw new NotFoundException('Item not found.');
     const q = await this.quotations.findByIdAny(existing.quotationId);
     if (!q || q.status !== CrmQuotationStatus.DRAFT) {
-      throw new BadRequestException("Items can only be removed from draft quotations.");
+      throw new BadRequestException('Items can only be removed from draft quotations.');
     }
     await this.items.delete(itemId);
     await this.recalculateTotals(existing.quotationId, Number(q.discount));
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.quotation_updated",
-      entityType: "crm_quotation",
+      action: 'crm.quotation_updated',
+      entityType: 'crm_quotation',
       entityId: existing.quotationId,
       metadata: { itemRemoved: itemId },
       ipAddress: meta.ip,
@@ -438,11 +444,11 @@ export class CrmQuotationService {
   ) {
     this.assertWrite(user);
     const q = await this.quotations.findById(id);
-    if (!q) throw new NotFoundException("Quotation not found.");
+    if (!q) throw new NotFoundException('Quotation not found.');
     if (q.status !== CrmQuotationStatus.DRAFT) {
-      throw new BadRequestException("Only draft quotations can be sent.");
+      throw new BadRequestException('Only draft quotations can be sent.');
     }
-    const portalToken = crypto.randomBytes(32).toString("hex");
+    const portalToken = crypto.randomBytes(32).toString('hex');
     const expires = new Date();
     expires.setDate(expires.getDate() + 30);
     const row = await this.quotations.update(id, {
@@ -450,12 +456,18 @@ export class CrmQuotationService {
       portalTokenHash: hashPortalToken(portalToken),
       portalTokenExpiresAt: expires,
     });
-    await this.recordApproval(id, CrmQuotationApprovalAction.SENT, user.id, user.email, dto.comments);
+    await this.recordApproval(
+      id,
+      CrmQuotationApprovalAction.SENT,
+      user.id,
+      user.email,
+      dto.comments,
+    );
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.quotation_sent",
-      entityType: "crm_quotation",
+      action: 'crm.quotation_sent',
+      entityType: 'crm_quotation',
       entityId: id,
       ipAddress: meta.ip,
       userAgent: meta.ua,
@@ -463,20 +475,31 @@ export class CrmQuotationService {
     return { ...row, portalToken };
   }
 
-  async approveQuotation(user: AuthenticatedUser, id: string, dto: QuotationActionDto, meta: AuditMeta) {
+  async approveQuotation(
+    user: AuthenticatedUser,
+    id: string,
+    dto: QuotationActionDto,
+    meta: AuditMeta,
+  ) {
     this.assertWrite(user);
     const q = await this.quotations.findByIdAny(id);
-    if (!q) throw new NotFoundException("Quotation not found.");
+    if (!q) throw new NotFoundException('Quotation not found.');
     const row = await this.quotations.update(id, {
       status: CrmQuotationStatus.APPROVED,
       approvedById: user.id,
     });
-    await this.recordApproval(id, CrmQuotationApprovalAction.APPROVED, user.id, user.email, dto.comments);
+    await this.recordApproval(
+      id,
+      CrmQuotationApprovalAction.APPROVED,
+      user.id,
+      user.email,
+      dto.comments,
+    );
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.quotation_approved",
-      entityType: "crm_quotation",
+      action: 'crm.quotation_approved',
+      entityType: 'crm_quotation',
       entityId: id,
       ipAddress: meta.ip,
       userAgent: meta.ua,
@@ -484,17 +507,28 @@ export class CrmQuotationService {
     return row;
   }
 
-  async rejectQuotation(user: AuthenticatedUser, id: string, dto: QuotationActionDto, meta: AuditMeta) {
+  async rejectQuotation(
+    user: AuthenticatedUser,
+    id: string,
+    dto: QuotationActionDto,
+    meta: AuditMeta,
+  ) {
     this.assertWrite(user);
     const q = await this.quotations.findByIdAny(id);
-    if (!q) throw new NotFoundException("Quotation not found.");
+    if (!q) throw new NotFoundException('Quotation not found.');
     const row = await this.quotations.update(id, { status: CrmQuotationStatus.REJECTED });
-    await this.recordApproval(id, CrmQuotationApprovalAction.REJECTED, user.id, user.email, dto.comments);
+    await this.recordApproval(
+      id,
+      CrmQuotationApprovalAction.REJECTED,
+      user.id,
+      user.email,
+      dto.comments,
+    );
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.quotation_rejected",
-      entityType: "crm_quotation",
+      action: 'crm.quotation_rejected',
+      entityType: 'crm_quotation',
       entityId: id,
       ipAddress: meta.ip,
       userAgent: meta.ua,
@@ -502,17 +536,28 @@ export class CrmQuotationService {
     return row;
   }
 
-  async cancelQuotation(user: AuthenticatedUser, id: string, dto: QuotationActionDto, meta: AuditMeta) {
+  async cancelQuotation(
+    user: AuthenticatedUser,
+    id: string,
+    dto: QuotationActionDto,
+    meta: AuditMeta,
+  ) {
     this.assertWrite(user);
     const q = await this.quotations.findByIdAny(id);
-    if (!q) throw new NotFoundException("Quotation not found.");
+    if (!q) throw new NotFoundException('Quotation not found.');
     const row = await this.quotations.update(id, { status: CrmQuotationStatus.CANCELLED });
-    await this.recordApproval(id, CrmQuotationApprovalAction.CANCELLED, user.id, user.email, dto.comments);
+    await this.recordApproval(
+      id,
+      CrmQuotationApprovalAction.CANCELLED,
+      user.id,
+      user.email,
+      dto.comments,
+    );
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.quotation_cancelled",
-      entityType: "crm_quotation",
+      action: 'crm.quotation_cancelled',
+      entityType: 'crm_quotation',
       entityId: id,
       ipAddress: meta.ip,
       userAgent: meta.ua,
@@ -523,14 +568,14 @@ export class CrmQuotationService {
   async expireQuotation(user: AuthenticatedUser, id: string, meta: AuditMeta) {
     this.assertWrite(user);
     const q = await this.quotations.findByIdAny(id);
-    if (!q) throw new NotFoundException("Quotation not found.");
+    if (!q) throw new NotFoundException('Quotation not found.');
     const row = await this.quotations.update(id, { status: CrmQuotationStatus.EXPIRED });
     await this.recordApproval(id, CrmQuotationApprovalAction.EXPIRED, user.id, user.email);
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.quotation_updated",
-      entityType: "crm_quotation",
+      action: 'crm.quotation_updated',
+      entityType: 'crm_quotation',
       entityId: id,
       metadata: { expired: true },
       ipAddress: meta.ip,
@@ -542,7 +587,7 @@ export class CrmQuotationService {
   async cloneQuotation(user: AuthenticatedUser, id: string, meta: AuditMeta) {
     this.assertWrite(user);
     const source = await this.quotations.findById(id);
-    if (!source) throw new NotFoundException("Quotation not found.");
+    if (!source) throw new NotFoundException('Quotation not found.');
     const year = new Date().getFullYear();
     const quotationNumber = await this.quotations.nextQuotationNumber(year);
     const row = await this.quotations.create({
@@ -576,8 +621,8 @@ export class CrmQuotationService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.quotation_created",
-      entityType: "crm_quotation",
+      action: 'crm.quotation_created',
+      entityType: 'crm_quotation',
       entityId: row.id,
       metadata: { clonedFrom: id },
       ipAddress: meta.ip,
@@ -594,7 +639,7 @@ export class CrmQuotationService {
   ) {
     this.assertWrite(user);
     const source = await this.quotations.findById(id);
-    if (!source) throw new NotFoundException("Quotation not found.");
+    if (!source) throw new NotFoundException('Quotation not found.');
     const year = new Date().getFullYear();
     const quotationNumber = await this.quotations.nextQuotationNumber(year);
     const row = await this.quotations.create({
@@ -638,8 +683,8 @@ export class CrmQuotationService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.quotation_revision_created",
-      entityType: "crm_quotation",
+      action: 'crm.quotation_revision_created',
+      entityType: 'crm_quotation',
       entityId: row.id,
       metadata: { parentId: source.id },
       ipAddress: meta.ip,
@@ -653,7 +698,7 @@ export class CrmQuotationService {
   async generateProposal(user: AuthenticatedUser, quotationId: string, meta: AuditMeta) {
     this.assertWrite(user);
     const q = await this.quotations.findById(quotationId);
-    if (!q) throw new NotFoundException("Quotation not found.");
+    if (!q) throw new NotFoundException('Quotation not found.');
     const tenant = await this.prisma.client.tenant.findUnique({
       where: { id: q.tenantId },
       include: { companyProfile: true, workspace: true },
@@ -674,7 +719,7 @@ export class CrmQuotationService {
       scopeOfWork: q.scopeOfWork,
       deliverables: q.deliverables,
       company: {
-        name: tenant?.workspace?.name ?? tenant?.name ?? "Company",
+        name: tenant?.workspace?.name ?? tenant?.name ?? 'Company',
         legalName: profile?.legalName,
         email: profile?.email,
         phone: profile?.phone,
@@ -710,8 +755,8 @@ export class CrmQuotationService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.proposal_generated",
-      entityType: "crm_proposal",
+      action: 'crm.proposal_generated',
+      entityType: 'crm_proposal',
       entityId: doc.id,
       metadata: { quotationId, version },
       ipAddress: meta.ip,
@@ -728,7 +773,7 @@ export class CrmQuotationService {
   async getProposalPdf(user: AuthenticatedUser, proposalId: string) {
     this.assertRead(user);
     const doc = await this.proposals.findById(proposalId);
-    if (!doc) throw new NotFoundException("Proposal not found.");
+    if (!doc) throw new NotFoundException('Proposal not found.');
     return { buffer: Buffer.from(doc.pdfContent), version: doc.version };
   }
 
@@ -754,23 +799,27 @@ export class CrmQuotationService {
   async updateTemplate(user: AuthenticatedUser, id: string, dto: UpdateCrmProposalTemplateDto) {
     this.assertWrite(user);
     const existing = await this.templates.findById(id);
-    if (!existing) throw new NotFoundException("Template not found.");
+    if (!existing) throw new NotFoundException('Template not found.');
     return this.templates.update(id, {
       ...(dto.name !== undefined ? { name: dto.name.trim() } : {}),
       ...(dto.description !== undefined ? { description: dto.description?.trim() || null } : {}),
       ...(dto.coverTitle !== undefined ? { coverTitle: dto.coverTitle?.trim() || null } : {}),
-      ...(dto.scopeTemplate !== undefined ? { scopeTemplate: dto.scopeTemplate?.trim() || null } : {}),
+      ...(dto.scopeTemplate !== undefined
+        ? { scopeTemplate: dto.scopeTemplate?.trim() || null }
+        : {}),
       ...(dto.deliverablesTemplate !== undefined
         ? { deliverablesTemplate: dto.deliverablesTemplate?.trim() || null }
         : {}),
-      ...(dto.termsTemplate !== undefined ? { termsTemplate: dto.termsTemplate?.trim() || null } : {}),
+      ...(dto.termsTemplate !== undefined
+        ? { termsTemplate: dto.termsTemplate?.trim() || null }
+        : {}),
     });
   }
 
   async deleteTemplate(user: AuthenticatedUser, id: string) {
     this.assertWrite(user);
     const existing = await this.templates.findById(id);
-    if (!existing) throw new NotFoundException("Template not found.");
+    if (!existing) throw new NotFoundException('Template not found.');
     await this.templates.delete(id);
     return { ok: true };
   }
@@ -785,12 +834,12 @@ export class CrmQuotationService {
   private async resolveByToken(token: string) {
     const hash = hashPortalToken(token);
     const q = await this.quotations.findByPortalTokenHash(hash);
-    if (!q) throw new NotFoundException("Quotation link invalid or expired.");
+    if (!q) throw new NotFoundException('Quotation link invalid or expired.');
     if (q.portalTokenExpiresAt && q.portalTokenExpiresAt < new Date()) {
-      throw new BadRequestException("Quotation link has expired.");
+      throw new BadRequestException('Quotation link has expired.');
     }
     if (q.status === CrmQuotationStatus.CANCELLED) {
-      throw new BadRequestException("Quotation has been cancelled.");
+      throw new BadRequestException('Quotation has been cancelled.');
     }
     return q;
   }
@@ -806,14 +855,14 @@ export class CrmQuotationService {
         data: {
           quotationId: q.id,
           action: CrmQuotationApprovalAction.VIEWED,
-          actorName: "Customer",
+          actorName: 'Customer',
           tenantId: q.tenantId,
         },
       });
       await this.audit.log({
         tenantId: q.tenantId,
-        action: "crm.quotation_viewed",
-        entityType: "crm_quotation",
+        action: 'crm.quotation_viewed',
+        entityType: 'crm_quotation',
         entityId: q.id,
       });
     }
@@ -847,7 +896,7 @@ export class CrmQuotationService {
     const q = await this.resolveByToken(token);
     const latest = await this.prisma.client.crmProposalDocument.findFirst({
       where: { quotationId: q.id, tenantId: q.tenantId },
-      orderBy: { version: "desc" },
+      orderBy: { version: 'desc' },
     });
     if (latest) return Buffer.from(latest.pdfContent);
     const profile = q.tenant.companyProfile;
@@ -900,7 +949,7 @@ export class CrmQuotationService {
       CrmQuotationStatus.EXPIRED,
     ];
     if (finalized.includes(q.status)) {
-      throw new BadRequestException("Quotation is already finalized.");
+      throw new BadRequestException('Quotation is already finalized.');
     }
     await this.prisma.client.crmQuotation.update({
       where: { id: q.id },
@@ -910,7 +959,7 @@ export class CrmQuotationService {
       data: {
         quotationId: q.id,
         action: CrmQuotationApprovalAction.APPROVED,
-        actorName: dto.actorName?.trim() || "Customer",
+        actorName: dto.actorName?.trim() || 'Customer',
         comments: dto.comments?.trim() || null,
         tenantId: q.tenantId,
       },
@@ -922,7 +971,7 @@ export class CrmQuotationService {
     const q = await this.resolveByToken(token);
     const closed: CrmQuotationStatus[] = [CrmQuotationStatus.APPROVED, CrmQuotationStatus.REJECTED];
     if (closed.includes(q.status)) {
-      throw new BadRequestException("Quotation is already finalized.");
+      throw new BadRequestException('Quotation is already finalized.');
     }
     await this.prisma.client.crmQuotation.update({
       where: { id: q.id },
@@ -932,7 +981,7 @@ export class CrmQuotationService {
       data: {
         quotationId: q.id,
         action: CrmQuotationApprovalAction.REJECTED,
-        actorName: dto.actorName?.trim() || "Customer",
+        actorName: dto.actorName?.trim() || 'Customer',
         comments: dto.comments?.trim() || null,
         tenantId: q.tenantId,
       },
@@ -946,7 +995,7 @@ export class CrmQuotationService {
       data: {
         quotationId: q.id,
         action: CrmQuotationApprovalAction.COMMENT,
-        actorName: dto.actorName?.trim() || "Customer",
+        actorName: dto.actorName?.trim() || 'Customer',
         comments: dto.comments.trim(),
         tenantId: q.tenantId,
       },

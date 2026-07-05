@@ -34,7 +34,7 @@ export function buildZatcaTlvBase64(input: ZatcaInvoiceQrInput): string {
     merged.set(c, offset);
     offset += c.length;
   }
-  let binary = "";
+  let binary = '';
   for (const b of merged) binary += String.fromCharCode(b);
   return btoa(binary);
 }

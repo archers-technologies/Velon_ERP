@@ -1,4 +1,4 @@
-import { Type } from "class-transformer";
+import { Type } from 'class-transformer';
 import {
   IsArray,
   IsIn,
@@ -7,7 +7,7 @@ import {
   IsString,
   Min,
   ValidateNested,
-} from "class-validator";
+} from 'class-validator';
 
 export class PosSaleLineDto {
   @IsOptional()
@@ -32,8 +32,8 @@ export class CommitPosSaleDto {
   @Type(() => PosSaleLineDto)
   lines!: PosSaleLineDto[];
 
-  @IsIn(["paid", "due"])
-  kind!: "paid" | "due";
+  @IsIn(['paid', 'due'])
+  kind!: 'paid' | 'due';
 
   @IsOptional()
   @IsString()

@@ -1,17 +1,17 @@
+import { resolve } from 'node:path';
 import {
+  IndustryTemplate,
   PrismaClient,
-  UserRole,
+  TenantHealth,
   TenantPlan,
   TenantStatus,
-  TenantHealth,
-  IndustryTemplate,
-} from "@prisma/client";
-import * as bcrypt from "bcrypt";
-import { config } from "dotenv";
-import { resolve } from "node:path";
-import { canSeedDemoTenants } from "@velon/shared";
+  UserRole,
+} from '@prisma/client';
+import * as bcrypt from 'bcrypt';
+import { config } from 'dotenv';
+import { canSeedDemoTenants } from '@velon/shared';
 
-config({ path: resolve(__dirname, "../../../.env") });
+config({ path: resolve(__dirname, '../../../.env') });
 
 const prisma = new PrismaClient();
 
@@ -19,10 +19,10 @@ async function seedPlanDefinitions() {
   const defaults = [
     {
       plan: TenantPlan.STARTER,
-      displayName: "Starter",
+      displayName: 'Starter',
       monthlyPrice: 49,
       annualPrice: 539,
-      currency: "INR",
+      currency: 'INR',
       seatLimit: 5,
       storageLimitGb: 10,
       invoiceLimitMo: 500,
@@ -30,14 +30,14 @@ async function seedPlanDefinitions() {
       trialDays: 14,
       moduleFinance: false,
       moduleManufacturing: false,
-      description: "For small teams getting started with Velon ERP.",
+      description: 'For small teams getting started with Velon ERP.',
     },
     {
       plan: TenantPlan.GROWTH,
-      displayName: "Professional",
+      displayName: 'Professional',
       monthlyPrice: 149,
       annualPrice: 1639,
-      currency: "INR",
+      currency: 'INR',
       seatLimit: 25,
       storageLimitGb: 50,
       invoiceLimitMo: 5000,
@@ -45,14 +45,14 @@ async function seedPlanDefinitions() {
       trialDays: 14,
       moduleFinance: true,
       moduleManufacturing: false,
-      description: "For growing companies that need more seats and control.",
+      description: 'For growing companies that need more seats and control.',
     },
     {
       plan: TenantPlan.ENTERPRISE,
-      displayName: "Enterprise",
+      displayName: 'Enterprise',
       monthlyPrice: 499,
       annualPrice: 5489,
-      currency: "INR",
+      currency: 'INR',
       seatLimit: null,
       storageLimitGb: 500,
       invoiceLimitMo: null,
@@ -60,7 +60,7 @@ async function seedPlanDefinitions() {
       trialDays: 14,
       moduleFinance: true,
       moduleManufacturing: true,
-      description: "Unlimited scale with dedicated support.",
+      description: 'Unlimited scale with dedicated support.',
     },
   ] as const;
 
@@ -96,20 +96,20 @@ async function seedPlanDefinitions() {
 }
 
 async function seedDevTenant() {
-  if (process.env.NODE_ENV === "production") return;
+  if (process.env.NODE_ENV === 'production') return;
 
   const email = process.env.DEV_TENANT_EMAIL?.trim().toLowerCase();
   const password = process.env.DEV_TENANT_PASSWORD;
   if (!email || !password) {
     console.log(
-      "Skipping dev tenant — set DEV_TENANT_EMAIL and DEV_TENANT_PASSWORD in .env, then run npm run db:seed",
+      'Skipping dev tenant — set DEV_TENANT_EMAIL and DEV_TENANT_PASSWORD in .env, then run npm run db:seed',
     );
     return;
   }
 
-  const companyName = process.env.DEV_TENANT_COMPANY_NAME?.trim() || "Velon Test Workspace";
+  const companyName = process.env.DEV_TENANT_COMPANY_NAME?.trim() || 'Velon Test Workspace';
   const passwordHash = await bcrypt.hash(password, 12);
-  const slug = "velon-test-workspace";
+  const slug = 'velon-test-workspace';
   const renewal = new Date();
   renewal.setDate(renewal.getDate() + 30);
 
@@ -117,7 +117,7 @@ async function seedDevTenant() {
   if (existing) {
     await prisma.user.update({
       where: { id: existing.id },
-      data: { passwordHash, isActive: true, role: UserRole.USER, seedSource: "seed" },
+      data: { passwordHash, isActive: true, role: UserRole.USER, seedSource: 'seed' },
     });
     const membership = await prisma.tenantMembership.findFirst({
       where: { userId: existing.id, isActive: true },
@@ -135,16 +135,16 @@ async function seedDevTenant() {
         data: {
           email,
           passwordHash,
-          name: "Test Tenant Owner",
+          name: 'Test Tenant Owner',
           role: UserRole.USER,
-          seedSource: "seed",
+          seedSource: 'seed',
         },
       }));
 
     if (existing) {
       await tx.user.update({
         where: { id: user.id },
-        data: { passwordHash, isActive: true, role: UserRole.USER, seedSource: "seed" },
+        data: { passwordHash, isActive: true, role: UserRole.USER, seedSource: 'seed' },
       });
     }
 
@@ -157,14 +157,14 @@ async function seedDevTenant() {
         data: {
           name: companyName,
           slug,
-          tenantCode: "TNT-DEV01",
-          country: "India",
+          tenantCode: 'TNT-DEV01',
+          country: 'India',
           plan: TenantPlan.GROWTH,
           status: TenantStatus.ACTIVE,
           health: TenantHealth.HEALTHY,
           industryTemplate: IndustryTemplate.SERVICES,
           renewalDate: renewal,
-          seedSource: "seed",
+          seedSource: 'seed',
         },
       });
 
@@ -173,8 +173,8 @@ async function seedDevTenant() {
           tenantId: tenant.id,
           legalName: companyName,
           email,
-          phone: "+91 9999999999",
-          country: "India",
+          phone: '+91 9999999999',
+          country: 'India',
           industry: IndustryTemplate.SERVICES,
         },
       });
@@ -213,10 +213,10 @@ async function seedDevTenant() {
 }
 
 async function main() {
-  const superEmail = process.env.SUPER_ADMIN_EMAIL ?? "info@velonerp.com";
+  const superEmail = process.env.SUPER_ADMIN_EMAIL ?? 'info@velonerp.com';
   const superPassword = process.env.SUPER_ADMIN_PASSWORD;
   if (!superPassword) {
-    throw new Error("SUPER_ADMIN_PASSWORD is required to seed the database.");
+    throw new Error('SUPER_ADMIN_PASSWORD is required to seed the database.');
   }
 
   const passwordHash = await bcrypt.hash(superPassword, 12);
@@ -227,16 +227,16 @@ async function main() {
     create: {
       email: superEmail.toLowerCase(),
       passwordHash,
-      name: "Platform Super Admin",
+      name: 'Platform Super Admin',
       role: UserRole.SUPER_ADMIN,
       seedSource: null,
     },
   });
 
   await prisma.platformRevision.upsert({
-    where: { id: "main" },
+    where: { id: 'main' },
     update: {},
-    create: { id: "main", revision: 1 },
+    create: { id: 'main', revision: 1 },
   });
 
   await seedPlanDefinitions();
@@ -247,10 +247,10 @@ async function main() {
     renewal.setDate(renewal.getDate() + 30);
     const tenant = await prisma.tenant.create({
       data: {
-        name: "Demo Retail Co.",
-        slug: "demo-retail",
-        tenantCode: "TNT-DEMO1",
-        country: "India",
+        name: 'Demo Retail Co.',
+        slug: 'demo-retail',
+        tenantCode: 'TNT-DEMO1',
+        country: 'India',
         plan: TenantPlan.GROWTH,
         status: TenantStatus.ACTIVE,
         health: TenantHealth.HEALTHY,
@@ -260,27 +260,27 @@ async function main() {
         storageUsedGb: 8,
         storageCapGb: 120,
         renewalDate: renewal,
-        seedSource: "demo",
+        seedSource: 'demo',
         companyProfile: {
           create: {
-            legalName: "Demo Retail Co.",
-            email: "demo@demo-retail.local",
-            phone: "+91 00000 00000",
-            country: "India",
+            legalName: 'Demo Retail Co.',
+            email: 'demo@demo-retail.local',
+            phone: '+91 00000 00000',
+            country: 'India',
             industry: IndustryTemplate.RETAIL,
           },
         },
         workspace: {
           create: {
-            name: "Demo Retail Co.",
-            slug: "demo-retail-ws",
+            name: 'Demo Retail Co.',
+            slug: 'demo-retail-ws',
           },
         },
       },
     });
     console.log(`Demo tenant seeded (seedSource=demo): ${tenant.id}`);
   } else if (tenantCount === 0 && !canSeedDemoTenants()) {
-    console.log("Skipping demo tenant — set SEED_DEMO_DATA=true in development to seed one.");
+    console.log('Skipping demo tenant — set SEED_DEMO_DATA=true in development to seed one.');
   }
 
   await seedDevTenant();
@@ -288,8 +288,8 @@ async function main() {
   await prisma.auditLog.create({
     data: {
       actorId: superAdmin.id,
-      action: "platform.seeded",
-      entityType: "system",
+      action: 'platform.seeded',
+      entityType: 'system',
       metadata: { superAdminEmail: superEmail },
     },
   });

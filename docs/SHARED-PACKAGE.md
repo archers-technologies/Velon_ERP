@@ -7,18 +7,18 @@
 
 ## Export areas
 
-| Export area | Contents |
-|-------------|----------|
-| Roles and permissions | `VelonRole`, `ROLE_PERMISSIONS`, `roleHasPermission` |
-| CRM / inventory / procurement / sales permission helpers | `canReadCrm`, `canManageInventory`, … |
-| Plans and seats | `PLAN_CATALOG`, `SEAT_LIMITS`, regional pricing |
-| Billing policy | Trial days, portal path prefixes, subscription access |
-| Password policy | Strength rules and evaluation |
-| Localization | Country catalog, currency formatting, date/number formats |
-| Navigation | Workspace sidebar labels, settings routes, admin nav |
-| Role presets | Friendly invite roles |
-| Seed / production filters | Demo exclusion for platform metrics |
-| Workspace host | Public workspace domain resolution |
+| Export area                                              | Contents                                                  |
+| -------------------------------------------------------- | --------------------------------------------------------- |
+| Roles and permissions                                    | `VelonRole`, `ROLE_PERMISSIONS`, `roleHasPermission`      |
+| CRM / inventory / procurement / sales permission helpers | `canReadCrm`, `canManageInventory`, …                     |
+| Plans and seats                                          | `PLAN_CATALOG`, `SEAT_LIMITS`, regional pricing           |
+| Billing policy                                           | Trial days, portal path prefixes, subscription access     |
+| Password policy                                          | Strength rules and evaluation                             |
+| Localization                                             | Country catalog, currency formatting, date/number formats |
+| Navigation                                               | Workspace sidebar labels, settings routes, admin nav      |
+| Role presets                                             | Friendly invite roles                                     |
+| Seed / production filters                                | Demo exclusion for platform metrics                       |
+| Workspace host                                           | Public workspace domain resolution                        |
 
 ## Rule of thumb
 

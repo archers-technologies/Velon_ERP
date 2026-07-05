@@ -28,7 +28,7 @@ export type InvoiceDocument = {
   taxRate?: number;
   currency: string;
   company: InvoiceCompanyProfile;
-  paymentStatus?: "paid" | "due";
+  paymentStatus?: 'paid' | 'due';
 };
 
-export type ThermalWidth = "58mm" | "80mm";
+export type ThermalWidth = '58mm' | '80mm';

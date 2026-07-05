@@ -1,12 +1,12 @@
-import { invoiceTotals, lineSubtotal } from "./calculations";
-import type { InvoiceDocument, ThermalWidth } from "./types";
+import { invoiceTotals, lineSubtotal } from './calculations';
+import type { InvoiceDocument, ThermalWidth } from './types';
 
 function escapeHtml(s: string): string {
   return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 export function renderThermalInvoiceHtml(
@@ -16,8 +16,8 @@ export function renderThermalInvoiceHtml(
 ): string {
   const { subtotal, taxRate, taxAmount, grandTotal } = invoiceTotals(doc);
   const c = doc.company;
-  const maxWidth = width === "58mm" ? "58mm" : "80mm";
-  const fontSize = width === "58mm" ? "10px" : "11px";
+  const maxWidth = width === '58mm' ? '58mm' : '80mm';
+  const fontSize = width === '58mm' ? '10px' : '11px';
   const lines = doc.lines
     .map((line) => {
       const amt = lineSubtotal(line);
@@ -26,7 +26,7 @@ export function renderThermalInvoiceHtml(
         <div class="detail">${line.quantity} x ${line.unitPrice.toFixed(2)} = ${amt.toFixed(2)}</div>
       </div>`;
     })
-    .join("");
+    .join('');
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -43,13 +43,13 @@ export function renderThermalInvoiceHtml(
     .name { font-weight: 600; }
     .detail { color: #333; }
     .row { display: flex; justify-content: space-between; }
-    .qr { display: block; margin: 10px auto; width: ${width === "58mm" ? "96px" : "120px"}; }
+    .qr { display: block; margin: 10px auto; width: ${width === '58mm' ? '96px' : '120px'}; }
   </style>
 </head>
 <body>
   <div class="center bold">${escapeHtml(c.legalName)}</div>
-  ${c.taxId ? `<div class="center">VAT/GST: ${escapeHtml(c.taxId)}</div>` : ""}
-  ${c.phone ? `<div class="center">${escapeHtml(c.phone)}</div>` : ""}
+  ${c.taxId ? `<div class="center">VAT/GST: ${escapeHtml(c.taxId)}</div>` : ''}
+  ${c.phone ? `<div class="center">${escapeHtml(c.phone)}</div>` : ''}
   <hr />
   <div class="row"><span>Invoice</span><span>${escapeHtml(doc.invoiceNumber)}</span></div>
   <div class="row"><span>Date</span><span>${escapeHtml(doc.invoiceDate)}</span></div>

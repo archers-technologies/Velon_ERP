@@ -6,15 +6,15 @@ import {
   useMemo,
   useState,
   type ReactNode,
-} from "react";
-import { VELON_THEME_STORAGE_KEY, setVelonThemeMode } from "@/lib/shared/document-theme";
-import { PRINTER_SETTINGS_STORAGE_KEYS } from "@/lib/shared/printer-settings";
+} from 'react';
+import { setVelonThemeMode, VELON_THEME_STORAGE_KEY } from '@/lib/shared/document-theme';
+import { PRINTER_SETTINGS_STORAGE_KEYS } from '@/lib/shared/printer-settings';
 
-const STORAGE_LOW_STOCK = "velon-workspace-pref-low-stock-email";
-const STORAGE_DAILY = "velon-workspace-pref-daily-summary";
-const STORAGE_CITY = "velon-workspace-pref-city";
-const STORAGE_COUNTRY = "velon-workspace-pref-country";
-const STORAGE_REGION = "velon-workspace-pref-region";
+const STORAGE_LOW_STOCK = 'velon-workspace-pref-low-stock-email';
+const STORAGE_DAILY = 'velon-workspace-pref-daily-summary';
+const STORAGE_CITY = 'velon-workspace-pref-city';
+const STORAGE_COUNTRY = 'velon-workspace-pref-country';
+const STORAGE_REGION = 'velon-workspace-pref-region';
 
 /** Keys cleared by “Reset to defaults” (currency keys live in workspace-currency). */
 export const WORKSPACE_RESET_STORAGE_KEYS = [
@@ -24,28 +24,28 @@ export const WORKSPACE_RESET_STORAGE_KEYS = [
   STORAGE_CITY,
   STORAGE_COUNTRY,
   STORAGE_REGION,
-  "velon-workspace-currency-preset",
-  "velon-workspace-currency-custom-symbol",
+  'velon-workspace-currency-preset',
+  'velon-workspace-currency-custom-symbol',
   ...PRINTER_SETTINGS_STORAGE_KEYS,
 ] as const;
 
-export type WorkspaceThemeMode = "light" | "dark";
+export type WorkspaceThemeMode = 'light' | 'dark';
 
 const DEFAULTS = {
-  theme: "light" as WorkspaceThemeMode,
+  theme: 'light' as WorkspaceThemeMode,
   lowStockEmailAlerts: true,
   dailySummaryReport: true,
-  city: "Mumbai",
-  country: "India",
-  region: "West India",
+  city: 'Mumbai',
+  country: 'India',
+  region: 'West India',
 };
 
 function readBool(key: string, defaultValue: boolean): boolean {
-  if (typeof window === "undefined") return defaultValue;
+  if (typeof window === 'undefined') return defaultValue;
   try {
     const v = localStorage.getItem(key);
     if (v === null) return defaultValue;
-    return v === "1" || v === "true";
+    return v === '1' || v === 'true';
   } catch {
     return defaultValue;
   }
@@ -53,17 +53,17 @@ function readBool(key: string, defaultValue: boolean): boolean {
 
 function writeBool(key: string, value: boolean) {
   try {
-    localStorage.setItem(key, value ? "1" : "0");
+    localStorage.setItem(key, value ? '1' : '0');
   } catch {
     /* ignore */
   }
 }
 
 function readString(key: string, fallback: string): string {
-  if (typeof window === "undefined") return fallback;
+  if (typeof window === 'undefined') return fallback;
   try {
     const v = localStorage.getItem(key);
-    return v !== null && v.trim() !== "" ? v : fallback;
+    return v !== null && v.trim() !== '' ? v : fallback;
   } catch {
     return fallback;
   }
@@ -78,11 +78,11 @@ function writeString(key: string, value: string) {
 }
 
 function readTheme(): WorkspaceThemeMode {
-  if (typeof window === "undefined") return "light";
+  if (typeof window === 'undefined') return 'light';
   try {
-    return localStorage.getItem(VELON_THEME_STORAGE_KEY) === "dark" ? "dark" : "light";
+    return localStorage.getItem(VELON_THEME_STORAGE_KEY) === 'dark' ? 'dark' : 'light';
   } catch {
-    return "light";
+    return 'light';
   }
 }
 
@@ -137,7 +137,7 @@ export function WorkspacePreferencesProvider({ children }: { children: ReactNode
 
   const toggleTheme = useCallback(() => {
     setThemeState((prev) => {
-      const next: WorkspaceThemeMode = prev === "dark" ? "light" : "dark";
+      const next: WorkspaceThemeMode = prev === 'dark' ? 'light' : 'dark';
       setVelonThemeMode(next);
       return next;
     });
@@ -176,7 +176,7 @@ export function WorkspacePreferencesProvider({ children }: { children: ReactNode
     } catch {
       /* ignore */
     }
-    setVelonThemeMode("light");
+    setVelonThemeMode('light');
     window.location.reload();
   }, []);
 
@@ -225,6 +225,6 @@ export function WorkspacePreferencesProvider({ children }: { children: ReactNode
 export function useWorkspacePreferences(): WorkspacePreferencesContextValue {
   const ctx = useContext(WorkspacePreferencesContext);
   if (!ctx)
-    throw new Error("useWorkspacePreferences must be used within WorkspacePreferencesProvider");
+    throw new Error('useWorkspacePreferences must be used within WorkspacePreferencesProvider');
   return ctx;
 }

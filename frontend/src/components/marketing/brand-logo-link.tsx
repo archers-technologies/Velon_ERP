@@ -1,7 +1,7 @@
-import type { ReactNode } from "react";
-import { Link } from "@tanstack/react-router";
-import { cn } from "@/lib/utils";
-import type { LogoNav } from "@/lib/shared/logo-navigation";
+import type { ReactNode } from 'react';
+import { Link } from '@tanstack/react-router';
+import type { LogoNav } from '@/lib/shared/logo-navigation';
+import { cn } from '@/lib/utils';
 
 type BrandLogoLinkProps = {
   nav?: LogoNav;
@@ -9,8 +9,8 @@ type BrandLogoLinkProps = {
   children: ReactNode;
 };
 
-export function BrandLogoLink({ nav = { type: "home" }, className, children }: BrandLogoLinkProps) {
-  if (nav.type === "external") {
+export function BrandLogoLink({ nav = { type: 'home' }, className, children }: BrandLogoLinkProps) {
+  if (nav.type === 'external') {
     return (
       <a
         href={nav.href}
@@ -24,24 +24,35 @@ export function BrandLogoLink({ nav = { type: "home" }, className, children }: B
     );
   }
 
-  if (nav.type === "workspace") {
+  if (nav.type === 'workspace') {
     return (
-      <Link to="/app" className={className} aria-label="Go to workspace dashboard">
+      <Link
+        to="/app"
+        className={className}
+        aria-label="Go to workspace dashboard"
+      >
         {children}
       </Link>
     );
   }
 
-  if (nav.type === "inactive") {
+  if (nav.type === 'inactive') {
     return (
-      <div className={cn(className, "cursor-default")} aria-hidden={false}>
+      <div
+        className={cn(className, 'cursor-default')}
+        aria-hidden={false}
+      >
         {children}
       </div>
     );
   }
 
   return (
-    <Link to="/" className={className} aria-label="Go to Velon-ERP homepage">
+    <Link
+      to="/"
+      className={className}
+      aria-label="Go to Velon-ERP homepage"
+    >
       {children}
     </Link>
   );

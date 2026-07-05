@@ -3,25 +3,25 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
-} from "@nestjs/common";
-import { Prisma, PurchaseOrderStatus, PurchaseRequestStatus } from "@velon/database";
+} from '@nestjs/common';
+import { Prisma, PurchaseOrderStatus, PurchaseRequestStatus } from '@velon/database';
 import {
   canApproveProcurement,
   canManageProcurement,
   canReadProcurement,
   normalizeVelonRole,
-} from "@velon/shared";
-import { AuditService } from "../audit/audit.service";
-import type { AuthenticatedUser } from "../auth/auth.types";
-import { PrismaService } from "../prisma/prisma.service";
+} from '@velon/shared';
+import { AuditService } from '../audit/audit.service';
+import type { AuthenticatedUser } from '../auth/auth.types';
+import { PrismaService } from '../prisma/prisma.service';
 import {
   ApproveDto,
   CreatePurchaseOrderDto,
   CreatePurchaseRequestDto,
   ReceivePurchaseOrderDto,
   RejectDto,
-} from "./dto/procurement.dto";
-import { PurchaseOrderRepository, PurchaseRequestRepository } from "./procurement.repositories";
+} from './dto/procurement.dto';
+import { PurchaseOrderRepository, PurchaseRequestRepository } from './procurement.repositories';
 
 type AuditMeta = { ip?: string; ua?: string };
 
@@ -40,32 +40,32 @@ export class ProcurementService {
 
   private assertRead(user: AuthenticatedUser) {
     if (!canReadProcurement(this.role(user))) {
-      throw new ForbiddenException("Procurement access denied.");
+      throw new ForbiddenException('Procurement access denied.');
     }
   }
 
   private assertManage(user: AuthenticatedUser) {
     if (!canManageProcurement(this.role(user))) {
-      throw new ForbiddenException("Insufficient permissions to manage procurement.");
+      throw new ForbiddenException('Insufficient permissions to manage procurement.');
     }
   }
 
   private assertApprove(user: AuthenticatedUser) {
     if (!canApproveProcurement(this.role(user))) {
-      throw new ForbiddenException("Approval requires Tenant Owner or Admin.");
+      throw new ForbiddenException('Approval requires Tenant Owner or Admin.');
     }
   }
 
   private async nextRequestNumber(tenantId: string) {
     const count = await this.prisma.client.purchaseRequest.count({ where: { tenantId } });
     const year = new Date().getFullYear();
-    return `PR-${year}-${String(count + 1).padStart(4, "0")}`;
+    return `PR-${year}-${String(count + 1).padStart(4, '0')}`;
   }
 
   private async nextPoNumber(tenantId: string) {
     const count = await this.prisma.client.purchaseOrder.count({ where: { tenantId } });
     const year = new Date().getFullYear();
-    return `PO-${year}-${String(count + 1).padStart(4, "0")}`;
+    return `PO-${year}-${String(count + 1).padStart(4, '0')}`;
   }
 
   private calcOrderTotals(items: { quantity: number; unitPrice: number; taxRate?: number }[]) {
@@ -90,17 +90,13 @@ export class ProcurementService {
   async getRequest(user: AuthenticatedUser, id: string) {
     this.assertRead(user);
     const row = await this.requests.findById(id);
-    if (!row) throw new NotFoundException("Purchase request not found.");
+    if (!row) throw new NotFoundException('Purchase request not found.');
     return row;
   }
 
-  async createRequest(
-    user: AuthenticatedUser,
-    dto: CreatePurchaseRequestDto,
-    meta: AuditMeta,
-  ) {
+  async createRequest(user: AuthenticatedUser, dto: CreatePurchaseRequestDto, meta: AuditMeta) {
     this.assertManage(user);
-    if (!dto.items?.length) throw new BadRequestException("At least one line item is required.");
+    if (!dto.items?.length) throw new BadRequestException('At least one line item is required.');
 
     const requestNumber = await this.nextRequestNumber(user.tenantId!);
     const row = await this.prisma.client.purchaseRequest.create({
@@ -123,7 +119,7 @@ export class ProcurementService {
         },
       },
       include: {
-        items: { orderBy: { position: "asc" }, include: { product: true } },
+        items: { orderBy: { position: 'asc' }, include: { product: true } },
         requestedBy: { select: { id: true, name: true, email: true } },
       },
     });
@@ -131,8 +127,8 @@ export class ProcurementService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "procurement.request_created",
-      entityType: "purchase_request",
+      action: 'procurement.request_created',
+      entityType: 'purchase_request',
       entityId: row.id,
       metadata: { requestNumber },
       ipAddress: meta.ip,
@@ -145,24 +141,19 @@ export class ProcurementService {
   async submitRequest(user: AuthenticatedUser, id: string, meta: AuditMeta) {
     this.assertManage(user);
     const row = await this.requests.findById(id);
-    if (!row) throw new NotFoundException("Purchase request not found.");
+    if (!row) throw new NotFoundException('Purchase request not found.');
     if (row.status !== PurchaseRequestStatus.DRAFT) {
-      throw new BadRequestException("Only draft requests can be submitted.");
+      throw new BadRequestException('Only draft requests can be submitted.');
     }
     return this.requests.update(id, { status: PurchaseRequestStatus.PENDING_APPROVAL });
   }
 
-  async approveRequest(
-    user: AuthenticatedUser,
-    id: string,
-    dto: ApproveDto,
-    meta: AuditMeta,
-  ) {
+  async approveRequest(user: AuthenticatedUser, id: string, dto: ApproveDto, meta: AuditMeta) {
     this.assertApprove(user);
     const row = await this.requests.findById(id);
-    if (!row) throw new NotFoundException("Purchase request not found.");
+    if (!row) throw new NotFoundException('Purchase request not found.');
     if (row.status !== PurchaseRequestStatus.PENDING_APPROVAL) {
-      throw new BadRequestException("Request is not pending approval.");
+      throw new BadRequestException('Request is not pending approval.');
     }
 
     const updated = await this.requests.update(id, {
@@ -174,8 +165,8 @@ export class ProcurementService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "procurement.request_approved",
-      entityType: "purchase_request",
+      action: 'procurement.request_approved',
+      entityType: 'purchase_request',
       entityId: id,
       metadata: { comments: dto.comments },
       ipAddress: meta.ip,
@@ -188,9 +179,9 @@ export class ProcurementService {
   async rejectRequest(user: AuthenticatedUser, id: string, dto: RejectDto) {
     this.assertApprove(user);
     const row = await this.requests.findById(id);
-    if (!row) throw new NotFoundException("Purchase request not found.");
+    if (!row) throw new NotFoundException('Purchase request not found.');
     if (row.status !== PurchaseRequestStatus.PENDING_APPROVAL) {
-      throw new BadRequestException("Request is not pending approval.");
+      throw new BadRequestException('Request is not pending approval.');
     }
     return this.requests.update(id, { status: PurchaseRequestStatus.REJECTED });
   }
@@ -205,18 +196,18 @@ export class ProcurementService {
   async getOrder(user: AuthenticatedUser, id: string) {
     this.assertRead(user);
     const row = await this.orders.findById(id);
-    if (!row) throw new NotFoundException("Purchase order not found.");
+    if (!row) throw new NotFoundException('Purchase order not found.');
     return row;
   }
 
   async createOrder(user: AuthenticatedUser, dto: CreatePurchaseOrderDto, meta: AuditMeta) {
     this.assertManage(user);
-    if (!dto.items?.length) throw new BadRequestException("At least one line item is required.");
+    if (!dto.items?.length) throw new BadRequestException('At least one line item is required.');
 
     const supplier = await this.prisma.client.supplier.findFirst({
       where: { id: dto.supplierId, tenantId: user.tenantId },
     });
-    if (!supplier) throw new NotFoundException("Supplier not found.");
+    if (!supplier) throw new NotFoundException('Supplier not found.');
 
     const poNumber = await this.nextPoNumber(user.tenantId!);
     const totals = this.calcOrderTotals(dto.items);
@@ -250,7 +241,7 @@ export class ProcurementService {
         },
       },
       include: {
-        items: { orderBy: { position: "asc" }, include: { product: true } },
+        items: { orderBy: { position: 'asc' }, include: { product: true } },
         supplier: true,
       },
     });
@@ -258,8 +249,8 @@ export class ProcurementService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "procurement.po_created",
-      entityType: "purchase_order",
+      action: 'procurement.po_created',
+      entityType: 'purchase_order',
       entityId: row.id,
       metadata: { poNumber, supplierId: dto.supplierId },
       ipAddress: meta.ip,
@@ -272,12 +263,12 @@ export class ProcurementService {
   async approveOrder(user: AuthenticatedUser, id: string, dto: ApproveDto, meta: AuditMeta) {
     this.assertApprove(user);
     const row = await this.orders.findById(id);
-    if (!row) throw new NotFoundException("Purchase order not found.");
+    if (!row) throw new NotFoundException('Purchase order not found.');
     if (
       row.status !== PurchaseOrderStatus.DRAFT &&
       row.status !== PurchaseOrderStatus.PENDING_APPROVAL
     ) {
-      throw new BadRequestException("Order cannot be approved in current status.");
+      throw new BadRequestException('Order cannot be approved in current status.');
     }
 
     const updated = await this.orders.update(id, {
@@ -289,8 +280,8 @@ export class ProcurementService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "procurement.po_approved",
-      entityType: "purchase_order",
+      action: 'procurement.po_approved',
+      entityType: 'purchase_order',
       entityId: id,
       metadata: { comments: dto.comments },
       ipAddress: meta.ip,
@@ -303,9 +294,9 @@ export class ProcurementService {
   async submitOrder(user: AuthenticatedUser, id: string) {
     this.assertManage(user);
     const row = await this.orders.findById(id);
-    if (!row) throw new NotFoundException("Purchase order not found.");
+    if (!row) throw new NotFoundException('Purchase order not found.');
     if (row.status !== PurchaseOrderStatus.APPROVED) {
-      throw new BadRequestException("Only approved orders can be sent.");
+      throw new BadRequestException('Only approved orders can be sent.');
     }
     return this.orders.update(id, { status: PurchaseOrderStatus.SENT });
   }
@@ -318,7 +309,7 @@ export class ProcurementService {
   ) {
     this.assertManage(user);
     const order = await this.orders.findById(id);
-    if (!order) throw new NotFoundException("Purchase order not found.");
+    if (!order) throw new NotFoundException('Purchase order not found.');
 
     const receivable = new Set<PurchaseOrderStatus>([
       PurchaseOrderStatus.SENT,
@@ -326,13 +317,13 @@ export class ProcurementService {
       PurchaseOrderStatus.PARTIALLY_RECEIVED,
     ]);
     if (!receivable.has(order.status)) {
-      throw new BadRequestException("Purchase order cannot be received in its current status.");
+      throw new BadRequestException('Purchase order cannot be received in its current status.');
     }
 
     const warehouse = await this.prisma.client.inventoryWarehouse.findFirst({
       where: { id: dto.warehouseId, tenantId: user.tenantId },
     });
-    if (!warehouse) throw new NotFoundException("Warehouse not found.");
+    if (!warehouse) throw new NotFoundException('Warehouse not found.');
 
     const itemMap = new Map(order.items.map((i) => [i.id, i]));
 
@@ -399,8 +390,8 @@ export class ProcurementService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "procurement.po_received",
-      entityType: "purchase_order",
+      action: 'procurement.po_received',
+      entityType: 'purchase_order',
       entityId: id,
       metadata: {
         warehouseId: dto.warehouseId,
@@ -411,7 +402,7 @@ export class ProcurementService {
     });
 
     const updated = await this.orders.findById(id);
-    if (!updated) throw new NotFoundException("Purchase order not found.");
+    if (!updated) throw new NotFoundException('Purchase order not found.');
     return updated;
   }
 }

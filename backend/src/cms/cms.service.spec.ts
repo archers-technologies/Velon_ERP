@@ -1,38 +1,38 @@
-import { CmsService } from "./cms.service";
-import { createMockPrisma, createMockPrismaClient } from "../../test/helpers/mocks";
+import { createMockPrisma, createMockPrismaClient } from '../../test/helpers/mocks';
+import { CmsService } from './cms.service';
 
-describe("CmsService", () => {
+describe('CmsService', () => {
   const client = createMockPrismaClient();
   const service = new CmsService(createMockPrisma(client));
 
   beforeEach(() => jest.clearAllMocks());
 
-  it("fills missing site content blocks with defaults", async () => {
+  it('fills missing site content blocks with defaults', async () => {
     client.siteContentBlock.findMany.mockResolvedValue([
-      { key: "hero", data: { title: "Custom hero" } },
+      { key: 'hero', data: { title: 'Custom hero' } },
     ]);
 
     const all = await service.getAll();
-    expect(all.hero).toEqual({ title: "Custom hero" });
-    expect(all).toHaveProperty("pricing");
+    expect(all.hero).toEqual({ title: 'Custom hero' });
+    expect(all).toHaveProperty('pricing');
   });
 
-  it("returns default block when key is missing", async () => {
+  it('returns default block when key is missing', async () => {
     client.siteContentBlock.findUnique.mockResolvedValue(null);
-    const block = await service.getBlock("hero" as never);
+    const block = await service.getBlock('hero' as never);
     expect(block).toBeDefined();
   });
 
-  it("upserts a content block through prisma mock", async () => {
+  it('upserts a content block through prisma mock', async () => {
     client.siteContentBlock.upsert.mockResolvedValue({
-      key: "hero",
-      data: { title: "Updated" },
+      key: 'hero',
+      data: { title: 'Updated' },
     });
-    await service.upsertBlock("hero" as never, { title: "Updated" });
+    await service.upsertBlock('hero' as never, { title: 'Updated' });
     expect(client.siteContentBlock.upsert).toHaveBeenCalledWith({
-      where: { key: "hero" },
-      create: { key: "hero", data: { title: "Updated" } },
-      update: { data: { title: "Updated" } },
+      where: { key: 'hero' },
+      create: { key: 'hero', data: { title: 'Updated' } },
+      update: { data: { title: 'Updated' } },
     });
   });
 });

@@ -1,4 +1,4 @@
-import type { InvoiceDocument, InvoiceLineItem } from "./types";
+import type { InvoiceDocument, InvoiceLineItem } from './types';
 
 const DEFAULT_TAX_RATE = 0.15;
 

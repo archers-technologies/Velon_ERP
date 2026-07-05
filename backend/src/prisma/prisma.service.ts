@@ -1,5 +1,5 @@
-import { Injectable, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
-import { prisma } from "@velon/database";
+import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { prisma } from '@velon/database';
 
 @Injectable()
 export class PrismaService implements OnModuleInit, OnModuleDestroy {

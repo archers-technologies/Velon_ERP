@@ -3,4 +3,4 @@ export {
   getCurrencySymbol,
   formatCurrencyLabel,
   type WorkspaceMoneyFormat,
-} from "@velon/shared";
+} from '@velon/shared';

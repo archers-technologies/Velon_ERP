@@ -1,4 +1,4 @@
-import type { BillingInterval, PaymentProviderId } from "@velon/shared";
+import type { BillingInterval, PaymentProviderId } from '@velon/shared';
 
 export type CheckoutInput = {
   tenantId: string;
@@ -36,7 +36,7 @@ export type WebhookResult = {
   tenantId?: string;
   amount?: number;
   currency?: string;
-  status?: "succeeded" | "failed" | "pending";
+  status?: 'succeeded' | 'failed' | 'pending';
 };
 
 export type OfflinePaymentInput = {
@@ -52,7 +52,7 @@ export type OfflinePaymentInput = {
 export type PaymentRecord = {
   provider: PaymentProviderId;
   providerPaymentId: string;
-  status: "pending" | "succeeded" | "failed";
+  status: 'pending' | 'succeeded' | 'failed';
 };
 
 export interface PaymentProviderAdapter {

@@ -1,12 +1,12 @@
-import { invoiceTotals, lineSubtotal } from "./calculations";
-import type { InvoiceDocument } from "./types";
+import { invoiceTotals, lineSubtotal } from './calculations';
+import type { InvoiceDocument } from './types';
 
 function escapeHtml(s: string): string {
   return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 export function renderA4InvoiceHtml(doc: InvoiceDocument, qrDataUrl: string): string {
@@ -22,7 +22,7 @@ export function renderA4InvoiceHtml(doc: InvoiceDocument, qrDataUrl: string): st
         <td class="num">${lineSubtotal(line).toFixed(2)}</td>
       </tr>`,
     )
-    .join("");
+    .join('');
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -52,19 +52,19 @@ export function renderA4InvoiceHtml(doc: InvoiceDocument, qrDataUrl: string): st
 <body>
   <div class="header">
     <div>
-      ${c.logoDataUrl ? `<img class="logo" src="${c.logoDataUrl}" alt="" />` : ""}
+      ${c.logoDataUrl ? `<img class="logo" src="${c.logoDataUrl}" alt="" />` : ''}
       <h1>${escapeHtml(c.legalName)}</h1>
-      ${c.address ? `<div class="muted">${escapeHtml(c.address)}</div>` : ""}
-      ${c.phone ? `<div class="muted">Tel: ${escapeHtml(c.phone)}</div>` : ""}
-      ${c.email ? `<div class="muted">${escapeHtml(c.email)}</div>` : ""}
-      ${c.taxId ? `<div class="muted">VAT/GST: ${escapeHtml(c.taxId)}</div>` : ""}
-      ${c.crNumber ? `<div class="muted">CR: ${escapeHtml(c.crNumber)}</div>` : ""}
+      ${c.address ? `<div class="muted">${escapeHtml(c.address)}</div>` : ''}
+      ${c.phone ? `<div class="muted">Tel: ${escapeHtml(c.phone)}</div>` : ''}
+      ${c.email ? `<div class="muted">${escapeHtml(c.email)}</div>` : ''}
+      ${c.taxId ? `<div class="muted">VAT/GST: ${escapeHtml(c.taxId)}</div>` : ''}
+      ${c.crNumber ? `<div class="muted">CR: ${escapeHtml(c.crNumber)}</div>` : ''}
     </div>
     <div style="text-align:right">
       <div style="font-size:18px;font-weight:700">TAX INVOICE</div>
       <div><strong>No.</strong> ${escapeHtml(doc.invoiceNumber)}</div>
       <div><strong>Date</strong> ${escapeHtml(doc.invoiceDate)}</div>
-      ${doc.dueDate ? `<div><strong>Due</strong> ${escapeHtml(doc.dueDate)}</div>` : ""}
+      ${doc.dueDate ? `<div><strong>Due</strong> ${escapeHtml(doc.dueDate)}</div>` : ''}
       <div><strong>Currency</strong> ${escapeHtml(doc.currency)}</div>
     </div>
   </div>
@@ -72,9 +72,9 @@ export function renderA4InvoiceHtml(doc: InvoiceDocument, qrDataUrl: string): st
     <div>
       <strong>Bill to</strong><br/>
       ${escapeHtml(doc.customerName)}<br/>
-      ${doc.customerAddress ? escapeHtml(doc.customerAddress) + "<br/>" : ""}
-      ${doc.customerPhone ? escapeHtml(doc.customerPhone) + "<br/>" : ""}
-      ${doc.customerEmail ? escapeHtml(doc.customerEmail) : ""}
+      ${doc.customerAddress ? escapeHtml(doc.customerAddress) + '<br/>' : ''}
+      ${doc.customerPhone ? escapeHtml(doc.customerPhone) + '<br/>' : ''}
+      ${doc.customerEmail ? escapeHtml(doc.customerEmail) : ''}
     </div>
   </div>
   <table>

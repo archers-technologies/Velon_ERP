@@ -1,56 +1,56 @@
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
-import { AuthPortalShell } from "@/components/auth/auth-portal-shell";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useEffect, useState } from 'react';
+import { createFileRoute, Link, useRouter } from '@tanstack/react-router';
+import { Headphones, LockKeyhole, ShieldCheck } from 'lucide-react';
+import { toast } from 'sonner';
+import { VELON_CONTACT_EMAIL } from '@velon/shared';
+import { AuthPortalShell } from '@/components/auth/auth-portal-shell';
+import { PasswordRequirementsChecklist } from '@/components/auth/password-requirements-checklist';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { apiLogin, apiRequestSignupOtp, apiSignUp, apiVerifySignupOtp } from "@/lib/api/client";
-import { API_V1_BASE, isApiEnabled } from "@/lib/api/config";
-import { saveSession } from "@/lib/auth/session";
-import { isSuperAdminEmail } from "@/lib/auth/demo-auth";
-import { VELON_CONTACT_EMAIL } from "@velon/shared";
-import { isPasswordStrong } from "@/lib/auth/password-policy";
-import { formatApiError, loginSearch } from "@/lib/auth/login-utils";
-import { redirectIfWorkspaceAuthenticated } from "@/lib/auth/route-guard";
-import { bootstrapWorkspaceUser } from "@/lib/workspace/user-profile";
-import { saveWorkspaceName } from "@/lib/workspace/tenant-workspace";
-import { PasswordRequirementsChecklist } from "@/components/auth/password-requirements-checklist";
+} from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   BusinessLocalizationFields,
   createDefaultLocalization,
   type BusinessLocalizationValue,
-} from "@/components/workspace/business-localization-fields";
-import { Headphones, LockKeyhole, ShieldCheck } from "lucide-react";
+} from '@/components/workspace/business-localization-fields';
+import { apiLogin, apiRequestSignupOtp, apiSignUp, apiVerifySignupOtp } from '@/lib/api/client';
+import { API_V1_BASE, isApiEnabled } from '@/lib/api/config';
+import { isSuperAdminEmail } from '@/lib/auth/demo-auth';
+import { formatApiError, loginSearch } from '@/lib/auth/login-utils';
+import { isPasswordStrong } from '@/lib/auth/password-policy';
+import { redirectIfWorkspaceAuthenticated } from '@/lib/auth/route-guard';
+import { saveSession } from '@/lib/auth/session';
+import { saveWorkspaceName } from '@/lib/workspace/tenant-workspace';
+import { bootstrapWorkspaceUser } from '@/lib/workspace/user-profile';
 
 const INDUSTRY_OPTIONS = [
-  { value: "RETAIL", label: "Retail" },
-  { value: "MANUFACTURING", label: "Manufacturing" },
-  { value: "DISTRIBUTION", label: "Distribution" },
-  { value: "SERVICES", label: "Services" },
+  { value: 'RETAIL', label: 'Retail' },
+  { value: 'MANUFACTURING', label: 'Manufacturing' },
+  { value: 'DISTRIBUTION', label: 'Distribution' },
+  { value: 'SERVICES', label: 'Services' },
 ] as const;
 
-export const Route = createFileRoute("/login")({
+export const Route = createFileRoute('/login')({
   validateSearch: (search: Record<string, unknown>) => ({
-    tab: search.tab === "signup" ? "signup" : "signin",
-    reset: search.reset === "success" ? ("success" as const) : undefined,
+    tab: search.tab === 'signup' ? 'signup' : 'signin',
+    reset: search.reset === 'success' ? ('success' as const) : undefined,
   }),
   beforeLoad: () => {
     redirectIfWorkspaceAuthenticated();
   },
   head: () => ({
     meta: [
-      { title: "Workspace Sign In · Velon-ERP" },
+      { title: 'Workspace Sign In · Velon-ERP' },
       {
-        name: "description",
-        content: "Sign in or create your company workspace on Velon-ERP.",
+        name: 'description',
+        content: 'Sign in or create your company workspace on Velon-ERP.',
       },
     ],
   }),
@@ -60,13 +60,13 @@ export const Route = createFileRoute("/login")({
 const workspaceSignals = [
   {
     icon: ShieldCheck,
-    title: "Verified company signup",
-    desc: "Email OTP verification before your workspace is provisioned.",
+    title: 'Verified company signup',
+    desc: 'Email OTP verification before your workspace is provisioned.',
   },
   {
     icon: LockKeyhole,
-    title: "Tenant isolation",
-    desc: "Each company workspace is isolated with role-based access.",
+    title: 'Tenant isolation',
+    desc: 'Each company workspace is isolated with role-based access.',
   },
 ];
 
@@ -76,30 +76,30 @@ function WorkspaceLoginPage() {
   const useApi = isApiEnabled();
 
   useEffect(() => {
-    if (search.reset === "success") {
-      toast.success("Password successfully updated. Please sign in.");
-      void router.navigate({ to: "/login", search: loginSearch(), replace: true });
+    if (search.reset === 'success') {
+      toast.success('Password successfully updated. Please sign in.');
+      void router.navigate({ to: '/login', search: loginSearch(), replace: true });
     }
   }, [search.reset, router]);
 
   const [busy, setBusy] = useState(false);
-  const [signinEmail, setSigninEmail] = useState("");
-  const [signinPassword, setSigninPassword] = useState("");
-  const [companyName, setCompanyName] = useState("");
-  const [companyEmail, setCompanyEmail] = useState("");
-  const [companyPhone, setCompanyPhone] = useState("");
+  const [signinEmail, setSigninEmail] = useState('');
+  const [signinPassword, setSigninPassword] = useState('');
+  const [companyName, setCompanyName] = useState('');
+  const [companyEmail, setCompanyEmail] = useState('');
+  const [companyPhone, setCompanyPhone] = useState('');
   const [localization, setLocalization] = useState<BusinessLocalizationValue>(() =>
-    createDefaultLocalization("IN"),
+    createDefaultLocalization('IN'),
   );
   const [industry, setIndustry] = useState<string>(INDUSTRY_OPTIONS[0].value);
-  const [fullName, setFullName] = useState("");
-  const [signupPassword, setSignupPassword] = useState("");
-  const [signupStep, setSignupStep] = useState<"details" | "otp">("details");
-  const [signupOtp, setSignupOtp] = useState("");
+  const [fullName, setFullName] = useState('');
+  const [signupPassword, setSignupPassword] = useState('');
+  const [signupStep, setSignupStep] = useState<'details' | 'otp'>('details');
+  const [signupOtp, setSignupOtp] = useState('');
   const [signupVerificationToken, setSignupVerificationToken] = useState<string | null>(null);
   const [devOtpHint, setDevOtpHint] = useState<string | null>(null);
   const [apiReachable, setApiReachable] = useState<boolean | null>(null);
-  const appOrigin = typeof window !== "undefined" ? window.location.origin : "";
+  const appOrigin = typeof window !== 'undefined' ? window.location.origin : '';
 
   useEffect(() => {
     if (!import.meta.env.DEV) return;
@@ -115,29 +115,29 @@ function WorkspaceLoginPage() {
       role?: string;
       tenantId?: string;
       workspaceId?: string;
-      scope?: "platform" | "tenant";
+      scope?: 'platform' | 'tenant';
     },
     email: string,
   ) {
     saveSession({
       accessToken: res.accessToken,
       refreshToken: res.refreshToken,
-      route: "app",
+      route: 'app',
       email,
       tenantId: res.tenantId,
       workspaceId: res.workspaceId,
       membershipRole: res.role,
-      scope: res.scope ?? "tenant",
+      scope: res.scope ?? 'tenant',
     });
   }
 
   async function onSignIn(e: React.FormEvent) {
     e.preventDefault();
     if (isSuperAdminEmail(signinEmail)) {
-      toast.error("Platform administrators must use the Super Admin gateway.", {
+      toast.error('Platform administrators must use the Super Admin gateway.', {
         action: {
-          label: "Open gateway",
-          onClick: () => void router.navigate({ to: "/platform/login" }),
+          label: 'Open gateway',
+          onClick: () => void router.navigate({ to: '/platform/login' }),
         },
       });
       return;
@@ -145,20 +145,20 @@ function WorkspaceLoginPage() {
     setBusy(true);
     try {
       if (!useApi) {
-        toast.error("Configure VITE_API_URL — demo auth was removed in Phase 2C.");
+        toast.error('Configure VITE_API_URL — demo auth was removed in Phase 2C.');
         return;
       }
       const res = await apiLogin(signinEmail, signinPassword);
-      if (res.route === "admin") {
-        toast.error("Use the platform admin portal for Super Admin access.");
+      if (res.route === 'admin') {
+        toast.error('Use the platform admin portal for Super Admin access.');
         return;
       }
       saveWorkspaceSession(res, signinEmail);
       bootstrapWorkspaceUser({ email: signinEmail });
-      toast.success("Signed in to workspace");
-      await router.navigate({ to: "/app" });
+      toast.success('Signed in to workspace');
+      await router.navigate({ to: '/app' });
     } catch (err) {
-      toast.error(formatApiError(err, "Sign in failed"));
+      toast.error(formatApiError(err, 'Sign in failed'));
     } finally {
       setBusy(false);
     }
@@ -167,11 +167,11 @@ function WorkspaceLoginPage() {
   async function completeSignup(verificationToken?: string) {
     try {
       if (!useApi) {
-        toast.error("Configure VITE_API_URL — demo signup was removed in Phase 2C.");
+        toast.error('Configure VITE_API_URL — demo signup was removed in Phase 2C.');
         return;
       }
       if (!verificationToken) {
-        toast.error("Email verification required. Complete OTP verification first.");
+        toast.error('Email verification required. Complete OTP verification first.');
         return;
       }
       const res = await apiSignUp({
@@ -181,7 +181,7 @@ function WorkspaceLoginPage() {
         countryCode: localization.countryCode,
         currency: localization.currency,
         timezone: localization.timezone,
-        address: localization.address?.trim() ?? "",
+        address: localization.address?.trim() ?? '',
         taxId: localization.taxId?.trim() || undefined,
         industry,
         fullName,
@@ -192,39 +192,39 @@ function WorkspaceLoginPage() {
       saveWorkspaceName(companyName);
       bootstrapWorkspaceUser({ email: companyEmail, businessName: companyName, fullName });
       setSignupVerificationToken(null);
-      toast.success("Workspace created — redirecting");
-      await router.navigate({ to: "/app" });
+      toast.success('Workspace created — redirecting');
+      await router.navigate({ to: '/app' });
     } catch (err) {
-      toast.error(formatApiError(err, "Could not create workspace"));
+      toast.error(formatApiError(err, 'Could not create workspace'));
     }
   }
 
   async function requestSignupOtpCode() {
     if (!companyName.trim() || !companyEmail.trim() || !fullName.trim()) {
-      toast.error("Complete all required company and owner fields first.");
+      toast.error('Complete all required company and owner fields first.');
       return;
     }
     if (!localization.countryCode || !localization.currency) {
-      toast.error("Country and currency are required.");
+      toast.error('Country and currency are required.');
       return;
     }
     if (!localization.address?.trim()) {
-      toast.error("Business address is required.");
+      toast.error('Business address is required.');
       return;
     }
     if (!localization.timezone) {
-      toast.error("Timezone is required.");
+      toast.error('Timezone is required.');
       return;
     }
     setBusy(true);
     try {
       const res = await apiRequestSignupOtp(companyEmail, companyName);
-      setSignupStep("otp");
+      setSignupStep('otp');
       setSignupVerificationToken(null);
       setDevOtpHint(res.devCode ?? null);
-      toast.success(res.delivered ? "OTP sent to your email" : "OTP generated for local testing");
+      toast.success(res.delivered ? 'OTP sent to your email' : 'OTP generated for local testing');
     } catch (err) {
-      toast.error(formatApiError(err, "Could not send OTP"));
+      toast.error(formatApiError(err, 'Could not send OTP'));
     } finally {
       setBusy(false);
     }
@@ -247,8 +247,8 @@ function WorkspaceLoginPage() {
       }
       await completeSignup(verificationToken);
     } catch (err) {
-      const message = formatApiError(err, "Could not verify OTP");
-      if (message.toLowerCase().includes("verification code")) {
+      const message = formatApiError(err, 'Could not verify OTP');
+      if (message.toLowerCase().includes('verification code')) {
         setSignupVerificationToken(null);
       }
       toast.error(message);
@@ -269,12 +269,18 @@ function WorkspaceLoginPage() {
       complianceIcon={ShieldCheck}
       complianceText={
         <>
-          By continuing, you agree to our{" "}
-          <Link to="/privacy" className="text-foreground">
+          By continuing, you agree to our{' '}
+          <Link
+            to="/privacy"
+            className="text-foreground"
+          >
             Privacy Policy
-          </Link>{" "}
-          and{" "}
-          <Link to="/terms" className="text-foreground">
+          </Link>{' '}
+          and{' '}
+          <Link
+            to="/terms"
+            className="text-foreground"
+          >
             Terms of Service
           </Link>
           .
@@ -282,26 +288,41 @@ function WorkspaceLoginPage() {
       }
     >
       {import.meta.env.DEV && apiReachable === false ? (
-        <div className="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-          API not reachable. Close extra terminals, run{" "}
-          <code className="rounded bg-destructive/10 px-1 font-mono">npm run dev</code>, then use{" "}
-          <a href={appOrigin || "/"} className="font-medium underline">
-            {appOrigin ? appOrigin.replace(/^https?:\/\//, "") : "this app origin"}
-          </a>{" "}
+        <div className="border-destructive/50 bg-destructive/10 text-destructive mb-4 rounded-lg border px-3 py-2 text-xs">
+          API not reachable. Close extra terminals, run{' '}
+          <code className="bg-destructive/10 rounded px-1 font-mono">npm run dev</code>, then use{' '}
+          <a
+            href={appOrigin || '/'}
+            className="font-medium underline"
+          >
+            {appOrigin ? appOrigin.replace(/^https?:\/\//, '') : 'this app origin'}
+          </a>{' '}
           only (not 8081).
         </div>
       ) : null}
       <Tabs defaultValue={search.tab}>
         <TabsList className="w-full">
-          <TabsTrigger className="flex-1" value="signin">
+          <TabsTrigger
+            className="flex-1"
+            value="signin"
+          >
             Sign In
           </TabsTrigger>
-          <TabsTrigger className="flex-1" value="signup">
+          <TabsTrigger
+            className="flex-1"
+            value="signup"
+          >
             Create Workspace
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="signin" className="space-y-3 pt-4">
-          <form className="space-y-3" onSubmit={onSignIn}>
+        <TabsContent
+          value="signin"
+          className="space-y-3 pt-4"
+        >
+          <form
+            className="space-y-3"
+            onSubmit={onSignIn}
+          >
             <Input
               placeholder="Email"
               type="email"
@@ -321,23 +342,29 @@ function WorkspaceLoginPage() {
             <Button
               type="submit"
               disabled={busy}
-              className="w-full bg-foreground text-background hover:bg-foreground/90"
+              className="bg-foreground text-background hover:bg-foreground/90 w-full"
             >
-              {busy ? "Signing in…" : "Sign In"}
+              {busy ? 'Signing in…' : 'Sign In'}
             </Button>
-            <div className="text-xs text-muted-foreground">
+            <div className="text-muted-foreground text-xs">
               <Link
                 to="/forgot-password"
-                className="font-medium text-foreground underline-offset-4 hover:underline"
+                className="text-foreground font-medium underline-offset-4 hover:underline"
               >
                 Forgot password?
               </Link>
             </div>
           </form>
         </TabsContent>
-        <TabsContent value="signup" className="space-y-3 pt-4">
-          {signupStep === "details" ? (
-            <form className="space-y-3" onSubmit={onSignUp}>
+        <TabsContent
+          value="signup"
+          className="space-y-3 pt-4"
+        >
+          {signupStep === 'details' ? (
+            <form
+              className="space-y-3"
+              onSubmit={onSignUp}
+            >
               <Input
                 placeholder="Company name"
                 value={companyName}
@@ -368,13 +395,19 @@ function WorkspaceLoginPage() {
                 showFormats={false}
                 idPrefix="signup"
               />
-              <Select value={industry} onValueChange={setIndustry}>
+              <Select
+                value={industry}
+                onValueChange={setIndustry}
+              >
                 <SelectTrigger className="h-10">
                   <SelectValue placeholder="Industry" />
                 </SelectTrigger>
                 <SelectContent>
                   {INDUSTRY_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
+                    <SelectItem
+                      key={opt.value}
+                      value={opt.value}
+                    >
                       {opt.label}
                     </SelectItem>
                   ))}
@@ -399,22 +432,25 @@ function WorkspaceLoginPage() {
               <Button
                 type="submit"
                 disabled={busy || !isPasswordStrong(signupPassword)}
-                className="w-full bg-foreground text-background hover:bg-foreground/90"
+                className="bg-foreground text-background hover:bg-foreground/90 w-full"
               >
-                {busy ? "Sending OTP…" : "Verify email & continue"}
+                {busy ? 'Sending OTP…' : 'Verify email & continue'}
               </Button>
-              <p className="text-xs leading-relaxed text-muted-foreground">
+              <p className="text-muted-foreground text-xs leading-relaxed">
                 We verify your company email before creating the workspace. You become the Tenant
                 Super Admin for your company.
               </p>
             </form>
           ) : (
-            <form className="space-y-3" onSubmit={onVerifySignupOtp}>
-              <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
-                Enter the 6-digit code sent to{" "}
-                <span className="font-medium text-foreground">{companyEmail}</span>.
+            <form
+              className="space-y-3"
+              onSubmit={onVerifySignupOtp}
+            >
+              <div className="border-border bg-muted/40 text-muted-foreground rounded-lg border p-3 text-xs">
+                Enter the 6-digit code sent to{' '}
+                <span className="text-foreground font-medium">{companyEmail}</span>.
                 {devOtpHint ? (
-                  <span className="mt-1 block font-mono text-foreground">
+                  <span className="text-foreground mt-1 block font-mono">
                     Local dev OTP: {devOtpHint}
                   </span>
                 ) : null}
@@ -425,23 +461,23 @@ function WorkspaceLoginPage() {
                 autoComplete="one-time-code"
                 maxLength={6}
                 value={signupOtp}
-                onChange={(e) => setSignupOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                onChange={(e) => setSignupOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 required
               />
               <Button
                 type="submit"
                 disabled={busy || signupOtp.length !== 6}
-                className="w-full bg-foreground text-background hover:bg-foreground/90"
+                className="bg-foreground text-background hover:bg-foreground/90 w-full"
               >
-                {busy ? "Creating workspace…" : "Verify OTP & create workspace"}
+                {busy ? 'Creating workspace…' : 'Verify OTP & create workspace'}
               </Button>
-              <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+              <div className="text-muted-foreground flex flex-wrap items-center justify-between gap-2 text-xs">
                 <button
                   type="button"
-                  className="font-medium text-foreground underline-offset-4 hover:underline"
+                  className="text-foreground font-medium underline-offset-4 hover:underline"
                   onClick={() => {
-                    setSignupStep("details");
-                    setSignupOtp("");
+                    setSignupStep('details');
+                    setSignupOtp('');
                     setSignupVerificationToken(null);
                     setDevOtpHint(null);
                   }}
@@ -450,7 +486,7 @@ function WorkspaceLoginPage() {
                 </button>
                 <button
                   type="button"
-                  className="font-medium text-foreground underline-offset-4 hover:underline"
+                  className="text-foreground font-medium underline-offset-4 hover:underline"
                   onClick={requestSignupOtpCode}
                   disabled={busy}
                 >
@@ -461,7 +497,7 @@ function WorkspaceLoginPage() {
           )}
         </TabsContent>
       </Tabs>
-      <div className="mt-5 border-t border-border pt-4 text-xs text-muted-foreground">
+      <div className="border-border text-muted-foreground mt-5 border-t pt-4 text-xs">
         <span className="flex items-center gap-1.5">
           <Headphones className="h-3.5 w-3.5" /> {VELON_CONTACT_EMAIL}
         </span>

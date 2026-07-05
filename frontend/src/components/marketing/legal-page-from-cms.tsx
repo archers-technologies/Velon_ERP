@@ -1,5 +1,5 @@
-import { LegalPageLayout } from "@/components/marketing/legal-page-layout";
-import type { CmsLegalPage } from "@/lib/cms/defaults";
+import { LegalPageLayout } from '@/components/marketing/legal-page-layout';
+import type { CmsLegalPage } from '@/lib/cms/defaults';
 
 export function LegalPageFromCms({
   page,
@@ -18,9 +18,9 @@ export function LegalPageFromCms({
       sections={page.sections.map((section) => ({
         id: section.id,
         title: section.title,
-        content: section.body.split("\n\n").map((paragraph, index) => (
-          <p key={index}>{paragraph}</p>
-        )),
+        content: section.body
+          .split('\n\n')
+          .map((paragraph, index) => <p key={index}>{paragraph}</p>),
       }))}
       relatedLinks={relatedLinks}
     />

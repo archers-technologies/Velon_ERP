@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import {
   CrmLeadStatus,
   CrmOpportunityStatus,
@@ -7,13 +7,12 @@ import {
   PurchaseOrderStatus,
   PurchaseRequestStatus,
   SupplierStatus,
-} from "@velon/database";
-import { canReadInventory, normalizeVelonRole } from "@velon/shared";
-import { planCatalogEntry } from "@velon/shared";
-import { AuditService } from "../audit/audit.service";
-import { PrismaService } from "../prisma/prisma.service";
-import { SeatsService } from "../tenant-admin/seats.service";
-import { WorkspaceContextService } from "./workspace-context.service";
+} from '@velon/database';
+import { canReadInventory, normalizeVelonRole, planCatalogEntry } from '@velon/shared';
+import { AuditService } from '../audit/audit.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { SeatsService } from '../tenant-admin/seats.service';
+import { WorkspaceContextService } from './workspace-context.service';
 
 type PosSaleAuditMeta = {
   total?: number;
@@ -41,7 +40,7 @@ export class WorkspaceDataService {
   }
 
   private parsePosMeta(metadata: unknown): PosSaleAuditMeta {
-    if (!metadata || typeof metadata !== "object") return {};
+    if (!metadata || typeof metadata !== 'object') return {};
     return metadata as PosSaleAuditMeta;
   }
 
@@ -49,10 +48,10 @@ export class WorkspaceDataService {
     return this.prisma.client.auditLog.findMany({
       where: {
         tenantId,
-        action: { in: ["pos.sale_paid", "pos.sale_due"] },
+        action: { in: ['pos.sale_paid', 'pos.sale_due'] },
         ...(since ? { createdAt: { gte: since } } : {}),
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
       take: 200,
     });
   }
@@ -64,15 +63,15 @@ export class WorkspaceDataService {
     const invoices = rows.map((row) => {
       const meta = this.parsePosMeta(row.metadata);
       const amount = Number(meta.total ?? 0);
-      const paid = row.action === "pos.sale_paid";
+      const paid = row.action === 'pos.sale_paid';
       if (paid) paidMtd += amount;
       else dueMtd += amount;
       revenueMtd += amount;
       return {
         id: row.entityId ?? row.id,
-        customer: meta.customerName ?? "Walk-in",
+        customer: meta.customerName ?? 'Walk-in',
         amount,
-        status: paid ? ("paid" as const) : ("due" as const),
+        status: paid ? ('paid' as const) : ('due' as const),
         date: row.createdAt.toISOString().slice(0, 10),
         at: row.createdAt.toISOString(),
         lineCount: meta.lineCount ?? 0,
@@ -81,7 +80,7 @@ export class WorkspaceDataService {
     return { paidMtd, dueMtd, revenueMtd, invoices };
   }
 
-  async dashboard(user: Parameters<WorkspaceContextService["resolve"]>[0]) {
+  async dashboard(user: Parameters<WorkspaceContextService['resolve']>[0]) {
     const ctx = await this.workspaceContext.resolve(user);
     const tenantId = ctx.tenantId;
 
@@ -114,7 +113,7 @@ export class WorkspaceDataService {
       }),
       this.prisma.client.notification.findMany({
         where: { tenantId, userId },
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: 'desc' },
         take: 8,
       }),
       this.audit.listRecent(10, tenantId),
@@ -132,7 +131,9 @@ export class WorkspaceDataService {
       this.prisma.client.crmQuotation.count({
         where: {
           tenantId,
-          status: { in: [CrmQuotationStatus.DRAFT, CrmQuotationStatus.SENT, CrmQuotationStatus.VIEWED] },
+          status: {
+            in: [CrmQuotationStatus.DRAFT, CrmQuotationStatus.SENT, CrmQuotationStatus.VIEWED],
+          },
         },
       }),
       this.prisma.client.crmActivity.count({ where: { tenantId } }),
@@ -229,18 +230,34 @@ export class WorkspaceDataService {
         warehouseCount: inventoryWarehouses,
       },
       quickActions: [
-        { label: "Invite team member", to: "/app/settings/admin", search: { section: "invitations", tab: "general" } },
-        { label: "Create department", to: "/app/settings/admin", search: { section: "departments", tab: "general" } },
-        { label: "Add user", to: "/app/settings/admin", search: { section: "users", tab: "general" } },
-        { label: "Open CRM", to: "/app/crm", search: { section: "customers" } },
-        { label: "Inventory", to: "/app/inventory" },
-        { label: "Procurement", to: "/app/procurement" },
-        { label: "Company settings", to: "/app/settings/admin", search: { section: "company", tab: "general" } },
+        {
+          label: 'Invite team member',
+          to: '/app/settings/admin',
+          search: { section: 'invitations', tab: 'general' },
+        },
+        {
+          label: 'Create department',
+          to: '/app/settings/admin',
+          search: { section: 'departments', tab: 'general' },
+        },
+        {
+          label: 'Add user',
+          to: '/app/settings/admin',
+          search: { section: 'users', tab: 'general' },
+        },
+        { label: 'Open CRM', to: '/app/crm', search: { section: 'customers' } },
+        { label: 'Inventory', to: '/app/inventory' },
+        { label: 'Procurement', to: '/app/procurement' },
+        {
+          label: 'Company settings',
+          to: '/app/settings/admin',
+          search: { section: 'company', tab: 'general' },
+        },
       ],
     };
   }
 
-  async navBadges(user: Parameters<WorkspaceContextService["resolve"]>[0]) {
+  async navBadges(user: Parameters<WorkspaceContextService['resolve']>[0]) {
     const ctx = await this.workspaceContext.resolve(user);
     const unread = await this.prisma.client.notification.count({
       where: { tenantId: ctx.tenantId, userId: ctx.user.id, read: false },
@@ -248,11 +265,11 @@ export class WorkspaceDataService {
     return { billingOpen: 0, alerts: unread };
   }
 
-  async alerts(user: Parameters<WorkspaceContextService["resolve"]>[0]) {
+  async alerts(user: Parameters<WorkspaceContextService['resolve']>[0]) {
     const ctx = await this.workspaceContext.resolve(user);
     const rows = await this.prisma.client.notification.findMany({
       where: { tenantId: ctx.tenantId, userId: ctx.user.id },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
       take: 20,
     });
     return rows.map((n) => ({
@@ -265,7 +282,7 @@ export class WorkspaceDataService {
   }
 
   async markNotificationRead(
-    user: Parameters<WorkspaceContextService["resolve"]>[0],
+    user: Parameters<WorkspaceContextService['resolve']>[0],
     notificationId: string,
   ) {
     const ctx = await this.workspaceContext.resolve(user);
@@ -273,11 +290,11 @@ export class WorkspaceDataService {
       where: { id: notificationId, tenantId: ctx.tenantId, userId: ctx.user.id },
       data: { read: true },
     });
-    if (result.count === 0) throw new NotFoundException("Notification not found.");
+    if (result.count === 0) throw new NotFoundException('Notification not found.');
     return { ok: true };
   }
 
-  async markAllNotificationsRead(user: Parameters<WorkspaceContextService["resolve"]>[0]) {
+  async markAllNotificationsRead(user: Parameters<WorkspaceContextService['resolve']>[0]) {
     const ctx = await this.workspaceContext.resolve(user);
     await this.prisma.client.notification.updateMany({
       where: { tenantId: ctx.tenantId, userId: ctx.user.id, read: false },
@@ -286,11 +303,11 @@ export class WorkspaceDataService {
     return { ok: true };
   }
 
-  async customers(user: Parameters<WorkspaceContextService["resolve"]>[0]) {
+  async customers(user: Parameters<WorkspaceContextService['resolve']>[0]) {
     const ctx = await this.workspaceContext.resolve(user);
     const rows = await this.prisma.client.crmCustomer.findMany({
       where: { tenantId: ctx.tenantId, archivedAt: null },
-      orderBy: { updatedAt: "desc" },
+      orderBy: { updatedAt: 'desc' },
       take: 50,
     });
     const posRows = await this.posSalesAudit(ctx.tenantId);
@@ -299,24 +316,26 @@ export class WorkspaceDataService {
     const customers = rows.map((c) => ({
       id: c.id,
       name: c.companyName,
-      outstandingDue: Math.round(
-        pos.invoices
-          .filter((i) => i.status === "due" && i.customer === c.companyName)
-          .reduce((s, i) => s + i.amount, 0) * 100,
-      ) / 100,
-      status: "active" as const,
-      email: c.email ?? "",
-      phone: c.phone ?? "",
-      accountManager: "",
+      outstandingDue:
+        Math.round(
+          pos.invoices
+            .filter((i) => i.status === 'due' && i.customer === c.companyName)
+            .reduce((s, i) => s + i.amount, 0) * 100,
+        ) / 100,
+      status: 'active' as const,
+      email: c.email ?? '',
+      phone: c.phone ?? '',
+      accountManager: '',
       creditLimit: 0,
-      lifetimeValue: Math.round(
-        pos.invoices
-          .filter((i) => i.customer === c.companyName)
-          .reduce((s, i) => s + i.amount, 0) * 100,
-      ) / 100,
+      lifetimeValue:
+        Math.round(
+          pos.invoices
+            .filter((i) => i.customer === c.companyName)
+            .reduce((s, i) => s + i.amount, 0) * 100,
+        ) / 100,
       openOpportunities: 0,
       winRatePct: 0,
-      healthScore: c.status === "ACTIVE" ? 80 : 50,
+      healthScore: c.status === 'ACTIVE' ? 80 : 50,
     }));
     return {
       customers,
@@ -334,12 +353,12 @@ export class WorkspaceDataService {
     };
   }
 
-  async suppliers(user: Parameters<WorkspaceContextService["resolve"]>[0]) {
+  async suppliers(user: Parameters<WorkspaceContextService['resolve']>[0]) {
     const ctx = await this.workspaceContext.resolve(user);
     const [supplierRows, poRows, threadRows] = await Promise.all([
       this.prisma.client.supplier.findMany({
         where: { tenantId: ctx.tenantId },
-        orderBy: { name: "asc" },
+        orderBy: { name: 'asc' },
       }),
       this.prisma.client.purchaseOrder.findMany({
         where: {
@@ -355,12 +374,12 @@ export class WorkspaceDataService {
           },
         },
         include: { supplier: true },
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: 'desc' },
         take: 30,
       }),
       this.prisma.client.supplierThread.findMany({
         where: { tenantId: ctx.tenantId },
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: 'desc' },
         take: 200,
       }),
     ]);
@@ -369,18 +388,18 @@ export class WorkspaceDataService {
       id: s.id,
       name: s.name,
       outstanding: 0,
-      paymentStatus: s.status === SupplierStatus.ACTIVE ? "paid" : "due in 3 days",
-      email: s.email ?? "",
-      region: s.country ?? "",
-      category: "General",
+      paymentStatus: s.status === SupplierStatus.ACTIVE ? 'paid' : 'due in 3 days',
+      email: s.email ?? '',
+      region: s.country ?? '',
+      category: 'General',
       lifecycle: (s.status === SupplierStatus.ONBOARDING
-        ? "onboarding"
+        ? 'onboarding'
         : s.status === SupplierStatus.ACTIVE
-          ? "active"
-          : "inactive") as "active" | "onboarding" | "inactive",
+          ? 'active'
+          : 'inactive') as 'active' | 'onboarding' | 'inactive',
       onTimeDeliveryPct: 0,
       qualityScore: 0,
-      riskTier: "low" as const,
+      riskTier: 'low' as const,
       annualSpend: 0,
       primaryCatalog: s.legalName ?? s.name,
     }));
@@ -390,7 +409,12 @@ export class WorkspaceDataService {
       supplierId: po.supplierId,
       supplierName: po.supplier.name,
       poNumber: po.poNumber,
-      stage: po.status.toLowerCase().replace(/_/g, "-") as "draft" | "sent" | "partial" | "received" | "invoiced",
+      stage: po.status.toLowerCase().replace(/_/g, '-') as
+        | 'draft'
+        | 'sent'
+        | 'partial'
+        | 'received'
+        | 'invoiced',
       amount: Number(po.total),
       total: Number(po.total),
       currency: ctx.workspace.currency,
@@ -425,64 +449,72 @@ export class WorkspaceDataService {
     };
   }
 
-  async salesCrm(user: Parameters<WorkspaceContextService["resolve"]>[0]) {
+  async salesCrm(user: Parameters<WorkspaceContextService['resolve']>[0]) {
     const ctx = await this.workspaceContext.resolve(user);
     const tenantId = ctx.tenantId;
     const monthStart = this.monthStart();
 
-    const [leads, openOpps, openQuotes, stocks, posRows, crmCustomers, leadRows] = await Promise.all([
-      this.prisma.client.crmLead.count({
-        where: {
-          tenantId,
-          archivedAt: null,
-          status: { notIn: [CrmLeadStatus.CONVERTED, CrmLeadStatus.DISQUALIFIED] },
-        },
-      }),
-      this.prisma.client.crmOpportunity.findMany({
-        where: { tenantId, status: CrmOpportunityStatus.OPEN },
-        select: { value: true },
-      }),
-      this.prisma.client.crmQuotation.count({
-        where: {
-          tenantId,
-          status: { in: [CrmQuotationStatus.DRAFT, CrmQuotationStatus.SENT, CrmQuotationStatus.VIEWED] },
-        },
-      }),
-      this.prisma.client.inventoryStock.findMany({ where: { tenantId } }),
-      this.posSalesAudit(tenantId, monthStart),
-      this.prisma.client.crmCustomer.findMany({
-        where: { tenantId, archivedAt: null },
-        take: 24,
-        orderBy: { updatedAt: "desc" },
-      }),
-      this.prisma.client.crmLead.findMany({
-        where: {
-          tenantId,
-          archivedAt: null,
-          status: { notIn: [CrmLeadStatus.CONVERTED, CrmLeadStatus.DISQUALIFIED] },
-        },
-        orderBy: { updatedAt: "desc" },
-        take: 48,
-      }),
-    ]);
+    const [leads, openOpps, openQuotes, stocks, posRows, crmCustomers, leadRows] =
+      await Promise.all([
+        this.prisma.client.crmLead.count({
+          where: {
+            tenantId,
+            archivedAt: null,
+            status: { notIn: [CrmLeadStatus.CONVERTED, CrmLeadStatus.DISQUALIFIED] },
+          },
+        }),
+        this.prisma.client.crmOpportunity.findMany({
+          where: { tenantId, status: CrmOpportunityStatus.OPEN },
+          select: { value: true },
+        }),
+        this.prisma.client.crmQuotation.count({
+          where: {
+            tenantId,
+            status: {
+              in: [CrmQuotationStatus.DRAFT, CrmQuotationStatus.SENT, CrmQuotationStatus.VIEWED],
+            },
+          },
+        }),
+        this.prisma.client.inventoryStock.findMany({ where: { tenantId } }),
+        this.posSalesAudit(tenantId, monthStart),
+        this.prisma.client.crmCustomer.findMany({
+          where: { tenantId, archivedAt: null },
+          take: 24,
+          orderBy: { updatedAt: 'desc' },
+        }),
+        this.prisma.client.crmLead.findMany({
+          where: {
+            tenantId,
+            archivedAt: null,
+            status: { notIn: [CrmLeadStatus.CONVERTED, CrmLeadStatus.DISQUALIFIED] },
+          },
+          orderBy: { updatedAt: 'desc' },
+          take: 48,
+        }),
+      ]);
 
     const pos = this.summarizePosSales(posRows);
     const pipelineValueOpen = openOpps.reduce((s, o) => s + Number(o.value ?? 0), 0);
     const lowStockSkus = stocks.filter((s) => s.quantity - s.reservedQty <= s.reorderLevel).length;
 
-    const mapLeadStage = (status: CrmLeadStatus): "New" | "Qualified" | "Proposal" | "Won" => {
+    const mapLeadStage = (status: CrmLeadStatus): 'New' | 'Qualified' | 'Proposal' | 'Won' => {
       switch (status) {
         case CrmLeadStatus.QUALIFIED:
-          return "Qualified";
+          return 'Qualified';
         case CrmLeadStatus.CONTACTED:
-          return "Qualified";
+          return 'Qualified';
         default:
-          return "New";
+          return 'New';
       }
     };
 
     return {
-      stageCounts: { New: leads, Qualified: 0, Proposal: openQuotes, Won: pos.invoices.filter((i) => i.status === "paid").length },
+      stageCounts: {
+        New: leads,
+        Qualified: 0,
+        Proposal: openQuotes,
+        Won: pos.invoices.filter((i) => i.status === 'paid').length,
+      },
       leads: leadRows.map((row) => ({
         id: row.id,
         title: row.contactName ? `${row.companyName} — ${row.contactName}` : row.companyName,
@@ -491,17 +523,17 @@ export class WorkspaceDataService {
         estimatedValue: 0,
         customerId: row.convertedCustomerId ?? undefined,
         aiScore: 50,
-        quoteStatus: "none" as const,
-        owner: "Workspace",
-        nextStep: row.notes?.slice(0, 80) ?? "Follow up",
+        quoteStatus: 'none' as const,
+        owner: 'Workspace',
+        nextStep: row.notes?.slice(0, 80) ?? 'Follow up',
         nextStepDue: row.updatedAt.toISOString().slice(0, 10),
       })),
       activities: [],
       customers: crmCustomers.map((c) => ({
         id: c.id,
         name: c.companyName,
-        email: c.email ?? "",
-        status: "active" as const,
+        email: c.email ?? '',
+        status: 'active' as const,
       })),
       invoices: pos.invoices.map((i) => ({
         id: i.id,
@@ -517,7 +549,10 @@ export class WorkspaceDataService {
         avgDealOpen: openOpps.length ? Math.round(pipelineValueOpen / openOpps.length) : 0,
         wonValueAll: Math.round(pos.paidMtd * 100) / 100,
         monthlyGoal: Math.round(pos.revenueMtd * 1.2 * 100) / 100 || 10000,
-        goalProgressPct: pos.revenueMtd > 0 ? Math.min(100, Math.round((pos.paidMtd / (pos.revenueMtd * 1.2 || 1)) * 100)) : 0,
+        goalProgressPct:
+          pos.revenueMtd > 0
+            ? Math.min(100, Math.round((pos.paidMtd / (pos.revenueMtd * 1.2 || 1)) * 100))
+            : 0,
         pendingQuotes: openQuotes,
         hotLeads: leads,
       },
@@ -526,7 +561,7 @@ export class WorkspaceDataService {
     };
   }
 
-  async accounting(user: Parameters<WorkspaceContextService["resolve"]>[0]) {
+  async accounting(user: Parameters<WorkspaceContextService['resolve']>[0]) {
     const ctx = await this.workspaceContext.resolve(user);
     const tenantId = ctx.tenantId;
     const monthStart = this.monthStart();
@@ -540,27 +575,25 @@ export class WorkspaceDataService {
       this.prisma.client.purchaseOrder.findMany({
         where: {
           tenantId,
-          status: { in: ["DRAFT", "PENDING_APPROVAL", "APPROVED", "SENT", "PARTIALLY_RECEIVED"] },
+          status: { in: ['DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'SENT', 'PARTIALLY_RECEIVED'] },
         },
         select: { total: true },
       }),
-      this.prisma.client.supplier.count({ where: { tenantId, status: "ACTIVE" } }),
+      this.prisma.client.supplier.count({ where: { tenantId, status: 'ACTIVE' } }),
       this.posSalesAudit(tenantId, monthStart),
       this.prisma.client.auditLog.findMany({
         where: { tenantId },
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: 'desc' },
         take: 30,
         include: { actor: { select: { email: true, name: true } } },
       }),
     ]);
 
     const pos = this.summarizePosSales(posRows);
-    const payables = Math.round(
-      openPoRows.reduce((sum, po) => sum + Number(po.total), 0) * 100,
-    ) / 100;
+    const payables =
+      Math.round(openPoRows.reduce((sum, po) => sum + Number(po.total), 0) * 100) / 100;
     const inventoryValue = stocks.reduce(
-      (sum, row) =>
-        sum + (row.quantity - row.reservedQty) * Number(row.product.unitPrice),
+      (sum, row) => sum + (row.quantity - row.reservedQty) * Number(row.product.unitPrice),
       0,
     );
     const cogsMtd = Math.round(pos.revenueMtd * 0.55 * 100) / 100;
@@ -570,7 +603,7 @@ export class WorkspaceDataService {
     for (const inv of pos.invoices) {
       const day = inv.date;
       const cur = cashByDay.get(day) ?? { inflow: 0, outflow: 0 };
-      if (inv.status === "paid") cur.inflow += inv.amount;
+      if (inv.status === 'paid') cur.inflow += inv.amount;
       else cur.outflow += inv.amount;
       cashByDay.set(day, cur);
     }
@@ -590,9 +623,9 @@ export class WorkspaceDataService {
       },
       agingAr:
         pos.dueMtd > 0
-          ? [{ bucket: "POS tickets (due)", amount: Math.round(pos.dueMtd * 100) / 100 }]
+          ? [{ bucket: 'POS tickets (due)', amount: Math.round(pos.dueMtd * 100) / 100 }]
           : [],
-      agingAp: payables > 0 ? [{ bucket: "Open POs", amount: payables }] : [],
+      agingAp: payables > 0 ? [{ bucket: 'Open POs', amount: payables }] : [],
       cashFlowTrend,
       automationAlerts: [],
       controlAlerts: [],
@@ -600,50 +633,50 @@ export class WorkspaceDataService {
         id: inv.id,
         customer: inv.customer,
         amt: inv.amount,
-        status: inv.status === "paid" ? ("Paid" as const) : ("Pending" as const),
+        status: inv.status === 'paid' ? ('Paid' as const) : ('Pending' as const),
         postedDate: inv.date,
         label: `${inv.id} · ${inv.customer}`,
       })),
       journalEntries: pos.invoices.map((inv) => {
         const amt = inv.amount;
-        const paid = inv.status === "paid";
+        const paid = inv.status === 'paid';
         return {
           id: inv.id,
           postedDate: inv.date,
           memo: `POS ${inv.status} · ${inv.customer}`,
-          sourceModule: "sales" as const,
+          sourceModule: 'sales' as const,
           sourceDocId: inv.id,
-          postedBy: "POS",
+          postedBy: 'POS',
           lines: paid
             ? [
-                { account: "1000 · Cash", debit: amt, credit: 0 },
-                { account: "4000 · Sales revenue", debit: 0, credit: amt },
+                { account: '1000 · Cash', debit: amt, credit: 0 },
+                { account: '4000 · Sales revenue', debit: 0, credit: amt },
               ]
             : [
-                { account: "1200 · Accounts receivable", debit: amt, credit: 0 },
-                { account: "4000 · Sales revenue", debit: 0, credit: amt },
+                { account: '1200 · Accounts receivable', debit: amt, credit: 0 },
+                { account: '4000 · Sales revenue', debit: 0, credit: amt },
               ],
         };
       }),
       bankFeed: pos.invoices
-        .filter((i) => i.status === "paid")
+        .filter((i) => i.status === 'paid')
         .map((i) => ({
           id: i.id,
           bookedDate: i.date,
           description: `POS cash · ${i.customer}`,
           amount: i.amount,
-          matchStatus: "matched" as const,
+          matchStatus: 'matched' as const,
           matchedTo: i.id,
         })),
       apBills: openPoRows.length
         ? [
             {
-              id: "open-pos",
-              supplierName: "Suppliers",
+              id: 'open-pos',
+              supplierName: 'Suppliers',
               amount: payables,
-              stage: "scheduled" as const,
+              stage: 'scheduled' as const,
               dueDate: new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10),
-              reference: "Open purchase orders",
+              reference: 'Open purchase orders',
             },
           ]
         : [],
@@ -651,8 +684,8 @@ export class WorkspaceDataService {
         id: a.id,
         action: a.action,
         at: a.createdAt.toISOString(),
-        actor: a.actor?.name ?? a.actor?.email ?? "System",
-        entityRef: a.entityId ?? a.entityType ?? "—",
+        actor: a.actor?.name ?? a.actor?.email ?? 'System',
+        entityRef: a.entityId ?? a.entityType ?? '—',
       })),
       _live: {
         customerCount: customers,
@@ -664,7 +697,7 @@ export class WorkspaceDataService {
     };
   }
 
-  async reports(user: Parameters<WorkspaceContextService["resolve"]>[0]) {
+  async reports(user: Parameters<WorkspaceContextService['resolve']>[0]) {
     const accounting = await this.accounting(user);
     const revenueMtd = accounting.kpis.recognizedRevenueMtd;
     const expensesMtd = accounting.kpis.expensesMtd;
@@ -687,9 +720,9 @@ export class WorkspaceDataService {
         net: Math.round((row.inflow - row.outflow) * 100) / 100,
       })),
       expenseMix: [
-        { name: "COGS", value: accounting.kpis.cogsMtd },
-        { name: "Payables", value: accounting.kpis.payables },
-        { name: "Operating", value: expensesMtd },
+        { name: 'COGS', value: accounting.kpis.cogsMtd },
+        { name: 'Payables', value: accounting.kpis.payables },
+        { name: 'Operating', value: expensesMtd },
       ].filter((row) => row.value > 0),
       expenseDrill: [],
       taskQueues: {
@@ -718,7 +751,7 @@ export class WorkspaceDataService {
     };
   }
 
-  async branches(user: Parameters<WorkspaceContextService["resolve"]>[0]) {
+  async branches(user: Parameters<WorkspaceContextService['resolve']>[0]) {
     const ctx = await this.workspaceContext.resolve(user);
     const tenantId = ctx.tenantId;
 
@@ -728,7 +761,7 @@ export class WorkspaceDataService {
     const [warehouses, stocks, posMtdRows, posTodayRows] = await Promise.all([
       this.prisma.client.inventoryWarehouse.findMany({
         where: { tenantId },
-        orderBy: { name: "asc" },
+        orderBy: { name: 'asc' },
       }),
       this.prisma.client.inventoryStock.findMany({
         where: { tenantId },
@@ -753,18 +786,16 @@ export class WorkspaceDataService {
       const lowStockSkus = whStocks.filter(
         (s) => s.quantity - s.reservedQty <= s.reorderLevel,
       ).length;
-      const criticalSkus = whStocks.filter(
-        (s) => s.quantity - s.reservedQty <= s.minStock,
-      ).length;
+      const criticalSkus = whStocks.filter((s) => s.quantity - s.reservedQty <= s.minStock).length;
       const batchTrackedSkus = whStocks.filter((s) => s.product.batchTracked).length;
-      const operationalStatus: "healthy" | "watch" | "critical" =
-        criticalSkus > 0 ? "critical" : lowStockSkus > 0 ? "watch" : "healthy";
+      const operationalStatus: 'healthy' | 'watch' | 'critical' =
+        criticalSkus > 0 ? 'critical' : lowStockSkus > 0 ? 'watch' : 'healthy';
 
       return {
         id: wh.id,
         name: wh.name,
         code: wh.code,
-        kind: "store" as const,
+        kind: 'store' as const,
         salesMtd: 0,
         operationalStatus,
         skusTracked: whStocks.length,
@@ -772,19 +803,15 @@ export class WorkspaceDataService {
         criticalSkus,
         batchTrackedSkus,
         inventorySites: [wh.name],
-        address: wh.location ?? "",
-        phone: wh.phone ?? "",
-        email: wh.email ?? "",
-        manager: wh.managerName ?? "",
+        address: wh.location ?? '',
+        phone: wh.phone ?? '',
+        email: wh.email ?? '',
+        manager: wh.managerName ?? '',
         isActive: wh.isActive,
         lines: whStocks.map((s) => {
           const available = s.quantity - s.reservedQty;
           const stockLevel =
-            available <= s.minStock
-              ? "critical"
-              : available <= s.reorderLevel
-                ? "low"
-                : "healthy";
+            available <= s.minStock ? 'critical' : available <= s.reorderLevel ? 'low' : 'healthy';
           return {
             id: s.id,
             sku: s.product.sku,
@@ -800,7 +827,7 @@ export class WorkspaceDataService {
     });
 
     const storesInWatch = branches.filter(
-      (b) => b.isActive && b.operationalStatus !== "healthy",
+      (b) => b.isActive && b.operationalStatus !== 'healthy',
     ).length;
 
     return {
@@ -827,24 +854,20 @@ export class WorkspaceDataService {
     };
   }
 
-  async inventory(user: Parameters<WorkspaceContextService["resolve"]>[0]) {
+  async inventory(user: Parameters<WorkspaceContextService['resolve']>[0]) {
     if (!canReadInventory(normalizeVelonRole(user.role))) return [];
     const ctx = await this.workspaceContext.resolve(user);
 
     const stocks = await this.prisma.client.inventoryStock.findMany({
       where: { tenantId: ctx.tenantId },
       include: { product: true, warehouse: true },
-      orderBy: { updatedAt: "desc" },
+      orderBy: { updatedAt: 'desc' },
     });
 
     return stocks.map((row) => {
       const available = row.quantity - row.reservedQty;
       const stockLevel =
-        available <= row.minStock
-          ? "critical"
-          : available <= row.reorderLevel
-            ? "low"
-            : "healthy";
+        available <= row.minStock ? 'critical' : available <= row.reorderLevel ? 'low' : 'healthy';
       return {
         id: row.id,
         sku: row.product.sku,
@@ -863,39 +886,88 @@ export class WorkspaceDataService {
     });
   }
 
-  async posBootstrap(user: Parameters<WorkspaceContextService["resolve"]>[0]) {
+  async posBootstrap(user: Parameters<WorkspaceContextService['resolve']>[0]) {
     const ctx = await this.workspaceContext.resolve(user);
 
-    const [stocks, crmCustomers] = await Promise.all([
+    const [stocks, variantProducts, crmCustomers] = await Promise.all([
       this.prisma.client.inventoryStock.findMany({
-        where: { tenantId: ctx.tenantId },
+        where: { tenantId: ctx.tenantId, variantId: null },
         include: { product: true, warehouse: true },
-        orderBy: { updatedAt: "desc" },
+        orderBy: { updatedAt: 'desc' },
         take: 48,
+      }),
+      this.prisma.client.inventoryProduct.findMany({
+        where: { tenantId: ctx.tenantId, hasVariants: true, status: 'ACTIVE' },
+        include: {
+          variants: {
+            where: { status: 'ACTIVE' },
+            include: {
+              stock: { include: { warehouse: true } },
+            },
+            orderBy: { sortOrder: 'asc' },
+          },
+        },
+        orderBy: { updatedAt: 'desc' },
+        take: 24,
       }),
       this.prisma.client.crmCustomer.findMany({
         where: { tenantId: ctx.tenantId, archivedAt: null },
         select: { id: true, companyName: true },
         take: 24,
-        orderBy: { companyName: "asc" },
+        orderBy: { companyName: 'asc' },
       }),
     ]);
 
     const catalog = stocks
-      .filter((row) => row.quantity - row.reservedQty > 0)
+      .filter((row) => !row.product.hasVariants && row.quantity - row.reservedQty > 0)
       .map((row) => ({
+        id: row.id,
         inventoryId: row.id,
+        productId: row.productId,
         sku: row.product.sku,
         name: row.product.name,
         site: row.warehouse.name,
         unitPrice: Number(row.product.unitPrice),
         available: row.quantity - row.reservedQty,
+        hasVariants: false,
       }));
+
+    const variantCatalog = variantProducts
+      .filter((p) => p.variants.length > 0)
+      .map((p) => ({
+        id: p.id,
+        productId: p.id,
+        name: p.name,
+        imageDataUrl: p.imageDataUrl,
+        variantCount: p.variants.length,
+        hasVariants: true,
+        variants: p.variants
+          .map((v) => {
+            const stockRow = v.stock.find((s) => s.quantity - s.reservedQty > 0) ?? v.stock[0];
+            const available = stockRow ? stockRow.quantity - stockRow.reservedQty : 0;
+            const unitPrice = Number(v.unitPrice);
+            const salePrice = v.salePrice != null ? Number(v.salePrice) : null;
+            const effectivePrice = salePrice != null && salePrice >= 0 ? salePrice : unitPrice;
+            return {
+              id: v.id,
+              variantId: v.id,
+              inventoryId: stockRow?.id,
+              label: v.label,
+              sku: v.sku,
+              unitPrice: effectivePrice,
+              available,
+              site: stockRow?.warehouse.name,
+            };
+          })
+          .filter((v) => v.available > 0 && v.inventoryId),
+      }))
+      .filter((p) => p.variants.length > 0);
 
     const customers = crmCustomers.map((c) => ({ id: c.id, name: c.companyName }));
 
     return {
       catalog,
+      variantCatalog,
       recentTickets: [],
       customers,
       defaultTicket: [],
@@ -903,10 +975,10 @@ export class WorkspaceDataService {
   }
 
   async commitPosSale(
-    user: Parameters<WorkspaceContextService["resolve"]>[0],
+    user: Parameters<WorkspaceContextService['resolve']>[0],
     input: {
       lines: Array<{ inventoryId?: string; name: string; qty: number; unitPrice: number }>;
-      kind: "paid" | "due";
+      kind: 'paid' | 'due';
       customerName?: string;
     },
     meta?: { ip?: string; ua?: string },
@@ -915,7 +987,7 @@ export class WorkspaceDataService {
     const tenantId = ctx.tenantId;
 
     if (!input.lines.length) {
-      throw new BadRequestException("Add at least one line to the ticket before settling.");
+      throw new BadRequestException('Add at least one line to the ticket before settling.');
     }
 
     let total = 0;
@@ -956,14 +1028,14 @@ export class WorkspaceDataService {
     await this.audit.log({
       actorId: ctx.user.id,
       tenantId,
-      action: input.kind === "paid" ? "pos.sale_paid" : "pos.sale_due",
-      entityType: "pos_ticket",
+      action: input.kind === 'paid' ? 'pos.sale_paid' : 'pos.sale_due',
+      entityType: 'pos_ticket',
       entityId: invoiceId,
       metadata: {
         total: roundedTotal,
         lineCount: input.lines.length,
         inventoryRowsTouched,
-        customerName: input.customerName ?? "Walk-in",
+        customerName: input.customerName ?? 'Walk-in',
         lines: input.lines.map((l) => ({
           name: l.name,
           qty: l.qty,

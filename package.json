@@ -11,7 +11,7 @@
     "dev": "npm run dev:all",
     "dev:web": "npm run dev -w @velon/frontend",
     "dev:api": "npm run dev -w @velon/backend",
-    "dev:all": "concurrently -n web,api -c blue,green \"npm run dev -w @velon/frontend\" \"npm run db:generate && npm run dev -w @velon/backend\"",
+    "dev:all": "concurrently -n api,web -c green,blue \"npm run db:generate && npm run dev -w @velon/backend\" \"node --env-file=.env scripts/wait-for-api.mjs && npm run dev -w @velon/frontend\"",
     "build": "npm run build -w @velon/shared && npm run build -w @velon/database && npm run build -w @velon/backend && npm run build -w @velon/frontend",
     "build:web": "npm run build -w @velon/frontend",
     "build:api": "npm run build -w @velon/database && npm run build -w @velon/shared && npm run build -w @velon/backend",

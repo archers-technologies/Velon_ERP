@@ -1,15 +1,15 @@
-import { Injectable } from "@nestjs/common";
-import { CrmQuotationApprovalAction, CrmQuotationStatus, Prisma } from "@velon/database";
-import { PrismaService } from "../prisma/prisma.service";
-import { TenantScopedRepository } from "../common/repositories/tenant-scoped.repository";
+import { Injectable } from '@nestjs/common';
+import { CrmQuotationApprovalAction, CrmQuotationStatus, Prisma } from '@velon/database';
+import { TenantScopedRepository } from '../common/repositories/tenant-scoped.repository';
+import { PrismaService } from '../prisma/prisma.service';
 
 const quotationInclude = {
   customer: { select: { id: true, companyName: true, email: true, phone: true, address: true } },
   opportunity: { select: { id: true, title: true, opportunityCode: true } },
   createdBy: { select: { id: true, name: true, email: true } },
   approvedBy: { select: { id: true, name: true, email: true } },
-  items: { orderBy: { position: "asc" as const } },
-  approvalHistory: { orderBy: { createdAt: "desc" as const }, take: 20 },
+  items: { orderBy: { position: 'asc' as const } },
+  approvalHistory: { orderBy: { createdAt: 'desc' as const }, take: 20 },
   _count: { select: { proposals: true, revisions: true } },
 };
 
@@ -29,8 +29,8 @@ export class CrmQuotationRepository extends TenantScopedRepository {
     const q = opts.search?.trim();
     if (q) {
       OR.push(
-        { quotationNumber: { contains: q, mode: "insensitive" } },
-        { notes: { contains: q, mode: "insensitive" } },
+        { quotationNumber: { contains: q, mode: 'insensitive' } },
+        { notes: { contains: q, mode: 'insensitive' } },
       );
     }
     return this.prisma.client.crmQuotation.findMany({
@@ -42,7 +42,7 @@ export class CrmQuotationRepository extends TenantScopedRepository {
         }),
         ...(OR.length ? { OR } : {}),
       },
-      orderBy: { updatedAt: "desc" },
+      orderBy: { updatedAt: 'desc' },
       include: quotationInclude,
     });
   }
@@ -52,8 +52,20 @@ export class CrmQuotationRepository extends TenantScopedRepository {
       where: this.where({ id }),
       include: {
         ...quotationInclude,
-        proposals: { orderBy: { version: "desc" }, take: 10, select: { id: true, version: true, generatedAt: true } },
-        revisions: { select: { id: true, quotationNumber: true, revisionNumber: true, status: true, createdAt: true } },
+        proposals: {
+          orderBy: { version: 'desc' },
+          take: 10,
+          select: { id: true, version: true, generatedAt: true },
+        },
+        revisions: {
+          select: {
+            id: true,
+            quotationNumber: true,
+            revisionNumber: true,
+            status: true,
+            createdAt: true,
+          },
+        },
       },
     });
   }
@@ -62,7 +74,7 @@ export class CrmQuotationRepository extends TenantScopedRepository {
     return this.prisma.client.crmQuotation.findFirst({ where: this.where({ id }) });
   }
 
-  create(data: Omit<Prisma.CrmQuotationUncheckedCreateInput, "tenantId">) {
+  create(data: Omit<Prisma.CrmQuotationUncheckedCreateInput, 'tenantId'>) {
     return this.prisma.client.crmQuotation.create({
       data: { ...data, tenantId: this.tenantId },
       include: quotationInclude,
@@ -83,7 +95,7 @@ export class CrmQuotationRepository extends TenantScopedRepository {
 
   aggregateByStatus() {
     return this.prisma.client.crmQuotation.groupBy({
-      by: ["status"],
+      by: ['status'],
       where: this.where(),
       _count: true,
       _sum: { total: true },
@@ -97,7 +109,7 @@ export class CrmQuotationRepository extends TenantScopedRepository {
         create: { tenantId: this.tenantId, year, lastNumber: 1 },
         update: { lastNumber: { increment: 1 } },
       });
-      const num = String(seq.lastNumber).padStart(5, "0");
+      const num = String(seq.lastNumber).padStart(5, '0');
       return `QTN-${year}-${num}`;
     });
   }
@@ -107,7 +119,7 @@ export class CrmQuotationRepository extends TenantScopedRepository {
       where: { portalTokenHash: hash },
       include: {
         customer: true,
-        items: { orderBy: { position: "asc" } },
+        items: { orderBy: { position: 'asc' } },
         tenant: { include: { companyProfile: true, workspace: true } },
       },
     });
@@ -123,7 +135,7 @@ export class CrmQuotationItemRepository extends TenantScopedRepository {
   findByQuotation(quotationId: string) {
     return this.prisma.client.crmQuotationItem.findMany({
       where: this.where({ quotationId }),
-      orderBy: { position: "asc" },
+      orderBy: { position: 'asc' },
     });
   }
 
@@ -133,13 +145,13 @@ export class CrmQuotationItemRepository extends TenantScopedRepository {
     });
   }
 
-  create(data: Omit<Prisma.CrmQuotationItemUncheckedCreateInput, "tenantId">) {
+  create(data: Omit<Prisma.CrmQuotationItemUncheckedCreateInput, 'tenantId'>) {
     return this.prisma.client.crmQuotationItem.create({
       data: { ...data, tenantId: this.tenantId },
     });
   }
 
-  createMany(items: Omit<Prisma.CrmQuotationItemUncheckedCreateInput, "tenantId">[]) {
+  createMany(items: Omit<Prisma.CrmQuotationItemUncheckedCreateInput, 'tenantId'>[]) {
     return this.prisma.client.crmQuotationItem.createMany({
       data: items.map((i) => ({ ...i, tenantId: this.tenantId })),
     });
@@ -173,7 +185,7 @@ export class CrmQuotationApprovalRepository extends TenantScopedRepository {
     super(prisma);
   }
 
-  create(data: Omit<Prisma.CrmQuotationApprovalHistoryUncheckedCreateInput, "tenantId">) {
+  create(data: Omit<Prisma.CrmQuotationApprovalHistoryUncheckedCreateInput, 'tenantId'>) {
     return this.prisma.client.crmQuotationApprovalHistory.create({
       data: { ...data, tenantId: this.tenantId },
     });
@@ -182,7 +194,7 @@ export class CrmQuotationApprovalRepository extends TenantScopedRepository {
   findByQuotation(quotationId: string) {
     return this.prisma.client.crmQuotationApprovalHistory.findMany({
       where: this.where({ quotationId }),
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
       include: { actor: { select: { id: true, name: true, email: true } } },
     });
   }
@@ -197,7 +209,7 @@ export class CrmProposalDocumentRepository extends TenantScopedRepository {
   findByQuotation(quotationId: string) {
     return this.prisma.client.crmProposalDocument.findMany({
       where: this.where({ quotationId }),
-      orderBy: { version: "desc" },
+      orderBy: { version: 'desc' },
       select: { id: true, version: true, generatedAt: true, generatedById: true },
     });
   }
@@ -211,7 +223,7 @@ export class CrmProposalDocumentRepository extends TenantScopedRepository {
   findLatest(quotationId: string) {
     return this.prisma.client.crmProposalDocument.findFirst({
       where: this.where({ quotationId }),
-      orderBy: { version: "desc" },
+      orderBy: { version: 'desc' },
     });
   }
 
@@ -222,7 +234,7 @@ export class CrmProposalDocumentRepository extends TenantScopedRepository {
     });
   }
 
-  create(data: Omit<Prisma.CrmProposalDocumentUncheckedCreateInput, "tenantId">) {
+  create(data: Omit<Prisma.CrmProposalDocumentUncheckedCreateInput, 'tenantId'>) {
     return this.prisma.client.crmProposalDocument.create({
       data: { ...data, tenantId: this.tenantId },
       select: { id: true, version: true, generatedAt: true },
@@ -239,7 +251,7 @@ export class CrmProposalTemplateRepository extends TenantScopedRepository {
   findMany() {
     return this.prisma.client.crmProposalTemplate.findMany({
       where: this.where(),
-      orderBy: [{ isDefault: "desc" }, { name: "asc" }],
+      orderBy: [{ isDefault: 'desc' }, { name: 'asc' }],
     });
   }
 
@@ -249,7 +261,7 @@ export class CrmProposalTemplateRepository extends TenantScopedRepository {
     });
   }
 
-  create(data: Omit<Prisma.CrmProposalTemplateUncheckedCreateInput, "tenantId">) {
+  create(data: Omit<Prisma.CrmProposalTemplateUncheckedCreateInput, 'tenantId'>) {
     return this.prisma.client.crmProposalTemplate.create({
       data: { ...data, tenantId: this.tenantId },
     });

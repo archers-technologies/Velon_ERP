@@ -1,18 +1,20 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
+import { useCallback, useEffect, useState } from 'react';
+import { createFileRoute } from '@tanstack/react-router';
+import { toast } from 'sonner';
+import { canWriteCrmRecords, normalizeVelonRole } from '@velon/shared';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
+import { getSessionMembershipRole } from '@/lib/auth/session';
 import {
   archiveCrmLead,
   convertCrmLead,
@@ -21,52 +23,50 @@ import {
   type CrmLead,
   type CrmLeadSource,
   type CrmLeadStatus,
-} from "@/lib/crm/pipeline-api";
-import { getSessionMembershipRole } from "@/lib/auth/session";
-import { canWriteCrmRecords, normalizeVelonRole } from "@velon/shared";
+} from '@/lib/crm/pipeline-api';
 
 const leadStatuses: CrmLeadStatus[] = [
-  "NEW",
-  "CONTACTED",
-  "QUALIFIED",
-  "DISQUALIFIED",
-  "CONVERTED",
+  'NEW',
+  'CONTACTED',
+  'QUALIFIED',
+  'DISQUALIFIED',
+  'CONVERTED',
 ];
 const leadSources: CrmLeadSource[] = [
-  "MANUAL",
-  "WEBSITE",
-  "REFERRAL",
-  "EMAIL",
-  "TRADE_SHOW",
-  "IMPORT",
-  "OTHER",
+  'MANUAL',
+  'WEBSITE',
+  'REFERRAL',
+  'EMAIL',
+  'TRADE_SHOW',
+  'IMPORT',
+  'OTHER',
 ];
 
-export const Route = createFileRoute("/app/crm/leads")({
+export const Route = createFileRoute('/app/crm/leads')({
   component: CrmLeadsPage,
 });
 
 function CrmLeadsPage() {
-  const canWrite = canWriteCrmRecords(normalizeVelonRole(getSessionMembershipRole() ?? "USER"));
+  const canWrite = canWriteCrmRecords(normalizeVelonRole(getSessionMembershipRole() ?? 'USER'));
   const [leads, setLeads] = useState<CrmLead[]>([]);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState({
-    companyName: "",
-    contactName: "",
-    email: "",
-    phone: "",
-    source: "MANUAL" as CrmLeadSource,
-    industry: "",
-    status: "NEW" as CrmLeadStatus,
-    notes: "",
+    companyName: '',
+    contactName: '',
+    email: '',
+    phone: '',
+    source: 'MANUAL' as CrmLeadSource,
+    industry: '',
+    status: 'NEW' as CrmLeadStatus,
+    notes: '',
   });
 
   const refresh = useCallback(async () => {
     const rows = await loadCrmLeads({
       search: search || undefined,
-      status: statusFilter !== "all" ? (statusFilter as CrmLeadStatus) : undefined,
+      status: statusFilter !== 'all' ? (statusFilter as CrmLeadStatus) : undefined,
     });
     setLeads(rows);
   }, [search, statusFilter]);
@@ -81,20 +81,20 @@ function CrmLeadsPage() {
     setBusy(true);
     try {
       await createCrmLead(form);
-      toast.success("Lead created");
+      toast.success('Lead created');
       setForm({
-        companyName: "",
-        contactName: "",
-        email: "",
-        phone: "",
-        source: "MANUAL",
-        industry: "",
-        status: "NEW",
-        notes: "",
+        companyName: '',
+        contactName: '',
+        email: '',
+        phone: '',
+        source: 'MANUAL',
+        industry: '',
+        status: 'NEW',
+        notes: '',
       });
       await refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed");
+      toast.error(err instanceof Error ? err.message : 'Failed');
     } finally {
       setBusy(false);
     }
@@ -109,20 +109,29 @@ function CrmLeadsPage() {
           onChange={(e) => setSearch(e.target.value)}
           className="max-w-xs"
         />
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select
+          value={statusFilter}
+          onValueChange={setStatusFilter}
+        >
           <SelectTrigger className="w-[160px]">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All statuses</SelectItem>
             {leadStatuses.map((s) => (
-              <SelectItem key={s} value={s}>
+              <SelectItem
+                key={s}
+                value={s}
+              >
                 {s}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
-        <Button variant="secondary" onClick={() => void refresh()}>
+        <Button
+          variant="secondary"
+          onClick={() => void refresh()}
+        >
           Search
         </Button>
       </div>
@@ -130,7 +139,10 @@ function CrmLeadsPage() {
       {canWrite && (
         <Card className="border-border bg-card p-6">
           <h2 className="font-semibold">New lead</h2>
-          <form className="mt-4 grid gap-3 sm:grid-cols-2" onSubmit={onCreate}>
+          <form
+            className="mt-4 grid gap-3 sm:grid-cols-2"
+            onSubmit={onCreate}
+          >
             <div>
               <Label>Company name</Label>
               <Input
@@ -172,8 +184,11 @@ function CrmLeadsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {leadSources.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {s.replace("_", " ")}
+                    <SelectItem
+                      key={s}
+                      value={s}
+                    >
+                      {s.replace('_', ' ')}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -193,7 +208,11 @@ function CrmLeadsPage() {
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
               />
             </div>
-            <Button type="submit" disabled={busy} className="w-fit">
+            <Button
+              type="submit"
+              disabled={busy}
+              className="w-fit"
+            >
               Add lead
             </Button>
           </form>
@@ -202,16 +221,19 @@ function CrmLeadsPage() {
 
       <Card className="border-border bg-card divide-y">
         {leads.map((l) => (
-          <div key={l.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
+          <div
+            key={l.id}
+            className="flex flex-wrap items-center justify-between gap-3 p-4"
+          >
             <div>
               <p className="font-medium">{l.companyName}</p>
-              <p className="text-xs text-muted-foreground">
-                {l.leadCode} · {l.contactName ?? "—"} · {l.email ?? "—"} · {l.source}
+              <p className="text-muted-foreground text-xs">
+                {l.leadCode} · {l.contactName ?? '—'} · {l.email ?? '—'} · {l.source}
               </p>
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="secondary">{l.status}</Badge>
-              {canWrite && l.status !== "CONVERTED" && l.status !== "DISQUALIFIED" && (
+              {canWrite && l.status !== 'CONVERTED' && l.status !== 'DISQUALIFIED' && (
                 <>
                   <Button
                     size="sm"
@@ -219,7 +241,7 @@ function CrmLeadsPage() {
                     onClick={() =>
                       void convertCrmLead(l.id, { value: 0 })
                         .then(() => refresh())
-                        .then(() => toast.success("Lead converted"))
+                        .then(() => toast.success('Lead converted'))
                     }
                   >
                     Convert
@@ -230,7 +252,7 @@ function CrmLeadsPage() {
                     onClick={() =>
                       void archiveCrmLead(l.id)
                         .then(() => refresh())
-                        .then(() => toast.success("Archived"))
+                        .then(() => toast.success('Archived'))
                     }
                   >
                     Archive
@@ -240,9 +262,7 @@ function CrmLeadsPage() {
             </div>
           </div>
         ))}
-        {leads.length === 0 && (
-          <p className="p-6 text-sm text-muted-foreground">No leads yet.</p>
-        )}
+        {leads.length === 0 && <p className="text-muted-foreground p-6 text-sm">No leads yet.</p>}
       </Card>
     </div>
   );

@@ -1,8 +1,8 @@
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { IndustryTemplate } from "@velon/database";
-import { VELON_CONTACT_EMAIL } from "@velon/shared";
-import { IsEmail, IsEnum, IsOptional, IsString, Matches, MinLength } from "class-validator";
-import { IsVelonPassword } from "../validators/is-velon-password.decorator";
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsEmail, IsEnum, IsOptional, IsString, Matches, MinLength } from 'class-validator';
+import { IndustryTemplate } from '@velon/database';
+import { VELON_CONTACT_EMAIL } from '@velon/shared';
+import { IsVelonPassword } from '../validators/is-velon-password.decorator';
 
 export class LoginDto {
   @ApiProperty({ example: VELON_CONTACT_EMAIL })
@@ -22,12 +22,12 @@ export class RefreshDto {
 }
 
 export class SignUpDto {
-  @ApiProperty({ description: "Legal company name" })
+  @ApiProperty({ description: 'Legal company name' })
   @IsString()
   @MinLength(2)
   companyName!: string;
 
-  @ApiProperty({ description: "Company contact email (also used for login)" })
+  @ApiProperty({ description: 'Company contact email (also used for login)' })
   @IsEmail()
   companyEmail!: string;
 
@@ -36,34 +36,34 @@ export class SignUpDto {
   @MinLength(6)
   companyPhone!: string;
 
-  @ApiProperty({ description: "ISO 3166-1 alpha-2 country code" })
+  @ApiProperty({ description: 'ISO 3166-1 alpha-2 country code' })
   @IsString()
   @MinLength(2)
   countryCode!: string;
 
-  @ApiProperty({ description: "ISO 4217 currency code", example: "SAR" })
+  @ApiProperty({ description: 'ISO 4217 currency code', example: 'SAR' })
   @IsString()
   @MinLength(3)
-  @Matches(/^[A-Za-z]{3}$/, { message: "Currency must be a 3-letter ISO code" })
+  @Matches(/^[A-Za-z]{3}$/, { message: 'Currency must be a 3-letter ISO code' })
   currency!: string;
 
-  @ApiProperty({ example: "Asia/Riyadh" })
+  @ApiProperty({ example: 'Asia/Riyadh' })
   @IsString()
   @MinLength(3)
   timezone!: string;
 
-  @ApiProperty({ description: "Registered business address" })
+  @ApiProperty({ description: 'Registered business address' })
   @IsString()
   @MinLength(5)
   address!: string;
 
-  @ApiPropertyOptional({ description: "Tax / VAT registration number" })
+  @ApiPropertyOptional({ description: 'Tax / VAT registration number' })
   @IsOptional()
   @IsString()
   taxId?: string;
 
   /** @deprecated Use countryCode — kept for backward-compatible clients */
-  @ApiPropertyOptional({ description: "Country display name (optional if countryCode is set)" })
+  @ApiPropertyOptional({ description: 'Country display name (optional if countryCode is set)' })
   @IsOptional()
   @IsString()
   @MinLength(2)
@@ -73,21 +73,20 @@ export class SignUpDto {
   @IsEnum(IndustryTemplate)
   industry!: IndustryTemplate;
 
-  @ApiProperty({ description: "Full name of the account owner" })
+  @ApiProperty({ description: 'Full name of the account owner' })
   @IsString()
   @MinLength(2)
   fullName!: string;
 
   @ApiProperty({
-    description:
-      "Password — minimum 8 characters with uppercase, lowercase, number, and symbol",
+    description: 'Password — minimum 8 characters with uppercase, lowercase, number, and symbol',
   })
   @IsString()
   @MinLength(8)
   @IsVelonPassword()
   password!: string;
 
-  @ApiProperty({ description: "HMAC token issued after email OTP verification" })
+  @ApiProperty({ description: 'HMAC token issued after email OTP verification' })
   @IsString()
   @MinLength(16)
   verificationToken!: string;
@@ -109,8 +108,8 @@ export class VerifySignupOtpDto {
   @IsEmail()
   email!: string;
 
-  @ApiProperty({ description: "6-digit verification code" })
+  @ApiProperty({ description: '6-digit verification code' })
   @IsString()
-  @Matches(/^\d{6}$/, { message: "Enter the 6-digit OTP" })
+  @Matches(/^\d{6}$/, { message: 'Enter the 6-digit OTP' })
   code!: string;
 }

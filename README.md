@@ -4,25 +4,25 @@
 
 It serves three audiences from a single monorepo:
 
-| Surface | Path | Audience |
-|---------|------|----------|
-| **Marketing site** | `/`, `/pricing`, `/demo`, … | Prospects and public visitors |
-| **Tenant workspace** | `/app` | Business teams running day-to-day operations |
-| **Platform admin** | `/admin` | Velon staff managing tenants, plans, and the platform |
+| Surface              | Path                        | Audience                                              |
+| -------------------- | --------------------------- | ----------------------------------------------------- |
+| **Marketing site**   | `/`, `/pricing`, `/demo`, … | Prospects and public visitors                         |
+| **Tenant workspace** | `/app`                      | Business teams running day-to-day operations          |
+| **Platform admin**   | `/admin`                    | Velon staff managing tenants, plans, and the platform |
 
 ---
 
 ## Stack
 
-| Layer | Technology |
-|-------|------------|
-| Web app | React 19, TanStack Router / Start, Vite, Tailwind CSS 4 |
-| API | NestJS 11, Passport JWT, Swagger |
-| Database | PostgreSQL 16 (Prisma ORM) |
-| Cache / sessions | Redis 7 |
-| Shared contracts | `@velon/shared` (roles, permissions, plans, localization) |
-| Payments | Razorpay (optional; other providers stubbed) |
-| Hosting | Web on Vercel; API (and optional combined stack) on Railway |
+| Layer            | Technology                                                  |
+| ---------------- | ----------------------------------------------------------- |
+| Web app          | React 19, TanStack Router / Start, Vite, Tailwind CSS 4     |
+| API              | NestJS 11, Passport JWT, Swagger                            |
+| Database         | PostgreSQL 16 (Prisma ORM)                                  |
+| Cache / sessions | Redis 7                                                     |
+| Shared contracts | `@velon/shared` (roles, permissions, plans, localization)   |
+| Payments         | Razorpay (optional; other providers stubbed)                |
+| Hosting          | Web on Vercel; API (and optional combined stack) on Railway |
 
 ---
 
@@ -70,10 +70,10 @@ npm run bootstrap:local
 npm run dev
 ```
 
-| Service | Default URL |
-|---------|-------------|
-| Web | [http://localhost:8080](http://localhost:8080) |
-| API | [http://localhost:3001](http://localhost:3001) |
+| Service | Default URL                                                      |
+| ------- | ---------------------------------------------------------------- |
+| Web     | [http://localhost:8080](http://localhost:8080)                   |
+| API     | [http://localhost:3001](http://localhost:3001)                   |
 | Swagger | [http://localhost:3001/api/docs](http://localhost:3001/api/docs) |
 
 **Platform admin:** `SUPER_ADMIN_EMAIL` (default `info@velonerp.com`) + `SUPER_ADMIN_PASSWORD` from `.env` → `/admin`
@@ -86,23 +86,23 @@ Demo login (when demo seed is enabled): any non–super-admin email with passwor
 
 ## Common scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Web + API (concurrent) |
-| `npm run dev:web` | Web only |
-| `npm run dev:api` | API only |
-| `npm run build` | Build shared, database, API, and web |
-| `npm run typecheck` | TypeScript check (web) |
-| `npm run lint` | ESLint |
-| `npm run format` | Prettier write (quotes, attributes, import order) |
-| `npm run format:check` | Prettier check (CI) |
-| `npm test` | Unit tests with mocks (no database writes) |
-| `npm run test:all` | Unit + security e2e (needs `DATABASE_URL_TEST`) |
-| `npm run db:migrate` | Prisma migrate (dev) |
-| `npm run db:seed` | Seed super admin / optional tenant |
-| `npm run db:studio` | Prisma Studio |
-| `npm run stack:up` | `docker compose up -d` (Postgres + Redis) |
-| `npm run verify:release` | Release readiness checks |
+| Command                  | Description                                       |
+| ------------------------ | ------------------------------------------------- |
+| `npm run dev`            | Web + API (concurrent)                            |
+| `npm run dev:web`        | Web only                                          |
+| `npm run dev:api`        | API only                                          |
+| `npm run build`          | Build shared, database, API, and web              |
+| `npm run typecheck`      | TypeScript check (web)                            |
+| `npm run lint`           | ESLint                                            |
+| `npm run format`         | Prettier write (quotes, attributes, import order) |
+| `npm run format:check`   | Prettier check (CI)                               |
+| `npm test`               | Unit tests with mocks (no database writes)        |
+| `npm run test:all`       | Unit + security e2e (needs `DATABASE_URL_TEST`)   |
+| `npm run db:migrate`     | Prisma migrate (dev)                              |
+| `npm run db:seed`        | Seed super admin / optional tenant                |
+| `npm run db:studio`      | Prisma Studio                                     |
+| `npm run stack:up`       | `docker compose up -d` (Postgres + Redis)         |
+| `npm run verify:release` | Release readiness checks                          |
 
 ---
 
@@ -110,14 +110,14 @@ Demo login (when demo seed is enabled): any non–super-admin email with passwor
 
 Docs are split by topic under [`docs/`](docs/README.md):
 
-| Document | Description |
-|----------|-------------|
-| [docs/README.md](docs/README.md) | Full documentation index |
-| [docs/TECH-STACK.md](docs/TECH-STACK.md) | Technologies used in each category |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System architecture |
-| [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | Local development |
-| [docs/API-REFERENCE.md](docs/API-REFERENCE.md) | API endpoints |
-| [docs/TENANT-WORKSPACE-GUIDE.md](docs/TENANT-WORKSPACE-GUIDE.md) | End-user workspace guide |
+| Document                                                         | Description                        |
+| ---------------------------------------------------------------- | ---------------------------------- |
+| [docs/README.md](docs/README.md)                                 | Full documentation index           |
+| [docs/TECH-STACK.md](docs/TECH-STACK.md)                         | Technologies used in each category |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)                     | System architecture                |
+| [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)                       | Local development                  |
+| [docs/API-REFERENCE.md](docs/API-REFERENCE.md)                   | API endpoints                      |
+| [docs/TENANT-WORKSPACE-GUIDE.md](docs/TENANT-WORKSPACE-GUIDE.md) | End-user workspace guide           |
 
 Product requirements live in [Velon-PRD.md](Velon-PRD.md).
 

@@ -1,7 +1,7 @@
-export type TenantPlan = "Starter" | "Growth" | "Enterprise";
-export type TenantStatus = "Active" | "Trial" | "Past due" | "Suspended";
+export type TenantPlan = 'Starter' | 'Growth' | 'Enterprise';
+export type TenantStatus = 'Active' | 'Trial' | 'Past due' | 'Suspended';
 
-export type TenantHealth = "healthy" | "degraded" | "critical";
+export type TenantHealth = 'healthy' | 'degraded' | 'critical';
 
 export type TenantModuleFlags = {
   hrm: boolean;
@@ -11,7 +11,7 @@ export type TenantModuleFlags = {
   manufacturing: boolean;
 };
 
-export const INDUSTRY_TEMPLATES = ["Retail", "Manufacturing", "Distribution", "Services"] as const;
+export const INDUSTRY_TEMPLATES = ['Retail', 'Manufacturing', 'Distribution', 'Services'] as const;
 export type IndustryTemplate = (typeof INDUSTRY_TEMPLATES)[number];
 
 export type TenantPlatformSeed = {
@@ -39,13 +39,13 @@ export type TenantPlatformSeed = {
 
 export function defaultModulesForIndustry(template: IndustryTemplate): TenantModuleFlags {
   switch (template) {
-    case "Manufacturing":
+    case 'Manufacturing':
       return { hrm: true, crm: true, finance: true, inventory: true, manufacturing: true };
-    case "Distribution":
+    case 'Distribution':
       return { hrm: true, crm: true, finance: true, inventory: true, manufacturing: false };
-    case "Services":
+    case 'Services':
       return { hrm: true, crm: true, finance: true, inventory: false, manufacturing: false };
-    case "Retail":
+    case 'Retail':
     default:
       return { hrm: true, crm: true, finance: true, inventory: true, manufacturing: false };
   }
@@ -53,7 +53,7 @@ export function defaultModulesForIndustry(template: IndustryTemplate): TenantMod
 
 export const SALES_DEMO_INR_PER_USD = 83.5;
 
-export type AdminUserStatus = "Active" | "Suspended" | "Invited";
+export type AdminUserStatus = 'Active' | 'Suspended' | 'Invited';
 
 export type AdminPlatformUser = {
   id: string;

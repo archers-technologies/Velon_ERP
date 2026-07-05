@@ -1,5 +1,5 @@
-import { Injectable, Logger } from "@nestjs/common";
-import { sendTransactionalMail } from "../common/mail-delivery.util";
+import { Injectable, Logger } from '@nestjs/common';
+import { sendTransactionalMail } from '../common/mail-delivery.util';
 
 export type InviteEmailPayload = {
   to: string;
@@ -15,11 +15,11 @@ export class InvitationMailer {
   private readonly log = new Logger(InvitationMailer.name);
 
   async sendInvite(payload: InviteEmailPayload): Promise<{ delivered: boolean; devUrl?: string }> {
-    const expiresLabel = payload.expiresAt.toLocaleDateString("en-US", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-      year: "numeric",
+    const expiresLabel = payload.expiresAt.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
     });
 
     const text = [
@@ -29,7 +29,7 @@ export class InvitationMailer {
       ``,
       `Accept invitation: ${payload.inviteUrl}`,
       `Expires: ${expiresLabel}`,
-    ].join("\n");
+    ].join('\n');
 
     const html = `
       <p>Hello <strong>${payload.fullName}</strong>,</p>

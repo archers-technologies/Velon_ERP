@@ -1,36 +1,36 @@
-const LEGACY_ACCESS_KEY = "velon.accessToken";
-const LEGACY_REFRESH_KEY = "velon.refreshToken";
-const LEGACY_ROLE_KEY = "velon.role";
-const LEGACY_EMAIL_KEY = "velon.userEmail";
+const LEGACY_ACCESS_KEY = 'velon.accessToken';
+const LEGACY_REFRESH_KEY = 'velon.refreshToken';
+const LEGACY_ROLE_KEY = 'velon.role';
+const LEGACY_EMAIL_KEY = 'velon.userEmail';
 
 const ACCESS_KEYS = {
-  admin: "velon.admin.accessToken",
-  app: "velon.app.accessToken",
+  admin: 'velon.admin.accessToken',
+  app: 'velon.app.accessToken',
 } as const;
 
 const REFRESH_KEYS = {
-  admin: "velon.admin.refreshToken",
-  app: "velon.app.refreshToken",
+  admin: 'velon.admin.refreshToken',
+  app: 'velon.app.refreshToken',
 } as const;
 
 const EMAIL_KEYS = {
-  admin: "velon.admin.userEmail",
-  app: "velon.app.userEmail",
+  admin: 'velon.admin.userEmail',
+  app: 'velon.app.userEmail',
 } as const;
 
-const TENANT_ID_KEY = "velon.app.tenantId";
-const WORKSPACE_ID_KEY = "velon.app.workspaceId";
-const MEMBERSHIP_ROLE_KEY = "velon.app.membershipRole";
+const TENANT_ID_KEY = 'velon.app.tenantId';
+const WORKSPACE_ID_KEY = 'velon.app.workspaceId';
+const MEMBERSHIP_ROLE_KEY = 'velon.app.membershipRole';
 const SCOPE_KEYS = {
-  admin: "velon.admin.scope",
-  app: "velon.app.scope",
+  admin: 'velon.admin.scope',
+  app: 'velon.app.scope',
 } as const;
 
-export type SessionRole = "admin" | "app";
-export type StoredAuthScope = "platform" | "tenant";
+export type SessionRole = 'admin' | 'app';
+export type StoredAuthScope = 'platform' | 'tenant';
 
 function isClient(): boolean {
-  return typeof window !== "undefined";
+  return typeof window !== 'undefined';
 }
 
 /** One-time migration from single-key session to scoped admin/app keys. */
@@ -40,7 +40,7 @@ function migrateLegacySession(): void {
   if (!legacyAccess) return;
 
   const legacyRole = localStorage.getItem(LEGACY_ROLE_KEY);
-  const route: SessionRole = legacyRole === "admin" ? "admin" : "app";
+  const route: SessionRole = legacyRole === 'admin' ? 'admin' : 'app';
 
   localStorage.setItem(ACCESS_KEYS[route], legacyAccess);
   const legacyRefresh = localStorage.getItem(LEGACY_REFRESH_KEY);
@@ -60,13 +60,13 @@ function migrateLegacySession(): void {
 
 export function getSessionContextFromPath(pathname: string): SessionRole {
   // `/platform/*` is the operator portal — must not use workspace (app) session during login → /admin navigation.
-  if (pathname.startsWith("/admin") || pathname.startsWith("/platform")) return "admin";
-  return "app";
+  if (pathname.startsWith('/admin') || pathname.startsWith('/platform')) return 'admin';
+  return 'app';
 }
 
 export function resolveSessionContext(route?: SessionRole): SessionRole {
   if (route) return route;
-  if (!isClient()) return "app";
+  if (!isClient()) return 'app';
   return getSessionContextFromPath(window.location.pathname);
 }
 
@@ -89,7 +89,7 @@ export function saveSession(tokens: {
   if (tokens.scope) {
     localStorage.setItem(SCOPE_KEYS[tokens.route], tokens.scope);
   }
-  if (tokens.route === "app") {
+  if (tokens.route === 'app') {
     if (tokens.tenantId) localStorage.setItem(TENANT_ID_KEY, tokens.tenantId);
     if (tokens.workspaceId) localStorage.setItem(WORKSPACE_ID_KEY, tokens.workspaceId);
     if (tokens.membershipRole) localStorage.setItem(MEMBERSHIP_ROLE_KEY, tokens.membershipRole);
@@ -103,7 +103,7 @@ export function clearSession(route?: SessionRole) {
   localStorage.removeItem(REFRESH_KEYS[ctx]);
   localStorage.removeItem(EMAIL_KEYS[ctx]);
   localStorage.removeItem(SCOPE_KEYS[ctx]);
-  if (ctx === "app") {
+  if (ctx === 'app') {
     localStorage.removeItem(TENANT_ID_KEY);
     localStorage.removeItem(WORKSPACE_ID_KEY);
     localStorage.removeItem(MEMBERSHIP_ROLE_KEY);
@@ -164,7 +164,7 @@ export function getSessionScope(route?: SessionRole): StoredAuthScope | null {
   migrateLegacySession();
   try {
     const value = localStorage.getItem(SCOPE_KEYS[resolveSessionContext(route)]);
-    if (value === "platform" || value === "tenant") return value;
+    if (value === 'platform' || value === 'tenant') return value;
     return null;
   } catch {
     return null;

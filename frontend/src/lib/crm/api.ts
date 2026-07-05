@@ -1,9 +1,9 @@
-import { apiFetch } from "@/lib/api/client";
+import { apiFetch } from '@/lib/api/client';
 
-export type CrmCustomerStatus = "ACTIVE" | "INACTIVE" | "PROSPECT";
-export type CrmActivityType = "CALL" | "MEETING" | "EMAIL" | "VISIT" | "TASK" | "FOLLOW_UP";
-export type CrmActivityStatus = "OPEN" | "COMPLETED" | "CANCELLED";
-export type CrmNoteTargetType = "CUSTOMER" | "CONTACT";
+export type CrmCustomerStatus = 'ACTIVE' | 'INACTIVE' | 'PROSPECT';
+export type CrmActivityType = 'CALL' | 'MEETING' | 'EMAIL' | 'VISIT' | 'TASK' | 'FOLLOW_UP';
+export type CrmActivityStatus = 'OPEN' | 'COMPLETED' | 'CANCELLED';
+export type CrmNoteTargetType = 'CUSTOMER' | 'CONTACT';
 
 export type CrmCustomer = {
   id: string;
@@ -77,36 +77,36 @@ function q(params: Record<string, string | undefined>) {
     if (v) sp.set(k, v);
   }
   const s = sp.toString();
-  return s ? `?${s}` : "";
+  return s ? `?${s}` : '';
 }
 
 export async function loadCrmCustomers(search?: string, includeArchived?: boolean) {
   return apiFetch<CrmCustomer[]>(
-    `/crm/customers${q({ search, includeArchived: includeArchived ? "true" : undefined })}`,
+    `/crm/customers${q({ search, includeArchived: includeArchived ? 'true' : undefined })}`,
   );
 }
 
 export async function createCrmCustomer(data: Partial<CrmCustomer> & { companyName: string }) {
-  return apiFetch<CrmCustomer>("/crm/customers", { method: "POST", body: JSON.stringify(data) });
+  return apiFetch<CrmCustomer>('/crm/customers', { method: 'POST', body: JSON.stringify(data) });
 }
 
 export async function updateCrmCustomer(id: string, data: Partial<CrmCustomer>) {
   return apiFetch<CrmCustomer>(`/crm/customers/${id}`, {
-    method: "PATCH",
+    method: 'PATCH',
     body: JSON.stringify(data),
   });
 }
 
 export async function archiveCrmCustomer(id: string) {
-  return apiFetch(`/crm/customers/${id}/archive`, { method: "POST" });
+  return apiFetch(`/crm/customers/${id}/archive`, { method: 'POST' });
 }
 
 export async function restoreCrmCustomer(id: string) {
-  return apiFetch(`/crm/customers/${id}/restore`, { method: "POST" });
+  return apiFetch(`/crm/customers/${id}/restore`, { method: 'POST' });
 }
 
 export async function deleteCrmCustomer(id: string) {
-  return apiFetch(`/crm/customers/${id}`, { method: "DELETE" });
+  return apiFetch(`/crm/customers/${id}`, { method: 'DELETE' });
 }
 
 export async function loadCrmContacts(search?: string, customerId?: string) {
@@ -121,18 +121,18 @@ export async function createCrmContact(data: {
   email?: string;
   phone?: string;
 }) {
-  return apiFetch<CrmContact>("/crm/contacts", { method: "POST", body: JSON.stringify(data) });
+  return apiFetch<CrmContact>('/crm/contacts', { method: 'POST', body: JSON.stringify(data) });
 }
 
 export async function updateCrmContact(id: string, data: Partial<CrmContact>) {
   return apiFetch<CrmContact>(`/crm/contacts/${id}`, {
-    method: "PATCH",
+    method: 'PATCH',
     body: JSON.stringify(data),
   });
 }
 
 export async function archiveCrmContact(id: string) {
-  return apiFetch(`/crm/contacts/${id}/archive`, { method: "POST" });
+  return apiFetch(`/crm/contacts/${id}/archive`, { method: 'POST' });
 }
 
 export async function loadCrmNotes(targetType?: CrmNoteTargetType, targetId?: string) {
@@ -144,11 +144,11 @@ export async function createCrmNote(data: {
   targetId: string;
   content: string;
 }) {
-  return apiFetch<CrmNote>("/crm/notes", { method: "POST", body: JSON.stringify(data) });
+  return apiFetch<CrmNote>('/crm/notes', { method: 'POST', body: JSON.stringify(data) });
 }
 
 export async function deleteCrmNote(id: string) {
-  return apiFetch(`/crm/notes/${id}`, { method: "DELETE" });
+  return apiFetch(`/crm/notes/${id}`, { method: 'DELETE' });
 }
 
 export async function loadCrmActivities(filters?: {
@@ -173,13 +173,13 @@ export async function createCrmActivity(data: {
   description?: string;
   contactId?: string;
 }) {
-  return apiFetch<CrmActivity>("/crm/activities", { method: "POST", body: JSON.stringify(data) });
+  return apiFetch<CrmActivity>('/crm/activities', { method: 'POST', body: JSON.stringify(data) });
 }
 
 export async function completeCrmActivity(id: string) {
-  return apiFetch<CrmActivity>(`/crm/activities/${id}/complete`, { method: "POST" });
+  return apiFetch<CrmActivity>(`/crm/activities/${id}/complete`, { method: 'POST' });
 }
 
 export async function cancelCrmActivity(id: string) {
-  return apiFetch<CrmActivity>(`/crm/activities/${id}/cancel`, { method: "POST" });
+  return apiFetch<CrmActivity>(`/crm/activities/${id}/cancel`, { method: 'POST' });
 }

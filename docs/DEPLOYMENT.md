@@ -5,10 +5,10 @@
 
 ## Recommended split
 
-| Component | Platform | Config |
-|-----------|----------|--------|
-| Web | Vercel | `vercel.json` — TanStack Start, `npm run build:web` |
-| API | Railway | `railway.json` — `backend/Dockerfile.api`, migrate deploy pre-command, healthcheck `/api/v1/health/live` |
+| Component | Platform | Config                                                                                                   |
+| --------- | -------- | -------------------------------------------------------------------------------------------------------- |
+| Web       | Vercel   | `vercel.json` — TanStack Start, `npm run build:web`                                                      |
+| API       | Railway  | `railway.json` — `backend/Dockerfile.api`, migrate deploy pre-command, healthcheck `/api/v1/health/live` |
 
 Set `VITE_API_URL` on Vercel to the public Railway API origin.
 

@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from "@nestjs/common";
+import { BadRequestException, Injectable } from '@nestjs/common';
 import {
   BillingInterval,
   PaymentProvider,
@@ -7,15 +7,15 @@ import {
   SubscriptionPaymentStatus,
   TenantPlan,
   TenantStatus,
-} from "@velon/database";
+} from '@velon/database';
 import {
-  TRIAL_DAYS_DEFAULT,
   mapSubscriptionStatusToTenantStatus,
   planCatalogEntry,
-} from "@velon/shared";
-import { PrismaService } from "../prisma/prisma.service";
-import { BillingPricingService } from "./billing-pricing.service";
-import type { CheckoutSession } from "./providers/payment-provider.types";
+  TRIAL_DAYS_DEFAULT,
+} from '@velon/shared';
+import { PrismaService } from '../prisma/prisma.service';
+import { BillingPricingService } from './billing-pricing.service';
+import type { CheckoutSession } from './providers/payment-provider.types';
 
 function addDays(date: Date, days: number): Date {
   const next = new Date(date);
@@ -29,10 +29,10 @@ function toDateOnly(date: Date): Date {
 
 function isMissingSubscriptionTableError(err: unknown): boolean {
   return (
-    typeof err === "object" &&
+    typeof err === 'object' &&
     err !== null &&
-    "code" in err &&
-    (err as { code?: string }).code === "P2021"
+    'code' in err &&
+    (err as { code?: string }).code === 'P2021'
   );
 }
 
@@ -143,11 +143,7 @@ export class SubscriptionService {
   async getTenantSubscription(tenantId: string) {
     const sub = await this.ensureForTenant(tenantId);
     const entry = planCatalogEntry(sub.plan);
-    const resolved = await this.pricing.resolveForTenant(
-      tenantId,
-      sub.plan,
-      sub.billingInterval,
-    );
+    const resolved = await this.pricing.resolveForTenant(tenantId, sub.plan, sub.billingInterval);
     return {
       id: sub.id,
       plan: sub.plan,
@@ -173,7 +169,7 @@ export class SubscriptionService {
     try {
       const rows = await this.prisma.client.subscriptionInvoice.findMany({
         where: { tenantId },
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: 'desc' },
         take: limit,
       });
       return rows.map((row) => ({
@@ -199,7 +195,7 @@ export class SubscriptionService {
     try {
       const rows = await this.prisma.client.subscriptionPayment.findMany({
         where: { tenantId },
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: 'desc' },
         take: limit,
       });
       return rows.map((row) => ({
@@ -229,7 +225,7 @@ export class SubscriptionService {
     const sub = await this.ensureForTenant(tenantId);
     const resolved = await this.pricing.resolveForTenant(tenantId, plan, billingInterval);
     const mrr = resolved.monthlyEquivalent;
-    if (sub.id.startsWith("legacy-")) {
+    if (sub.id.startsWith('legacy-')) {
       await this.prisma.client.tenant.update({
         where: { id: tenantId },
         data: { plan, mrr },
@@ -330,12 +326,12 @@ export class SubscriptionService {
     const payment = await this.prisma.client.subscriptionPayment.findUnique({
       where: { id: paymentId },
     });
-    if (!payment) throw new BadRequestException("Payment not found");
+    if (!payment) throw new BadRequestException('Payment not found');
     if (payment.provider !== PaymentProvider.BANK_TRANSFER) {
-      throw new BadRequestException("Only bank transfer payments can be manually approved");
+      throw new BadRequestException('Only bank transfer payments can be manually approved');
     }
     if (payment.status !== SubscriptionPaymentStatus.PENDING) {
-      throw new BadRequestException("Payment is not pending approval");
+      throw new BadRequestException('Payment is not pending approval');
     }
 
     const result = await this.activateFromVerifiedPayment(paymentId, {
@@ -349,12 +345,12 @@ export class SubscriptionService {
     const payment = await this.prisma.client.subscriptionPayment.findUnique({
       where: { id: paymentId },
     });
-    if (!payment) throw new BadRequestException("Payment not found");
+    if (!payment) throw new BadRequestException('Payment not found');
     if (payment.provider !== PaymentProvider.BANK_TRANSFER) {
-      throw new BadRequestException("Only bank transfer payments can be manually rejected");
+      throw new BadRequestException('Only bank transfer payments can be manually rejected');
     }
     if (payment.status !== SubscriptionPaymentStatus.PENDING) {
-      throw new BadRequestException("Payment is not pending approval");
+      throw new BadRequestException('Payment is not pending approval');
     }
 
     await this.prisma.client.subscriptionPayment.update({
@@ -386,17 +382,16 @@ export class SubscriptionService {
       where: { id: paymentId },
       include: { subscription: true },
     });
-    if (!payment) throw new BadRequestException("Payment not found");
+    if (!payment) throw new BadRequestException('Payment not found');
 
     if (payment.status === SubscriptionPaymentStatus.SUCCEEDED) {
       return { id: paymentId, status: payment.status, alreadyVerified: true };
     }
     if (payment.status !== SubscriptionPaymentStatus.PENDING) {
-      throw new BadRequestException("Payment cannot be activated");
+      throw new BadRequestException('Payment cannot be activated');
     }
 
-    const periodDays =
-      payment.subscription.billingInterval === BillingInterval.YEARLY ? 365 : 30;
+    const periodDays = payment.subscription.billingInterval === BillingInterval.YEARLY ? 365 : 30;
     const renewal = addDays(new Date(), periodDays);
     const verifiedAt = opts?.verifiedAt ?? new Date();
 
@@ -445,20 +440,17 @@ export class SubscriptionService {
     customerEmail: string,
     idempotencyKey: string,
   ) {
-    if (
-      provider !== PaymentProvider.BANK_TRANSFER &&
-      provider !== PaymentProvider.RAZORPAY
-    ) {
+    if (provider !== PaymentProvider.BANK_TRANSFER && provider !== PaymentProvider.RAZORPAY) {
       throw new BadRequestException(
-        "This payment gateway is not available. Use bank transfer or Razorpay when enabled.",
+        'This payment gateway is not available. Use bank transfer or Razorpay when enabled.',
       );
     }
 
     if (provider === PaymentProvider.RAZORPAY) {
-      const { getRazorpaySecrets } = await import("../config/razorpay.env");
+      const { getRazorpaySecrets } = await import('../config/razorpay.env');
       if (!getRazorpaySecrets()) {
         throw new BadRequestException(
-          "Razorpay is not configured. Use bank transfer or contact support.",
+          'Razorpay is not configured. Use bank transfer or contact support.',
         );
       }
     }
@@ -485,9 +477,9 @@ export class SubscriptionService {
     const currency = resolved.currency;
     const isRazorpay = provider === PaymentProvider.RAZORPAY;
 
-    if (isRazorpay && currency !== "INR") {
+    if (isRazorpay && currency !== 'INR') {
       throw new BadRequestException(
-        "Razorpay checkout is only available for India (INR) regional pricing.",
+        'Razorpay checkout is only available for India (INR) regional pricing.',
       );
     }
 
@@ -510,7 +502,7 @@ export class SubscriptionService {
       },
     });
 
-    const { getPaymentProvider } = await import("./providers");
+    const { getPaymentProvider } = await import('./providers');
     const adapter = getPaymentProvider(provider);
     const session = await adapter.createCheckoutSession({
       tenantId,
@@ -520,8 +512,8 @@ export class SubscriptionService {
       amount,
       currency,
       customerEmail,
-      successUrl: "/app/settings/billing?checkout=success",
-      cancelUrl: "/app/settings/billing?checkout=cancelled",
+      successUrl: '/app/settings/billing?checkout=success',
+      cancelUrl: '/app/settings/billing?checkout=cancelled',
       idempotencyKey,
     });
 
@@ -553,7 +545,7 @@ export class SubscriptionService {
       where: { id: pending.id },
       data: {
         status: SubscriptionPaymentStatus.FAILED,
-        failureReason: "Superseded by a new checkout attempt",
+        failureReason: 'Superseded by a new checkout attempt',
       },
     });
     if (pending.invoiceId) {
@@ -572,7 +564,7 @@ export class SubscriptionService {
         provider: PaymentProvider.RAZORPAY,
         ...(orderId ? { providerOrderId: orderId } : {}),
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
     });
     if (!pending) {
       return { cancelled: false as const };
@@ -581,7 +573,7 @@ export class SubscriptionService {
       where: { id: pending.id },
       data: {
         status: SubscriptionPaymentStatus.FAILED,
-        failureReason: "Cancelled by user",
+        failureReason: 'Cancelled by user',
       },
     });
     return { cancelled: true as const, paymentId: pending.id };
@@ -599,10 +591,10 @@ export class SubscriptionService {
     },
     invoice: { id: string; invoiceNumber: string; amount: unknown } | null,
   ) {
-    const { getRazorpayPublicConfig } = await import("../config/razorpay.env");
+    const { getRazorpayPublicConfig } = await import('../config/razorpay.env');
     const sessionId = payment.providerOrderId ?? payment.providerPaymentId ?? payment.id;
 
-    let razorpay: CheckoutSession["razorpay"];
+    let razorpay: CheckoutSession['razorpay'];
     if (payment.provider === PaymentProvider.RAZORPAY && payment.providerOrderId) {
       const pub = getRazorpayPublicConfig();
       razorpay = {
@@ -614,7 +606,7 @@ export class SubscriptionService {
     }
 
     return {
-      invoice: invoice ?? { id: payment.id, invoiceNumber: "", amount: Number(payment.amount) },
+      invoice: invoice ?? { id: payment.id, invoiceNumber: '', amount: Number(payment.amount) },
       session: {
         provider: payment.provider,
         sessionId,
@@ -622,7 +614,7 @@ export class SubscriptionService {
         clientSecret: null,
         instructions:
           payment.provider === PaymentProvider.BANK_TRANSFER
-            ? "Transfer the invoice amount to Velon ERP (IBAN on file). Include your workspace code in the reference."
+            ? 'Transfer the invoice amount to Velon ERP (IBAN on file). Include your workspace code in the reference.'
             : null,
         expiresAt: null,
         razorpay,

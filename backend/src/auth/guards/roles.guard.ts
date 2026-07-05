@@ -1,9 +1,9 @@
-import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from "@nestjs/common";
-import { Reflector } from "@nestjs/core";
-import { UserRole } from "@velon/database";
-import { normalizeVelonRole } from "@velon/shared";
-import type { AuthenticatedUser } from "../auth.types";
-import { ROLES_KEY } from "../decorators/roles.decorator";
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { UserRole } from '@velon/database';
+import { normalizeVelonRole } from '@velon/shared';
+import type { AuthenticatedUser } from '../auth.types';
+import { ROLES_KEY } from '../decorators/roles.decorator';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -16,11 +16,11 @@ export class RolesGuard implements CanActivate {
     ]);
     if (!required?.length) return true;
     const { user } = context.switchToHttp().getRequest<{ user?: AuthenticatedUser }>();
-    if (!user) throw new ForbiddenException("Insufficient permissions.");
+    if (!user) throw new ForbiddenException('Insufficient permissions.');
     const userRole = normalizeVelonRole(user.role);
     const allowed = required.map((r) => normalizeVelonRole(r));
     if (!allowed.includes(userRole)) {
-      throw new ForbiddenException("Insufficient permissions.");
+      throw new ForbiddenException('Insufficient permissions.');
     }
     return true;
   }

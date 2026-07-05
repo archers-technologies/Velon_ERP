@@ -1,8 +1,8 @@
-import { BadRequestException, ForbiddenException } from "@nestjs/common";
-import { UserRole } from "@velon/database";
-import * as crypto from "crypto";
-import { normalizeVelonRole, VelonRole } from "@velon/shared";
-import type { PrismaService } from "../prisma/prisma.service";
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
+import * as crypto from 'crypto';
+import { UserRole } from '@velon/database';
+import { normalizeVelonRole, VelonRole } from '@velon/shared';
+import type { PrismaService } from '../prisma/prisma.service';
 
 export const INVITE_TTL_DAYS = 7;
 const ASSIGNABLE_ROLES: UserRole[] = [UserRole.DEPARTMENT_ADMIN, UserRole.USER];
@@ -10,13 +10,13 @@ const ASSIGNABLE_ROLES: UserRole[] = [UserRole.DEPARTMENT_ADMIN, UserRole.USER];
 export function assertOwnerRole(role: string) {
   const normalized = normalizeVelonRole(role);
   if (normalized !== VelonRole.TENANT_OWNER && normalized !== VelonRole.TENANT_ADMIN) {
-    throw new ForbiddenException("Tenant Owner access required.");
+    throw new ForbiddenException('Tenant Owner access required.');
   }
 }
 
 export function assertTenantOwnerRole(role: string) {
   if (normalizeVelonRole(role) !== VelonRole.TENANT_OWNER) {
-    throw new ForbiddenException("Only the workspace owner can delete the company workspace.");
+    throw new ForbiddenException('Only the workspace owner can delete the company workspace.');
   }
 }
 
@@ -27,19 +27,19 @@ export function assertAssignableRole(role: UserRole) {
     role === UserRole.SUPER_ADMIN ||
     role === UserRole.PLATFORM_SUPPORT
   ) {
-    throw new BadRequestException("Cannot assign owner or platform roles.");
+    throw new BadRequestException('Cannot assign owner or platform roles.');
   }
   if (!ASSIGNABLE_ROLES.includes(role) && role !== UserRole.USER && role !== UserRole.TENANT_USER) {
-    throw new BadRequestException("Invalid role for assignment.");
+    throw new BadRequestException('Invalid role for assignment.');
   }
 }
 
 export function hashInviteToken(token: string) {
-  return crypto.createHash("sha256").update(token).digest("hex");
+  return crypto.createHash('sha256').update(token).digest('hex');
 }
 
 export function generateInviteToken() {
-  return crypto.randomBytes(32).toString("base64url");
+  return crypto.randomBytes(32).toString('base64url');
 }
 
 export function inviteExpiresAt() {
@@ -62,7 +62,7 @@ export async function assertAtLeastOneOwner(
     },
   });
   if (owners < 1) {
-    throw new BadRequestException("At least one active Tenant Owner must remain.");
+    throw new BadRequestException('At least one active Tenant Owner must remain.');
   }
 }
 
@@ -72,7 +72,13 @@ export function mapMembership(row: {
   isActive: boolean;
   createdAt: Date;
   departmentId: string | null;
-  user: { id: string; email: string; name: string | null; isActive: boolean; lastLoginAt: Date | null };
+  user: {
+    id: string;
+    email: string;
+    name: string | null;
+    isActive: boolean;
+    lastLoginAt: Date | null;
+  };
   department: { id: string; name: string } | null;
 }) {
   return {

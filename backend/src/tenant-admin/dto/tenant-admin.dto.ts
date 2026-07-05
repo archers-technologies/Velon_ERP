@@ -1,6 +1,6 @@
-import { IsEmail, IsEnum, IsOptional, IsString, MinLength } from "class-validator";
-import { IndustryTemplate, UserRole } from "@velon/database";
-import { IsVelonPassword } from "../../auth/validators/is-velon-password.decorator";
+import { IsEmail, IsEnum, IsOptional, IsString, MinLength } from 'class-validator';
+import { IndustryTemplate, UserRole } from '@velon/database';
+import { IsVelonPassword } from '../../auth/validators/is-velon-password.decorator';
 
 export class CreateDepartmentDto {
   @IsString()

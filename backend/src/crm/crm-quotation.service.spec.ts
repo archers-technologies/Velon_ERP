@@ -1,25 +1,30 @@
-import { BadRequestException, ForbiddenException, NotFoundException } from "@nestjs/common";
-import { CrmQuotationStatus } from "@velon/database";
-import { CrmQuotationService } from "./crm-quotation.service";
-import { IDS, META, tenantOwner, tenantUser } from "../../test/helpers/fixtures";
-import { createMockAudit, createMockPrisma, createMockPrismaClient, createRepoMock } from "../../test/helpers/mocks";
+import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { CrmQuotationStatus } from '@velon/database';
+import { IDS, META, tenantOwner, tenantUser } from '../../test/helpers/fixtures';
+import {
+  createMockAudit,
+  createMockPrisma,
+  createMockPrismaClient,
+  createRepoMock,
+} from '../../test/helpers/mocks';
+import { CrmQuotationService } from './crm-quotation.service';
 
-describe("CrmQuotationService", () => {
+describe('CrmQuotationService', () => {
   const quotations = createRepoMock([
-    "findMany",
-    "findById",
-    "findByIdAny",
-    "create",
-    "update",
-    "nextQuotationNumber",
-    "aggregateByStatus",
+    'findMany',
+    'findById',
+    'findByIdAny',
+    'create',
+    'update',
+    'nextQuotationNumber',
+    'aggregateByStatus',
   ]);
-  const items = createRepoMock(["findByQuotation", "create", "update", "delete"]);
-  const approvals = createRepoMock(["findByQuotation", "create"]);
-  const proposals = createRepoMock(["findByQuotation", "findById", "create"]);
-  const templates = createRepoMock(["findMany", "findById", "create", "update", "delete"]);
-  const customers = createRepoMock(["findById"]);
-  const opportunities = createRepoMock(["findById"]);
+  const items = createRepoMock(['findByQuotation', 'create', 'update', 'delete']);
+  const approvals = createRepoMock(['findByQuotation', 'create']);
+  const proposals = createRepoMock(['findByQuotation', 'findById', 'create']);
+  const templates = createRepoMock(['findMany', 'findById', 'create', 'update', 'delete']);
+  const customers = createRepoMock(['findById']);
+  const opportunities = createRepoMock(['findById']);
   const pdf = { generate: jest.fn() };
   const audit = createMockAudit();
   const prisma = createMockPrisma(createMockPrismaClient());
@@ -42,20 +47,20 @@ describe("CrmQuotationService", () => {
     );
   });
 
-  it("denies write for read-only users", async () => {
+  it('denies write for read-only users', async () => {
     await expect(
       service.createQuotation(tenantUser(), { customerId: IDS.customer }, META),
     ).rejects.toThrow(ForbiddenException);
   });
 
-  it("requires an existing customer", async () => {
+  it('requires an existing customer', async () => {
     customers.findById.mockResolvedValue(null);
     await expect(
-      service.createQuotation(tenantOwner(), { customerId: "missing" }, META),
+      service.createQuotation(tenantOwner(), { customerId: 'missing' }, META),
     ).rejects.toThrow(BadRequestException);
   });
 
-  it("creates a draft quotation with a generated number", async () => {
+  it('creates a draft quotation with a generated number', async () => {
     const year = new Date().getFullYear();
     customers.findById.mockResolvedValue({ id: IDS.customer });
     quotations.nextQuotationNumber.mockResolvedValue(`Q-${year}-0001`);
@@ -65,26 +70,20 @@ describe("CrmQuotationService", () => {
       status: CrmQuotationStatus.DRAFT,
     });
 
-    const row = await service.createQuotation(
-      tenantOwner(),
-      { customerId: IDS.customer },
-      META,
-    );
+    const row = await service.createQuotation(tenantOwner(), { customerId: IDS.customer }, META);
 
     expect(row.quotationNumber).toBe(`Q-${year}-0001`);
     expect(audit.log).toHaveBeenCalledWith(
-      expect.objectContaining({ action: "crm.quotation_created" }),
+      expect.objectContaining({ action: 'crm.quotation_created' }),
     );
   });
 
-  it("returns not found for missing quotations", async () => {
+  it('returns not found for missing quotations', async () => {
     quotations.findById.mockResolvedValue(null);
-    await expect(service.getQuotation(tenantOwner(), "missing")).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(service.getQuotation(tenantOwner(), 'missing')).rejects.toThrow(NotFoundException);
   });
 
-  it("computes quotation metrics from status aggregates", async () => {
+  it('computes quotation metrics from status aggregates', async () => {
     quotations.aggregateByStatus.mockResolvedValue([
       { status: CrmQuotationStatus.APPROVED, _count: 2, _sum: { total: 200 } },
       { status: CrmQuotationStatus.REJECTED, _count: 2, _sum: { total: 50 } },

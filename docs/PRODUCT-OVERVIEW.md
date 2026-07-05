@@ -17,13 +17,13 @@ Plans (`STARTER`, `GROWTH`, `ENTERPRISE`) control seats, storage, and module fla
 
 ## Application portals
 
-| Portal | Routes | Auth scope | Purpose |
-|--------|--------|------------|---------|
-| Marketing | `/`, `/features`, `/pricing`, `/demo`, legal pages | Public | Acquisition and trust |
-| Tenant workspace | `/app/*` | `tenant` JWT | Business operations |
-| Platform admin | `/admin/*` | `platform` JWT | SaaS operations |
-| Partner (placeholder) | `/partner` | Future | Sales partner panel |
-| Public quote view | `/quote/$token` | Token | Customer-facing quotation |
+| Portal                | Routes                                             | Auth scope     | Purpose                   |
+| --------------------- | -------------------------------------------------- | -------------- | ------------------------- |
+| Marketing             | `/`, `/features`, `/pricing`, `/demo`, legal pages | Public         | Acquisition and trust     |
+| Tenant workspace      | `/app/*`                                           | `tenant` JWT   | Business operations       |
+| Platform admin        | `/admin/*`                                         | `platform` JWT | SaaS operations           |
+| Partner (placeholder) | `/partner`                                         | Future         | Sales partner panel       |
+| Public quote view     | `/quote/$token`                                    | Token          | Customer-facing quotation |
 
 ## Related docs
 

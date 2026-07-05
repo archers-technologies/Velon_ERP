@@ -1,14 +1,14 @@
-import { apiFetch } from "@/lib/api/client";
-import { API_V1_BASE } from "@/lib/api/config";
+import { apiFetch } from '@/lib/api/client';
+import { API_V1_BASE } from '@/lib/api/config';
 
 export type CrmQuotationStatus =
-  | "DRAFT"
-  | "SENT"
-  | "VIEWED"
-  | "APPROVED"
-  | "REJECTED"
-  | "EXPIRED"
-  | "CANCELLED";
+  | 'DRAFT'
+  | 'SENT'
+  | 'VIEWED'
+  | 'APPROVED'
+  | 'REJECTED'
+  | 'EXPIRED'
+  | 'CANCELLED';
 
 export type CrmQuotation = {
   id: string;
@@ -84,11 +84,11 @@ function q(params: Record<string, string | undefined>) {
     if (v) sp.set(k, v);
   }
   const s = sp.toString();
-  return s ? `?${s}` : "";
+  return s ? `?${s}` : '';
 }
 
 export function loadQuotationMetrics() {
-  return apiFetch<CrmQuotationMetrics>("/crm/quotation-metrics");
+  return apiFetch<CrmQuotationMetrics>('/crm/quotation-metrics');
 }
 
 export function loadQuotations(filters?: {
@@ -121,53 +121,53 @@ export function createQuotation(data: {
   scopeOfWork?: string;
   deliverables?: string;
 }) {
-  return apiFetch<CrmQuotation>("/crm/quotations", {
-    method: "POST",
+  return apiFetch<CrmQuotation>('/crm/quotations', {
+    method: 'POST',
     body: JSON.stringify(data),
   });
 }
 
 export function createQuotationFromOpportunity(opportunityId: string) {
   return apiFetch<CrmQuotation>(`/crm/quotations/from-opportunity/${opportunityId}`, {
-    method: "POST",
+    method: 'POST',
   });
 }
 
 export function sendQuotation(id: string, comments?: string) {
   return apiFetch<CrmQuotation & { portalToken?: string }>(`/crm/quotations/${id}/send`, {
-    method: "POST",
+    method: 'POST',
     body: JSON.stringify({ comments }),
   });
 }
 
 export function approveQuotation(id: string, comments?: string) {
   return apiFetch<CrmQuotation>(`/crm/quotations/${id}/approve`, {
-    method: "POST",
+    method: 'POST',
     body: JSON.stringify({ comments }),
   });
 }
 
 export function rejectQuotation(id: string, comments?: string) {
   return apiFetch<CrmQuotation>(`/crm/quotations/${id}/reject`, {
-    method: "POST",
+    method: 'POST',
     body: JSON.stringify({ comments }),
   });
 }
 
 export function cancelQuotation(id: string, comments?: string) {
   return apiFetch<CrmQuotation>(`/crm/quotations/${id}/cancel`, {
-    method: "POST",
+    method: 'POST',
     body: JSON.stringify({ comments }),
   });
 }
 
 export function cloneQuotation(id: string) {
-  return apiFetch<CrmQuotation>(`/crm/quotations/${id}/clone`, { method: "POST" });
+  return apiFetch<CrmQuotation>(`/crm/quotations/${id}/clone`, { method: 'POST' });
 }
 
 export function createQuotationRevision(id: string, revisionReason: string) {
   return apiFetch<CrmQuotation>(`/crm/quotations/${id}/revision`, {
-    method: "POST",
+    method: 'POST',
     body: JSON.stringify({ revisionReason }),
   });
 }
@@ -184,18 +184,18 @@ export function addQuotationItem(
   },
 ) {
   return apiFetch<CrmQuotationItem>(`/crm/quotation-items${q({ quotationId })}`, {
-    method: "POST",
+    method: 'POST',
     body: JSON.stringify(data),
   });
 }
 
 export function removeQuotationItem(itemId: string) {
-  return apiFetch(`/crm/quotation-items/${itemId}`, { method: "DELETE" });
+  return apiFetch(`/crm/quotation-items/${itemId}`, { method: 'DELETE' });
 }
 
 export function generateProposal(quotationId: string) {
   return apiFetch<CrmProposalSummary>(`/crm/proposals/generate/${quotationId}`, {
-    method: "POST",
+    method: 'POST',
   });
 }
 
@@ -208,7 +208,7 @@ export function proposalPdfUrl(proposalId: string) {
 }
 
 export function loadProposalTemplates() {
-  return apiFetch<CrmProposalTemplate[]>("/crm/templates");
+  return apiFetch<CrmProposalTemplate[]>('/crm/templates');
 }
 
 export function createProposalTemplate(data: {
@@ -219,14 +219,14 @@ export function createProposalTemplate(data: {
   deliverablesTemplate?: string;
   termsTemplate?: string;
 }) {
-  return apiFetch<CrmProposalTemplate>("/crm/templates", {
-    method: "POST",
+  return apiFetch<CrmProposalTemplate>('/crm/templates', {
+    method: 'POST',
     body: JSON.stringify(data),
   });
 }
 
 export function deleteProposalTemplate(id: string) {
-  return apiFetch(`/crm/templates/${id}`, { method: "DELETE" });
+  return apiFetch(`/crm/templates/${id}`, { method: 'DELETE' });
 }
 
 export function customerViewUrl(token: string) {

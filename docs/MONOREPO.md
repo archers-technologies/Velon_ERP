@@ -56,12 +56,12 @@ Velon_ERP/
 
 ## What each top-level folder is for
 
-| Path | Package | Responsibility |
-|------|---------|----------------|
-| `frontend/` | `@velon/frontend` | UI, routing, client-side API calls |
-| `backend/` | `@velon/backend` | Business logic, auth, integrations |
-| `packages/shared-kernel/` | `@velon/shared` | Cross-cutting policy and types (imported by both apps) |
-| `packages/database/` | `@velon/database` | Prisma schema, migrations, seed |
+| Path                      | Package           | Responsibility                                         |
+| ------------------------- | ----------------- | ------------------------------------------------------ |
+| `frontend/`               | `@velon/frontend` | UI, routing, client-side API calls                     |
+| `backend/`                | `@velon/backend`  | Business logic, auth, integrations                     |
+| `packages/shared-kernel/` | `@velon/shared`   | Cross-cutting policy and types (imported by both apps) |
+| `packages/database/`      | `@velon/database` | Prisma schema, migrations, seed                        |
 
 See [packages/README.md](../packages/README.md) for package rules.
 

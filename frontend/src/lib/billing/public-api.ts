@@ -1,5 +1,5 @@
-import { API_V1_BASE, isApiEnabled } from "@/lib/api/config";
-import type { PlanRegionalPrices } from "@velon/shared";
+import type { PlanRegionalPrices } from '@velon/shared';
+import { API_V1_BASE, isApiEnabled } from '@/lib/api/config';
 
 export type PublicPlan = {
   id: string;
@@ -13,34 +13,34 @@ export type PublicPlan = {
 
 const FALLBACK_PLANS: PublicPlan[] = [
   {
-    id: "STARTER",
-    displayName: "Starter",
+    id: 'STARTER',
+    displayName: 'Starter',
     monthlyPrice: 49,
     seatLimit: 5,
-    description: "For small teams getting started with Velon ERP.",
-    features: ["Up to 5 users", "CRM foundation", "Workspace admin", "Email support"],
+    description: 'For small teams getting started with Velon ERP.',
+    features: ['Up to 5 users', 'CRM foundation', 'Workspace admin', 'Email support'],
   },
   {
-    id: "GROWTH",
-    displayName: "Professional",
+    id: 'GROWTH',
+    displayName: 'Professional',
     monthlyPrice: 149,
     seatLimit: 25,
-    description: "For growing companies that need more seats and control.",
-    features: ["Up to 25 users", "Full CRM & quotations", "Departments", "Priority support"],
+    description: 'For growing companies that need more seats and control.',
+    features: ['Up to 25 users', 'Full CRM & quotations', 'Departments', 'Priority support'],
   },
   {
-    id: "ENTERPRISE",
-    displayName: "Enterprise",
+    id: 'ENTERPRISE',
+    displayName: 'Enterprise',
     monthlyPrice: 499,
     seatLimit: null,
-    description: "Unlimited scale with dedicated support.",
-    features: ["Unlimited users", "All modules", "Custom integrations", "Dedicated support"],
+    description: 'Unlimited scale with dedicated support.',
+    features: ['Unlimited users', 'All modules', 'Custom integrations', 'Dedicated support'],
   },
 ];
 
 function unwrapPublicPlans(body: unknown): PublicPlan[] {
   if (Array.isArray(body)) return body as PublicPlan[];
-  if (body && typeof body === "object" && "success" in body) {
+  if (body && typeof body === 'object' && 'success' in body) {
     const envelope = body as { success?: boolean; data?: unknown };
     if (envelope.success === true && Array.isArray(envelope.data)) {
       return envelope.data as PublicPlan[];
@@ -70,7 +70,7 @@ export function marketingPlanCards(plans: PublicPlan[]) {
     regionalPrices: plan.regionalPrices,
     desc: plan.description,
     features: plan.features,
-    featured: plan.id === "GROWTH",
-    isCustom: plan.id === "ENTERPRISE",
+    featured: plan.id === 'GROWTH',
+    isCustom: plan.id === 'ENTERPRISE',
   }));
 }

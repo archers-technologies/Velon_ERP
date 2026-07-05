@@ -1,10 +1,10 @@
-import type { ReactNode } from "react";
-import { Link } from "@tanstack/react-router";
-import { SiteHeader } from "@/components/marketing/site-header";
-import { SiteFooter } from "@/components/marketing/site-footer";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import type { ReactNode } from 'react';
+import { Link } from '@tanstack/react-router';
+import { SiteFooter } from '@/components/marketing/site-footer';
+import { SiteHeader } from '@/components/marketing/site-header';
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 export type LegalSection = {
   id: string;
@@ -30,16 +30,19 @@ export function LegalPageLayout({
   relatedLinks: { label: string; to: string }[];
 }) {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="bg-background min-h-screen">
       <SiteHeader />
-      <section className="border-b border-border bg-gradient-hero">
+      <section className="border-border bg-gradient-hero border-b">
         <div className="mx-auto max-w-4xl px-6 py-14">
-          <Badge variant="outline" className="rounded-full border-border bg-background/80">
+          <Badge
+            variant="outline"
+            className="border-border bg-background/80 rounded-full"
+          >
             {label}
           </Badge>
           <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">{title}</h1>
-          <p className="mt-4 text-muted-foreground">{description}</p>
-          <p className="mt-3 text-xs text-muted-foreground">
+          <p className="text-muted-foreground mt-4">{description}</p>
+          <p className="text-muted-foreground mt-3 text-xs">
             Effective: {effectiveDate} · Last updated: {lastUpdated}
           </p>
         </div>
@@ -48,7 +51,7 @@ export function LegalPageLayout({
       <main className="mx-auto grid max-w-7xl gap-10 px-6 py-12 lg:grid-cols-[240px_1fr]">
         <aside className="lg:sticky lg:top-24 lg:self-start">
           <Card className="border-border bg-card p-4">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="text-muted-foreground mb-3 text-xs font-semibold tracking-wider uppercase">
               On this page
             </p>
             <nav className="flex flex-col gap-1 text-sm">
@@ -56,18 +59,21 @@ export function LegalPageLayout({
                 <a
                   key={s.id}
                   href={`#${s.id}`}
-                  className="rounded-md px-2 py-1.5 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                  className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-md px-2 py-1.5 transition"
                 >
                   {s.title}
                 </a>
               ))}
             </nav>
-            <div className="mt-4 border-t border-border pt-4 text-xs text-muted-foreground">
+            <div className="border-border text-muted-foreground mt-4 border-t pt-4 text-xs">
               Related:
               <ul className="mt-2 space-y-1">
                 {relatedLinks.map((l) => (
                   <li key={l.to}>
-                    <Link to={l.to} className="font-medium text-foreground hover:underline">
+                    <Link
+                      to={l.to}
+                      className="text-foreground font-medium hover:underline"
+                    >
                       {l.label}
                     </Link>
                   </li>
@@ -79,14 +85,18 @@ export function LegalPageLayout({
 
         <article className="min-w-0 space-y-10">
           {sections.map((section) => (
-            <section key={section.id} id={section.id} className="scroll-mt-24">
+            <section
+              key={section.id}
+              id={section.id}
+              className="scroll-mt-24"
+            >
               <h2 className="text-xl font-semibold tracking-tight">{section.title}</h2>
               <div
                 className={cn(
-                  "prose prose-sm mt-4 max-w-none text-muted-foreground",
-                  "prose-headings:text-foreground prose-strong:text-foreground",
-                  "prose-a:text-foreground prose-a:underline prose-a:underline-offset-4",
-                  "prose-li:marker:text-muted-foreground",
+                  'prose prose-sm text-muted-foreground mt-4 max-w-none',
+                  'prose-headings:text-foreground prose-strong:text-foreground',
+                  'prose-a:text-foreground prose-a:underline prose-a:underline-offset-4',
+                  'prose-li:marker:text-muted-foreground',
                 )}
               >
                 {section.content}

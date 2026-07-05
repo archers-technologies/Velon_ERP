@@ -1,13 +1,13 @@
-import { Injectable } from "@nestjs/common";
-import type { PaymentProviderId } from "@velon/shared";
-import { assertRazorpayConfigured } from "../../config/razorpay.env";
-import { createRazorpayOrder } from "./razorpay.client";
-import type { CheckoutInput, CheckoutSession } from "./payment-provider.types";
-import { StubPaymentProvider } from "./stub-providers";
+import { Injectable } from '@nestjs/common';
+import type { PaymentProviderId } from '@velon/shared';
+import { assertRazorpayConfigured } from '../../config/razorpay.env';
+import type { CheckoutInput, CheckoutSession } from './payment-provider.types';
+import { createRazorpayOrder } from './razorpay.client';
+import { StubPaymentProvider } from './stub-providers';
 
 @Injectable()
 export class RazorpayPaymentProvider extends StubPaymentProvider {
-  readonly id = "RAZORPAY" as const;
+  readonly id = 'RAZORPAY' as const;
 
   override async createCheckoutSession(input: CheckoutInput): Promise<CheckoutSession> {
     const secrets = assertRazorpayConfigured();

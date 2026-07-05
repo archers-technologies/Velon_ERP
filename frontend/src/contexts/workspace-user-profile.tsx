@@ -6,11 +6,11 @@ import {
   useMemo,
   useState,
   type ReactNode,
-} from "react";
-import { getSessionUserEmail } from "@/lib/auth/session";
-import { readWorkspaceName, saveWorkspaceName } from "@/lib/workspace/tenant-workspace";
-import { bootstrapWorkspaceUser } from "@/lib/workspace/user-profile";
+} from 'react';
+import { getSessionUserEmail } from '@/lib/auth/session';
+import { readWorkspaceName, saveWorkspaceName } from '@/lib/workspace/tenant-workspace';
 import {
+  bootstrapWorkspaceUser,
   ensureWorkspaceSessions,
   extractDominantBrandColor,
   readWorkspaceUserProfile,
@@ -18,7 +18,7 @@ import {
   updateWorkspaceUserProfile,
   type WorkspaceUserProfile,
   type WorkspaceUserSession,
-} from "@/lib/workspace/user-profile";
+} from '@/lib/workspace/user-profile';
 
 type WorkspaceUserProfileContextValue = {
   profile: WorkspaceUserProfile;
@@ -29,32 +29,30 @@ type WorkspaceUserProfileContextValue = {
   patchProfile: (patch: Partial<WorkspaceUserProfile>) => void;
   switchTenant: (tenantId: string) => void;
   revokeOtherSessions: () => void;
-  applyWorkspaceLogo: (dataUrl: string, aspect: "square" | "wide") => Promise<void>;
+  applyWorkspaceLogo: (dataUrl: string, aspect: 'square' | 'wide') => Promise<void>;
 };
 
-const WorkspaceUserProfileContext = createContext<WorkspaceUserProfileContextValue | null>(
-  null,
-);
+const WorkspaceUserProfileContext = createContext<WorkspaceUserProfileContextValue | null>(null);
 
 function loadProfile(): WorkspaceUserProfile {
   const workspaceName = readWorkspaceName();
   const stored = readWorkspaceUserProfile();
   if (stored) return stored;
   return {
-    email: "user@workspace.local",
-    fullName: "Workspace User",
-    role: "Workspace Administrator",
-    workspaceLogoAspect: "square",
+    email: 'user@workspace.local',
+    fullName: 'Workspace User',
+    role: 'Workspace Administrator',
+    workspaceLogoAspect: 'square',
     mfaEnabled: false,
-    assignedTenants: [{ id: "primary", name: workspaceName, role: "Workspace Administrator" }],
-    activeTenantId: "primary",
+    assignedTenants: [{ id: 'primary', name: workspaceName, role: 'Workspace Administrator' }],
+    activeTenantId: 'primary',
   };
 }
 
 export function WorkspaceUserProfileProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<WorkspaceUserProfile>(loadProfile);
   const [sessions, setSessions] = useState<WorkspaceUserSession[]>(() =>
-    typeof window === "undefined" ? [] : ensureWorkspaceSessions(),
+    typeof window === 'undefined' ? [] : ensureWorkspaceSessions(),
   );
 
   const refresh = useCallback(() => {
@@ -70,10 +68,10 @@ export function WorkspaceUserProfileProvider({ children }: { children: ReactNode
 
   useEffect(() => {
     const accent = profile.brandAccentHex;
-    if (!accent || typeof document === "undefined") return;
-    document.documentElement.style.setProperty("--workspace-accent", accent);
+    if (!accent || typeof document === 'undefined') return;
+    document.documentElement.style.setProperty('--workspace-accent', accent);
     return () => {
-      document.documentElement.style.removeProperty("--workspace-accent");
+      document.documentElement.style.removeProperty('--workspace-accent');
     };
   }, [profile.brandAccentHex]);
 
@@ -97,8 +95,8 @@ export function WorkspaceUserProfileProvider({ children }: { children: ReactNode
       const tenant = profile.assignedTenants.find((t) => t.id === tenantId);
       if (!tenant) return;
       patchProfile({ activeTenantId: tenantId, role: tenant.role });
-      saveWorkspaceName(tenant.name.replace(/ · West Branch$/, "").trim());
-      window.dispatchEvent(new Event("velon-workspace-name-changed"));
+      saveWorkspaceName(tenant.name.replace(/ · West Branch$/, '').trim());
+      window.dispatchEvent(new Event('velon-workspace-name-changed'));
     },
     [patchProfile, profile.assignedTenants],
   );
@@ -109,7 +107,7 @@ export function WorkspaceUserProfileProvider({ children }: { children: ReactNode
   }, []);
 
   const applyWorkspaceLogo = useCallback(
-    async (dataUrl: string, aspect: "square" | "wide") => {
+    async (dataUrl: string, aspect: 'square' | 'wide') => {
       const brandAccentHex = await extractDominantBrandColor(dataUrl);
       patchProfile({ workspaceLogoDataUrl: dataUrl, workspaceLogoAspect: aspect, brandAccentHex });
     },
@@ -122,7 +120,7 @@ export function WorkspaceUserProfileProvider({ children }: { children: ReactNode
       .filter(Boolean)
       .slice(0, 2)
       .map((p) => p[0]?.toUpperCase())
-      .join("");
+      .join('');
   }, [profile.fullName]);
 
   const value = useMemo(
@@ -130,7 +128,7 @@ export function WorkspaceUserProfileProvider({ children }: { children: ReactNode
       profile,
       sessions,
       activeTenantName: activeTenant?.name ?? readWorkspaceName(),
-      initials: initials || "WS",
+      initials: initials || 'WS',
       refresh,
       patchProfile,
       switchTenant,
@@ -160,7 +158,7 @@ export function WorkspaceUserProfileProvider({ children }: { children: ReactNode
 export function useWorkspaceUserProfile() {
   const ctx = useContext(WorkspaceUserProfileContext);
   if (!ctx) {
-    throw new Error("useWorkspaceUserProfile must be used within WorkspaceUserProfileProvider");
+    throw new Error('useWorkspaceUserProfile must be used within WorkspaceUserProfileProvider');
   }
   return ctx;
 }

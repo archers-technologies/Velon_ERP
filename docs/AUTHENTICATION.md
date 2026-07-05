@@ -5,14 +5,14 @@
 
 ## Auth flows
 
-| Flow | Endpoints | Notes |
-|------|-----------|-------|
-| Login | `POST /api/v1/auth/login` | Returns access + refresh tokens |
-| Refresh | `POST /api/v1/auth/refresh` | Rotates refresh token |
-| Logout | `POST /api/v1/auth/logout` | Revokes refresh token |
-| Signup OTP | `signup/request-otp` → `verify-otp` → `signup` | Creates tenant + owner membership |
-| Password reset | `password-reset/request` → `verify-otp` → `complete` | OTP codes omitted from responses in production |
-| Change password | `POST /api/v1/auth/change-password` | Authenticated |
+| Flow            | Endpoints                                            | Notes                                          |
+| --------------- | ---------------------------------------------------- | ---------------------------------------------- |
+| Login           | `POST /api/v1/auth/login`                            | Returns access + refresh tokens                |
+| Refresh         | `POST /api/v1/auth/refresh`                          | Rotates refresh token                          |
+| Logout          | `POST /api/v1/auth/logout`                           | Revokes refresh token                          |
+| Signup OTP      | `signup/request-otp` → `verify-otp` → `signup`       | Creates tenant + owner membership              |
+| Password reset  | `password-reset/request` → `verify-otp` → `complete` | OTP codes omitted from responses in production |
+| Change password | `POST /api/v1/auth/change-password`                  | Authenticated                                  |
 
 Password policy is shared (`PASSWORD_MIN_LENGTH`, `PASSWORD_RULES` in `@velon/shared`).
 
@@ -20,9 +20,9 @@ Password policy is shared (`PASSWORD_MIN_LENGTH`, `PASSWORD_RULES` in `@velon/sh
 
 ```ts
 type JwtPayload = {
-  sub: string;           // user id
+  sub: string; // user id
   email: string;
-  scope: "platform" | "tenant";
+  scope: 'platform' | 'tenant';
   role: VelonRole;
   tenantId?: string;
   workspaceId?: string;
@@ -32,14 +32,14 @@ type JwtPayload = {
 
 ## Roles
 
-| Role | Scope | Typical use |
-|------|-------|-------------|
-| `SUPER_ADMIN` | platform | Full platform control |
-| `PLATFORM_SUPPORT` | platform | Read/update tenants, audit |
-| `TENANT_OWNER` | tenant | Full workspace + billing |
-| `TENANT_ADMIN` | tenant | Full workspace + billing |
-| `DEPARTMENT_ADMIN` | tenant | Department-scoped write |
-| `USER` / `TENANT_USER` | tenant | Limited read/write |
+| Role                   | Scope    | Typical use                |
+| ---------------------- | -------- | -------------------------- |
+| `SUPER_ADMIN`          | platform | Full platform control      |
+| `PLATFORM_SUPPORT`     | platform | Read/update tenants, audit |
+| `TENANT_OWNER`         | tenant   | Full workspace + billing   |
+| `TENANT_ADMIN`         | tenant   | Full workspace + billing   |
+| `DEPARTMENT_ADMIN`     | tenant   | Department-scoped write    |
+| `USER` / `TENANT_USER` | tenant   | Limited read/write         |
 
 Permissions are declared in `ROLE_PERMISSIONS` (`packages/shared-kernel/src/index.ts`) using strings such as `crm:*`, `inventory:read`, `users:invite`. Wildcard matching supports `module:*` prefixes.
 
@@ -47,15 +47,15 @@ Workspace UI exposes **role presets** (Owner, Admin, Manager, Accountant, Sales,
 
 ## Guards (NestJS)
 
-| Guard | Purpose |
-|-------|---------|
-| `JwtAuthGuard` | Require valid access token |
-| `PlatformScopeGuard` | Platform-only routes |
-| `TenantScopeGuard` / portal scope | Tenant-only routes |
-| `RolesGuard` | Role allow-list |
-| `PermissionGuard` | Permission string checks |
-| `SubscriptionGuard` | Global subscription access policy |
-| `ThrottlerGuard` | Rate limits |
+| Guard                             | Purpose                           |
+| --------------------------------- | --------------------------------- |
+| `JwtAuthGuard`                    | Require valid access token        |
+| `PlatformScopeGuard`              | Platform-only routes              |
+| `TenantScopeGuard` / portal scope | Tenant-only routes                |
+| `RolesGuard`                      | Role allow-list                   |
+| `PermissionGuard`                 | Permission string checks          |
+| `SubscriptionGuard`               | Global subscription access policy |
+| `ThrottlerGuard`                  | Rate limits                       |
 
 Decorators: `@CurrentUser()`, `@CurrentTenant()`, `@RequirePermission()`, `@Roles()`, portal-scope markers.
 

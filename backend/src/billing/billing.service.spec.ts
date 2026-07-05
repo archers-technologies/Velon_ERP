@@ -1,9 +1,13 @@
-import { BadRequestException } from "@nestjs/common";
-import { TenantPlan } from "@velon/database";
-import { BillingService } from "./billing.service";
-import { createMockAudit, createMockPrisma, createMockPrismaClient } from "../../test/helpers/mocks";
+import { BadRequestException } from '@nestjs/common';
+import { TenantPlan } from '@velon/database';
+import {
+  createMockAudit,
+  createMockPrisma,
+  createMockPrismaClient,
+} from '../../test/helpers/mocks';
+import { BillingService } from './billing.service';
 
-describe("BillingService", () => {
+describe('BillingService', () => {
   const client = createMockPrismaClient();
   const prisma = createMockPrisma(client);
   const audit = createMockAudit();
@@ -29,16 +33,16 @@ describe("BillingService", () => {
     );
   });
 
-  it("maps plan catalog for public display", async () => {
+  it('maps plan catalog for public display', async () => {
     planDefinitions.listCatalog.mockResolvedValue([
       {
         id: TenantPlan.STARTER,
-        displayName: "Starter",
+        displayName: 'Starter',
         globalMonthlyPrice: 29,
         globalAnnualPrice: 290,
         seatLimit: 5,
-        description: "Starter plan",
-        features: ["crm"],
+        description: 'Starter plan',
+        features: ['crm'],
         regionalPrices: {},
       },
     ]);
@@ -47,34 +51,34 @@ describe("BillingService", () => {
     expect(catalog).toEqual([
       expect.objectContaining({
         id: TenantPlan.STARTER,
-        displayName: "Starter",
+        displayName: 'Starter',
         monthlyPrice: 29,
         annualPrice: 290,
-        currency: "USD",
+        currency: 'USD',
         seatLimit: 5,
       }),
     ]);
   });
 
-  it("rejects negative plan prices on platform updates", async () => {
+  it('rejects negative plan prices on platform updates', async () => {
     await expect(
-      service.updatePlanDefinition(TenantPlan.STARTER, { monthlyPrice: -1 }, "admin-1"),
+      service.updatePlanDefinition(TenantPlan.STARTER, { monthlyPrice: -1 }, 'admin-1'),
     ).rejects.toThrow(BadRequestException);
 
     await expect(
-      service.updatePlanDefinition(TenantPlan.STARTER, { currency: "US" }, "admin-1"),
+      service.updatePlanDefinition(TenantPlan.STARTER, { currency: 'US' }, 'admin-1'),
     ).rejects.toThrow(/3-letter/i);
   });
 
-  it("delegates valid plan updates to plan definitions", async () => {
+  it('delegates valid plan updates to plan definitions', async () => {
     planDefinitions.updatePlan.mockResolvedValue({ id: TenantPlan.STARTER, monthlyPrice: 39 });
     await expect(
-      service.updatePlanDefinition(TenantPlan.STARTER, { monthlyPrice: 39 }, "admin-1"),
+      service.updatePlanDefinition(TenantPlan.STARTER, { monthlyPrice: 39 }, 'admin-1'),
     ).resolves.toMatchObject({ monthlyPrice: 39 });
     expect(planDefinitions.updatePlan).toHaveBeenCalledWith(
       TenantPlan.STARTER,
       { monthlyPrice: 39 },
-      "admin-1",
+      'admin-1',
     );
   });
 });

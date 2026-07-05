@@ -1,13 +1,13 @@
 export const PASSWORD_MIN_LENGTH = 8;
 
-export type PasswordRuleId = "minLength" | "uppercase" | "lowercase" | "number" | "symbol";
+export type PasswordRuleId = 'minLength' | 'uppercase' | 'lowercase' | 'number' | 'symbol';
 
 export const PASSWORD_RULES: { id: PasswordRuleId; label: string }[] = [
-  { id: "minLength", label: "Minimum 8 characters" },
-  { id: "uppercase", label: "Uppercase letter" },
-  { id: "lowercase", label: "Lowercase letter" },
-  { id: "number", label: "Number" },
-  { id: "symbol", label: "Symbol" },
+  { id: 'minLength', label: 'Minimum 8 characters' },
+  { id: 'uppercase', label: 'Uppercase letter' },
+  { id: 'lowercase', label: 'Lowercase letter' },
+  { id: 'number', label: 'Number' },
+  { id: 'symbol', label: 'Symbol' },
 ];
 
 export type PasswordRuleStatus = Record<PasswordRuleId, boolean>;
@@ -32,10 +32,10 @@ export function passwordStrengthMessage(password: string): string | null {
   if (!rules.minLength) {
     return `Password must be at least ${PASSWORD_MIN_LENGTH} characters.`;
   }
-  if (!rules.uppercase) return "Password must include at least one uppercase letter.";
-  if (!rules.lowercase) return "Password must include at least one lowercase letter.";
-  if (!rules.number) return "Password must include at least one number.";
-  if (!rules.symbol) return "Password must include at least one symbol.";
-  if (password.trim().length > 128) return "Password is too long.";
+  if (!rules.uppercase) return 'Password must include at least one uppercase letter.';
+  if (!rules.lowercase) return 'Password must include at least one lowercase letter.';
+  if (!rules.number) return 'Password must include at least one number.';
+  if (!rules.symbol) return 'Password must include at least one symbol.';
+  if (password.trim().length > 128) return 'Password is too long.';
   return null;
 }

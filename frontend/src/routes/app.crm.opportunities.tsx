@@ -1,18 +1,23 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
+import { useCallback, useEffect, useState } from 'react';
+import { createFileRoute } from '@tanstack/react-router';
+import { Briefcase, LayoutGrid, List } from 'lucide-react';
+import { toast } from 'sonner';
+import { canWriteCrmRecords, normalizeVelonRole } from '@velon/shared';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
+import { getSessionMembershipRole } from '@/lib/auth/session';
+import { loadCrmCustomers } from '@/lib/crm/api';
 import {
   archiveCrmOpportunity,
   closeCrmOpportunityLost,
@@ -24,41 +29,36 @@ import {
   type CrmOpportunity,
   type CrmOpportunityStatus,
   type CrmPipeline,
-} from "@/lib/crm/pipeline-api";
-import { loadCrmCustomers } from "@/lib/crm/api";
-import { getSessionMembershipRole } from "@/lib/auth/session";
-import { canWriteCrmRecords, normalizeVelonRole } from "@velon/shared";
-import { Briefcase, LayoutGrid, List } from "lucide-react";
-import { EmptyState } from "@/components/ui/empty-state";
+} from '@/lib/crm/pipeline-api';
 
-export const Route = createFileRoute("/app/crm/opportunities")({
+export const Route = createFileRoute('/app/crm/opportunities')({
   component: CrmOpportunitiesPage,
 });
 
 function CrmOpportunitiesPage() {
-  const canWrite = canWriteCrmRecords(normalizeVelonRole(getSessionMembershipRole() ?? "USER"));
+  const canWrite = canWriteCrmRecords(normalizeVelonRole(getSessionMembershipRole() ?? 'USER'));
   const [opportunities, setOpportunities] = useState<CrmOpportunity[]>([]);
   const [pipelines, setPipelines] = useState<CrmPipeline[]>([]);
   const [customers, setCustomers] = useState<{ id: string; companyName: string }[]>([]);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("OPEN");
-  const [viewMode, setViewMode] = useState<"list" | "kanban">("kanban");
-  const [kanbanPipelineId, setKanbanPipelineId] = useState("");
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('OPEN');
+  const [viewMode, setViewMode] = useState<'list' | 'kanban'>('kanban');
+  const [kanbanPipelineId, setKanbanPipelineId] = useState('');
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState({
-    title: "",
-    pipelineId: "",
-    stageId: "",
-    customerId: "",
-    value: "",
-    expectedCloseDate: "",
+    title: '',
+    pipelineId: '',
+    stageId: '',
+    customerId: '',
+    value: '',
+    expectedCloseDate: '',
   });
 
   const refresh = useCallback(async () => {
     const [rows, pipes, custs] = await Promise.all([
       loadCrmOpportunities({
         search: search || undefined,
-        status: statusFilter !== "all" ? (statusFilter as CrmOpportunityStatus) : undefined,
+        status: statusFilter !== 'all' ? (statusFilter as CrmOpportunityStatus) : undefined,
       }),
       loadCrmPipelines(),
       loadCrmCustomers(),
@@ -66,7 +66,7 @@ function CrmOpportunitiesPage() {
     setOpportunities(rows);
     setPipelines(pipes);
     setCustomers(custs.map((c) => ({ id: c.id, companyName: c.companyName })));
-    setKanbanPipelineId((prev) => prev || pipes[0]?.id || "");
+    setKanbanPipelineId((prev) => prev || pipes[0]?.id || '');
     setForm((f) => {
       if (f.pipelineId) return f;
       const p = pipes[0];
@@ -74,7 +74,7 @@ function CrmOpportunitiesPage() {
       return {
         ...f,
         pipelineId: p.id,
-        stageId: p.stages.find((s) => s.name === "New")?.id ?? p.stages[0]?.id ?? "",
+        stageId: p.stages.find((s) => s.name === 'New')?.id ?? p.stages[0]?.id ?? '',
       };
     });
   }, [search, statusFilter]);
@@ -85,13 +85,13 @@ function CrmOpportunitiesPage() {
 
   const selectedPipeline = pipelines.find((p) => p.id === form.pipelineId);
   const kanbanPipeline = pipelines.find((p) => p.id === kanbanPipelineId) ?? pipelines[0];
-  const openOpportunities = opportunities.filter((o) => o.status === "OPEN");
-  const showKanban = viewMode === "kanban" && statusFilter === "OPEN" && kanbanPipeline;
+  const openOpportunities = opportunities.filter((o) => o.status === 'OPEN');
+  const showKanban = viewMode === 'kanban' && statusFilter === 'OPEN' && kanbanPipeline;
 
   function statusBadgeVariant(status: CrmOpportunityStatus) {
-    if (status === "WON") return "success" as const;
-    if (status === "LOST") return "destructive" as const;
-    return "info" as const;
+    if (status === 'WON') return 'success' as const;
+    if (status === 'LOST') return 'destructive' as const;
+    return 'info' as const;
   }
 
   async function onCreate(e: React.FormEvent) {
@@ -107,11 +107,11 @@ function CrmOpportunitiesPage() {
         value: form.value ? Number(form.value) : 0,
         expectedCloseDate: form.expectedCloseDate || undefined,
       });
-      toast.success("Opportunity created");
-      setForm((f) => ({ ...f, title: "", customerId: "", value: "", expectedCloseDate: "" }));
+      toast.success('Opportunity created');
+      setForm((f) => ({ ...f, title: '', customerId: '', value: '', expectedCloseDate: '' }));
       await refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed");
+      toast.error(err instanceof Error ? err.message : 'Failed');
     } finally {
       setBusy(false);
     }
@@ -126,7 +126,10 @@ function CrmOpportunitiesPage() {
           onChange={(e) => setSearch(e.target.value)}
           className="max-w-xs"
         />
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select
+          value={statusFilter}
+          onValueChange={setStatusFilter}
+        >
           <SelectTrigger className="w-[140px]">
             <SelectValue />
           </SelectTrigger>
@@ -137,31 +140,40 @@ function CrmOpportunitiesPage() {
             <SelectItem value="LOST">Lost</SelectItem>
           </SelectContent>
         </Select>
-        <Button variant="secondary" onClick={() => void refresh()}>
+        <Button
+          variant="secondary"
+          onClick={() => void refresh()}
+        >
           Search
         </Button>
-        {statusFilter === "OPEN" && (
+        {statusFilter === 'OPEN' && (
           <>
-            <Select value={kanbanPipelineId} onValueChange={setKanbanPipelineId}>
+            <Select
+              value={kanbanPipelineId}
+              onValueChange={setKanbanPipelineId}
+            >
               <SelectTrigger className="w-[160px]">
                 <SelectValue placeholder="Pipeline" />
               </SelectTrigger>
               <SelectContent>
                 {pipelines.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
+                  <SelectItem
+                    key={p.id}
+                    value={p.id}
+                  >
                     {p.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <div className="flex rounded-lg border border-border p-0.5">
+            <div className="border-border flex rounded-lg border p-0.5">
               <Button
                 type="button"
                 size="sm"
-                variant={viewMode === "kanban" ? "secondary" : "ghost"}
+                variant={viewMode === 'kanban' ? 'secondary' : 'ghost'}
                 className="h-8 px-2.5"
-                onClick={() => setViewMode("kanban")}
-                aria-pressed={viewMode === "kanban"}
+                onClick={() => setViewMode('kanban')}
+                aria-pressed={viewMode === 'kanban'}
               >
                 <LayoutGrid className="mr-1.5 h-4 w-4" />
                 Board
@@ -169,10 +181,10 @@ function CrmOpportunitiesPage() {
               <Button
                 type="button"
                 size="sm"
-                variant={viewMode === "list" ? "secondary" : "ghost"}
+                variant={viewMode === 'list' ? 'secondary' : 'ghost'}
                 className="h-8 px-2.5"
-                onClick={() => setViewMode("list")}
-                aria-pressed={viewMode === "list"}
+                onClick={() => setViewMode('list')}
+                aria-pressed={viewMode === 'list'}
               >
                 <List className="mr-1.5 h-4 w-4" />
                 List
@@ -185,7 +197,10 @@ function CrmOpportunitiesPage() {
       {canWrite && (
         <Card className="border-border bg-card p-6">
           <h2 className="font-semibold">New opportunity</h2>
-          <form className="mt-4 grid gap-3 sm:grid-cols-2" onSubmit={onCreate}>
+          <form
+            className="mt-4 grid gap-3 sm:grid-cols-2"
+            onSubmit={onCreate}
+          >
             <div>
               <Label>Title</Label>
               <Input
@@ -205,7 +220,10 @@ function CrmOpportunitiesPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {customers.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
+                    <SelectItem
+                      key={c.id}
+                      value={c.id}
+                    >
                       {c.companyName}
                     </SelectItem>
                   ))}
@@ -221,7 +239,7 @@ function CrmOpportunitiesPage() {
                   setForm({
                     ...form,
                     pipelineId: v,
-                    stageId: p?.stages[0]?.id ?? "",
+                    stageId: p?.stages[0]?.id ?? '',
                   });
                 }}
               >
@@ -230,7 +248,10 @@ function CrmOpportunitiesPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {pipelines.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
+                    <SelectItem
+                      key={p.id}
+                      value={p.id}
+                    >
                       {p.name}
                     </SelectItem>
                   ))}
@@ -248,7 +269,10 @@ function CrmOpportunitiesPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {(selectedPipeline?.stages ?? []).map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
+                    <SelectItem
+                      key={s.id}
+                      value={s.id}
+                    >
                       {s.name}
                     </SelectItem>
                   ))}
@@ -272,7 +296,11 @@ function CrmOpportunitiesPage() {
                 onChange={(e) => setForm({ ...form, expectedCloseDate: e.target.value })}
               />
             </div>
-            <Button type="submit" disabled={busy} className="sm:col-span-2 w-fit">
+            <Button
+              type="submit"
+              disabled={busy}
+              className="w-fit sm:col-span-2"
+            >
               Add opportunity
             </Button>
           </form>
@@ -288,18 +316,21 @@ function CrmOpportunitiesPage() {
             return (
               <div
                 key={stage.id}
-                className="flex w-72 shrink-0 flex-col rounded-xl border border-border bg-muted/30"
+                className="border-border bg-muted/30 flex w-72 shrink-0 flex-col rounded-xl border"
               >
-                <div className="flex items-center justify-between border-b border-border px-4 py-3">
+                <div className="border-border flex items-center justify-between border-b px-4 py-3">
                   <h3 className="text-sm font-semibold">{stage.name}</h3>
                   <Badge variant="neutral">{cards.length}</Badge>
                 </div>
                 <div className="flex flex-1 flex-col gap-2 p-3">
                   {cards.map((o) => (
-                    <Card key={o.id} className="border-border bg-card p-3 shadow-sm">
-                      <p className="text-sm font-medium leading-snug">{o.title}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">{o.opportunityCode}</p>
-                      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <Card
+                      key={o.id}
+                      className="border-border bg-card p-3 shadow-sm"
+                    >
+                      <p className="text-sm leading-snug font-medium">{o.title}</p>
+                      <p className="text-muted-foreground mt-1 text-xs">{o.opportunityCode}</p>
+                      <div className="text-muted-foreground mt-2 flex flex-wrap items-center gap-2 text-xs">
                         <span>${Number(o.value).toLocaleString()}</span>
                         <span>·</span>
                         <span>{o.probability}%</span>
@@ -310,7 +341,7 @@ function CrmOpportunitiesPage() {
                           onValueChange={(stageId) =>
                             void moveCrmOpportunityStage(o.id, stageId)
                               .then(() => refresh())
-                              .then(() => toast.success("Stage updated"))
+                              .then(() => toast.success('Stage updated'))
                           }
                         >
                           <SelectTrigger className="mt-2 h-8 text-xs">
@@ -318,7 +349,10 @@ function CrmOpportunitiesPage() {
                           </SelectTrigger>
                           <SelectContent>
                             {kanbanPipeline.stages.map((s) => (
-                              <SelectItem key={s.id} value={s.id}>
+                              <SelectItem
+                                key={s.id}
+                                value={s.id}
+                              >
                                 {s.name}
                               </SelectItem>
                             ))}
@@ -328,7 +362,7 @@ function CrmOpportunitiesPage() {
                     </Card>
                   ))}
                   {cards.length === 0 && (
-                    <p className="py-6 text-center text-xs text-muted-foreground">No deals</p>
+                    <p className="text-muted-foreground py-6 text-center text-xs">No deals</p>
                   )}
                 </div>
               </div>
@@ -336,88 +370,94 @@ function CrmOpportunitiesPage() {
           })}
         </div>
       ) : (
-      <Card className="border-border bg-card divide-y">
-        {opportunities.map((o) => (
-          <div key={o.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
-            <div>
-              <p className="font-medium">{o.title}</p>
-              <p className="text-xs text-muted-foreground">
-                {o.opportunityCode} · {o.stage?.name ?? "—"} · $
-                {Number(o.value).toLocaleString()} · {o.probability}%
-              </p>
+        <Card className="border-border bg-card divide-y">
+          {opportunities.map((o) => (
+            <div
+              key={o.id}
+              className="flex flex-wrap items-center justify-between gap-3 p-4"
+            >
+              <div>
+                <p className="font-medium">{o.title}</p>
+                <p className="text-muted-foreground text-xs">
+                  {o.opportunityCode} · {o.stage?.name ?? '—'} · ${Number(o.value).toLocaleString()}{' '}
+                  · {o.probability}%
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant={statusBadgeVariant(o.status)}>{o.status}</Badge>
+                {canWrite && o.status === 'OPEN' && o.pipeline && (
+                  <Select
+                    value={o.stageId}
+                    onValueChange={(stageId) =>
+                      void moveCrmOpportunityStage(o.id, stageId)
+                        .then(() => refresh())
+                        .then(() => toast.success('Stage updated'))
+                    }
+                  >
+                    <SelectTrigger className="h-8 w-[140px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(pipelines.find((p) => p.id === o.pipelineId)?.stages ?? []).map((s) => (
+                        <SelectItem
+                          key={s.id}
+                          value={s.id}
+                        >
+                          {s.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {canWrite && o.status === 'OPEN' && (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        void closeCrmOpportunityWon(o.id)
+                          .then(() => refresh())
+                          .then(() => toast.success('Won'))
+                      }
+                    >
+                      Won
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() =>
+                        void closeCrmOpportunityLost(o.id)
+                          .then(() => refresh())
+                          .then(() => toast.success('Lost'))
+                      }
+                    >
+                      Lost
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() =>
+                        void archiveCrmOpportunity(o.id)
+                          .then(() => refresh())
+                          .then(() => toast.success('Archived'))
+                      }
+                    >
+                      Archive
+                    </Button>
+                  </>
+                )}
+              </div>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant={statusBadgeVariant(o.status)}>{o.status}</Badge>
-              {canWrite && o.status === "OPEN" && o.pipeline && (
-                <Select
-                  value={o.stageId}
-                  onValueChange={(stageId) =>
-                    void moveCrmOpportunityStage(o.id, stageId)
-                      .then(() => refresh())
-                      .then(() => toast.success("Stage updated"))
-                  }
-                >
-                  <SelectTrigger className="h-8 w-[140px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(pipelines.find((p) => p.id === o.pipelineId)?.stages ?? []).map((s) => (
-                      <SelectItem key={s.id} value={s.id}>
-                        {s.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-              {canWrite && o.status === "OPEN" && (
-                <>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() =>
-                      void closeCrmOpportunityWon(o.id)
-                        .then(() => refresh())
-                        .then(() => toast.success("Won"))
-                    }
-                  >
-                    Won
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() =>
-                      void closeCrmOpportunityLost(o.id)
-                        .then(() => refresh())
-                        .then(() => toast.success("Lost"))
-                    }
-                  >
-                    Lost
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() =>
-                      void archiveCrmOpportunity(o.id)
-                        .then(() => refresh())
-                        .then(() => toast.success("Archived"))
-                    }
-                  >
-                    Archive
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
-        ))}
-        {opportunities.length === 0 && (
-          <EmptyState
-            icon={Briefcase}
-            title="No opportunities yet"
-            description="Create your first opportunity to start tracking your sales pipeline."
-            className="m-4 border-0 bg-transparent"
-          />
-        )}
-      </Card>
+          ))}
+          {opportunities.length === 0 && (
+            <EmptyState
+              icon={Briefcase}
+              title="No opportunities yet"
+              description="Create your first opportunity to start tracking your sales pipeline."
+              className="m-4 border-0 bg-transparent"
+            />
+          )}
+        </Card>
       )}
     </div>
   );

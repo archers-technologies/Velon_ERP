@@ -1,4 +1,4 @@
-import type { AuthScope, VelonRole } from "@velon/shared";
+import type { AuthScope, VelonRole } from '@velon/shared';
 
 /** Attached to request after JWT validation. */
 export type AuthenticatedUser = {
@@ -13,13 +13,13 @@ export type AuthenticatedUser = {
 
 export type TokenIssueContext =
   | {
-      scope: "platform";
+      scope: 'platform';
       userId: string;
       email: string;
       role: VelonRole;
     }
   | {
-      scope: "tenant";
+      scope: 'tenant';
       userId: string;
       email: string;
       role: VelonRole;
@@ -35,7 +35,7 @@ export type AuthSessionResponse = {
   role: string;
   email: string;
   scope: AuthScope;
-  route: "admin" | "app";
+  route: 'admin' | 'app';
   tenantId?: string;
   workspaceId?: string;
   membershipId?: string;

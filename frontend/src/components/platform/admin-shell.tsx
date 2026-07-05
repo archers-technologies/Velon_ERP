@@ -1,61 +1,56 @@
-import type { ReactNode } from "react";
-import { marketingSiteOrigin } from "@/lib/shared/logo-navigation";
-import { useCallback, useEffect, useLayoutEffect, useState } from "react";
-import { AppShell, type NavGroup } from "@/components/workspace/app-shell";
-import { AdminUserMenu } from "@/components/platform/admin-user-menu";
+import { useCallback, useEffect, useLayoutEffect, useState, type ReactNode } from 'react';
+import {
+  Bell,
+  Building2,
+  CreditCard,
+  LayoutDashboard,
+  MapPin,
+  Moon,
+  Server,
+  Sun,
+  Users,
+} from 'lucide-react';
+import { isAdminNavItemActive } from '@velon/shared';
+import { AdminUserMenu } from '@/components/platform/admin-user-menu';
+import { PlatformSyncIndicator } from '@/components/platform/platform-sync-indicator';
+import { Button } from '@/components/ui/button';
+import { AppShell, type NavGroup } from '@/components/workspace/app-shell';
 import {
   NotificationDropdown,
   type NotificationPreview,
-} from "@/components/workspace/notification-dropdown";
-import { loadAlertsLogsCommandCenter } from "@/lib/platform/admin-loaders";
-import { usePlatformRealtime } from "@/hooks/use-platform-realtime";
+} from '@/components/workspace/notification-dropdown';
 import {
-  AdminCurrencyProvider,
   adminBooksCurrencyLine,
+  AdminCurrencyProvider,
   useAdminCurrency,
-} from "@/contexts/admin-currency";
+} from '@/contexts/admin-currency';
+import { usePlatformRealtime } from '@/hooks/use-platform-realtime';
+import { loadAlertsLogsCommandCenter } from '@/lib/platform/admin-loaders';
 import {
   applyVelonThemeFromStorage,
   isVelonDocumentDark,
   toggleVelonTheme,
-} from "@/lib/shared/document-theme";
-import { PlatformSyncIndicator } from "@/components/platform/platform-sync-indicator";
-import { isAdminNavItemActive } from "@velon/shared";
-import { Button } from "@/components/ui/button";
-import {
-  LayoutDashboard,
-  Building2,
-  Users,
-  CreditCard,
-  Bell,
-  Server,
-  MapPin,
-  Sun,
-  Moon,
-} from "lucide-react";
+} from '@/lib/shared/document-theme';
+import { marketingSiteOrigin } from '@/lib/shared/logo-navigation';
 
 export const adminGroups: NavGroup[] = [
   {
-    label: "Platform",
+    label: 'Platform',
     items: [
-      { label: "Overview", to: "/admin", icon: LayoutDashboard },
-      { label: "Tenants", to: "/admin/tenants", icon: Building2 },
-      { label: "Users", to: "/admin/users", icon: Users },
-      { label: "Subscriptions", to: "/admin/subscriptions", icon: CreditCard },
-      { label: "Website", to: "/admin/website", icon: MapPin },
+      { label: 'Overview', to: '/admin', icon: LayoutDashboard },
+      { label: 'Tenants', to: '/admin/tenants', icon: Building2 },
+      { label: 'Users', to: '/admin/users', icon: Users },
+      { label: 'Subscriptions', to: '/admin/subscriptions', icon: CreditCard },
+      { label: 'Website', to: '/admin/website', icon: MapPin },
     ],
   },
   {
-    label: "Operations",
-    items: [
-      { label: "Alerts & Logs", to: "/admin/alerts-logs", icon: Bell },
-    ],
+    label: 'Operations',
+    items: [{ label: 'Alerts & Logs', to: '/admin/alerts-logs', icon: Bell }],
   },
   {
-    label: "System",
-    items: [
-      { label: "Infrastructure", to: "/admin/infrastructure", icon: Server },
-    ],
+    label: 'System',
+    items: [{ label: 'Infrastructure', to: '/admin/infrastructure', icon: Server }],
   },
 ];
 
@@ -78,33 +73,39 @@ function AdminHeaderToolbar({
   return (
     <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5 sm:gap-2 md:gap-3">
       <span
-        className="rounded-md border border-border bg-muted/50 px-2 py-1 font-mono text-[10px] font-semibold text-foreground md:hidden"
+        className="border-border bg-muted/50 text-foreground rounded-md border px-2 py-1 font-mono text-[10px] font-semibold md:hidden"
         title={books}
       >
-        {preset === "CUSTOM" ? customSymbol.trim() || "?" : preset}
+        {preset === 'CUSTOM' ? customSymbol.trim() || '?' : preset}
       </span>
       <div className="hidden min-w-0 flex-col items-end text-right md:flex">
-        <span className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground">
+        <span className="text-muted-foreground text-[9px] font-medium tracking-wider uppercase">
           Platform figures
         </span>
         <span
-          className="max-w-[220px] truncate text-[11px] font-semibold leading-tight"
+          className="max-w-[220px] truncate text-[11px] leading-tight font-semibold"
           title={books}
         >
           {books}
         </span>
       </div>
-      <div className="hidden h-8 w-px bg-border md:block" aria-hidden />
       <div
-        className="hidden min-w-0 items-center gap-1.5 text-muted-foreground sm:flex"
+        className="bg-border hidden h-8 w-px md:block"
+        aria-hidden
+      />
+      <div
+        className="text-muted-foreground hidden min-w-0 items-center gap-1.5 sm:flex"
         title="Primary control plane"
       >
-        <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
-        <div className="min-w-0 flex flex-col items-end text-right">
-          <span className="max-w-[min(42vw,200px)] truncate text-[11px] font-medium text-foreground">
+        <MapPin
+          className="h-3.5 w-3.5 shrink-0"
+          aria-hidden
+        />
+        <div className="flex min-w-0 flex-col items-end text-right">
+          <span className="text-foreground max-w-[min(42vw,200px)] truncate text-[11px] font-medium">
             Global · multi-region
           </span>
-          <span className="max-w-[min(42vw,200px)] truncate text-[10px] text-muted-foreground">
+          <span className="text-muted-foreground max-w-[min(42vw,200px)] truncate text-[10px]">
             Primary · us-east-1
           </span>
         </div>
@@ -119,7 +120,7 @@ function AdminHeaderToolbar({
           toggleVelonTheme();
           setDark(isVelonDocumentDark());
         }}
-        aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+        aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
       >
         {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
       </Button>
@@ -175,7 +176,7 @@ export function AdminShell({
         initials="SA"
         title={title}
         subtitle={subtitle}
-        logoNav={{ type: "external", href: marketingSiteOrigin() }}
+        logoNav={{ type: 'external', href: marketingSiteOrigin() }}
         headerToolbar={
           <AdminHeaderToolbar
             notifications={notifications}

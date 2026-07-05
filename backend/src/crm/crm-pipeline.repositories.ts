@@ -1,12 +1,7 @@
-import { Injectable } from "@nestjs/common";
-import {
-  CrmLeadSource,
-  CrmLeadStatus,
-  CrmOpportunityStatus,
-  Prisma,
-} from "@velon/database";
-import { PrismaService } from "../prisma/prisma.service";
-import { TenantScopedRepository } from "../common/repositories/tenant-scoped.repository";
+import { Injectable } from '@nestjs/common';
+import { CrmLeadSource, CrmLeadStatus, CrmOpportunityStatus, Prisma } from '@velon/database';
+import { TenantScopedRepository } from '../common/repositories/tenant-scoped.repository';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class CrmLeadRepository extends TenantScopedRepository {
@@ -25,11 +20,11 @@ export class CrmLeadRepository extends TenantScopedRepository {
     const q = opts.search?.trim();
     if (q) {
       OR.push(
-        { companyName: { contains: q, mode: "insensitive" } },
-        { contactName: { contains: q, mode: "insensitive" } },
-        { email: { contains: q, mode: "insensitive" } },
-        { phone: { contains: q, mode: "insensitive" } },
-        { leadCode: { contains: q, mode: "insensitive" } },
+        { companyName: { contains: q, mode: 'insensitive' } },
+        { contactName: { contains: q, mode: 'insensitive' } },
+        { email: { contains: q, mode: 'insensitive' } },
+        { phone: { contains: q, mode: 'insensitive' } },
+        { leadCode: { contains: q, mode: 'insensitive' } },
       );
     }
     return this.prisma.client.crmLead.findMany({
@@ -42,7 +37,7 @@ export class CrmLeadRepository extends TenantScopedRepository {
         }),
         ...(OR.length ? { OR } : {}),
       },
-      orderBy: { updatedAt: "desc" },
+      orderBy: { updatedAt: 'desc' },
       include: {
         assignedTo: { select: { id: true, name: true, email: true } },
         createdBy: { select: { id: true, name: true, email: true } },
@@ -67,7 +62,7 @@ export class CrmLeadRepository extends TenantScopedRepository {
     return this.prisma.client.crmLead.findFirst({ where: this.where({ id }) });
   }
 
-  create(data: Omit<Prisma.CrmLeadUncheckedCreateInput, "tenantId">) {
+  create(data: Omit<Prisma.CrmLeadUncheckedCreateInput, 'tenantId'>) {
     return this.prisma.client.crmLead.create({
       data: { ...data, tenantId: this.tenantId },
       include: {
@@ -101,9 +96,9 @@ export class CrmPipelineRepository extends TenantScopedRepository {
   findMany() {
     return this.prisma.client.crmPipeline.findMany({
       where: this.where(),
-      orderBy: [{ isDefault: "desc" }, { name: "asc" }],
+      orderBy: [{ isDefault: 'desc' }, { name: 'asc' }],
       include: {
-        stages: { orderBy: { position: "asc" } },
+        stages: { orderBy: { position: 'asc' } },
         _count: { select: { opportunities: true } },
       },
     });
@@ -112,14 +107,14 @@ export class CrmPipelineRepository extends TenantScopedRepository {
   findById(id: string) {
     return this.prisma.client.crmPipeline.findFirst({
       where: this.where({ id }),
-      include: { stages: { orderBy: { position: "asc" } } },
+      include: { stages: { orderBy: { position: 'asc' } } },
     });
   }
 
   findDefault() {
     return this.prisma.client.crmPipeline.findFirst({
       where: this.where({ isDefault: true }),
-      include: { stages: { orderBy: { position: "asc" } } },
+      include: { stages: { orderBy: { position: 'asc' } } },
     });
   }
 
@@ -127,10 +122,10 @@ export class CrmPipelineRepository extends TenantScopedRepository {
     return this.prisma.client.crmPipeline.count({ where: this.where() });
   }
 
-  create(data: Omit<Prisma.CrmPipelineUncheckedCreateInput, "tenantId">) {
+  create(data: Omit<Prisma.CrmPipelineUncheckedCreateInput, 'tenantId'>) {
     return this.prisma.client.crmPipeline.create({
       data: { ...data, tenantId: this.tenantId },
-      include: { stages: { orderBy: { position: "asc" } } },
+      include: { stages: { orderBy: { position: 'asc' } } },
     });
   }
 
@@ -138,7 +133,7 @@ export class CrmPipelineRepository extends TenantScopedRepository {
     return this.prisma.client.crmPipeline.update({
       where: { id },
       data,
-      include: { stages: { orderBy: { position: "asc" } } },
+      include: { stages: { orderBy: { position: 'asc' } } },
     });
   }
 
@@ -163,7 +158,7 @@ export class CrmPipelineStageRepository extends TenantScopedRepository {
   findByPipeline(pipelineId: string) {
     return this.prisma.client.crmPipelineStage.findMany({
       where: this.where({ pipelineId }),
-      orderBy: { position: "asc" },
+      orderBy: { position: 'asc' },
     });
   }
 
@@ -179,7 +174,7 @@ export class CrmPipelineStageRepository extends TenantScopedRepository {
     });
   }
 
-  create(data: Omit<Prisma.CrmPipelineStageUncheckedCreateInput, "tenantId">) {
+  create(data: Omit<Prisma.CrmPipelineStageUncheckedCreateInput, 'tenantId'>) {
     return this.prisma.client.crmPipelineStage.create({
       data: { ...data, tenantId: this.tenantId },
     });
@@ -219,8 +214,8 @@ export class CrmOpportunityRepository extends TenantScopedRepository {
     const q = opts.search?.trim();
     if (q) {
       OR.push(
-        { title: { contains: q, mode: "insensitive" } },
-        { opportunityCode: { contains: q, mode: "insensitive" } },
+        { title: { contains: q, mode: 'insensitive' } },
+        { opportunityCode: { contains: q, mode: 'insensitive' } },
       );
     }
     return this.prisma.client.crmOpportunity.findMany({
@@ -234,7 +229,7 @@ export class CrmOpportunityRepository extends TenantScopedRepository {
         }),
         ...(OR.length ? { OR } : {}),
       },
-      orderBy: { updatedAt: "desc" },
+      orderBy: { updatedAt: 'desc' },
       include: {
         customer: { select: { id: true, companyName: true } },
         lead: { select: { id: true, companyName: true, leadCode: true } },
@@ -264,7 +259,7 @@ export class CrmOpportunityRepository extends TenantScopedRepository {
     });
   }
 
-  create(data: Omit<Prisma.CrmOpportunityUncheckedCreateInput, "tenantId">) {
+  create(data: Omit<Prisma.CrmOpportunityUncheckedCreateInput, 'tenantId'>) {
     return this.prisma.client.crmOpportunity.create({
       data: { ...data, tenantId: this.tenantId },
       include: {

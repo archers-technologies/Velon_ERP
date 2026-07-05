@@ -1,20 +1,15 @@
-import { apiFetch } from "@/lib/api/client";
+import { apiFetch } from '@/lib/api/client';
 
-export type CrmLeadStatus =
-  | "NEW"
-  | "CONTACTED"
-  | "QUALIFIED"
-  | "DISQUALIFIED"
-  | "CONVERTED";
+export type CrmLeadStatus = 'NEW' | 'CONTACTED' | 'QUALIFIED' | 'DISQUALIFIED' | 'CONVERTED';
 export type CrmLeadSource =
-  | "MANUAL"
-  | "WEBSITE"
-  | "REFERRAL"
-  | "EMAIL"
-  | "TRADE_SHOW"
-  | "IMPORT"
-  | "OTHER";
-export type CrmOpportunityStatus = "OPEN" | "WON" | "LOST";
+  | 'MANUAL'
+  | 'WEBSITE'
+  | 'REFERRAL'
+  | 'EMAIL'
+  | 'TRADE_SHOW'
+  | 'IMPORT'
+  | 'OTHER';
+export type CrmOpportunityStatus = 'OPEN' | 'WON' | 'LOST';
 
 export type CrmLead = {
   id: string;
@@ -96,11 +91,11 @@ function q(params: Record<string, string | undefined>) {
     if (v) sp.set(k, v);
   }
   const s = sp.toString();
-  return s ? `?${s}` : "";
+  return s ? `?${s}` : '';
 }
 
 export function loadCrmDashboardMetrics() {
-  return apiFetch<CrmDashboardMetrics>("/crm/dashboard-metrics");
+  return apiFetch<CrmDashboardMetrics>('/crm/dashboard-metrics');
 }
 
 export function loadCrmLeads(filters?: {
@@ -130,16 +125,16 @@ export function createCrmLead(data: {
   assignedToId?: string;
   notes?: string;
 }) {
-  return apiFetch<CrmLead>("/crm/leads", { method: "POST", body: JSON.stringify(data) });
+  return apiFetch<CrmLead>('/crm/leads', { method: 'POST', body: JSON.stringify(data) });
 }
 
 export function updateCrmLead(id: string, data: Partial<CrmLead>) {
-  return apiFetch<CrmLead>(`/crm/leads/${id}`, { method: "PATCH", body: JSON.stringify(data) });
+  return apiFetch<CrmLead>(`/crm/leads/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
 }
 
 export function assignCrmLead(id: string, assignedToId: string) {
   return apiFetch<CrmLead>(`/crm/leads/${id}/assign`, {
-    method: "POST",
+    method: 'POST',
     body: JSON.stringify({ assignedToId }),
   });
 }
@@ -150,35 +145,39 @@ export function convertCrmLead(
 ) {
   return apiFetch<{ customer: { id: string }; opportunity: CrmOpportunity }>(
     `/crm/leads/${id}/convert`,
-    { method: "POST", body: JSON.stringify(data ?? {}) },
+    { method: 'POST', body: JSON.stringify(data ?? {}) },
   );
 }
 
 export function archiveCrmLead(id: string) {
-  return apiFetch(`/crm/leads/${id}/archive`, { method: "POST" });
+  return apiFetch(`/crm/leads/${id}/archive`, { method: 'POST' });
 }
 
 export function loadCrmPipelines() {
-  return apiFetch<CrmPipeline[]>("/crm/pipelines");
+  return apiFetch<CrmPipeline[]>('/crm/pipelines');
 }
 
-export function createCrmPipeline(data: { name: string; description?: string; isDefault?: boolean }) {
-  return apiFetch<CrmPipeline>("/crm/pipelines", { method: "POST", body: JSON.stringify(data) });
+export function createCrmPipeline(data: {
+  name: string;
+  description?: string;
+  isDefault?: boolean;
+}) {
+  return apiFetch<CrmPipeline>('/crm/pipelines', { method: 'POST', body: JSON.stringify(data) });
 }
 
 export function updateCrmPipeline(id: string, data: { name?: string; description?: string }) {
   return apiFetch<CrmPipeline>(`/crm/pipelines/${id}`, {
-    method: "PATCH",
+    method: 'PATCH',
     body: JSON.stringify(data),
   });
 }
 
 export function setDefaultCrmPipeline(id: string) {
-  return apiFetch<CrmPipeline>(`/crm/pipelines/${id}/default`, { method: "POST" });
+  return apiFetch<CrmPipeline>(`/crm/pipelines/${id}/default`, { method: 'POST' });
 }
 
 export function deleteCrmPipeline(id: string) {
-  return apiFetch(`/crm/pipelines/${id}`, { method: "DELETE" });
+  return apiFetch(`/crm/pipelines/${id}`, { method: 'DELETE' });
 }
 
 export function loadCrmStages(pipelineId: string) {
@@ -191,25 +190,25 @@ export function createCrmStage(data: {
   position?: number;
   probability?: number;
 }) {
-  return apiFetch<CrmPipelineStage>("/crm/stages", { method: "POST", body: JSON.stringify(data) });
+  return apiFetch<CrmPipelineStage>('/crm/stages', { method: 'POST', body: JSON.stringify(data) });
 }
 
 export function updateCrmStage(id: string, data: { name?: string; probability?: number }) {
   return apiFetch<CrmPipelineStage>(`/crm/stages/${id}`, {
-    method: "PATCH",
+    method: 'PATCH',
     body: JSON.stringify(data),
   });
 }
 
 export function reorderCrmStages(pipelineId: string, stageIds: string[]) {
-  return apiFetch<CrmPipelineStage[]>("/crm/stages/reorder", {
-    method: "POST",
+  return apiFetch<CrmPipelineStage[]>('/crm/stages/reorder', {
+    method: 'POST',
     body: JSON.stringify({ pipelineId, stageIds }),
   });
 }
 
 export function deleteCrmStage(id: string) {
-  return apiFetch(`/crm/stages/${id}`, { method: "DELETE" });
+  return apiFetch(`/crm/stages/${id}`, { method: 'DELETE' });
 }
 
 export function loadCrmOpportunities(filters?: {
@@ -242,34 +241,34 @@ export function createCrmOpportunity(data: {
   ownerId?: string;
   description?: string;
 }) {
-  return apiFetch<CrmOpportunity>("/crm/opportunities", {
-    method: "POST",
+  return apiFetch<CrmOpportunity>('/crm/opportunities', {
+    method: 'POST',
     body: JSON.stringify(data),
   });
 }
 
 export function updateCrmOpportunity(id: string, data: Partial<CrmOpportunity>) {
   return apiFetch<CrmOpportunity>(`/crm/opportunities/${id}`, {
-    method: "PATCH",
+    method: 'PATCH',
     body: JSON.stringify(data),
   });
 }
 
 export function moveCrmOpportunityStage(id: string, stageId: string) {
   return apiFetch<CrmOpportunity>(`/crm/opportunities/${id}/move-stage`, {
-    method: "POST",
+    method: 'POST',
     body: JSON.stringify({ stageId }),
   });
 }
 
 export function closeCrmOpportunityWon(id: string) {
-  return apiFetch<CrmOpportunity>(`/crm/opportunities/${id}/won`, { method: "POST" });
+  return apiFetch<CrmOpportunity>(`/crm/opportunities/${id}/won`, { method: 'POST' });
 }
 
 export function closeCrmOpportunityLost(id: string) {
-  return apiFetch<CrmOpportunity>(`/crm/opportunities/${id}/lost`, { method: "POST" });
+  return apiFetch<CrmOpportunity>(`/crm/opportunities/${id}/lost`, { method: 'POST' });
 }
 
 export function archiveCrmOpportunity(id: string) {
-  return apiFetch(`/crm/opportunities/${id}/archive`, { method: "POST" });
+  return apiFetch(`/crm/opportunities/${id}/archive`, { method: 'POST' });
 }

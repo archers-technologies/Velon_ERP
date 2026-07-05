@@ -3,19 +3,16 @@ import {
   Injectable,
   Logger,
   ServiceUnavailableException,
-} from "@nestjs/common";
-import { createHash, randomInt } from "node:crypto";
-import { issueSignupVerificationToken } from "@velon/shared/signup-verification";
-import { getAuthOtpSecret } from "../config/env";
-import {
-  formatMailProviderForLog,
-  sendTransactionalMail,
-} from "../common/mail-delivery.util";
-import { RedisService } from "../redis/redis.service";
+} from '@nestjs/common';
+import { createHash, randomInt } from 'node:crypto';
+import { issueSignupVerificationToken } from '@velon/shared/signup-verification';
+import { formatMailProviderForLog, sendTransactionalMail } from '../common/mail-delivery.util';
+import { getAuthOtpSecret } from '../config/env';
+import { RedisService } from '../redis/redis.service';
 
 const OTP_TTL_SEC = 10 * 60;
 const MAX_ATTEMPTS = 5;
-const REDIS_KEY_PREFIX = "velon:signup:otp:";
+const REDIS_KEY_PREFIX = 'velon:signup:otp:';
 
 type OtpRecord = {
   email: string;
@@ -40,9 +37,9 @@ export class SignupOtpService {
   }
 
   private hashOtp(email: string, code: string): string {
-    return createHash("sha256")
+    return createHash('sha256')
       .update(`${this.normalizeEmail(email)}:${code}:${getAuthOtpSecret()}`)
-      .digest("hex");
+      .digest('hex');
   }
 
   private generateOtp(): string {
@@ -57,23 +54,18 @@ export class SignupOtpService {
     } catch (err) {
       this.log.warn(`Redis OTP read failed: ${String(err)}`);
       throw new ServiceUnavailableException(
-        "Verification service is temporarily unavailable. Try again shortly.",
+        'Verification service is temporarily unavailable. Try again shortly.',
       );
     }
   }
 
   private async saveRecord(email: string, record: OtpRecord): Promise<void> {
     try {
-      await this.redis.client.set(
-        this.redisKey(email),
-        JSON.stringify(record),
-        "EX",
-        OTP_TTL_SEC,
-      );
+      await this.redis.client.set(this.redisKey(email), JSON.stringify(record), 'EX', OTP_TTL_SEC);
     } catch (err) {
       this.log.warn(`Redis OTP write failed: ${String(err)}`);
       throw new ServiceUnavailableException(
-        "Verification service is temporarily unavailable. Try again shortly.",
+        'Verification service is temporarily unavailable. Try again shortly.',
       );
     }
   }
@@ -105,7 +97,7 @@ export class SignupOtpService {
     const mail = await this.deliverOtpEmail({ to: email, businessName: companyName, code });
     this.log.log(`Signup OTP issued for ${email}`);
     if (mail.delivered) return { delivered: true };
-    if (process.env.NODE_ENV === "production") {
+    if (process.env.NODE_ENV === 'production') {
       return { delivered: false };
     }
     return { delivered: false, devCode: mail.devCode };
@@ -120,15 +112,15 @@ export class SignupOtpService {
     const doc = await this.loadRecord(email);
 
     if (!doc) {
-      throw new BadRequestException("Verification code not found. Request a new OTP.");
+      throw new BadRequestException('Verification code not found. Request a new OTP.');
     }
     if (doc.attempts >= MAX_ATTEMPTS) {
-      throw new BadRequestException("Too many OTP attempts. Request a new OTP.");
+      throw new BadRequestException('Too many OTP attempts. Request a new OTP.');
     }
     if (doc.otpHash !== this.hashOtp(email, code)) {
       doc.attempts += 1;
       await this.saveRecord(email, doc);
-      throw new BadRequestException("Invalid verification code.");
+      throw new BadRequestException('Invalid verification code.');
     }
 
     await this.deleteRecord(email);
@@ -149,28 +141,28 @@ export class SignupOtpService {
     try {
       const mail = await sendTransactionalMail({
         to: input.to,
-        subject: "Verify your Velon-ERP trial workspace",
+        subject: 'Verify your Velon-ERP trial workspace',
         text: `Your Velon-ERP verification code for ${input.businessName} is ${input.code}. It expires in 10 minutes.`,
         html: `<p>Your Velon-ERP verification code for <strong>${input.businessName}</strong> is:</p><p style="font-size:24px;font-weight:700;letter-spacing:4px">${input.code}</p><p>This code expires in 10 minutes.</p>`,
       });
       if (mail.delivered) return { delivered: true };
-      if (process.env.NODE_ENV !== "production") {
+      if (process.env.NODE_ENV !== 'production') {
         this.log.log(
-          `[dev OTP skipped:${mail.skippedReason ?? "smtp_failed"}] ${input.to}: ${input.code}`,
+          `[dev OTP skipped:${mail.skippedReason ?? 'smtp_failed'}] ${input.to}: ${input.code}`,
         );
         return { delivered: false, devCode: input.code };
       }
 
       if (
-        mail.skippedReason === "smtp_not_configured" ||
-        mail.skippedReason === "resend_not_configured" ||
-        mail.skippedReason === "mail_not_configured"
+        mail.skippedReason === 'smtp_not_configured' ||
+        mail.skippedReason === 'resend_not_configured' ||
+        mail.skippedReason === 'mail_not_configured'
       ) {
         throw new ServiceUnavailableException(
-          "Email OTP delivery is not configured. Set RESEND_API_KEY + RESEND_FROM on the API service (recommended on Railway), or set MAIL_PROVIDER=smtp with SMTP credentials.",
+          'Email OTP delivery is not configured. Set RESEND_API_KEY + RESEND_FROM on the API service (recommended on Railway), or set MAIL_PROVIDER=smtp with SMTP credentials.',
         );
       }
-      if (mail.skippedReason === "resend_send_failed") {
+      if (mail.skippedReason === 'resend_send_failed') {
         if (mail.resendFailureDetail) {
           const d = mail.resendFailureDetail;
           this.log.error(
@@ -179,14 +171,14 @@ export class SignupOtpService {
               `status=${d.statusCode}`,
               `body=${d.body}`,
               `message=${d.message}`,
-            ].join(" "),
+            ].join(' '),
           );
         }
         throw new ServiceUnavailableException(
-          "Could not send verification email. Check Resend credentials and sender domain, then try again.",
+          'Could not send verification email. Check Resend credentials and sender domain, then try again.',
         );
       }
-      if (mail.skippedReason === "smtp_send_failed") {
+      if (mail.skippedReason === 'smtp_send_failed') {
         if (mail.failureDetail) {
           const d = mail.failureDetail;
           this.log.error(
@@ -198,38 +190,36 @@ export class SignupOtpService {
               `message=${d.message}`,
             ]
               .filter(Boolean)
-              .join(" "),
+              .join(' '),
           );
         }
-        if (mail.failureDetail?.category === "connection_timeout") {
+        if (mail.failureDetail?.category === 'connection_timeout') {
           throw new ServiceUnavailableException(
             process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_SERVICE_NAME
-              ? "Email server timed out. Railway Hobby/Trial plans block outbound SMTP — upgrade to Pro, then redeploy @velon/backend."
-              : "Could not send verification email. Check SMTP credentials and try again.",
+              ? 'Email server timed out. Railway Hobby/Trial plans block outbound SMTP — upgrade to Pro, then redeploy @velon/backend.'
+              : 'Could not send verification email. Check SMTP credentials and try again.',
           );
         }
         throw new ServiceUnavailableException(
-          "Could not send verification email. Check SMTP credentials and try again.",
+          'Could not send verification email. Check SMTP credentials and try again.',
         );
       }
-      if (mail.skippedReason === "smtp_timeout") {
+      if (mail.skippedReason === 'smtp_timeout') {
         throw new ServiceUnavailableException(
           process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_SERVICE_NAME
-            ? "Email server timed out. Railway Hobby/Trial plans block outbound SMTP — upgrade to Pro, then redeploy @velon/backend."
-            : "Email server timed out. On Railway + Hostinger use SMTP_PORT=587 and SMTP_SECURE=false.",
+            ? 'Email server timed out. Railway Hobby/Trial plans block outbound SMTP — upgrade to Pro, then redeploy @velon/backend.'
+            : 'Email server timed out. On Railway + Hostinger use SMTP_PORT=587 and SMTP_SECURE=false.',
         );
       }
-      throw new ServiceUnavailableException(
-        "Email OTP delivery failed. Try again shortly.",
-      );
+      throw new ServiceUnavailableException('Email OTP delivery failed. Try again shortly.');
     } catch (err) {
       if (err instanceof ServiceUnavailableException) throw err;
       this.log.warn(`SMTP OTP failed for ${input.to}: ${String(err)}`);
     }
 
-    if (process.env.NODE_ENV === "production") {
+    if (process.env.NODE_ENV === 'production') {
       throw new ServiceUnavailableException(
-        "Could not send verification email. Check Resend credentials and try again.",
+        'Could not send verification email. Check Resend credentials and try again.',
       );
     }
 

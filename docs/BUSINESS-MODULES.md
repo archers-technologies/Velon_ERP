@@ -5,21 +5,21 @@
 
 ## Implemented (API-backed)
 
-| Module | Nest module | Capabilities |
-|--------|-------------|--------------|
-| **Workspace** | `WorkspaceModule` | Context, dashboard metrics, alerts, notifications, POS bootstrap/sales, module summary endpoints |
-| **Tenant admin** | `TenantAdminModule` | Company profile, workspace prefs, departments, members, invitations, seats, audit |
-| **CRM** | `CrmModule` | Customers, contacts, notes, activities, leads, pipelines/stages, opportunities, quotations, proposals/PDF, templates, public customer-view tokens |
-| **Inventory** | `InventoryModule` | Categories, products, warehouses, stock adjust/transfer |
-| **Suppliers** | `SuppliersModule` | Suppliers, contacts, communication threads |
-| **Procurement** | `ProcurementModule` | Purchase requests (submit/approve/reject), purchase orders (approve/send/receive) |
-| **Sales** | `SalesModule` | Sales orders from approved quotations |
-| **Billing** | `BillingModule` | Plans, checkout, Razorpay verify/webhooks, invoices/payments, platform subscription ops |
-| **Platform** | `PlatformModule` | Overview, diagnostics, platform users, demo cleanup |
-| **CMS** | `CmsModule` | Public site content + platform CMS edits |
-| **Tenants** | `TenantsModule` | Platform tenant CRUD |
-| **Audit** | `AuditModule` | Audit log reads |
-| **Health** | `HealthModule` | Live / ready probes |
+| Module           | Nest module         | Capabilities                                                                                                                                      |
+| ---------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Workspace**    | `WorkspaceModule`   | Context, dashboard metrics, alerts, notifications, POS bootstrap/sales, module summary endpoints                                                  |
+| **Tenant admin** | `TenantAdminModule` | Company profile, workspace prefs, departments, members, invitations, seats, audit                                                                 |
+| **CRM**          | `CrmModule`         | Customers, contacts, notes, activities, leads, pipelines/stages, opportunities, quotations, proposals/PDF, templates, public customer-view tokens |
+| **Inventory**    | `InventoryModule`   | Categories, products, warehouses, stock adjust/transfer                                                                                           |
+| **Suppliers**    | `SuppliersModule`   | Suppliers, contacts, communication threads                                                                                                        |
+| **Procurement**  | `ProcurementModule` | Purchase requests (submit/approve/reject), purchase orders (approve/send/receive)                                                                 |
+| **Sales**        | `SalesModule`       | Sales orders from approved quotations                                                                                                             |
+| **Billing**      | `BillingModule`     | Plans, checkout, Razorpay verify/webhooks, invoices/payments, platform subscription ops                                                           |
+| **Platform**     | `PlatformModule`    | Overview, diagnostics, platform users, demo cleanup                                                                                               |
+| **CMS**          | `CmsModule`         | Public site content + platform CMS edits                                                                                                          |
+| **Tenants**      | `TenantsModule`     | Platform tenant CRUD                                                                                                                              |
+| **Audit**        | `AuditModule`       | Audit log reads                                                                                                                                   |
+| **Health**       | `HealthModule`      | Live / ready probes                                                                                                                               |
 
 ## Frontend modules (partial / placeholder UI)
 

@@ -1,4 +1,4 @@
-import { apiFetch, authFetch } from "@/lib/api/client";
+import { apiFetch, authFetch } from '@/lib/api/client';
 
 export type TenantAdminOverview = {
   companyProfile: {
@@ -80,24 +80,24 @@ export type TenantInvitation = {
 };
 
 export async function loadTenantAdminOverview() {
-  return apiFetch<TenantAdminOverview>("/tenant-admin/overview");
+  return apiFetch<TenantAdminOverview>('/tenant-admin/overview');
 }
 
 export async function loadTenantMembers(search?: string) {
-  const q = search?.trim() ? `?search=${encodeURIComponent(search.trim())}` : "";
+  const q = search?.trim() ? `?search=${encodeURIComponent(search.trim())}` : '';
   return apiFetch<TenantMember[]>(`/tenant-admin/members${q}`);
 }
 
 export async function loadTenantDepartments() {
-  return apiFetch<TenantDepartment[]>("/tenant-admin/departments");
+  return apiFetch<TenantDepartment[]>('/tenant-admin/departments');
 }
 
 export async function loadTenantInvitations() {
-  return apiFetch<TenantInvitation[]>("/tenant-admin/invitations");
+  return apiFetch<TenantInvitation[]>('/tenant-admin/invitations');
 }
 
 export async function loadTenantAuditLogs() {
-  return apiFetch<TenantAdminOverview["auditLogs"]>("/tenant-admin/audit-logs");
+  return apiFetch<TenantAdminOverview['auditLogs']>('/tenant-admin/audit-logs');
 }
 
 export async function createTenantInvitation(body: {
@@ -106,8 +106,8 @@ export async function createTenantInvitation(body: {
   departmentId?: string;
   role: string;
 }) {
-  return apiFetch<{ id: string; devInviteUrl?: string }>("/tenant-admin/invitations", {
-    method: "POST",
+  return apiFetch<{ id: string; devInviteUrl?: string }>('/tenant-admin/invitations', {
+    method: 'POST',
     body: JSON.stringify(body),
   });
 }
@@ -123,8 +123,8 @@ export async function updateCompanyProfile(body: {
   taxId?: string;
   logoDataUrl?: string;
 }) {
-  return apiFetch<TenantAdminOverview["companyProfile"]>("/tenant-admin/company-profile", {
-    method: "PATCH",
+  return apiFetch<TenantAdminOverview['companyProfile']>('/tenant-admin/company-profile', {
+    method: 'PATCH',
     body: JSON.stringify(body),
   });
 }
@@ -151,10 +151,7 @@ export async function updateWorkspaceSettings(body: {
     numberFormat: string;
     language: string;
     isActive: boolean;
-  }>(
-    "/tenant-admin/workspace",
-    { method: "PATCH", body: JSON.stringify(body) },
-  );
+  }>('/tenant-admin/workspace', { method: 'PATCH', body: JSON.stringify(body) });
 }
 
 export async function updateTenantDepartment(
@@ -162,21 +159,21 @@ export async function updateTenantDepartment(
   body: { name?: string; description?: string; managerId?: string | null },
 ) {
   return apiFetch<TenantDepartment>(`/tenant-admin/departments/${id}`, {
-    method: "PATCH",
+    method: 'PATCH',
     body: JSON.stringify(body),
   });
 }
 
 export async function assignMemberDepartment(memberId: string, departmentId: string | null) {
   return apiFetch(`/tenant-admin/members/${memberId}/department`, {
-    method: "PATCH",
+    method: 'PATCH',
     body: JSON.stringify({ departmentId }),
   });
 }
 
 export async function deleteWorkspaceAccount(body: { password: string; confirmPhrase: string }) {
-  return apiFetch<{ id: string; deleted: true }>("/tenant-admin/workspace", {
-    method: "DELETE",
+  return apiFetch<{ id: string; deleted: true }>('/tenant-admin/workspace', {
+    method: 'DELETE',
     body: JSON.stringify(body),
   });
 }
@@ -186,42 +183,42 @@ export async function createTenantDepartment(body: {
   description?: string;
   managerId?: string;
 }) {
-  return apiFetch<TenantDepartment>("/tenant-admin/departments", {
-    method: "POST",
+  return apiFetch<TenantDepartment>('/tenant-admin/departments', {
+    method: 'POST',
     body: JSON.stringify(body),
   });
 }
 
 export async function deleteTenantDepartment(id: string) {
-  return apiFetch(`/tenant-admin/departments/${id}`, { method: "DELETE" });
+  return apiFetch(`/tenant-admin/departments/${id}`, { method: 'DELETE' });
 }
 
 export async function updateMemberRole(id: string, role: string) {
   return apiFetch(`/tenant-admin/members/${id}/role`, {
-    method: "PATCH",
+    method: 'PATCH',
     body: JSON.stringify({ role }),
   });
 }
 
 export async function disableTenantMember(id: string) {
-  return apiFetch(`/tenant-admin/members/${id}/disable`, { method: "POST" });
+  return apiFetch(`/tenant-admin/members/${id}/disable`, { method: 'POST' });
 }
 
 export async function enableTenantMember(id: string) {
-  return apiFetch(`/tenant-admin/members/${id}/enable`, { method: "POST" });
+  return apiFetch(`/tenant-admin/members/${id}/enable`, { method: 'POST' });
 }
 
 export async function removeTenantMember(id: string) {
-  return apiFetch(`/tenant-admin/members/${id}`, { method: "DELETE" });
+  return apiFetch(`/tenant-admin/members/${id}`, { method: 'DELETE' });
 }
 
 export async function revokeTenantInvitation(id: string) {
-  return apiFetch(`/tenant-admin/invitations/${id}/revoke`, { method: "POST" });
+  return apiFetch(`/tenant-admin/invitations/${id}/revoke`, { method: 'POST' });
 }
 
 export async function resendTenantInvitation(id: string) {
   return apiFetch<{ devInviteUrl?: string }>(`/tenant-admin/invitations/${id}/resend`, {
-    method: "POST",
+    method: 'POST',
   });
 }
 
@@ -245,8 +242,8 @@ export async function acceptInvitation(token: string, password: string) {
     scope: string;
     tenantId: string;
     workspaceId: string;
-  }>("/invitations/accept", {
-    method: "POST",
+  }>('/invitations/accept', {
+    method: 'POST',
     body: JSON.stringify({ token, password }),
   });
 }

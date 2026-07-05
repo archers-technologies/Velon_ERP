@@ -1,16 +1,18 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useCallback, useEffect, useState } from 'react';
+import { createFileRoute } from '@tanstack/react-router';
+import { toast } from 'sonner';
+import { canWriteCrmRecords, normalizeVelonRole } from '@velon/shared';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
+} from '@/components/ui/select';
+import { getAccessToken, getSessionMembershipRole } from '@/lib/auth/session';
 import {
   generateProposal,
   loadProposals,
@@ -18,19 +20,16 @@ import {
   proposalPdfUrl,
   type CrmProposalSummary,
   type CrmQuotation,
-} from "@/lib/crm/quotation-api";
-import { getSessionMembershipRole } from "@/lib/auth/session";
-import { canWriteCrmRecords, normalizeVelonRole } from "@velon/shared";
-import { getAccessToken } from "@/lib/auth/session";
+} from '@/lib/crm/quotation-api';
 
-export const Route = createFileRoute("/app/crm/proposals")({
+export const Route = createFileRoute('/app/crm/proposals')({
   component: CrmProposalsPage,
 });
 
 function CrmProposalsPage() {
-  const canWrite = canWriteCrmRecords(normalizeVelonRole(getSessionMembershipRole() ?? "USER"));
+  const canWrite = canWriteCrmRecords(normalizeVelonRole(getSessionMembershipRole() ?? 'USER'));
   const [quotations, setQuotations] = useState<CrmQuotation[]>([]);
-  const [selectedId, setSelectedId] = useState("");
+  const [selectedId, setSelectedId] = useState('');
   const [proposals, setProposals] = useState<CrmProposalSummary[]>([]);
 
   const refresh = useCallback(async () => {
@@ -56,11 +55,11 @@ function CrmProposalsPage() {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
     if (!res.ok) {
-      toast.error("Failed to load PDF");
+      toast.error('Failed to load PDF');
       return;
     }
     const blob = await res.blob();
-    window.open(URL.createObjectURL(blob), "_blank");
+    window.open(URL.createObjectURL(blob), '_blank');
   }
 
   const selected = quotations.find((q) => q.id === selectedId);
@@ -71,13 +70,19 @@ function CrmProposalsPage() {
         <div className="flex flex-wrap items-end gap-4">
           <div className="min-w-[240px]">
             <Label>Quotation</Label>
-            <Select value={selectedId} onValueChange={setSelectedId}>
+            <Select
+              value={selectedId}
+              onValueChange={setSelectedId}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select quotation" />
               </SelectTrigger>
               <SelectContent>
                 {quotations.map((q) => (
-                  <SelectItem key={q.id} value={q.id}>
+                  <SelectItem
+                    key={q.id}
+                    value={q.id}
+                  >
                     {q.quotationNumber} · {q.customer?.companyName}
                   </SelectItem>
                 ))}
@@ -90,7 +95,7 @@ function CrmProposalsPage() {
                 void generateProposal(selectedId)
                   .then(() => loadProposals(selectedId))
                   .then(setProposals)
-                  .then(() => toast.success("Proposal generated"))
+                  .then(() => toast.success('Proposal generated'))
               }
             >
               Generate PDF
@@ -98,7 +103,7 @@ function CrmProposalsPage() {
           )}
         </div>
         {selected && (
-          <p className="mt-3 text-sm text-muted-foreground">
+          <p className="text-muted-foreground mt-3 text-sm">
             {selected.quotationNumber} · Rev {selected.revisionNumber} · {selected.status} · $
             {Number(selected.total).toLocaleString()}
           </p>
@@ -107,20 +112,27 @@ function CrmProposalsPage() {
 
       <Card className="border-border bg-card divide-y">
         {proposals.map((p) => (
-          <div key={p.id} className="flex items-center justify-between p-4">
+          <div
+            key={p.id}
+            className="flex items-center justify-between p-4"
+          >
             <div>
               <p className="font-medium">Version {p.version}</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Generated {new Date(p.generatedAt).toLocaleString()}
               </p>
             </div>
-            <Button size="sm" variant="outline" onClick={() => void openPdf(p.id)}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => void openPdf(p.id)}
+            >
               View PDF
             </Button>
           </div>
         ))}
         {proposals.length === 0 && (
-          <p className="p-6 text-sm text-muted-foreground">
+          <p className="text-muted-foreground p-6 text-sm">
             No proposal PDFs for this quotation yet.
           </p>
         )}

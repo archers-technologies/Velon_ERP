@@ -3,17 +3,13 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
-} from "@nestjs/common";
-import {
-  InventoryAbcClass,
-  InventoryProductStatus,
-  InventoryVelocity,
-} from "@velon/database";
-import { canManageInventory, canReadInventory, normalizeVelonRole } from "@velon/shared";
-import * as crypto from "crypto";
-import { AuditService } from "../audit/audit.service";
-import type { AuthenticatedUser } from "../auth/auth.types";
-import { PrismaService } from "../prisma/prisma.service";
+} from '@nestjs/common';
+import * as crypto from 'crypto';
+import { InventoryAbcClass, InventoryProductStatus, InventoryVelocity } from '@velon/database';
+import { canManageInventory, canReadInventory, normalizeVelonRole } from '@velon/shared';
+import { AuditService } from '../audit/audit.service';
+import type { AuthenticatedUser } from '../auth/auth.types';
+import { PrismaService } from '../prisma/prisma.service';
 import {
   AdjustInventoryStockDto,
   CreateInventoryCategoryDto,
@@ -24,13 +20,14 @@ import {
   UpdateInventoryProductDto,
   UpdateInventoryWarehouseDto,
   UpdateStockLevelsDto,
-} from "./dto/inventory.dto";
+} from './dto/inventory.dto';
+import { InventoryVariantsService } from './inventory-variants.service';
 import {
   InventoryCategoryRepository,
   InventoryProductRepository,
   InventoryStockRepository,
   InventoryWarehouseRepository,
-} from "./inventory.repositories";
+} from './inventory.repositories';
 
 type AuditMeta = { ip?: string; ua?: string };
 
@@ -38,18 +35,18 @@ function stockLevel(
   quantity: number,
   minStock: number,
   reorderLevel: number,
-): "healthy" | "low" | "critical" {
-  if (quantity <= minStock) return "critical";
-  if (quantity <= reorderLevel) return "low";
-  return "healthy";
+): 'healthy' | 'low' | 'critical' {
+  if (quantity <= minStock) return 'critical';
+  if (quantity <= reorderLevel) return 'low';
+  return 'healthy';
 }
 
-function mapAbc(c: InventoryAbcClass): "A" | "B" | "C" {
+function mapAbc(c: InventoryAbcClass): 'A' | 'B' | 'C' {
   return c;
 }
 
-function mapVelocity(v: InventoryVelocity): "fast" | "medium" | "slow" {
-  return v.toLowerCase() as "fast" | "medium" | "slow";
+function mapVelocity(v: InventoryVelocity): 'fast' | 'medium' | 'slow' {
+  return v.toLowerCase() as 'fast' | 'medium' | 'slow';
 }
 
 @Injectable()
@@ -61,6 +58,7 @@ export class InventoryService {
     private readonly stock: InventoryStockRepository,
     private readonly audit: AuditService,
     private readonly prisma: PrismaService,
+    private readonly variantsService: InventoryVariantsService,
   ) {}
 
   private role(user: AuthenticatedUser) {
@@ -69,28 +67,28 @@ export class InventoryService {
 
   private assertRead(user: AuthenticatedUser) {
     if (!canReadInventory(this.role(user))) {
-      throw new ForbiddenException("Inventory access denied.");
+      throw new ForbiddenException('Inventory access denied.');
     }
   }
 
   private assertManage(user: AuthenticatedUser) {
     if (!canManageInventory(this.role(user))) {
-      throw new ForbiddenException("Insufficient permissions to manage inventory.");
+      throw new ForbiddenException('Insufficient permissions to manage inventory.');
     }
   }
 
   private async nextSku() {
     const count = await this.products.count();
-    return `SKU-${String(count + 1).padStart(5, "0")}`;
+    return `SKU-${String(count + 1).padStart(5, '0')}`;
   }
 
   private warehouseCode(name: string) {
     const slug = name
       .trim()
       .toUpperCase()
-      .replace(/[^A-Z0-9]+/g, "-")
+      .replace(/[^A-Z0-9]+/g, '-')
       .slice(0, 12);
-    return slug || `WH-${crypto.randomBytes(2).toString("hex").toUpperCase()}`;
+    return slug || `WH-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
   }
 
   mapStockRow(row: {
@@ -107,14 +105,27 @@ export class InventoryService {
       velocity: InventoryVelocity;
       batchTracked: boolean;
       variantParent: string | null;
+      hasVariants?: boolean;
     };
     warehouse: { name: string };
+    variant?: {
+      id: string;
+      label: string;
+      sku: string;
+      unitPrice: { toNumber(): number };
+      salePrice: { toNumber(): number } | null;
+    } | null;
   }) {
     const available = row.quantity - row.reservedQty;
+    const variantPrice = row.variant
+      ? row.variant.salePrice != null
+        ? row.variant.salePrice.toNumber()
+        : row.variant.unitPrice.toNumber()
+      : null;
     return {
       id: row.id,
-      sku: row.product.sku,
-      name: row.product.name,
+      sku: row.variant?.sku ?? row.product.sku,
+      name: row.variant ? `${row.product.name} / ${row.variant.label}` : row.product.name,
       site: row.warehouse.name,
       quantity: available,
       stockLevel: stockLevel(available, row.minStock, row.reorderLevel),
@@ -124,7 +135,9 @@ export class InventoryService {
       velocity: mapVelocity(row.product.velocity),
       batchTracked: row.product.batchTracked,
       variantParent: row.product.variantParent ?? undefined,
-      unitPrice: row.product.unitPrice.toNumber(),
+      unitPrice: variantPrice ?? row.product.unitPrice.toNumber(),
+      variantId: row.variant?.id,
+      hasVariants: row.product.hasVariants ?? false,
     };
   }
 
@@ -147,7 +160,7 @@ export class InventoryService {
   async updateCategory(user: AuthenticatedUser, id: string, dto: UpdateInventoryCategoryDto) {
     this.assertManage(user);
     const row = await this.categories.findById(id);
-    if (!row) throw new NotFoundException("Category not found.");
+    if (!row) throw new NotFoundException('Category not found.');
     return this.categories.update(id, {
       ...(dto.name !== undefined ? { name: dto.name.trim() } : {}),
       ...(dto.description !== undefined ? { description: dto.description?.trim() || null } : {}),
@@ -158,12 +171,12 @@ export class InventoryService {
   async deleteCategory(user: AuthenticatedUser, id: string) {
     this.assertManage(user);
     const row = await this.categories.findById(id);
-    if (!row) throw new NotFoundException("Category not found.");
+    if (!row) throw new NotFoundException('Category not found.');
     const productCount = await this.prisma.client.inventoryProduct.count({
       where: { tenantId: user.tenantId, categoryId: id },
     });
     if (productCount > 0) {
-      throw new BadRequestException("Cannot delete category with assigned products.");
+      throw new BadRequestException('Cannot delete category with assigned products.');
     }
     await this.categories.delete(id);
     return { ok: true };
@@ -176,22 +189,31 @@ export class InventoryService {
     return this.products.findMany({ search });
   }
 
-  async getProduct(user: AuthenticatedUser, id: string) {
+  async listProductsWithVariantCounts(user: AuthenticatedUser, search?: string) {
     this.assertRead(user);
-    const row = await this.products.findById(id);
-    if (!row) throw new NotFoundException("Product not found.");
-    return row;
+    const rows = await this.products.findMany({ search });
+    const counts = await this.prisma.client.inventoryProductVariant.groupBy({
+      by: ['productId'],
+      where: { tenantId: user.tenantId },
+      _count: { id: true },
+    });
+    const countMap = new Map(counts.map((c) => [c.productId, c._count.id]));
+    return rows.map((p) => ({
+      ...p,
+      variantCount: p.hasVariants ? (countMap.get(p.id) ?? 0) : 0,
+    }));
   }
 
-  async createProduct(
-    user: AuthenticatedUser,
-    dto: CreateInventoryProductDto,
-    meta: AuditMeta,
-  ) {
+  async getProduct(user: AuthenticatedUser, id: string) {
+    this.assertRead(user);
+    return this.variantsService.getProductWithVariants(user, id);
+  }
+
+  async createProduct(user: AuthenticatedUser, dto: CreateInventoryProductDto, meta: AuditMeta) {
     this.assertManage(user);
     const sku = dto.sku?.trim() || (await this.nextSku());
     const existing = await this.products.findBySku(sku);
-    if (existing) throw new BadRequestException("SKU already exists.");
+    if (existing) throw new BadRequestException('SKU already exists.');
 
     const product = await this.products.create({
       sku,
@@ -207,9 +229,11 @@ export class InventoryService {
       velocity: dto.velocity,
       batchTracked: dto.batchTracked ?? false,
       variantParent: dto.variantParent?.trim() || null,
+      hasVariants: dto.hasVariants ?? false,
       createdById: user.id,
     });
 
+    let defaultWarehouseId: string | undefined;
     if (dto.site?.trim()) {
       let warehouse = await this.warehouses.findByName(dto.site.trim());
       if (!warehouse) {
@@ -219,27 +243,46 @@ export class InventoryService {
           name: dto.site.trim(),
         });
       }
-      await this.stock.create({
-        productId: product.id,
-        warehouseId: warehouse.id,
-        quantity: dto.quantity ?? 0,
-        minStock: dto.safetyStock ?? 0,
-        reorderLevel: dto.reorderPoint ?? 0,
-      });
+      defaultWarehouseId = warehouse.id;
+      if (!dto.hasVariants) {
+        await this.stock.create({
+          productId: product.id,
+          warehouseId: warehouse.id,
+          quantity: dto.quantity ?? 0,
+          minStock: dto.safetyStock ?? 0,
+          reorderLevel: dto.reorderPoint ?? 0,
+        });
+      }
+    } else if (dto.variants?.hasVariants && dto.variants.variants?.length) {
+      const defaultWarehouse = (await this.warehouses.findMany(true))[0];
+      defaultWarehouseId = defaultWarehouse?.id;
+    }
+
+    if (dto.variants?.hasVariants) {
+      await this.variantsService.saveVariantsForProduct(
+        user,
+        product.id,
+        true,
+        dto.variants.attributes,
+        dto.variants.variants,
+        defaultWarehouseId,
+      );
     }
 
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "inventory.product_created",
-      entityType: "inventory_product",
+      action: 'inventory.product_created',
+      entityType: 'inventory_product',
       entityId: product.id,
       metadata: { sku: product.sku, name: product.name },
       ipAddress: meta.ip,
       userAgent: meta.ua,
     });
 
-    return product;
+    return dto.variants?.hasVariants
+      ? this.variantsService.getProductWithVariants(user, product.id)
+      : product;
   }
 
   async updateProduct(
@@ -250,7 +293,7 @@ export class InventoryService {
   ) {
     this.assertManage(user);
     const row = await this.products.findById(id);
-    if (!row) throw new NotFoundException("Product not found.");
+    if (!row) throw new NotFoundException('Product not found.');
 
     const updated = await this.products.update(id, {
       ...(dto.name !== undefined ? { name: dto.name.trim() } : {}),
@@ -264,20 +307,49 @@ export class InventoryService {
       ...(dto.abcClass !== undefined ? { abcClass: dto.abcClass } : {}),
       ...(dto.velocity !== undefined ? { velocity: dto.velocity } : {}),
       ...(dto.batchTracked !== undefined ? { batchTracked: dto.batchTracked } : {}),
-      ...(dto.variantParent !== undefined ? { variantParent: dto.variantParent?.trim() || null } : {}),
+      ...(dto.variantParent !== undefined
+        ? { variantParent: dto.variantParent?.trim() || null }
+        : {}),
+      ...(dto.hasVariants !== undefined ? { hasVariants: dto.hasVariants } : {}),
     });
+
+    if (dto.variants !== undefined) {
+      const defaultWarehouse = (await this.warehouses.findMany(true))[0];
+      await this.variantsService.saveVariantsForProduct(
+        user,
+        id,
+        dto.variants.hasVariants,
+        dto.variants.attributes,
+        dto.variants.variants,
+        defaultWarehouse?.id,
+      );
+    }
 
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "inventory.product_updated",
-      entityType: "inventory_product",
+      action: 'inventory.product_updated',
+      entityType: 'inventory_product',
       entityId: id,
       ipAddress: meta.ip,
       userAgent: meta.ua,
     });
 
-    return updated;
+    return dto.variants !== undefined
+      ? this.variantsService.getProductWithVariants(user, id)
+      : updated;
+  }
+
+  listVariantsForProduct(user: AuthenticatedUser, productId: string) {
+    return this.variantsService.listVariantsForProduct(user, productId);
+  }
+
+  searchVariants(user: AuthenticatedUser, query?: string) {
+    return this.variantsService.searchVariants(user, query);
+  }
+
+  deactivateVariant(user: AuthenticatedUser, variantId: string) {
+    return this.variantsService.deactivateVariant(user, variantId);
   }
 
   // ─── Warehouses ────────────────────────────────────────────
@@ -301,14 +373,10 @@ export class InventoryService {
     });
   }
 
-  async updateWarehouse(
-    user: AuthenticatedUser,
-    id: string,
-    dto: UpdateInventoryWarehouseDto,
-  ) {
+  async updateWarehouse(user: AuthenticatedUser, id: string, dto: UpdateInventoryWarehouseDto) {
     this.assertManage(user);
     const row = await this.warehouses.findById(id);
-    if (!row) throw new NotFoundException("Warehouse not found.");
+    if (!row) throw new NotFoundException('Warehouse not found.');
     return this.warehouses.update(id, {
       ...(dto.name !== undefined ? { name: dto.name.trim() } : {}),
       ...(dto.code !== undefined ? { code: dto.code.trim() } : {}),
@@ -332,17 +400,17 @@ export class InventoryService {
   async adjustStock(user: AuthenticatedUser, dto: AdjustInventoryStockDto, meta: AuditMeta) {
     this.assertManage(user);
     const row = await this.stock.findByProductWarehouse(dto.productId, dto.warehouseId);
-    if (!row) throw new NotFoundException("Stock record not found.");
+    if (!row) throw new NotFoundException('Stock record not found.');
     const nextQty = row.quantity + dto.delta;
-    if (nextQty < 0) throw new BadRequestException("Insufficient stock for adjustment.");
+    if (nextQty < 0) throw new BadRequestException('Insufficient stock for adjustment.');
 
     const updated = await this.stock.update(row.id, { quantity: nextQty });
 
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "inventory.stock_adjusted",
-      entityType: "inventory_stock",
+      action: 'inventory.stock_adjusted',
+      entityType: 'inventory_stock',
       entityId: row.id,
       metadata: { delta: dto.delta, reason: dto.reason, newQuantity: nextQty },
       ipAddress: meta.ip,
@@ -355,24 +423,30 @@ export class InventoryService {
   async transferStock(user: AuthenticatedUser, dto: TransferInventoryStockDto, meta: AuditMeta) {
     this.assertManage(user);
     if (dto.fromWarehouseId === dto.toWarehouseId) {
-      throw new BadRequestException("Source and destination warehouses must differ.");
+      throw new BadRequestException('Source and destination warehouses must differ.');
     }
 
     const from = await this.stock.findByProductWarehouse(dto.productId, dto.fromWarehouseId);
     if (!from || from.quantity < dto.quantity) {
-      throw new BadRequestException("Insufficient stock at source warehouse.");
+      throw new BadRequestException('Insufficient stock at source warehouse.');
     }
 
-    let to = await this.stock.findByProductWarehouse(dto.productId, dto.toWarehouseId);
-    if (!to) {
-      to = await this.stock.create({
+    const variantId = from.variantId ?? null;
+    const existingDest = await this.stock.findByProductWarehouse(
+      dto.productId,
+      dto.toWarehouseId,
+      variantId,
+    );
+    const dest =
+      existingDest ??
+      (await this.stock.create({
         productId: dto.productId,
+        variantId,
         warehouseId: dto.toWarehouseId,
         quantity: 0,
         minStock: from.minStock,
         reorderLevel: from.reorderLevel,
-      });
-    }
+      }));
 
     await this.prisma.client.$transaction([
       this.prisma.client.inventoryStock.update({
@@ -380,16 +454,16 @@ export class InventoryService {
         data: { quantity: from.quantity - dto.quantity },
       }),
       this.prisma.client.inventoryStock.update({
-        where: { id: to.id },
-        data: { quantity: to.quantity + dto.quantity },
+        where: { id: dest.id },
+        data: { quantity: dest.quantity + dto.quantity },
       }),
     ]);
 
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "inventory.stock_transferred",
-      entityType: "inventory_stock",
+      action: 'inventory.stock_transferred',
+      entityType: 'inventory_stock',
       entityId: from.id,
       metadata: {
         productId: dto.productId,
@@ -401,7 +475,11 @@ export class InventoryService {
       userAgent: meta.ua,
     });
 
-    const refreshed = await this.stock.findByProductWarehouse(dto.productId, dto.toWarehouseId);
+    const refreshed = await this.stock.findByProductWarehouse(
+      dto.productId,
+      dto.toWarehouseId,
+      variantId,
+    );
     return refreshed ? this.mapStockRow(refreshed) : null;
   }
 
@@ -414,7 +492,7 @@ export class InventoryService {
   ) {
     this.assertManage(user);
     const row = await this.stock.findById(stockId);
-    if (!row) throw new NotFoundException("Stock record not found.");
+    if (!row) throw new NotFoundException('Stock record not found.');
 
     if (dto.site?.trim() && dto.site.trim() !== row.warehouse.name) {
       let warehouse = await this.warehouses.findByName(dto.site.trim());
@@ -426,7 +504,7 @@ export class InventoryService {
       }
       const existing = await this.stock.findByProductWarehouse(row.productId, warehouse.id);
       if (existing && existing.id !== stockId) {
-        throw new BadRequestException("Product already has stock at that warehouse.");
+        throw new BadRequestException('Product already has stock at that warehouse.');
       }
       await this.stock.update(stockId, { warehouseId: warehouse.id });
     }
@@ -464,8 +542,8 @@ export class InventoryService {
       await this.audit.log({
         actorId: user.id,
         tenantId: user.tenantId,
-        action: "inventory.stock_adjusted",
-        entityType: "inventory_stock",
+        action: 'inventory.stock_adjusted',
+        entityType: 'inventory_stock',
         entityId: stockId,
         metadata: { quantity: dto.quantity },
         ipAddress: meta.ip,
@@ -486,10 +564,10 @@ export class InventoryService {
         }),
         this.prisma.client.inventoryStock.findMany({ where: { tenantId } }),
         this.prisma.client.purchaseRequest.count({
-          where: { tenantId, status: "PENDING_APPROVAL" },
+          where: { tenantId, status: 'PENDING_APPROVAL' },
         }),
         this.prisma.client.purchaseOrder.count({
-          where: { tenantId, status: { in: ["DRAFT", "PENDING_APPROVAL"] } },
+          where: { tenantId, status: { in: ['DRAFT', 'PENDING_APPROVAL'] } },
         }),
       ]);
 

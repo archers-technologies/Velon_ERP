@@ -1,12 +1,12 @@
-import { Injectable } from "@nestjs/common";
-import type { PaymentProviderId } from "@velon/shared";
+import { Injectable } from '@nestjs/common';
+import type { PaymentProviderId } from '@velon/shared';
 import type {
   CheckoutInput,
   CheckoutSession,
   OfflinePaymentInput,
   PaymentRecord,
   WebhookResult,
-} from "./payment-provider.types";
+} from './payment-provider.types';
 
 /** Stub adapter — connect live credentials after gateway approval. */
 @Injectable()
@@ -35,27 +35,27 @@ export abstract class StubPaymentProvider {
 
 @Injectable()
 export class StripeProvider extends StubPaymentProvider {
-  readonly id = "STRIPE" as const;
+  readonly id = 'STRIPE' as const;
 }
 
 @Injectable()
 export class RazorpayProvider extends StubPaymentProvider {
-  readonly id = "RAZORPAY" as const;
+  readonly id = 'RAZORPAY' as const;
 }
 
 @Injectable()
 export class StcPayProvider extends StubPaymentProvider {
-  readonly id = "STC_PAY" as const;
+  readonly id = 'STC_PAY' as const;
 }
 
 @Injectable()
 export class HyperPayProvider extends StubPaymentProvider {
-  readonly id = "HYPERPAY" as const;
+  readonly id = 'HYPERPAY' as const;
 }
 
 @Injectable()
 export class BankTransferProvider extends StubPaymentProvider {
-  readonly id = "BANK_TRANSFER" as const;
+  readonly id = 'BANK_TRANSFER' as const;
 
   override async createCheckoutSession(input: CheckoutInput): Promise<CheckoutSession> {
     return {
@@ -64,7 +64,7 @@ export class BankTransferProvider extends StubPaymentProvider {
       checkoutUrl: null,
       clientSecret: null,
       instructions:
-        "Transfer the invoice amount to Velon ERP (IBAN on file). Include your workspace code in the reference. A platform admin will activate your subscription after confirmation.",
+        'Transfer the invoice amount to Velon ERP (IBAN on file). Include your workspace code in the reference. A platform admin will activate your subscription after confirmation.',
       expiresAt: null,
     };
   }
@@ -73,7 +73,7 @@ export class BankTransferProvider extends StubPaymentProvider {
     return {
       provider: this.id,
       providerPaymentId: `bank_ref_${input.reference}`,
-      status: "pending",
+      status: 'pending',
     };
   }
 }

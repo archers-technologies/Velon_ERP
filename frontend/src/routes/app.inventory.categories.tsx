@@ -1,10 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useCallback, useEffect, useState } from 'react';
+import { createFileRoute } from '@tanstack/react-router';
+import { Plus, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { canManageInventory, normalizeVelonRole } from '@velon/shared';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Table,
   TableBody,
@@ -12,36 +14,36 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table';
+import { getSessionMembershipRole } from '@/lib/auth/session';
 import {
   createInventoryCategory,
   deleteInventoryCategory,
   listInventoryCategories,
   updateInventoryCategory,
   type InventoryCategory,
-} from "@/lib/inventory/api";
-import { getSessionMembershipRole } from "@/lib/auth/session";
-import { canManageInventory, normalizeVelonRole } from "@velon/shared";
-import { Plus, Trash2 } from "lucide-react";
+} from '@/lib/inventory/api';
 
-export const Route = createFileRoute("/app/inventory/categories")({
+export const Route = createFileRoute('/app/inventory/categories')({
   component: InventoryCategoriesPage,
 });
 
 function InventoryCategoriesPage() {
-  const canManage = canManageInventory(normalizeVelonRole(getSessionMembershipRole() ?? "USER"));
+  const canManage = canManageInventory(normalizeVelonRole(getSessionMembershipRole() ?? 'USER'));
   const [categories, setCategories] = useState<InventoryCategory[]>([]);
   const [busy, setBusy] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
 
   const refresh = useCallback(async () => {
     setCategories(await listInventoryCategories());
   }, []);
 
   useEffect(() => {
-    refresh().catch((e) => toast.error(e instanceof Error ? e.message : "Failed to load categories"));
+    refresh().catch((e) =>
+      toast.error(e instanceof Error ? e.message : 'Failed to load categories'),
+    );
   }, [refresh]);
 
   async function handleSave() {
@@ -49,18 +51,24 @@ function InventoryCategoriesPage() {
     setBusy(true);
     try {
       if (editingId) {
-        await updateInventoryCategory(editingId, { name: name.trim(), description: description.trim() || undefined });
-        toast.success("Category updated");
+        await updateInventoryCategory(editingId, {
+          name: name.trim(),
+          description: description.trim() || undefined,
+        });
+        toast.success('Category updated');
       } else {
-        await createInventoryCategory({ name: name.trim(), description: description.trim() || undefined });
-        toast.success("Category created");
+        await createInventoryCategory({
+          name: name.trim(),
+          description: description.trim() || undefined,
+        });
+        toast.success('Category created');
       }
       setEditingId(null);
-      setName("");
-      setDescription("");
+      setName('');
+      setDescription('');
       await refresh();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not save category");
+      toast.error(e instanceof Error ? e.message : 'Could not save category');
     } finally {
       setBusy(false);
     }
@@ -71,10 +79,10 @@ function InventoryCategoriesPage() {
     setBusy(true);
     try {
       await deleteInventoryCategory(id);
-      toast.success("Category deleted");
+      toast.success('Category deleted');
       await refresh();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not delete category");
+      toast.error(e instanceof Error ? e.message : 'Could not delete category');
     } finally {
       setBusy(false);
     }
@@ -84,20 +92,31 @@ function InventoryCategoriesPage() {
     <div className="space-y-4">
       {canManage && (
         <Card className="border-border bg-card p-4">
-          <h2 className="font-medium">{editingId ? "Edit category" : "New category"}</h2>
+          <h2 className="font-medium">{editingId ? 'Edit category' : 'New category'}</h2>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <div>
               <Label>Name</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} />
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
             </div>
             <div>
               <Label>Description</Label>
-              <Input value={description} onChange={(e) => setDescription(e.target.value)} />
+              <Input
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
             </div>
           </div>
-          <Button className="mt-3" size="sm" disabled={busy || !name.trim()} onClick={handleSave}>
+          <Button
+            className="mt-3"
+            size="sm"
+            disabled={busy || !name.trim()}
+            onClick={handleSave}
+          >
             <Plus className="mr-2 h-4 w-4" />
-            {editingId ? "Save" : "Create category"}
+            {editingId ? 'Save' : 'Create category'}
           </Button>
         </Card>
       )}
@@ -115,21 +134,26 @@ function InventoryCategoriesPage() {
             {categories.map((c) => (
               <TableRow key={c.id}>
                 <TableCell>{c.name}</TableCell>
-                <TableCell className="text-muted-foreground">{c.description ?? "—"}</TableCell>
+                <TableCell className="text-muted-foreground">{c.description ?? '—'}</TableCell>
                 {canManage && (
-                  <TableCell className="text-right space-x-2">
+                  <TableCell className="space-x-2 text-right">
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => {
                         setEditingId(c.id);
                         setName(c.name);
-                        setDescription(c.description ?? "");
+                        setDescription(c.description ?? '');
                       }}
                     >
                       Edit
                     </Button>
-                    <Button size="sm" variant="outline" disabled={busy} onClick={() => handleDelete(c.id)}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={busy}
+                      onClick={() => handleDelete(c.id)}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </TableCell>
@@ -138,7 +162,10 @@ function InventoryCategoriesPage() {
             ))}
             {categories.length === 0 && (
               <TableRow>
-                <TableCell colSpan={canManage ? 3 : 2} className="text-center text-muted-foreground">
+                <TableCell
+                  colSpan={canManage ? 3 : 2}
+                  className="text-muted-foreground text-center"
+                >
                   No categories yet
                 </TableCell>
               </TableRow>

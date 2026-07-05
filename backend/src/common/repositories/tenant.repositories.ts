@@ -1,6 +1,6 @@
-import { Injectable } from "@nestjs/common";
-import { PrismaService } from "../../prisma/prisma.service";
-import { TenantScopedRepository } from "../repositories/tenant-scoped.repository";
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../../prisma/prisma.service';
+import { TenantScopedRepository } from '../repositories/tenant-scoped.repository';
 
 @Injectable()
 export class TenantCustomerRepository extends TenantScopedRepository {
@@ -16,7 +16,7 @@ export class TenantCustomerRepository extends TenantScopedRepository {
   findMany() {
     return this.prisma.client.tenantCustomer.findMany({
       where: this.where(),
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -59,7 +59,7 @@ export class TenantAssetRepository extends TenantScopedRepository {
   findMany() {
     return this.prisma.client.tenantAsset.findMany({
       where: this.where(),
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -80,7 +80,7 @@ export class TenantFileRepository extends TenantScopedRepository {
       data: {
         tenantId: this.tenantId,
         name: name.trim(),
-        mimeType: mimeType?.trim() || "application/octet-stream",
+        mimeType: mimeType?.trim() || 'application/octet-stream',
         sizeBytes: sizeBytes ?? 0,
       },
     });
@@ -89,7 +89,7 @@ export class TenantFileRepository extends TenantScopedRepository {
   findMany() {
     return this.prisma.client.tenantFile.findMany({
       where: this.where(),
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -119,7 +119,7 @@ export class TenantNotificationRepository extends TenantScopedRepository {
   findManyForUser(userId: string) {
     return this.prisma.client.notification.findMany({
       where: this.where({ userId }),
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -138,7 +138,7 @@ export class TenantAuditRepository extends TenantScopedRepository {
   findMany(limit = 50) {
     return this.prisma.client.auditLog.findMany({
       where: this.where(),
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
       take: limit,
     });
   }

@@ -1,32 +1,19 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router';
+import { Printer } from 'lucide-react';
+import { toast } from 'sonner';
+import {
+  getCountryByCode,
+  getCurrencySymbol,
+  normalizeVelonRole,
+  parseSettingsUserTab,
+  VelonRole,
+} from '@velon/shared';
+import { SettingsWorkspaceShortcuts } from '@/components/settings/settings-workspace-shortcuts';
 import {
   WorkspaceProfileIdentityPanel,
   WorkspaceSecurityPanel,
-} from "@/components/settings/workspace-profile-panels";
-import { SettingsWorkspaceShortcuts } from "@/components/settings/settings-workspace-shortcuts";
-import { toast } from "sonner";
-import {
-  useWorkspaceCurrency,
-  type WorkspaceCurrencyPreset,
-} from "@/contexts/workspace-currency";
-import { apiFetch } from "@/lib/api/client";
-import { updateCompanyProfile, updateWorkspaceSettings } from "@/lib/tenants/admin-api";
-import {
-  BusinessLocalizationFields,
-  createDefaultLocalization,
-  type BusinessLocalizationValue,
-} from "@/components/workspace/business-localization-fields";
-import { getCountryByCode, getCurrencySymbol } from "@velon/shared";
-import { useWorkspacePreferences } from "@/contexts/workspace-preferences";
-import { Card } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getSessionMembershipRole } from "@/lib/auth/session";
-import { normalizeVelonRole, parseSettingsUserTab, VelonRole } from "@velon/shared";
+} from '@/components/settings/workspace-profile-panels';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,29 +24,44 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  BusinessLocalizationFields,
+  createDefaultLocalization,
+  type BusinessLocalizationValue,
+} from '@/components/workspace/business-localization-fields';
+import { useWorkspaceCurrency, type WorkspaceCurrencyPreset } from '@/contexts/workspace-currency';
+import { useWorkspacePreferences } from '@/contexts/workspace-preferences';
+import { apiFetch } from '@/lib/api/client';
+import { getSessionMembershipRole } from '@/lib/auth/session';
+import { printInvoiceDocument } from '@/lib/sales/invoicing/print-invoice';
+import { loadInvoiceCompanyProfile } from '@/lib/sales/invoicing/workspace-profile';
 import {
   getPrinterSettings,
   RECEIPT_FORMAT_OPTIONS,
   saveAutoPrintOnCharge,
   saveReceiptFormat,
   type ReceiptFormat,
-} from "@/lib/shared/printer-settings";
-import { printInvoiceDocument } from "@/lib/sales/invoicing/print-invoice";
-import { loadInvoiceCompanyProfile } from "@/lib/sales/invoicing/workspace-profile";
-import { Printer } from "lucide-react";
+} from '@/lib/shared/printer-settings';
+import { updateCompanyProfile, updateWorkspaceSettings } from '@/lib/tenants/admin-api';
 
-const settingsTabs = ["general", "regional", "printers", "profile", "security"] as const;
+const settingsTabs = ['general', 'regional', 'printers', 'profile', 'security'] as const;
 type SettingsTab = (typeof settingsTabs)[number];
 
-export const Route = createFileRoute("/app/settings/")({
+export const Route = createFileRoute('/app/settings/')({
   validateSearch: (search: Record<string, unknown>) => ({
     tab: parseSettingsUserTab(search.tab),
   }),
@@ -68,18 +70,20 @@ export const Route = createFileRoute("/app/settings/")({
 
 type RegionalFormDraft = BusinessLocalizationValue;
 
-function isWorkspaceCurrencyPreset(code: string): code is Exclude<WorkspaceCurrencyPreset, "CUSTOM"> {
+function isWorkspaceCurrencyPreset(
+  code: string,
+): code is Exclude<WorkspaceCurrencyPreset, 'CUSTOM'> {
   return (
-    code === "INR" ||
-    code === "USD" ||
-    code === "EUR" ||
-    code === "GBP" ||
-    code === "AED" ||
-    code === "SAR" ||
-    code === "BHD" ||
-    code === "OMR" ||
-    code === "QAR" ||
-    code === "KWD"
+    code === 'INR' ||
+    code === 'USD' ||
+    code === 'EUR' ||
+    code === 'GBP' ||
+    code === 'AED' ||
+    code === 'SAR' ||
+    code === 'BHD' ||
+    code === 'OMR' ||
+    code === 'QAR' ||
+    code === 'KWD'
   );
 }
 
@@ -102,11 +106,11 @@ function SettingsPage() {
   const isOwner = isWorkspaceOwner || membershipRole === VelonRole.TENANT_ADMIN;
   const [resetOpen, setResetOpen] = useState(false);
   const [tab, setTab] = useState<SettingsTab>(tabFromUrl);
-  const [receiptFormat, setReceiptFormat] = useState<ReceiptFormat>(() =>
-    getPrinterSettings().receiptFormat,
+  const [receiptFormat, setReceiptFormat] = useState<ReceiptFormat>(
+    () => getPrinterSettings().receiptFormat,
   );
-  const [autoPrintOnCharge, setAutoPrintOnCharge] = useState(() =>
-    getPrinterSettings().autoPrintOnCharge,
+  const [autoPrintOnCharge, setAutoPrintOnCharge] = useState(
+    () => getPrinterSettings().autoPrintOnCharge,
   );
   const [printerTestBusy, setPrinterTestBusy] = useState(false);
 
@@ -115,7 +119,7 @@ function SettingsPage() {
   }, [tabFromUrl]);
 
   useEffect(() => {
-    if (tabFromUrl === "printers") {
+    if (tabFromUrl === 'printers') {
       const s = getPrinterSettings();
       setReceiptFormat(s.receiptFormat);
       setAutoPrintOnCharge(s.autoPrintOnCharge);
@@ -127,8 +131,8 @@ function SettingsPage() {
   const snapshotRegional = useCallback((): RegionalFormDraft => createDefaultLocalization(), []);
 
   function handleTabChange(next: string) {
-    const safe = settingsTabs.includes(next as SettingsTab) ? (next as SettingsTab) : "general";
-    if (safe === "regional") {
+    const safe = settingsTabs.includes(next as SettingsTab) ? (next as SettingsTab) : 'general';
+    if (safe === 'regional') {
       const base = createDefaultLocalization();
       setRegionalDraft(base);
       void apiFetch<{
@@ -140,7 +144,7 @@ function SettingsPage() {
           numberFormat: string;
         };
         companyProfile: { address: string | null; taxId: string | null } | null;
-      }>("/workspace/context")
+      }>('/workspace/context')
         .then((ctx) => {
           setRegionalDraft({
             countryCode: ctx.workspace.countryCode,
@@ -148,8 +152,8 @@ function SettingsPage() {
             timezone: ctx.workspace.timezone,
             dateFormat: ctx.workspace.dateFormat,
             numberFormat: ctx.workspace.numberFormat,
-            address: ctx.companyProfile?.address ?? "",
-            taxId: ctx.companyProfile?.taxId ?? "",
+            address: ctx.companyProfile?.address ?? '',
+            taxId: ctx.companyProfile?.taxId ?? '',
           });
         })
         .catch(() => {
@@ -157,7 +161,7 @@ function SettingsPage() {
         });
     }
     setTab(safe);
-    void navigate({ to: "/app/settings", search: { tab: safe }, replace: true });
+    void navigate({ to: '/app/settings', search: { tab: safe }, replace: true });
   }
 
   const effectiveRegional = regionalDraft ?? snapshotRegional();
@@ -170,15 +174,15 @@ function SettingsPage() {
   async function saveRegional() {
     const e = effectiveRegional;
     if (!e.countryCode?.trim()) {
-      toast.error("Country is required");
+      toast.error('Country is required');
       return;
     }
     if (!e.currency?.trim()) {
-      toast.error("Currency is required");
+      toast.error('Currency is required');
       return;
     }
     if (!e.timezone?.trim()) {
-      toast.error("Timezone is required");
+      toast.error('Timezone is required');
       return;
     }
     setRegionalSaving(true);
@@ -205,10 +209,10 @@ function SettingsPage() {
       }
       setRegionalDraft({ ...e });
       toast.success(
-        isOwner ? "Business localization saved to workspace" : "Regional preferences saved",
+        isOwner ? 'Business localization saved to workspace' : 'Regional preferences saved',
       );
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not save business localization");
+      toast.error(err instanceof Error ? err.message : 'Could not save business localization');
     } finally {
       setRegionalSaving(false);
     }
@@ -217,18 +221,18 @@ function SettingsPage() {
   function handleReceiptFormatChange(format: ReceiptFormat) {
     setReceiptFormat(format);
     saveReceiptFormat(format);
-    toast.success("Printer format saved");
+    toast.success('Printer format saved');
   }
 
   function handleAutoPrintChange(enabled: boolean) {
     setAutoPrintOnCharge(enabled);
     saveAutoPrintOnCharge(enabled);
-    toast.success(enabled ? "Auto-print enabled on charge" : "Auto-print disabled");
+    toast.success(enabled ? 'Auto-print enabled on charge' : 'Auto-print disabled');
   }
 
   async function runTestPrint() {
-    if (receiptFormat === "none") {
-      toast.error("Select a receipt format other than Disabled to test print.");
+    if (receiptFormat === 'none') {
+      toast.error('Select a receipt format other than Disabled to test print.');
       return;
     }
     setPrinterTestBusy(true);
@@ -238,20 +242,20 @@ function SettingsPage() {
         {
           invoiceNumber: `TEST-${Date.now().toString(36).toUpperCase()}`,
           invoiceDate: new Date().toISOString().slice(0, 10),
-          customerName: "Walk-in customer",
+          customerName: 'Walk-in customer',
           lines: [
-            { name: "Sample product", quantity: 1, unitPrice: 100 },
-            { name: "Sample service", quantity: 2, unitPrice: 50 },
+            { name: 'Sample product', quantity: 1, unitPrice: 100 },
+            { name: 'Sample service', quantity: 2, unitPrice: 50 },
           ],
-          currency: "INR",
+          currency: 'INR',
           company,
-          paymentStatus: "paid",
+          paymentStatus: 'paid',
         },
         receiptFormat,
       );
-      toast.success("Test print preview opened.");
+      toast.success('Test print preview opened.');
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Test print failed");
+      toast.error(e instanceof Error ? e.message : 'Test print failed');
     } finally {
       setPrinterTestBusy(false);
     }
@@ -260,29 +264,51 @@ function SettingsPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <SettingsWorkspaceShortcuts />
-      <Tabs value={tab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="flex h-auto w-full flex-wrap gap-1 rounded-lg bg-muted/60 p-1 sm:w-auto">
-          <TabsTrigger value="general" className="rounded-md text-xs sm:text-sm">
+      <Tabs
+        value={tab}
+        onValueChange={handleTabChange}
+        className="w-full"
+      >
+        <TabsList className="bg-muted/60 flex h-auto w-full flex-wrap gap-1 rounded-lg p-1 sm:w-auto">
+          <TabsTrigger
+            value="general"
+            className="rounded-md text-xs sm:text-sm"
+          >
             General
           </TabsTrigger>
-          <TabsTrigger value="regional" className="rounded-md text-xs sm:text-sm">
+          <TabsTrigger
+            value="regional"
+            className="rounded-md text-xs sm:text-sm"
+          >
             Business localization
           </TabsTrigger>
-          <TabsTrigger value="printers" className="rounded-md text-xs sm:text-sm">
+          <TabsTrigger
+            value="printers"
+            className="rounded-md text-xs sm:text-sm"
+          >
             Printers
           </TabsTrigger>
-          <TabsTrigger value="profile" className="rounded-md text-xs sm:text-sm">
+          <TabsTrigger
+            value="profile"
+            className="rounded-md text-xs sm:text-sm"
+          >
             My profile
           </TabsTrigger>
-          <TabsTrigger value="security" className="rounded-md text-xs sm:text-sm">
+          <TabsTrigger
+            value="security"
+            className="rounded-md text-xs sm:text-sm"
+          >
             Security
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="general" className="mt-6 outline-none">
+        <TabsContent
+          value="general"
+          className="mt-6 outline-none"
+        >
           <Card className="border-border bg-card p-6">
             <h2 className="text-lg font-semibold">General preferences</h2>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="text-muted-foreground mt-1 text-xs">
               Notifications, appearance, and defaults for this workspace — no IT ticket required.
             </p>
             <Separator className="my-5" />
@@ -290,7 +316,7 @@ function SettingsPage() {
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <div className="font-medium">Enable low stock email alerts</div>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
+                  <p className="text-muted-foreground mt-0.5 text-xs">
                     Notify buyers when SKUs cross reorder thresholds.
                   </p>
                 </div>
@@ -303,7 +329,7 @@ function SettingsPage() {
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <div className="font-medium">Enable daily summary report</div>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
+                  <p className="text-muted-foreground mt-0.5 text-xs">
                     Morning roll-up of sales, dues, and exceptions.
                   </p>
                 </div>
@@ -316,23 +342,26 @@ function SettingsPage() {
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <div className="font-medium">Dark mode</div>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
+                  <p className="text-muted-foreground mt-0.5 text-xs">
                     Reduces glare for long sessions; matches the header toggle.
                   </p>
                 </div>
                 <Switch
-                  checked={theme === "dark"}
-                  onCheckedChange={(on) => setTheme(on ? "dark" : "light")}
+                  checked={theme === 'dark'}
+                  onCheckedChange={(on) => setTheme(on ? 'dark' : 'light')}
                   aria-label="Dark mode"
                 />
               </div>
               <Separator />
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   Restore factory defaults for currency, region, theme, and notification toggles.
                   The page will reload.
                 </p>
-                <AlertDialog open={resetOpen} onOpenChange={setResetOpen}>
+                <AlertDialog
+                  open={resetOpen}
+                  onOpenChange={setResetOpen}
+                >
                   <AlertDialogTrigger asChild>
                     <Button
                       type="button"
@@ -357,7 +386,7 @@ function SettingsPage() {
                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         onClick={() => {
                           setResetOpen(false);
-                          toast.info("Resetting workspace…");
+                          toast.info('Resetting workspace…');
                           resetToFactoryDefaults();
                         }}
                       >
@@ -371,10 +400,13 @@ function SettingsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="regional" className="mt-6 outline-none">
+        <TabsContent
+          value="regional"
+          className="mt-6 outline-none"
+        >
           <Card className="border-border bg-card p-6">
             <h2 className="text-lg font-semibold">Business localization</h2>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="text-muted-foreground mt-1 text-xs">
               Country, currency, and regional formats used across invoices, quotations, dashboards,
               and billing. Workspace owners save these settings to PostgreSQL for the whole team.
             </p>
@@ -387,7 +419,7 @@ function SettingsPage() {
                 showTaxId
                 idPrefix="ws-localization"
               />
-              <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border pt-5">
+              <div className="border-border flex flex-wrap items-center justify-end gap-2 border-t pt-5">
                 <Button
                   type="button"
                   variant="outline"
@@ -401,61 +433,70 @@ function SettingsPage() {
                 <Button
                   type="button"
                   size="sm"
-                  className="rounded-lg bg-foreground text-background hover:bg-foreground/90"
+                  className="bg-foreground text-background hover:bg-foreground/90 rounded-lg"
                   disabled={!regionalDirty || regionalSaving}
                   onClick={() => void saveRegional()}
                 >
-                  {regionalSaving ? "Saving…" : "Save changes"}
+                  {regionalSaving ? 'Saving…' : 'Save changes'}
                 </Button>
               </div>
             </div>
           </Card>
         </TabsContent>
 
-        <TabsContent value="printers" className="mt-6 outline-none">
+        <TabsContent
+          value="printers"
+          className="mt-6 outline-none"
+        >
           <Card className="border-border bg-card p-6">
             <h2 className="text-lg font-semibold">Printer settings</h2>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Configure how Billing &amp; POS prints receipts after a sale. Format applies workspace-wide
-              for this browser.
+            <p className="text-muted-foreground mt-1 text-xs">
+              Configure how Billing &amp; POS prints receipts after a sale. Format applies
+              workspace-wide for this browser.
             </p>
             <Separator className="my-5" />
             <div className="space-y-5 text-sm">
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Default receipt format</Label>
-                <Select value={receiptFormat} onValueChange={(v) => handleReceiptFormatChange(v as ReceiptFormat)}>
+                <Select
+                  value={receiptFormat}
+                  onValueChange={(v) => handleReceiptFormatChange(v as ReceiptFormat)}
+                >
                   <SelectTrigger className="rounded-lg">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {RECEIPT_FORMAT_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
+                      <SelectItem
+                        key={opt.value}
+                        value={opt.value}
+                      >
                         {opt.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   {RECEIPT_FORMAT_OPTIONS.find((o) => o.value === receiptFormat)?.description}
                 </p>
               </div>
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <div className="font-medium">Auto-print after charge</div>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
+                  <p className="text-muted-foreground mt-0.5 text-xs">
                     Open print preview automatically when a cash/card sale is captured.
                   </p>
                 </div>
                 <Switch
                   checked={autoPrintOnCharge}
                   onCheckedChange={handleAutoPrintChange}
-                  disabled={receiptFormat === "none"}
+                  disabled={receiptFormat === 'none'}
                   aria-label="Auto-print after charge"
                 />
               </div>
               <Separator />
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   Send a sample receipt to verify layout before going live on the POS floor.
                 </p>
                 <Button
@@ -463,7 +504,7 @@ function SettingsPage() {
                   variant="outline"
                   size="sm"
                   className="rounded-lg"
-                  disabled={printerTestBusy || receiptFormat === "none"}
+                  disabled={printerTestBusy || receiptFormat === 'none'}
                   onClick={() => void runTestPrint()}
                 >
                   <Printer className="mr-2 h-4 w-4" />
@@ -474,11 +515,17 @@ function SettingsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="profile" className="mt-6 outline-none">
+        <TabsContent
+          value="profile"
+          className="mt-6 outline-none"
+        >
           <WorkspaceProfileIdentityPanel />
         </TabsContent>
 
-        <TabsContent value="security" className="mt-6 outline-none">
+        <TabsContent
+          value="security"
+          className="mt-6 outline-none"
+        >
           <WorkspaceSecurityPanel canDeleteWorkspace={isWorkspaceOwner} />
         </TabsContent>
       </Tabs>

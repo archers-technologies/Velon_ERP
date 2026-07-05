@@ -1,4 +1,4 @@
-import { apiFetch } from "@/lib/api/client";
+import { apiFetch } from '@/lib/api/client';
 
 export type Supplier = {
   id: string;
@@ -49,12 +49,12 @@ export type PurchaseOrder = {
 };
 
 export async function listSuppliers(search?: string) {
-  const q = search ? `?search=${encodeURIComponent(search)}` : "";
+  const q = search ? `?search=${encodeURIComponent(search)}` : '';
   return apiFetch<Supplier[]>(`/suppliers${q}`);
 }
 
 export async function createSupplier(body: Record<string, unknown>) {
-  return apiFetch<Supplier>("/suppliers", { method: "POST", body: JSON.stringify(body) });
+  return apiFetch<Supplier>('/suppliers', { method: 'POST', body: JSON.stringify(body) });
 }
 
 export type SupplierThread = {
@@ -74,47 +74,47 @@ export async function createSupplierThread(
   body: { body: string; authorName?: string },
 ) {
   return apiFetch<SupplierThread>(`/suppliers/${supplierId}/threads`, {
-    method: "POST",
+    method: 'POST',
     body: JSON.stringify(body),
   });
 }
 
 export async function listPurchaseRequests() {
-  return apiFetch<PurchaseRequest[]>("/procurement/requests");
+  return apiFetch<PurchaseRequest[]>('/procurement/requests');
 }
 
 export async function createPurchaseRequest(body: Record<string, unknown>) {
-  return apiFetch<PurchaseRequest>("/procurement/requests", {
-    method: "POST",
+  return apiFetch<PurchaseRequest>('/procurement/requests', {
+    method: 'POST',
     body: JSON.stringify(body),
   });
 }
 
 export async function submitPurchaseRequest(id: string) {
-  return apiFetch<PurchaseRequest>(`/procurement/requests/${id}/submit`, { method: "POST" });
+  return apiFetch<PurchaseRequest>(`/procurement/requests/${id}/submit`, { method: 'POST' });
 }
 
 export async function approvePurchaseRequest(id: string) {
   return apiFetch<PurchaseRequest>(`/procurement/requests/${id}/approve`, {
-    method: "POST",
+    method: 'POST',
     body: JSON.stringify({}),
   });
 }
 
 export async function listPurchaseOrders() {
-  return apiFetch<PurchaseOrder[]>("/procurement/orders");
+  return apiFetch<PurchaseOrder[]>('/procurement/orders');
 }
 
 export async function createPurchaseOrder(body: Record<string, unknown>) {
-  return apiFetch<PurchaseOrder>("/procurement/orders", {
-    method: "POST",
+  return apiFetch<PurchaseOrder>('/procurement/orders', {
+    method: 'POST',
     body: JSON.stringify(body),
   });
 }
 
 export async function approvePurchaseOrder(id: string) {
   return apiFetch<PurchaseOrder>(`/procurement/orders/${id}/approve`, {
-    method: "POST",
+    method: 'POST',
     body: JSON.stringify({}),
   });
 }
@@ -124,7 +124,7 @@ export async function receivePurchaseOrder(
   body: { warehouseId: string; lines: { orderItemId: string; quantity: number }[] },
 ) {
   return apiFetch<PurchaseOrder>(`/procurement/orders/${id}/receive`, {
-    method: "POST",
+    method: 'POST',
     body: JSON.stringify(body),
   });
 }

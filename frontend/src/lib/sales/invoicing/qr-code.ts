@@ -1,11 +1,11 @@
-import QRCode from "qrcode";
-import { invoiceTotals } from "./calculations";
-import type { InvoiceDocument } from "./types";
-import { buildZatcaTlvBase64 } from "./zatca-qr";
+import QRCode from 'qrcode';
+import { invoiceTotals } from './calculations';
+import type { InvoiceDocument } from './types';
+import { buildZatcaTlvBase64 } from './zatca-qr';
 
 export async function invoiceQrDataUrl(doc: InvoiceDocument): Promise<string> {
   const { taxAmount, grandTotal } = invoiceTotals(doc);
-  const vatNumber = doc.company.taxId ?? "";
+  const vatNumber = doc.company.taxId ?? '';
   const sellerName = doc.company.legalName;
   const timestamp = new Date(doc.invoiceDate).toISOString();
 
@@ -27,5 +27,5 @@ export async function invoiceQrDataUrl(doc: InvoiceDocument): Promise<string> {
           tax: taxAmount.toFixed(2),
         });
 
-  return QRCode.toDataURL(payload, { margin: 1, width: 180, errorCorrectionLevel: "M" });
+  return QRCode.toDataURL(payload, { margin: 1, width: 180, errorCorrectionLevel: 'M' });
 }

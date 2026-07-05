@@ -1,15 +1,15 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { loadPublicSiteContentSafe } from "@/lib/cms/load-public";
-import { MarketingPageShell } from "@/components/marketing/marketing-page-shell";
+import { createFileRoute } from '@tanstack/react-router';
+import { MarketingPageShell } from '@/components/marketing/marketing-page-shell';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Card } from "@/components/ui/card";
+} from '@/components/ui/accordion';
+import { Card } from '@/components/ui/card';
+import { loadPublicSiteContentSafe } from '@/lib/cms/load-public';
 
-export const Route = createFileRoute("/help")({
+export const Route = createFileRoute('/help')({
   loader: () => loadPublicSiteContentSafe(),
   component: HelpPage,
 });
@@ -25,10 +25,17 @@ function HelpPage() {
       description="Guides for trial onboarding, role setup, module usage and subscription lifecycle."
       siteContent={siteContent}
     >
-      <Card className="mx-auto max-w-4xl border-border bg-card p-6">
-        <Accordion type="single" collapsible className="w-full">
+      <Card className="border-border bg-card mx-auto max-w-4xl p-6">
+        <Accordion
+          type="single"
+          collapsible
+          className="w-full"
+        >
           {faqItems.map((item, index) => (
-            <AccordionItem key={item.q} value={`faq-${index}`}>
+            <AccordionItem
+              key={item.q}
+              value={`faq-${index}`}
+            >
               <AccordionTrigger>{item.q}</AccordionTrigger>
               <AccordionContent>{item.a}</AccordionContent>
             </AccordionItem>

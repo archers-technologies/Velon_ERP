@@ -1,5 +1,5 @@
-import { Construction } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { Construction } from 'lucide-react';
+import { Card } from '@/components/ui/card';
 
 export function ComingSoonBanner({ module }: { module: string }) {
   return (
@@ -7,8 +7,8 @@ export function ComingSoonBanner({ module }: { module: string }) {
       <div className="flex items-start gap-3">
         <Construction className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
         <div>
-          <p className="text-sm font-medium text-foreground">{module} — coming soon</p>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="text-foreground text-sm font-medium">{module} — coming soon</p>
+          <p className="text-muted-foreground mt-1 text-sm">
             This workspace uses demo data while the live {module.toLowerCase()} module is being
             wired. Navigation stays visible so you can preview the layout.
           </p>

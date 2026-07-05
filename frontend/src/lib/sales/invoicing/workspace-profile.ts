@@ -1,5 +1,5 @@
-import { apiFetch } from "@/lib/api/client";
-import type { InvoiceCompanyProfile } from "./types";
+import { apiFetch } from '@/lib/api/client';
+import type { InvoiceCompanyProfile } from './types';
 
 type WorkspaceContextResponse = {
   workspace: { name: string; currency: string };
@@ -15,7 +15,7 @@ type WorkspaceContextResponse = {
 };
 
 export async function loadInvoiceCompanyProfile(): Promise<InvoiceCompanyProfile> {
-  const ctx = await apiFetch<WorkspaceContextResponse>("/workspace/context");
+  const ctx = await apiFetch<WorkspaceContextResponse>('/workspace/context');
   const p = ctx.companyProfile;
   return {
     legalName: p?.legalName ?? ctx.tenant.name ?? ctx.workspace.name,

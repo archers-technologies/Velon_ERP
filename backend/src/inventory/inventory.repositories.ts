@@ -1,7 +1,7 @@
-import { Injectable } from "@nestjs/common";
-import { Prisma } from "@velon/database";
-import { PrismaService } from "../prisma/prisma.service";
-import { TenantScopedRepository } from "../common/repositories/tenant-scoped.repository";
+import { Injectable } from '@nestjs/common';
+import { Prisma } from '@velon/database';
+import { TenantScopedRepository } from '../common/repositories/tenant-scoped.repository';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class InventoryCategoryRepository extends TenantScopedRepository {
@@ -12,7 +12,7 @@ export class InventoryCategoryRepository extends TenantScopedRepository {
   findMany() {
     return this.prisma.client.inventoryCategory.findMany({
       where: this.where(),
-      orderBy: { name: "asc" },
+      orderBy: { name: 'asc' },
     });
   }
 
@@ -20,7 +20,7 @@ export class InventoryCategoryRepository extends TenantScopedRepository {
     return this.prisma.client.inventoryCategory.findFirst({ where: this.where({ id }) });
   }
 
-  create(data: Omit<Prisma.InventoryCategoryUncheckedCreateInput, "tenantId">) {
+  create(data: Omit<Prisma.InventoryCategoryUncheckedCreateInput, 'tenantId'>) {
     return this.prisma.client.inventoryCategory.create({
       data: { ...data, tenantId: this.tenantId },
     });
@@ -46,9 +46,9 @@ export class InventoryProductRepository extends TenantScopedRepository {
     const q = opts?.search?.trim();
     if (q) {
       OR.push(
-        { name: { contains: q, mode: "insensitive" } },
-        { sku: { contains: q, mode: "insensitive" } },
-        { barcode: { contains: q, mode: "insensitive" } },
+        { name: { contains: q, mode: 'insensitive' } },
+        { sku: { contains: q, mode: 'insensitive' } },
+        { barcode: { contains: q, mode: 'insensitive' } },
       );
     }
     return this.prisma.client.inventoryProduct.findMany({
@@ -57,7 +57,7 @@ export class InventoryProductRepository extends TenantScopedRepository {
         ...(OR.length ? { OR } : {}),
       },
       include: { category: true },
-      orderBy: { updatedAt: "desc" },
+      orderBy: { updatedAt: 'desc' },
     });
   }
 
@@ -78,7 +78,7 @@ export class InventoryProductRepository extends TenantScopedRepository {
     return this.prisma.client.inventoryProduct.count({ where: this.where() });
   }
 
-  create(data: Omit<Prisma.InventoryProductUncheckedCreateInput, "tenantId">) {
+  create(data: Omit<Prisma.InventoryProductUncheckedCreateInput, 'tenantId'>) {
     return this.prisma.client.inventoryProduct.create({
       data: { ...data, tenantId: this.tenantId },
       include: { category: true },
@@ -104,7 +104,7 @@ export class InventoryWarehouseRepository extends TenantScopedRepository {
     return this.prisma.client.inventoryWarehouse.findMany({
       where: this.where(activeOnly ? { isActive: true } : {}),
       include: { manager: { select: { id: true, name: true, email: true } } },
-      orderBy: { name: "asc" },
+      orderBy: { name: 'asc' },
     });
   }
 
@@ -133,7 +133,7 @@ export class InventoryWarehouseRepository extends TenantScopedRepository {
     });
   }
 
-  create(data: Omit<Prisma.InventoryWarehouseUncheckedCreateInput, "tenantId">) {
+  create(data: Omit<Prisma.InventoryWarehouseUncheckedCreateInput, 'tenantId'>) {
     return this.prisma.client.inventoryWarehouse.create({
       data: { ...data, tenantId: this.tenantId },
       include: { manager: { select: { id: true, name: true, email: true } } },
@@ -161,29 +161,34 @@ export class InventoryStockRepository extends TenantScopedRepository {
       include: {
         product: true,
         warehouse: true,
+        variant: true,
       },
-      orderBy: { updatedAt: "desc" },
+      orderBy: { updatedAt: 'desc' },
     });
   }
 
   findById(id: string) {
     return this.prisma.client.inventoryStock.findFirst({
       where: this.where({ id }),
-      include: { product: true, warehouse: true },
+      include: { product: true, warehouse: true, variant: true },
     });
   }
 
-  findByProductWarehouse(productId: string, warehouseId: string) {
+  findByProductWarehouse(productId: string, warehouseId: string, variantId?: string | null) {
     return this.prisma.client.inventoryStock.findFirst({
-      where: this.where({ productId, warehouseId }),
-      include: { product: true, warehouse: true },
+      where: this.where({
+        productId,
+        warehouseId,
+        variantId: variantId ?? null,
+      }),
+      include: { product: true, warehouse: true, variant: true },
     });
   }
 
-  create(data: Omit<Prisma.InventoryStockUncheckedCreateInput, "tenantId">) {
+  create(data: Omit<Prisma.InventoryStockUncheckedCreateInput, 'tenantId'>) {
     return this.prisma.client.inventoryStock.create({
       data: { ...data, tenantId: this.tenantId },
-      include: { product: true, warehouse: true },
+      include: { product: true, warehouse: true, variant: true },
     });
   }
 
@@ -191,7 +196,7 @@ export class InventoryStockRepository extends TenantScopedRepository {
     return this.prisma.client.inventoryStock.update({
       where: { id },
       data,
-      include: { product: true, warehouse: true },
+      include: { product: true, warehouse: true, variant: true },
     });
   }
 }

@@ -1,6 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { guardDisabledAdminPath } from "@/lib/auth/production-routes";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { createFileRoute } from '@tanstack/react-router';
+import { AlertTriangle, CheckCircle2, ChevronDown, Clock, Mail, Radio } from 'lucide-react';
+import { toast } from 'sonner';
+import { VELON_CONTACT_EMAIL } from '@velon/shared';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,38 +13,35 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
+} from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { useAdminCurrency, type AdminCurrencyPreset } from "@/contexts/admin-currency";
-import { VELON_CONTACT_EMAIL } from "@velon/shared";
-import { AlertTriangle, CheckCircle2, ChevronDown, Clock, Mail, Radio } from "lucide-react";
-import { toast } from "sonner";
+} from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
+import { useAdminCurrency, type AdminCurrencyPreset } from '@/contexts/admin-currency';
+import { guardDisabledAdminPath } from '@/lib/auth/production-routes';
 
-export const Route = createFileRoute("/admin/settings")({
+export const Route = createFileRoute('/admin/settings')({
   beforeLoad: ({ location }) => {
     guardDisabledAdminPath(location.pathname);
   },
   component: AdminSettingsPage,
 });
 
-const POLICY_STORAGE = "velon-admin-policy-engine-v1";
+const POLICY_STORAGE = 'velon-admin-policy-engine-v1';
 
-type RoundingMode = "nearest_whole" | "up_whole" | "down_whole" | "nearest_minor";
+type RoundingMode = 'nearest_whole' | 'up_whole' | 'down_whole' | 'nearest_minor';
 
 type PolicyPersist = {
   taxLabel: string;
@@ -64,27 +64,27 @@ type PolicyPersist = {
 };
 
 const DEFAULT_POLICY: PolicyPersist = {
-  taxLabel: "GST / VAT",
-  cgstPct: "9",
-  sgstPct: "9",
-  igstPct: "18",
-  rounding: "nearest_whole",
-  invoiceNumbering: "VELON-{YYYY}-{SEQ}",
+  taxLabel: 'GST / VAT',
+  cgstPct: '9',
+  sgstPct: '9',
+  igstPct: '18',
+  rounding: 'nearest_whole',
+  invoiceNumbering: 'VELON-{YYYY}-{SEQ}',
   supportEmail: VELON_CONTACT_EMAIL,
   systemIncidents: true,
   systemIncidentDowntimeMin: 5,
   partnerDigest: true,
-  partnerDigestDay: "friday",
-  partnerDigestTime: "17:00",
+  partnerDigestDay: 'friday',
+  partnerDigestTime: '17:00',
   trialEscalation: false,
   trialEscalationLeadHours: 48,
   trialEscalationUsagePct: 80,
-  lastChangeSummary: "Initial platform defaults (demo seed).",
+  lastChangeSummary: 'Initial platform defaults (demo seed).',
   lastChangeIso: new Date().toISOString(),
 };
 
 function safeLoad(): Partial<PolicyPersist> {
-  if (typeof window === "undefined") return {};
+  if (typeof window === 'undefined') return {};
   try {
     const raw = localStorage.getItem(POLICY_STORAGE);
     if (!raw) return {};
@@ -96,11 +96,11 @@ function safeLoad(): Partial<PolicyPersist> {
 
 function applyRounding(amount: number, mode: RoundingMode): number {
   switch (mode) {
-    case "up_whole":
+    case 'up_whole':
       return Math.ceil(amount);
-    case "down_whole":
+    case 'down_whole':
       return Math.floor(amount);
-    case "nearest_minor":
+    case 'nearest_minor':
       return Math.round(amount * 100) / 100;
     default:
       return Math.round(amount);
@@ -109,14 +109,14 @@ function applyRounding(amount: number, mode: RoundingMode): number {
 
 function roundingLabel(mode: RoundingMode): string {
   switch (mode) {
-    case "up_whole":
-      return "Always round up (whole)";
-    case "down_whole":
-      return "Always round down (whole)";
-    case "nearest_minor":
-      return "Nearest 0.01 (minor unit)";
+    case 'up_whole':
+      return 'Always round up (whole)';
+    case 'down_whole':
+      return 'Always round down (whole)';
+    case 'nearest_minor':
+      return 'Nearest 0.01 (minor unit)';
     default:
-      return "Round to nearest whole number";
+      return 'Round to nearest whole number';
   }
 }
 
@@ -132,11 +132,11 @@ function fiscalSnapshot(p: {
 }
 
 function dnsLooksVerified(email: string): boolean {
-  const d = email.split("@")[1]?.toLowerCase().trim() ?? "";
+  const d = email.split('@')[1]?.toLowerCase().trim() ?? '';
   if (!d) return false;
-  if (d === "yourdomain.com") return false;
-  if (d.endsWith("velon.systems")) return true;
-  return d.includes(".");
+  if (d === 'yourdomain.com') return false;
+  if (d.endsWith('velon.systems')) return true;
+  return d.includes('.');
 }
 
 function AdminSettingsPage() {
@@ -167,7 +167,7 @@ function AdminSettingsPage() {
   const [lastChangeSummary, setLastChangeSummary] = useState(DEFAULT_POLICY.lastChangeSummary);
   const [lastChangeIso, setLastChangeIso] = useState(DEFAULT_POLICY.lastChangeIso);
 
-  const [fiscalBaseline, setFiscalBaseline] = useState("");
+  const [fiscalBaseline, setFiscalBaseline] = useState('');
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmLines, setConfirmLines] = useState<string[]>([]);
@@ -209,7 +209,7 @@ function AdminSettingsPage() {
 
   const previewAmount = 12_345.67;
   const roundedPreview = applyRounding(previewAmount, rounding);
-  const demoRateNote = "ECB / RBI reference (simulated) · next refresh in 42m";
+  const demoRateNote = 'ECB / RBI reference (simulated) · next refresh in 42m';
 
   const fiscalDirty = useMemo(() => {
     if (!hydrated) return false;
@@ -245,7 +245,7 @@ function AdminSettingsPage() {
       try {
         localStorage.setItem(POLICY_STORAGE, JSON.stringify(payload));
       } catch {
-        toast.error("Could not persist to this browser.");
+        toast.error('Could not persist to this browser.');
         return;
       }
       setLastChangeSummary(changeSummary);
@@ -260,8 +260,8 @@ function AdminSettingsPage() {
           invoiceNumbering,
         }),
       );
-      toast.success("Global policy saved", {
-        description: "Demo persistence — wire to your control plane API.",
+      toast.success('Global policy saved', {
+        description: 'Demo persistence — wire to your control plane API.',
       });
     },
     [
@@ -286,13 +286,13 @@ function AdminSettingsPage() {
   function buildFiscalConfirmLines(): string[] {
     const lines: string[] = [];
     lines.push(
-      "You are changing global fiscal rules. In production this would affect reporting, tax lines, and invoice math for every tenant.",
+      'You are changing global fiscal rules. In production this would affect reporting, tax lines, and invoice math for every tenant.',
     );
     lines.push(
       `Rounding: ${roundingLabel(rounding)} — new invoices would compute from ${formatCurrency(previewAmount)} → ${formatCurrency(roundedPreview)}.`,
     );
     lines.push(`Invoice numbering pattern: ${invoiceNumbering}.`);
-    lines.push(`Default tax label: ${taxLabel.trim() || "—"}.`);
+    lines.push(`Default tax label: ${taxLabel.trim() || '—'}.`);
     if (isGstMode) {
       lines.push(`GST split (demo rates): CGST ${cgstPct}% · SGST ${sgstPct}% · IGST ${igstPct}%.`);
     }
@@ -301,9 +301,9 @@ function AdminSettingsPage() {
 
   function handleSaveClick() {
     const summaryParts: string[] = [];
-    if (fiscalDirty) summaryParts.push("fiscal rules");
-    summaryParts.push("communications & notification matrix");
-    const summary = `Updated ${summaryParts.join(" and ")}.`;
+    if (fiscalDirty) summaryParts.push('fiscal rules');
+    summaryParts.push('communications & notification matrix');
+    const summary = `Updated ${summaryParts.join(' and ')}.`;
 
     if (fiscalDirty) {
       setConfirmLines(buildFiscalConfirmLines());
@@ -315,14 +315,14 @@ function AdminSettingsPage() {
 
   function handleConfirmFiscalSave() {
     setConfirmOpen(false);
-    persistAll("Confirmed fiscal change (rounding, tax presets, and/or invoice numbering).");
+    persistAll('Confirmed fiscal change (rounding, tax presets, and/or invoice numbering).');
   }
 
   const lastChangeHuman = useMemo(() => {
     try {
       return new Date(lastChangeIso).toLocaleString(undefined, {
-        dateStyle: "medium",
-        timeStyle: "short",
+        dateStyle: 'medium',
+        timeStyle: 'short',
       });
     } catch {
       return lastChangeIso;
@@ -332,13 +332,13 @@ function AdminSettingsPage() {
   return (
     <div className="mx-auto grid max-w-3xl gap-8">
       <div>
-        <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+        <p className="text-muted-foreground text-[11px] font-medium tracking-[0.14em] uppercase">
           Global policy engine
         </p>
         <h1 className="mt-1 text-xl font-semibold tracking-tight">
           Fiscal rules, identity &amp; escalation
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mt-1 text-sm">
           These controls define how money is presented, how tax lines read, and how revenue risk
           reaches admins — treat changes as production-critical.
         </p>
@@ -346,7 +346,7 @@ function AdminSettingsPage() {
 
       <Card className="border-border bg-card p-6">
         <h2 className="text-lg font-semibold">Global fiscal rules</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mt-1 text-sm">
           Platform books, tax presets, rounding, and invoice sequencing — separate from cosmetic UI
           themes.
         </p>
@@ -354,16 +354,19 @@ function AdminSettingsPage() {
         <div className="mt-6 space-y-6">
           <div className="space-y-3">
             <Label htmlFor="platform-currency">Platform display currency</Label>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Applies to MRR, tenant tables, and Super Admin reports. Matches the header selector
               and is saved to this browser.
             </p>
             <div className="flex max-w-xl flex-col gap-3 sm:flex-row sm:items-end">
               <div className="min-w-0 flex-1 space-y-2">
-                <Select value={preset} onValueChange={(v) => setPreset(v as AdminCurrencyPreset)}>
+                <Select
+                  value={preset}
+                  onValueChange={(v) => setPreset(v as AdminCurrencyPreset)}
+                >
                   <SelectTrigger
                     id="platform-currency"
-                    className="h-10 rounded-lg border-border bg-muted/40"
+                    className="border-border bg-muted/40 h-10 rounded-lg"
                   >
                     <SelectValue placeholder="Select currency" />
                   </SelectTrigger>
@@ -377,9 +380,12 @@ function AdminSettingsPage() {
                   </SelectContent>
                 </Select>
               </div>
-              {preset === "CUSTOM" && (
+              {preset === 'CUSTOM' && (
                 <div className="space-y-2 sm:w-28">
-                  <Label htmlFor="currency-symbol" className="sr-only">
+                  <Label
+                    htmlFor="currency-symbol"
+                    className="sr-only"
+                  >
                     Custom symbol
                   </Label>
                   <Input
@@ -387,7 +393,7 @@ function AdminSettingsPage() {
                     value={customSymbol}
                     onChange={(e) => setCustomSymbol(e.target.value)}
                     maxLength={6}
-                    className="h-10 rounded-lg border-border bg-muted/40"
+                    className="border-border bg-muted/40 h-10 rounded-lg"
                     placeholder="₹"
                     aria-label="Custom currency symbol"
                   />
@@ -396,25 +402,25 @@ function AdminSettingsPage() {
             </div>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">
-                  Preview:{" "}
-                  <span className="font-medium text-foreground">
+                <p className="text-muted-foreground text-xs">
+                  Preview:{' '}
+                  <span className="text-foreground font-medium">
                     {formatCurrency(previewAmount)}
                   </span>
                 </p>
-                <p className="max-w-xl text-[11px] leading-relaxed text-muted-foreground">
-                  <span className="font-medium text-foreground">Note:</span> Changing display
-                  currency converts multi-currency roll-ups using today&apos;s reference rates for{" "}
+                <p className="text-muted-foreground max-w-xl text-[11px] leading-relaxed">
+                  <span className="text-foreground font-medium">Note:</span> Changing display
+                  currency converts multi-currency roll-ups using today&apos;s reference rates for{' '}
                   <em>reporting only</em>; tenant billing contracts and gateway captures stay
                   unchanged until you issue a billing migration.
                 </p>
               </div>
-              <Alert className="max-w-sm border-warning/30 bg-warning/10 py-3">
-                <Clock className="h-4 w-4 text-warning-foreground" />
-                <AlertTitle className="text-xs font-semibold text-warning-foreground">
+              <Alert className="border-warning/30 bg-warning/10 max-w-sm py-3">
+                <Clock className="text-warning-foreground h-4 w-4" />
+                <AlertTitle className="text-warning-foreground text-xs font-semibold">
                   Live rate warning
                 </AlertTitle>
-                <AlertDescription className="text-[11px] text-warning-foreground/90">
+                <AlertDescription className="text-warning-foreground/90 text-[11px]">
                   {demoRateNote}
                 </AlertDescription>
               </Alert>
@@ -431,20 +437,20 @@ function AdminSettingsPage() {
                 value={taxLabel}
                 onChange={(e) => setTaxLabel(e.target.value)}
                 placeholder="GST / VAT"
-                className="rounded-lg border-border bg-muted/30"
+                className="border-border bg-muted/30 rounded-lg"
               />
-              <p className="text-[11px] text-muted-foreground">
-                Shown on platform invoices and tax summaries. When the label contains{" "}
+              <p className="text-muted-foreground text-[11px]">
+                Shown on platform invoices and tax summaries. When the label contains{' '}
                 <span className="font-medium">GST</span>, the preset builder assumes India CGST /
                 SGST / IGST style splits.
               </p>
             </div>
-            <div className="space-y-2 rounded-xl border border-border bg-muted/20 p-4">
-              <div className="text-xs font-medium text-foreground">Tax presets builder</div>
+            <div className="border-border bg-muted/20 space-y-2 rounded-xl border p-4">
+              <div className="text-foreground text-xs font-medium">Tax presets builder</div>
               {isGstMode ? (
                 <div className="grid grid-cols-3 gap-2">
                   <div className="space-y-1">
-                    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    <Label className="text-muted-foreground text-[10px] tracking-wider uppercase">
                       CGST %
                     </Label>
                     <Input
@@ -455,7 +461,7 @@ function AdminSettingsPage() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    <Label className="text-muted-foreground text-[10px] tracking-wider uppercase">
                       SGST %
                     </Label>
                     <Input
@@ -466,7 +472,7 @@ function AdminSettingsPage() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    <Label className="text-muted-foreground text-[10px] tracking-wider uppercase">
                       IGST %
                     </Label>
                     <Input
@@ -478,7 +484,7 @@ function AdminSettingsPage() {
                   </div>
                 </div>
               ) : (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   Enter a label containing GST to unlock CGST / SGST / IGST fields. For VAT-style
                   regimes, keep a single headline rate in your ERP books module (demo placeholder).
                 </p>
@@ -491,8 +497,14 @@ function AdminSettingsPage() {
           <div className="grid gap-6 lg:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="rounding">Rounding rules</Label>
-              <Select value={rounding} onValueChange={(v) => setRounding(v as RoundingMode)}>
-                <SelectTrigger id="rounding" className="h-10 rounded-lg border-border bg-muted/40">
+              <Select
+                value={rounding}
+                onValueChange={(v) => setRounding(v as RoundingMode)}
+              >
+                <SelectTrigger
+                  id="rounding"
+                  className="border-border bg-muted/40 h-10 rounded-lg"
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -502,35 +514,38 @@ function AdminSettingsPage() {
                   <SelectItem value="nearest_minor">Nearest 0.01 (minor unit)</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">
-                Preview:{" "}
-                <span className="font-mono text-foreground">
+              <p className="text-muted-foreground text-xs">
+                Preview:{' '}
+                <span className="text-foreground font-mono">
                   {formatCurrency(previewAmount)} → {formatCurrency(roundedPreview)}
                 </span>
               </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="invoice-seq">Invoice numbering</Label>
-              <Select value={invoiceNumbering} onValueChange={setInvoiceNumbering}>
+              <Select
+                value={invoiceNumbering}
+                onValueChange={setInvoiceNumbering}
+              >
                 <SelectTrigger
                   id="invoice-seq"
-                  className="h-10 rounded-lg border-border bg-muted/40"
+                  className="border-border bg-muted/40 h-10 rounded-lg"
                 >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="VELON-{YYYY}-{SEQ}">
-                    VELON-{"{YYYY}"}-{"{SEQ}"} · fiscal year
+                    VELON-{'{YYYY}'}-{'{SEQ}'} · fiscal year
                   </SelectItem>
                   <SelectItem value="INV-GLOBAL-{SEQ}">
-                    INV-GLOBAL-{"{SEQ}"} · mono sequence
+                    INV-GLOBAL-{'{SEQ}'} · mono sequence
                   </SelectItem>
                   <SelectItem value="TENANT-{CODE}-{SEQ}">
-                    TENANT-{"{CODE}"}-{"{SEQ}"} · per org
+                    TENANT-{'{CODE}'}-{'{SEQ}'} · per org
                   </SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Governs how platform-generated document ids advance.
               </p>
             </div>
@@ -540,7 +555,7 @@ function AdminSettingsPage() {
 
       <Card className="border-border bg-card p-6">
         <h2 className="text-lg font-semibold">Communications infrastructure</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mt-1 text-sm">
           Outbound identity for system and support messages.
         </p>
         <div className="mt-6 space-y-4">
@@ -553,15 +568,15 @@ function AdminSettingsPage() {
                 value={supportEmail}
                 onChange={(e) => setSupportEmail(e.target.value)}
                 placeholder={VELON_CONTACT_EMAIL}
-                className="rounded-lg border-border bg-muted/30"
+                className="border-border bg-muted/30 rounded-lg"
               />
               <Button
                 type="button"
                 variant="outline"
                 className="shrink-0 rounded-lg"
                 onClick={() =>
-                  toast.message("Test email queued", {
-                    description: `Would send from ${supportEmail || "—"} to your Super Admin inbox (demo).`,
+                  toast.message('Test email queued', {
+                    description: `Would send from ${supportEmail || '—'} to your Super Admin inbox (demo).`,
                   })
                 }
               >
@@ -572,18 +587,27 @@ function AdminSettingsPage() {
             <div className="flex flex-wrap items-center gap-2 text-xs">
               {spfOk ? (
                 <>
-                  <CheckCircle2 className="h-3.5 w-3.5 text-success" aria-hidden />
+                  <CheckCircle2
+                    className="text-success h-3.5 w-3.5"
+                    aria-hidden
+                  />
                   <span className="text-success">SPF · DKIM · DMARC aligned (demo)</span>
                 </>
               ) : (
                 <>
-                  <AlertTriangle className="h-3.5 w-3.5 text-warning-foreground" aria-hidden />
+                  <AlertTriangle
+                    className="text-warning-foreground h-3.5 w-3.5"
+                    aria-hidden
+                  />
                   <span className="text-warning-foreground">
                     Domain verification incomplete — publish SPF/DKIM before go-live.
                   </span>
                 </>
               )}
-              <Badge variant="outline" className="font-mono text-[10px]">
+              <Badge
+                variant="outline"
+                className="font-mono text-[10px]"
+              >
                 DNS TTL ~300s
               </Badge>
             </div>
@@ -593,15 +617,18 @@ function AdminSettingsPage() {
 
       <Card className="border-border bg-card p-6">
         <h2 className="text-lg font-semibold">Admin notification matrix</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mt-1 text-sm">
           Escalation logic instead of dumb on/off toggles alone.
         </p>
 
         <div className="mt-6 space-y-6">
-          <div className="rounded-xl border border-border bg-muted/15 p-4">
+          <div className="border-border bg-muted/15 rounded-xl border p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <Radio className="h-4 w-4 text-muted-foreground" aria-hidden />
+                <Radio
+                  className="text-muted-foreground h-4 w-4"
+                  aria-hidden
+                />
                 <span className="text-sm font-medium">System incidents</span>
               </div>
               <Switch
@@ -610,11 +637,11 @@ function AdminSettingsPage() {
                 aria-label="System incidents"
               />
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">
+            <p className="text-muted-foreground mt-2 text-xs">
               Only email Super Admins when synthetic downtime exceeds the threshold (noise gate).
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <span className="text-xs text-muted-foreground">Email if downtime exceeds</span>
+              <span className="text-muted-foreground text-xs">Email if downtime exceeds</span>
               <Select
                 value={String(systemIncidentDowntimeMin)}
                 onValueChange={(v) => setSystemIncidentDowntimeMin(Number(v))}
@@ -632,10 +659,13 @@ function AdminSettingsPage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-border bg-muted/15 p-4">
+          <div className="border-border bg-muted/15 rounded-xl border p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-muted-foreground" aria-hidden />
+                <Clock
+                  className="text-muted-foreground h-4 w-4"
+                  aria-hidden
+                />
                 <span className="text-sm font-medium">Partner payout digest</span>
               </div>
               <Switch
@@ -646,7 +676,7 @@ function AdminSettingsPage() {
             </div>
             <div className="mt-3 flex flex-wrap gap-3">
               <div className="space-y-1">
-                <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                <span className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
                   Day
                 </span>
                 <Select
@@ -667,7 +697,7 @@ function AdminSettingsPage() {
                 </Select>
               </div>
               <div className="space-y-1">
-                <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                <span className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
                   Time (UTC)
                 </span>
                 <Select
@@ -688,7 +718,7 @@ function AdminSettingsPage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-border bg-muted/15 p-4">
+          <div className="border-border bg-muted/15 rounded-xl border p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <span className="text-sm font-medium">Trial expiry escalation</span>
               <Switch
@@ -698,25 +728,25 @@ function AdminSettingsPage() {
               />
             </div>
             <Collapsible className="group mt-3">
-              <CollapsibleTrigger className="flex items-center gap-1 text-xs font-medium text-foreground underline-offset-4 hover:underline [&[data-state=open]>svg]:rotate-180">
+              <CollapsibleTrigger className="text-foreground flex items-center gap-1 text-xs font-medium underline-offset-4 hover:underline [&[data-state=open]>svg]:rotate-180">
                 <ChevronDown className="h-3.5 w-3.5 shrink-0 transition-transform" />
                 Advanced conditional rule
               </CollapsibleTrigger>
-              <CollapsibleContent className="mt-3 space-y-3 overflow-hidden text-xs text-muted-foreground data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+              <CollapsibleContent className="text-muted-foreground data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down mt-3 space-y-3 overflow-hidden text-xs">
                 <p>
-                  Notify Super Admin{" "}
-                  <span className="font-mono font-medium text-foreground">
+                  Notify Super Admin{' '}
+                  <span className="text-foreground font-mono font-medium">
                     {trialEscalationLeadHours}h
-                  </span>{" "}
-                  before an Enterprise tenant trial expires if usage exceeds{" "}
-                  <span className="font-mono font-medium text-foreground">
+                  </span>{' '}
+                  before an Enterprise tenant trial expires if usage exceeds{' '}
+                  <span className="text-foreground font-mono font-medium">
                     {trialEscalationUsagePct}%
-                  </span>{" "}
+                  </span>{' '}
                   of entitled capacity (storage + API calls proxy in production).
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <div className="space-y-1">
-                    <Label className="text-[10px] uppercase tracking-wider">
+                    <Label className="text-[10px] tracking-wider uppercase">
                       Lead time (hours)
                     </Label>
                     <Select
@@ -735,7 +765,7 @@ function AdminSettingsPage() {
                     </Select>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[10px] uppercase tracking-wider">Usage floor %</Label>
+                    <Label className="text-[10px] tracking-wider uppercase">Usage floor %</Label>
                     <Select
                       value={String(trialEscalationUsagePct)}
                       onValueChange={(v) => setTrialEscalationUsagePct(Number(v))}
@@ -761,30 +791,33 @@ function AdminSettingsPage() {
       <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:justify-end">
         <Button
           type="button"
-          className="rounded-lg bg-foreground text-background hover:bg-foreground/90"
+          className="bg-foreground text-background hover:bg-foreground/90 rounded-lg"
           onClick={handleSaveClick}
         >
           Save global policy
         </Button>
       </div>
 
-      <Card className="border-dashed border-border bg-muted/20 p-4">
-        <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+      <Card className="border-border bg-muted/20 border-dashed p-4">
+        <p className="text-muted-foreground text-[11px] font-medium tracking-[0.12em] uppercase">
           Change log snapshot
         </p>
-        <p className="mt-1 text-sm text-foreground">
+        <p className="text-foreground mt-1 text-sm">
           Last updated by <span className="font-medium">Admin S.A.</span> · {lastChangeHuman}
         </p>
-        <p className="mt-1 text-xs text-muted-foreground">{lastChangeSummary}</p>
+        <p className="text-muted-foreground mt-1 text-xs">{lastChangeSummary}</p>
       </Card>
 
-      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+      <AlertDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm fiscal change</AlertDialogTitle>
             <AlertDialogDescription asChild>
-              <div className="space-y-3 text-left text-sm text-muted-foreground">
-                <p className="font-medium text-destructive">
+              <div className="text-muted-foreground space-y-3 text-left text-sm">
+                <p className="text-destructive font-medium">
                   You are changing platform-wide fiscal behavior. This can affect how invoices and
                   tax lines render from this moment forward in the control plane.
                 </p>
@@ -798,7 +831,10 @@ function AdminSettingsPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="rounded-lg">Cancel</AlertDialogCancel>
-            <AlertDialogAction className="rounded-lg" onClick={handleConfirmFiscalSave}>
+            <AlertDialogAction
+              className="rounded-lg"
+              onClick={handleConfirmFiscalSave}
+            >
               I understand — save
             </AlertDialogAction>
           </AlertDialogFooter>

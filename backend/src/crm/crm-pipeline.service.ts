@@ -3,20 +3,20 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
-} from "@nestjs/common";
-import { CrmCustomerStatus, CrmLeadStatus, CrmOpportunityStatus } from "@velon/database";
-import { canReadCrm, canWriteCrmRecords, normalizeVelonRole } from "@velon/shared";
-import * as crypto from "crypto";
-import { AuditService } from "../audit/audit.service";
-import type { AuthenticatedUser } from "../auth/auth.types";
-import { DEFAULT_PIPELINE_NAME, DEFAULT_PIPELINE_STAGES } from "./crm-pipeline.defaults";
+} from '@nestjs/common';
+import * as crypto from 'crypto';
+import { CrmCustomerStatus, CrmLeadStatus, CrmOpportunityStatus } from '@velon/database';
+import { canReadCrm, canWriteCrmRecords, normalizeVelonRole } from '@velon/shared';
+import { AuditService } from '../audit/audit.service';
+import type { AuthenticatedUser } from '../auth/auth.types';
+import { DEFAULT_PIPELINE_NAME, DEFAULT_PIPELINE_STAGES } from './crm-pipeline.defaults';
 import {
   CrmLeadRepository,
   CrmOpportunityRepository,
   CrmPipelineRepository,
   CrmPipelineStageRepository,
-} from "./crm-pipeline.repositories";
-import { CrmCustomerRepository } from "./crm.repositories";
+} from './crm-pipeline.repositories';
+import { CrmCustomerRepository } from './crm.repositories';
 import type {
   AssignCrmLeadDto,
   ConvertCrmLeadDto,
@@ -32,7 +32,7 @@ import type {
   UpdateCrmOpportunityDto,
   UpdateCrmPipelineDto,
   UpdateCrmStageDto,
-} from "./dto/crm-pipeline.dto";
+} from './dto/crm-pipeline.dto';
 
 type AuditMeta = { ip?: string; ua?: string };
 
@@ -49,22 +49,22 @@ export class CrmPipelineService {
 
   private assertRead(user: AuthenticatedUser) {
     if (!canReadCrm(normalizeVelonRole(user.role))) {
-      throw new ForbiddenException("CRM access denied.");
+      throw new ForbiddenException('CRM access denied.');
     }
   }
 
   private assertWrite(user: AuthenticatedUser) {
     if (!canWriteCrmRecords(normalizeVelonRole(user.role))) {
-      throw new ForbiddenException("Insufficient permissions to modify CRM records.");
+      throw new ForbiddenException('Insufficient permissions to modify CRM records.');
     }
   }
 
   private leadCode() {
-    return `LED-${crypto.randomBytes(3).toString("hex").toUpperCase()}`;
+    return `LED-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
   }
 
   private opportunityCode() {
-    return `OPP-${crypto.randomBytes(3).toString("hex").toUpperCase()}`;
+    return `OPP-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
   }
 
   async ensureDefaultPipeline() {
@@ -72,7 +72,7 @@ export class CrmPipelineService {
     if (count > 0) return this.pipelines.findDefault();
     const pipeline = await this.pipelines.create({
       name: DEFAULT_PIPELINE_NAME,
-      description: "Default sales pipeline",
+      description: 'Default sales pipeline',
       isDefault: true,
     });
     for (const stage of DEFAULT_PIPELINE_STAGES) {
@@ -85,8 +85,8 @@ export class CrmPipelineService {
     }
     await this.audit.log({
       tenantId: pipeline.tenantId,
-      action: "crm.pipeline_created",
-      entityType: "crm_pipeline",
+      action: 'crm.pipeline_created',
+      entityType: 'crm_pipeline',
       entityId: pipeline.id,
       metadata: { default: true },
     });
@@ -142,14 +142,14 @@ export class CrmPipelineService {
       status: query.status,
       source: query.source,
       assignedToId: query.assignedToId,
-      includeArchived: query.includeArchived === "true",
+      includeArchived: query.includeArchived === 'true',
     });
   }
 
   async getLead(user: AuthenticatedUser, id: string) {
     this.assertRead(user);
     const row = await this.leads.findById(id, true);
-    if (!row) throw new NotFoundException("Lead not found.");
+    if (!row) throw new NotFoundException('Lead not found.');
     return row;
   }
 
@@ -161,7 +161,7 @@ export class CrmPipelineService {
       contactName: dto.contactName?.trim() || null,
       email: dto.email?.trim().toLowerCase() || null,
       phone: dto.phone?.trim() || null,
-      source: dto.source ?? "MANUAL",
+      source: dto.source ?? 'MANUAL',
       industry: dto.industry?.trim() || null,
       status: dto.status ?? CrmLeadStatus.NEW,
       assignedToId: dto.assignedToId || user.id,
@@ -171,8 +171,8 @@ export class CrmPipelineService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.lead_created",
-      entityType: "crm_lead",
+      action: 'crm.lead_created',
+      entityType: 'crm_lead',
       entityId: row.id,
       ipAddress: meta.ip,
       userAgent: meta.ua,
@@ -180,17 +180,12 @@ export class CrmPipelineService {
     return row;
   }
 
-  async updateLead(
-    user: AuthenticatedUser,
-    id: string,
-    dto: UpdateCrmLeadDto,
-    meta: AuditMeta,
-  ) {
+  async updateLead(user: AuthenticatedUser, id: string, dto: UpdateCrmLeadDto, meta: AuditMeta) {
     this.assertWrite(user);
     const existing = await this.leads.findByIdAny(id);
-    if (!existing) throw new NotFoundException("Lead not found.");
+    if (!existing) throw new NotFoundException('Lead not found.');
     if (existing.status === CrmLeadStatus.CONVERTED) {
-      throw new BadRequestException("Converted leads cannot be edited.");
+      throw new BadRequestException('Converted leads cannot be edited.');
     }
     const row = await this.leads.update(id, {
       ...(dto.companyName !== undefined ? { companyName: dto.companyName.trim() } : {}),
@@ -205,8 +200,8 @@ export class CrmPipelineService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.lead_updated",
-      entityType: "crm_lead",
+      action: 'crm.lead_updated',
+      entityType: 'crm_lead',
       entityId: id,
       ipAddress: meta.ip,
       userAgent: meta.ua,
@@ -214,21 +209,16 @@ export class CrmPipelineService {
     return row;
   }
 
-  async assignLead(
-    user: AuthenticatedUser,
-    id: string,
-    dto: AssignCrmLeadDto,
-    meta: AuditMeta,
-  ) {
+  async assignLead(user: AuthenticatedUser, id: string, dto: AssignCrmLeadDto, meta: AuditMeta) {
     this.assertWrite(user);
     const existing = await this.leads.findByIdAny(id);
-    if (!existing) throw new NotFoundException("Lead not found.");
+    if (!existing) throw new NotFoundException('Lead not found.');
     const row = await this.leads.update(id, { assignedToId: dto.assignedToId });
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.lead_assigned",
-      entityType: "crm_lead",
+      action: 'crm.lead_assigned',
+      entityType: 'crm_lead',
       entityId: id,
       metadata: { assignedToId: dto.assignedToId },
       ipAddress: meta.ip,
@@ -240,13 +230,13 @@ export class CrmPipelineService {
   async archiveLead(user: AuthenticatedUser, id: string, meta: AuditMeta) {
     this.assertWrite(user);
     const existing = await this.leads.findByIdAny(id);
-    if (!existing) throw new NotFoundException("Lead not found.");
+    if (!existing) throw new NotFoundException('Lead not found.');
     await this.leads.update(id, { archivedAt: new Date() });
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.lead_updated",
-      entityType: "crm_lead",
+      action: 'crm.lead_updated',
+      entityType: 'crm_lead',
       entityId: id,
       metadata: { archived: true },
       ipAddress: meta.ip,
@@ -255,35 +245,30 @@ export class CrmPipelineService {
     return { ok: true };
   }
 
-  async convertLead(
-    user: AuthenticatedUser,
-    id: string,
-    dto: ConvertCrmLeadDto,
-    meta: AuditMeta,
-  ) {
+  async convertLead(user: AuthenticatedUser, id: string, dto: ConvertCrmLeadDto, meta: AuditMeta) {
     this.assertWrite(user);
     const lead = await this.leads.findByIdAny(id);
-    if (!lead) throw new NotFoundException("Lead not found.");
+    if (!lead) throw new NotFoundException('Lead not found.');
     if (lead.status === CrmLeadStatus.CONVERTED) {
-      throw new BadRequestException("Lead is already converted.");
+      throw new BadRequestException('Lead is already converted.');
     }
     if (lead.status === CrmLeadStatus.DISQUALIFIED) {
-      throw new BadRequestException("Disqualified leads cannot be converted.");
+      throw new BadRequestException('Disqualified leads cannot be converted.');
     }
 
     const pipeline = dto.pipelineId
       ? await this.pipelines.findById(dto.pipelineId)
       : await this.ensureDefaultPipeline();
-    if (!pipeline) throw new BadRequestException("Pipeline not found.");
+    if (!pipeline) throw new BadRequestException('Pipeline not found.');
 
     const qualifiedStage =
-      pipeline.stages.find((s) => s.name === "Qualified") ??
-      pipeline.stages.find((s) => s.name === "New") ??
+      pipeline.stages.find((s) => s.name === 'Qualified') ??
+      pipeline.stages.find((s) => s.name === 'New') ??
       pipeline.stages[0];
-    if (!qualifiedStage) throw new BadRequestException("Pipeline has no stages.");
+    if (!qualifiedStage) throw new BadRequestException('Pipeline has no stages.');
 
     const customer = await this.customers.create({
-      customerCode: `CUS-${crypto.randomBytes(3).toString("hex").toUpperCase()}`,
+      customerCode: `CUS-${crypto.randomBytes(3).toString('hex').toUpperCase()}`,
       companyName: lead.companyName,
       email: lead.email,
       phone: lead.phone,
@@ -318,8 +303,8 @@ export class CrmPipelineService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.lead_converted",
-      entityType: "crm_lead",
+      action: 'crm.lead_converted',
+      entityType: 'crm_lead',
       entityId: id,
       metadata: { customerId: customer.id, opportunityId: opportunity.id },
       ipAddress: meta.ip,
@@ -328,8 +313,8 @@ export class CrmPipelineService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.opportunity_created",
-      entityType: "crm_opportunity",
+      action: 'crm.opportunity_created',
+      entityType: 'crm_opportunity',
       entityId: opportunity.id,
       metadata: { fromLeadId: id },
       ipAddress: meta.ip,
@@ -350,7 +335,7 @@ export class CrmPipelineService {
   async getPipeline(user: AuthenticatedUser, id: string) {
     this.assertRead(user);
     const row = await this.pipelines.findById(id);
-    if (!row) throw new NotFoundException("Pipeline not found.");
+    if (!row) throw new NotFoundException('Pipeline not found.');
     return row;
   }
 
@@ -375,8 +360,8 @@ export class CrmPipelineService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.pipeline_created",
-      entityType: "crm_pipeline",
+      action: 'crm.pipeline_created',
+      entityType: 'crm_pipeline',
       entityId: pipeline.id,
       ipAddress: meta.ip,
       userAgent: meta.ua,
@@ -392,7 +377,7 @@ export class CrmPipelineService {
   ) {
     this.assertWrite(user);
     const existing = await this.pipelines.findById(id);
-    if (!existing) throw new NotFoundException("Pipeline not found.");
+    if (!existing) throw new NotFoundException('Pipeline not found.');
     const row = await this.pipelines.update(id, {
       ...(dto.name !== undefined ? { name: dto.name.trim() } : {}),
       ...(dto.description !== undefined ? { description: dto.description?.trim() || null } : {}),
@@ -400,8 +385,8 @@ export class CrmPipelineService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.pipeline_updated",
-      entityType: "crm_pipeline",
+      action: 'crm.pipeline_updated',
+      entityType: 'crm_pipeline',
       entityId: id,
       ipAddress: meta.ip,
       userAgent: meta.ua,
@@ -412,14 +397,14 @@ export class CrmPipelineService {
   async setDefaultPipeline(user: AuthenticatedUser, id: string, meta: AuditMeta) {
     this.assertWrite(user);
     const existing = await this.pipelines.findById(id);
-    if (!existing) throw new NotFoundException("Pipeline not found.");
+    if (!existing) throw new NotFoundException('Pipeline not found.');
     await this.pipelines.clearDefaultFlag();
     const row = await this.pipelines.update(id, { isDefault: true });
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.pipeline_updated",
-      entityType: "crm_pipeline",
+      action: 'crm.pipeline_updated',
+      entityType: 'crm_pipeline',
       entityId: id,
       metadata: { isDefault: true },
       ipAddress: meta.ip,
@@ -431,20 +416,20 @@ export class CrmPipelineService {
   async deletePipeline(user: AuthenticatedUser, id: string, meta: AuditMeta) {
     this.assertWrite(user);
     const existing = await this.pipelines.findById(id);
-    if (!existing) throw new NotFoundException("Pipeline not found.");
+    if (!existing) throw new NotFoundException('Pipeline not found.');
     if (existing.isDefault) {
-      throw new BadRequestException("Cannot delete the default pipeline.");
+      throw new BadRequestException('Cannot delete the default pipeline.');
     }
     const oppCount = await this.opportunities.count({ pipelineId: id });
     if (oppCount > 0) {
-      throw new BadRequestException("Pipeline has opportunities. Archive or move them first.");
+      throw new BadRequestException('Pipeline has opportunities. Archive or move them first.');
     }
     await this.pipelines.delete(id);
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.pipeline_updated",
-      entityType: "crm_pipeline",
+      action: 'crm.pipeline_updated',
+      entityType: 'crm_pipeline',
       entityId: id,
       metadata: { deleted: true },
       ipAddress: meta.ip,
@@ -463,7 +448,7 @@ export class CrmPipelineService {
   async createStage(user: AuthenticatedUser, dto: CreateCrmStageDto, meta: AuditMeta) {
     this.assertWrite(user);
     const pipeline = await this.pipelines.findById(dto.pipelineId);
-    if (!pipeline) throw new NotFoundException("Pipeline not found.");
+    if (!pipeline) throw new NotFoundException('Pipeline not found.');
     const max = await this.stages.maxPosition(dto.pipelineId);
     const position = dto.position ?? (max._max.position ?? -1) + 1;
     const row = await this.stages.create({
@@ -475,8 +460,8 @@ export class CrmPipelineService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.pipeline_updated",
-      entityType: "crm_pipeline_stage",
+      action: 'crm.pipeline_updated',
+      entityType: 'crm_pipeline_stage',
       entityId: row.id,
       metadata: { pipelineId: dto.pipelineId, created: true },
       ipAddress: meta.ip,
@@ -485,15 +470,10 @@ export class CrmPipelineService {
     return row;
   }
 
-  async updateStage(
-    user: AuthenticatedUser,
-    id: string,
-    dto: UpdateCrmStageDto,
-    meta: AuditMeta,
-  ) {
+  async updateStage(user: AuthenticatedUser, id: string, dto: UpdateCrmStageDto, meta: AuditMeta) {
     this.assertWrite(user);
     const existing = await this.stages.findById(id);
-    if (!existing) throw new NotFoundException("Stage not found.");
+    if (!existing) throw new NotFoundException('Stage not found.');
     const row = await this.stages.update(id, {
       ...(dto.name !== undefined ? { name: dto.name.trim() } : {}),
       ...(dto.probability !== undefined ? { probability: dto.probability } : {}),
@@ -501,8 +481,8 @@ export class CrmPipelineService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.pipeline_updated",
-      entityType: "crm_pipeline_stage",
+      action: 'crm.pipeline_updated',
+      entityType: 'crm_pipeline_stage',
       entityId: id,
       ipAddress: meta.ip,
       userAgent: meta.ua,
@@ -513,21 +493,19 @@ export class CrmPipelineService {
   async reorderStages(user: AuthenticatedUser, dto: ReorderCrmStagesDto, meta: AuditMeta) {
     this.assertWrite(user);
     const pipeline = await this.pipelines.findById(dto.pipelineId);
-    if (!pipeline) throw new NotFoundException("Pipeline not found.");
+    if (!pipeline) throw new NotFoundException('Pipeline not found.');
     const stageIds = new Set(pipeline.stages.map((s) => s.id));
     if (dto.stageIds.length !== stageIds.size || !dto.stageIds.every((id) => stageIds.has(id))) {
-      throw new BadRequestException("Invalid stage order.");
+      throw new BadRequestException('Invalid stage order.');
     }
     await Promise.all(
-      dto.stageIds.map((stageId, position) =>
-        this.stages.update(stageId, { position }),
-      ),
+      dto.stageIds.map((stageId, position) => this.stages.update(stageId, { position })),
     );
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.pipeline_updated",
-      entityType: "crm_pipeline",
+      action: 'crm.pipeline_updated',
+      entityType: 'crm_pipeline',
       entityId: dto.pipelineId,
       metadata: { reordered: true },
       ipAddress: meta.ip,
@@ -539,18 +517,18 @@ export class CrmPipelineService {
   async deleteStage(user: AuthenticatedUser, id: string, meta: AuditMeta) {
     this.assertWrite(user);
     const existing = await this.stages.findById(id);
-    if (!existing) throw new NotFoundException("Stage not found.");
-    if (["Won", "Lost"].includes(existing.name)) {
-      throw new BadRequestException("Cannot delete Won/Lost stages.");
+    if (!existing) throw new NotFoundException('Stage not found.');
+    if (['Won', 'Lost'].includes(existing.name)) {
+      throw new BadRequestException('Cannot delete Won/Lost stages.');
     }
     const count = await this.opportunities.count({ stageId: id });
-    if (count > 0) throw new BadRequestException("Stage has opportunities.");
+    if (count > 0) throw new BadRequestException('Stage has opportunities.');
     await this.stages.delete(id);
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.pipeline_updated",
-      entityType: "crm_pipeline_stage",
+      action: 'crm.pipeline_updated',
+      entityType: 'crm_pipeline_stage',
       entityId: id,
       metadata: { deleted: true },
       ipAddress: meta.ip,
@@ -569,27 +547,23 @@ export class CrmPipelineService {
       stageId: query.stageId,
       status: query.status,
       ownerId: query.ownerId,
-      includeArchived: query.includeArchived === "true",
+      includeArchived: query.includeArchived === 'true',
     });
   }
 
   async getOpportunity(user: AuthenticatedUser, id: string) {
     this.assertRead(user);
     const row = await this.opportunities.findById(id);
-    if (!row) throw new NotFoundException("Opportunity not found.");
+    if (!row) throw new NotFoundException('Opportunity not found.');
     return row;
   }
 
-  async createOpportunity(
-    user: AuthenticatedUser,
-    dto: CreateCrmOpportunityDto,
-    meta: AuditMeta,
-  ) {
+  async createOpportunity(user: AuthenticatedUser, dto: CreateCrmOpportunityDto, meta: AuditMeta) {
     this.assertWrite(user);
     const pipeline = await this.pipelines.findById(dto.pipelineId);
-    if (!pipeline) throw new BadRequestException("Pipeline not found.");
+    if (!pipeline) throw new BadRequestException('Pipeline not found.');
     const stage = pipeline.stages.find((s) => s.id === dto.stageId);
-    if (!stage) throw new BadRequestException("Stage not found in pipeline.");
+    if (!stage) throw new BadRequestException('Stage not found in pipeline.');
     const row = await this.opportunities.create({
       opportunityCode: this.opportunityCode(),
       title: dto.title.trim(),
@@ -608,8 +582,8 @@ export class CrmPipelineService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.opportunity_created",
-      entityType: "crm_opportunity",
+      action: 'crm.opportunity_created',
+      entityType: 'crm_opportunity',
       entityId: row.id,
       ipAddress: meta.ip,
       userAgent: meta.ua,
@@ -625,7 +599,7 @@ export class CrmPipelineService {
   ) {
     this.assertWrite(user);
     const existing = await this.opportunities.findByIdAny(id);
-    if (!existing) throw new NotFoundException("Opportunity not found.");
+    if (!existing) throw new NotFoundException('Opportunity not found.');
     const row = await this.opportunities.update(id, {
       ...(dto.title !== undefined ? { title: dto.title.trim() } : {}),
       ...(dto.customerId !== undefined ? { customerId: dto.customerId || null } : {}),
@@ -641,8 +615,8 @@ export class CrmPipelineService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.opportunity_updated",
-      entityType: "crm_opportunity",
+      action: 'crm.opportunity_updated',
+      entityType: 'crm_opportunity',
       entityId: id,
       ipAddress: meta.ip,
       userAgent: meta.ua,
@@ -658,10 +632,10 @@ export class CrmPipelineService {
   ) {
     this.assertWrite(user);
     const existing = await this.opportunities.findByIdAny(id);
-    if (!existing) throw new NotFoundException("Opportunity not found.");
+    if (!existing) throw new NotFoundException('Opportunity not found.');
     const stage = await this.stages.findById(dto.stageId);
     if (!stage || stage.pipelineId !== existing.pipelineId) {
-      throw new BadRequestException("Invalid stage for this pipeline.");
+      throw new BadRequestException('Invalid stage for this pipeline.');
     }
     const row = await this.opportunities.update(id, {
       stageId: dto.stageId,
@@ -671,8 +645,8 @@ export class CrmPipelineService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.opportunity_stage_changed",
-      entityType: "crm_opportunity",
+      action: 'crm.opportunity_stage_changed',
+      entityType: 'crm_opportunity',
       entityId: id,
       metadata: { stageId: dto.stageId, stageName: stage.name },
       ipAddress: meta.ip,
@@ -684,16 +658,19 @@ export class CrmPipelineService {
   private async closeOpportunity(
     user: AuthenticatedUser,
     id: string,
-    outcome: "WON" | "LOST",
+    outcome: 'WON' | 'LOST',
     meta: AuditMeta,
   ) {
     this.assertWrite(user);
     const existing = await this.opportunities.findByIdAny(id);
-    if (!existing) throw new NotFoundException("Opportunity not found.");
-    const stage = await this.stages.findByName(existing.pipelineId, outcome === "WON" ? "Won" : "Lost");
-    if (!stage) throw new BadRequestException("Pipeline missing Won/Lost stage.");
+    if (!existing) throw new NotFoundException('Opportunity not found.');
+    const stage = await this.stages.findByName(
+      existing.pipelineId,
+      outcome === 'WON' ? 'Won' : 'Lost',
+    );
+    if (!stage) throw new BadRequestException('Pipeline missing Won/Lost stage.');
     const row = await this.opportunities.update(id, {
-      status: outcome === "WON" ? CrmOpportunityStatus.WON : CrmOpportunityStatus.LOST,
+      status: outcome === 'WON' ? CrmOpportunityStatus.WON : CrmOpportunityStatus.LOST,
       stageId: stage.id,
       probability: stage.probability,
       updatedById: user.id,
@@ -701,8 +678,8 @@ export class CrmPipelineService {
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: outcome === "WON" ? "crm.opportunity_won" : "crm.opportunity_lost",
-      entityType: "crm_opportunity",
+      action: outcome === 'WON' ? 'crm.opportunity_won' : 'crm.opportunity_lost',
+      entityType: 'crm_opportunity',
       entityId: id,
       ipAddress: meta.ip,
       userAgent: meta.ua,
@@ -711,23 +688,23 @@ export class CrmPipelineService {
   }
 
   closeWon(user: AuthenticatedUser, id: string, meta: AuditMeta) {
-    return this.closeOpportunity(user, id, "WON", meta);
+    return this.closeOpportunity(user, id, 'WON', meta);
   }
 
   closeLost(user: AuthenticatedUser, id: string, meta: AuditMeta) {
-    return this.closeOpportunity(user, id, "LOST", meta);
+    return this.closeOpportunity(user, id, 'LOST', meta);
   }
 
   async archiveOpportunity(user: AuthenticatedUser, id: string, meta: AuditMeta) {
     this.assertWrite(user);
     const existing = await this.opportunities.findByIdAny(id);
-    if (!existing) throw new NotFoundException("Opportunity not found.");
+    if (!existing) throw new NotFoundException('Opportunity not found.');
     await this.opportunities.update(id, { archivedAt: new Date(), updatedById: user.id });
     await this.audit.log({
       actorId: user.id,
       tenantId: user.tenantId,
-      action: "crm.opportunity_updated",
-      entityType: "crm_opportunity",
+      action: 'crm.opportunity_updated',
+      entityType: 'crm_opportunity',
       entityId: id,
       metadata: { archived: true },
       ipAddress: meta.ip,

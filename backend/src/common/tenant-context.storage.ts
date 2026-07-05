@@ -1,4 +1,4 @@
-import { AsyncLocalStorage } from "node:async_hooks";
+import { AsyncLocalStorage } from 'node:async_hooks';
 
 export type ActiveTenantContext = {
   tenantId: string;
@@ -12,7 +12,7 @@ export const tenantContextStorage = new AsyncLocalStorage<ActiveTenantContext>()
 export function getActiveTenantContext(): ActiveTenantContext {
   const ctx = tenantContextStorage.getStore();
   if (!ctx) {
-    throw new Error("Tenant context is not available on this request.");
+    throw new Error('Tenant context is not available on this request.');
   }
   return ctx;
 }

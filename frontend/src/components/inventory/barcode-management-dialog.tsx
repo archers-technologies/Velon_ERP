@@ -1,6 +1,8 @@
-import * as React from "react";
-import JsBarcode from "jsbarcode";
-import { toast } from "sonner";
+import * as React from 'react';
+import JsBarcode from 'jsbarcode';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -8,25 +10,23 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+} from '@/components/ui/select';
+import type { InventoryProduct } from '@/lib/inventory/api';
 import {
   autoGenerateBarcode,
   isValidEan13,
   type BarcodeFormat,
-} from "@/lib/inventory/barcode/generate";
-import { openPrintPreview } from "@/lib/sales/invoicing/print";
-import type { InventoryProduct } from "@/lib/inventory/api";
+} from '@/lib/inventory/barcode/generate';
+import { openPrintPreview } from '@/lib/sales/invoicing/print';
 
 type Props = {
   open: boolean;
@@ -36,17 +36,17 @@ type Props = {
 };
 
 function renderBarcodeSvg(value: string, format: BarcodeFormat): string {
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   try {
     JsBarcode(svg, value, {
-      format: format === "EAN13" ? "EAN13" : "CODE128",
+      format: format === 'EAN13' ? 'EAN13' : 'CODE128',
       displayValue: true,
       fontSize: 14,
       height: 60,
       margin: 8,
     });
   } catch (e) {
-    throw e instanceof Error ? e : new Error("Could not render barcode.");
+    throw e instanceof Error ? e : new Error('Could not render barcode.');
   }
   return new XMLSerializer().serializeToString(svg);
 }
@@ -61,7 +61,7 @@ function barcodePrintHtml(items: { name: string; sku: string; svg: string }[]): 
         ${item.svg}
       </div>`,
     )
-    .join("");
+    .join('');
   return `<!DOCTYPE html><html><head><meta charset="utf-8"/><style>
     @page { margin: 10mm; }
     body { font-family: system-ui, sans-serif; }
@@ -73,11 +73,11 @@ function barcodePrintHtml(items: { name: string; sku: string; svg: string }[]): 
 }
 
 export function BarcodeManagementDialog({ open, onOpenChange, products, onSaveBarcode }: Props) {
-  const [format, setFormat] = React.useState<BarcodeFormat>("CODE128");
-  const [customValue, setCustomValue] = React.useState("");
+  const [format, setFormat] = React.useState<BarcodeFormat>('CODE128');
+  const [customValue, setCustomValue] = React.useState('');
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set());
   const [activeId, setActiveId] = React.useState<string | null>(null);
-  const [previewSvg, setPreviewSvg] = React.useState("");
+  const [previewSvg, setPreviewSvg] = React.useState('');
   const [busy, setBusy] = React.useState(false);
 
   const activeProduct = products.find((p) => p.id === activeId) ?? products[0] ?? null;
@@ -89,7 +89,7 @@ export function BarcodeManagementDialog({ open, onOpenChange, products, onSaveBa
   }, [open, products, activeId]);
 
   const previewValue = React.useMemo(() => {
-    if (!activeProduct) return "";
+    if (!activeProduct) return '';
     if (customValue.trim()) return customValue.trim();
     if (activeProduct.barcode?.trim()) return activeProduct.barcode.trim();
     return autoGenerateBarcode(activeProduct, format);
@@ -97,24 +97,24 @@ export function BarcodeManagementDialog({ open, onOpenChange, products, onSaveBa
 
   React.useEffect(() => {
     if (!previewValue) {
-      setPreviewSvg("");
+      setPreviewSvg('');
       return;
     }
     try {
-      if (format === "EAN13" && !isValidEan13(previewValue)) {
-        setPreviewSvg("");
+      if (format === 'EAN13' && !isValidEan13(previewValue)) {
+        setPreviewSvg('');
         return;
       }
       setPreviewSvg(renderBarcodeSvg(previewValue, format));
     } catch {
-      setPreviewSvg("");
+      setPreviewSvg('');
     }
   }, [previewValue, format]);
 
   async function applyBarcode(saveToProduct: boolean) {
     if (!activeProduct || !previewValue) return;
-    if (format === "EAN13" && !isValidEan13(previewValue)) {
-      toast.error("EAN-13 requires 13 digits with a valid check digit.");
+    if (format === 'EAN13' && !isValidEan13(previewValue)) {
+      toast.error('EAN-13 requires 13 digits with a valid check digit.');
       return;
     }
     setBusy(true);
@@ -123,9 +123,9 @@ export function BarcodeManagementDialog({ open, onOpenChange, products, onSaveBa
         await onSaveBarcode(activeProduct.id, previewValue);
         toast.success(`Barcode saved for ${activeProduct.name}`);
       }
-      setCustomValue("");
+      setCustomValue('');
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not save barcode");
+      toast.error(e instanceof Error ? e.message : 'Could not save barcode');
     } finally {
       setBusy(false);
     }
@@ -134,7 +134,7 @@ export function BarcodeManagementDialog({ open, onOpenChange, products, onSaveBa
   function printSelected() {
     const selected = products.filter((p) => selectedIds.has(p.id));
     if (!selected.length) {
-      toast.error("Select at least one product to print.");
+      toast.error('Select at least one product to print.');
       return;
     }
     try {
@@ -146,9 +146,9 @@ export function BarcodeManagementDialog({ open, onOpenChange, products, onSaveBa
           svg: renderBarcodeSvg(value, format),
         };
       });
-      openPrintPreview(barcodePrintHtml(items), "Barcode labels");
+      openPrintPreview(barcodePrintHtml(items), 'Barcode labels');
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Print failed");
+      toast.error(e instanceof Error ? e.message : 'Print failed');
     }
   }
 
@@ -162,7 +162,10 @@ export function BarcodeManagementDialog({ open, onOpenChange, products, onSaveBa
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={onOpenChange}
+    >
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Barcode management</DialogTitle>
@@ -175,13 +178,19 @@ export function BarcodeManagementDialog({ open, onOpenChange, products, onSaveBa
           <div className="space-y-3">
             <div>
               <Label>Product</Label>
-              <Select value={activeId ?? ""} onValueChange={setActiveId}>
+              <Select
+                value={activeId ?? ''}
+                onValueChange={setActiveId}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select product" />
                 </SelectTrigger>
                 <SelectContent>
                   {products.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
+                    <SelectItem
+                      key={p.id}
+                      value={p.id}
+                    >
                       {p.sku} · {p.name}
                     </SelectItem>
                   ))}
@@ -190,7 +199,10 @@ export function BarcodeManagementDialog({ open, onOpenChange, products, onSaveBa
             </div>
             <div>
               <Label>Format</Label>
-              <Select value={format} onValueChange={(v) => setFormat(v as BarcodeFormat)}>
+              <Select
+                value={format}
+                onValueChange={(v) => setFormat(v as BarcodeFormat)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -205,7 +217,9 @@ export function BarcodeManagementDialog({ open, onOpenChange, products, onSaveBa
               <Input
                 value={customValue}
                 onChange={(e) => setCustomValue(e.target.value)}
-                placeholder={activeProduct ? autoGenerateBarcode(activeProduct, format) : "Auto-generated"}
+                placeholder={
+                  activeProduct ? autoGenerateBarcode(activeProduct, format) : 'Auto-generated'
+                }
               />
             </div>
             <Button
@@ -220,8 +234,8 @@ export function BarcodeManagementDialog({ open, onOpenChange, products, onSaveBa
             </Button>
           </div>
 
-          <div className="rounded-lg border border-border bg-muted/20 p-4">
-            <div className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          <div className="border-border bg-muted/20 rounded-lg border p-4">
+            <div className="text-muted-foreground mb-2 text-xs font-medium tracking-wider uppercase">
               Print preview
             </div>
             {previewSvg ? (
@@ -230,18 +244,23 @@ export function BarcodeManagementDialog({ open, onOpenChange, products, onSaveBa
                 dangerouslySetInnerHTML={{ __html: previewSvg }}
               />
             ) : (
-              <div className="flex min-h-[120px] items-center justify-center text-sm text-muted-foreground">
+              <div className="text-muted-foreground flex min-h-[120px] items-center justify-center text-sm">
                 Enter or generate a valid barcode value
               </div>
             )}
-            <div className="mt-2 font-mono text-xs text-muted-foreground">{previewValue || "—"}</div>
+            <div className="text-muted-foreground mt-2 font-mono text-xs">
+              {previewValue || '—'}
+            </div>
           </div>
         </div>
 
-        <div className="max-h-40 overflow-y-auto rounded-md border border-border p-2">
+        <div className="border-border max-h-40 overflow-y-auto rounded-md border p-2">
           <div className="mb-2 text-xs font-semibold">Bulk print selection</div>
           {products.map((p) => (
-            <label key={p.id} className="flex items-center gap-2 py-1 text-sm">
+            <label
+              key={p.id}
+              className="flex items-center gap-2 py-1 text-sm"
+            >
               <Checkbox
                 checked={selectedIds.has(p.id)}
                 onCheckedChange={(c) => toggleId(p.id, c === true)}
@@ -254,13 +273,26 @@ export function BarcodeManagementDialog({ open, onOpenChange, products, onSaveBa
         </div>
 
         <DialogFooter className="flex-wrap gap-2">
-          <Button type="button" variant="outline" onClick={printSelected}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={printSelected}
+          >
             Print selected
           </Button>
-          <Button type="button" variant="outline" disabled={busy || !previewValue} onClick={() => applyBarcode(false)}>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={busy || !previewValue}
+            onClick={() => applyBarcode(false)}
+          >
             Use without saving
           </Button>
-          <Button type="button" disabled={busy || !previewValue} onClick={() => applyBarcode(true)}>
+          <Button
+            type="button"
+            disabled={busy || !previewValue}
+            onClick={() => applyBarcode(true)}
+          >
             Save &amp; apply
           </Button>
         </DialogFooter>

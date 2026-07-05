@@ -1,17 +1,17 @@
+import { isIndiaBilling, type PlanRegionalPrices } from '@velon/shared';
 import {
   countryOptions,
+  currencyLocale,
   currencyOptions,
   getCountryDefaultCurrency,
   getInrPerUnit,
-  currencyLocale,
   type PricingCountry,
   type PricingCurrency,
-} from "@/lib/shared/country-currency-catalog";
-import { isIndiaBilling, type PlanRegionalPrices } from "@velon/shared";
+} from '@/lib/shared/country-currency-catalog';
 
 export type { PricingCountry, PricingCurrency };
 
-export type PricingLanguage = "en" | "hi" | "ar";
+export type PricingLanguage = 'en' | 'hi' | 'ar';
 
 export type PricingPreference = {
   country: PricingCountry;
@@ -19,13 +19,13 @@ export type PricingPreference = {
   language: PricingLanguage;
 };
 
-export const PRICING_PREFERENCE_KEY = "velon-pricing-preference-v2";
-export const PRICING_PROMPT_DISMISSED_KEY = "velon-pricing-prompt-dismissed-v2";
+export const PRICING_PREFERENCE_KEY = 'velon-pricing-preference-v2';
+export const PRICING_PROMPT_DISMISSED_KEY = 'velon-pricing-prompt-dismissed-v2';
 
 export const defaultPricingPreference: PricingPreference = {
-  country: "IN",
-  currency: "INR",
-  language: "en",
+  country: 'IN',
+  currency: 'INR',
+  language: 'en',
 };
 
 export { countryOptions, currencyOptions, getCountryDefaultCurrency };
@@ -33,10 +33,10 @@ export { countryOptions, currencyOptions, getCountryDefaultCurrency };
 export function formatMarketingMonthlyPrice(amount: number, currency: PricingCurrency) {
   const rounded = Math.round(amount * 100) / 100;
 
-  const locale = currencyLocale[currency] ?? "en-US";
+  const locale = currencyLocale[currency] ?? 'en-US';
   try {
     return new Intl.NumberFormat(locale, {
-      style: "currency",
+      style: 'currency',
       currency,
       maximumFractionDigits: 0,
     }).format(Math.max(rounded, 0));
@@ -52,21 +52,21 @@ export function resolveMarketingPlanPrice(
 ): { amount: number; currency: PricingCurrency } {
   if (!regionalPrices) {
     if (isIndiaBilling(preference.country, preference.currency)) {
-      return { amount: fallbackMonthlyPrice, currency: "INR" };
+      return { amount: fallbackMonthlyPrice, currency: 'INR' };
     }
-    if (preference.currency === "USD") {
-      return { amount: fallbackMonthlyPrice, currency: "USD" };
+    if (preference.currency === 'USD') {
+      return { amount: fallbackMonthlyPrice, currency: 'USD' };
     }
     const inrPerUnit = getInrPerUnit(preference.currency);
     return { amount: fallbackMonthlyPrice / inrPerUnit, currency: preference.currency };
   }
 
   if (isIndiaBilling(preference.country, preference.currency)) {
-    return { amount: regionalPrices.india.monthlyPrice, currency: "INR" };
+    return { amount: regionalPrices.india.monthlyPrice, currency: 'INR' };
   }
 
-  if (preference.currency === "USD") {
-    return { amount: regionalPrices.global.monthlyPrice, currency: "USD" };
+  if (preference.currency === 'USD') {
+    return { amount: regionalPrices.global.monthlyPrice, currency: 'USD' };
   }
 
   const inrPerUnit = getInrPerUnit(preference.currency);
@@ -89,11 +89,11 @@ export function formatPlanPriceForPreference(
 }
 
 function isValidLanguage(value: unknown): value is PricingLanguage {
-  return value === "en" || value === "hi" || value === "ar";
+  return value === 'en' || value === 'hi' || value === 'ar';
 }
 
 export function readPricingPreference(): PricingPreference {
-  if (typeof window === "undefined") return defaultPricingPreference;
+  if (typeof window === 'undefined') return defaultPricingPreference;
 
   try {
     const raw = window.localStorage.getItem(PRICING_PREFERENCE_KEY);
@@ -118,59 +118,66 @@ export function readPricingPreference(): PricingPreference {
 }
 
 export function savePricingPreference(preference: PricingPreference) {
-  if (typeof window === "undefined") return;
+  if (typeof window === 'undefined') return;
   window.localStorage.setItem(PRICING_PREFERENCE_KEY, JSON.stringify(preference));
   document.documentElement.lang = preference.language;
 }
 
 const TIMEZONE_COUNTRY: Record<string, PricingCountry> = {
-  "Asia/Kolkata": "IN",
-  "Asia/Calcutta": "IN",
-  "Asia/Dubai": "AE",
-  "Asia/Riyadh": "SA",
-  "Asia/Muscat": "OM",
-  "Asia/Bahrain": "BH",
-  "Asia/Qatar": "QA",
-  "Asia/Kuwait": "KW",
-  "Asia/Singapore": "SG",
-  "Europe/London": "GB",
-  "America/New_York": "US",
-  "America/Los_Angeles": "US",
-  "America/Chicago": "US",
+  'Asia/Kolkata': 'IN',
+  'Asia/Calcutta': 'IN',
+  'Asia/Dubai': 'AE',
+  'Asia/Riyadh': 'SA',
+  'Asia/Muscat': 'OM',
+  'Asia/Bahrain': 'BH',
+  'Asia/Qatar': 'QA',
+  'Asia/Kuwait': 'KW',
+  'Asia/Singapore': 'SG',
+  'Europe/London': 'GB',
+  'America/New_York': 'US',
+  'America/Los_Angeles': 'US',
+  'America/Chicago': 'US',
 };
 
 export function detectVisitorPricingPreference(): PricingPreference {
-  if (typeof window === "undefined") return defaultPricingPreference;
+  if (typeof window === 'undefined') return defaultPricingPreference;
 
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const languages = navigator.languages?.length ? navigator.languages : [navigator.language];
-  const primaryLang = languages[0]?.toLowerCase() ?? "en";
+  const primaryLang = languages[0]?.toLowerCase() ?? 'en';
 
-  let country: PricingCountry = TIMEZONE_COUNTRY[timeZone] ?? "OTHER";
-  if (country === "OTHER") {
-    if (languages.some((l) => /-IN\b/i.test(l))) country = "IN";
+  let country: PricingCountry = TIMEZONE_COUNTRY[timeZone] ?? 'OTHER';
+  if (country === 'OTHER') {
+    if (languages.some((l) => /-IN\b/i.test(l))) country = 'IN';
     else if (languages.some((l) => /-AE\b|-SA\b|-BH\b|-OM\b|-QA\b|-KW\b/i.test(l))) {
       const match = languages.find((l) => /-(AE|SA|BH|OM|QA|KW)\b/i.test(l));
-      const code = match?.split("-")[1]?.toUpperCase();
-      if (code === "AE" || code === "SA" || code === "BH" || code === "OM" || code === "QA" || code === "KW") {
+      const code = match?.split('-')[1]?.toUpperCase();
+      if (
+        code === 'AE' ||
+        code === 'SA' ||
+        code === 'BH' ||
+        code === 'OM' ||
+        code === 'QA' ||
+        code === 'KW'
+      ) {
         country = code;
       } else {
-        country = "AE";
+        country = 'AE';
       }
-    } else if (languages.some((l) => /-GB\b/i.test(l))) country = "GB";
-    else if (languages.some((l) => /-US\b/i.test(l))) country = "US";
+    } else if (languages.some((l) => /-GB\b/i.test(l))) country = 'GB';
+    else if (languages.some((l) => /-US\b/i.test(l))) country = 'US';
   }
 
   const currency = getCountryDefaultCurrency(country);
-  let language: PricingLanguage = "en";
-  if (primaryLang.startsWith("hi")) language = "hi";
-  else if (primaryLang.startsWith("ar")) language = "ar";
+  let language: PricingLanguage = 'en';
+  if (primaryLang.startsWith('hi')) language = 'hi';
+  else if (primaryLang.startsWith('ar')) language = 'ar';
 
   return { country, currency, language };
 }
 
 export function applyPricingLanguage(language: PricingLanguage) {
-  if (typeof document !== "undefined") {
+  if (typeof document !== 'undefined') {
     document.documentElement.lang = language;
   }
 }

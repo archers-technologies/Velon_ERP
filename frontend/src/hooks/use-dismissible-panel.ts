@@ -1,11 +1,11 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState } from 'react';
 
 /** Session-scoped dismiss for alert-style panels (survives navigation until the tab closes). */
 export function useDismissiblePanel(storageKey: string) {
   const [dismissed, setDismissed] = useState(() => {
-    if (typeof window === "undefined") return false;
+    if (typeof window === 'undefined') return false;
     try {
-      return sessionStorage.getItem(storageKey) === "1";
+      return sessionStorage.getItem(storageKey) === '1';
     } catch {
       return false;
     }
@@ -13,7 +13,7 @@ export function useDismissiblePanel(storageKey: string) {
 
   const dismiss = useCallback(() => {
     try {
-      sessionStorage.setItem(storageKey, "1");
+      sessionStorage.setItem(storageKey, '1');
     } catch {
       /* ignore quota / private mode */
     }

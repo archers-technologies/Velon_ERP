@@ -1,27 +1,27 @@
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { useState } from "react";
-import { toast } from "sonner";
-import { AuthPortalShell } from "@/components/auth/auth-portal-shell";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { apiLogin } from "@/lib/api/client";
-import { isApiEnabled } from "@/lib/api/config";
-import { saveSession } from "@/lib/auth/session";
-import { redirectIfAdminAuthenticated } from "@/lib/auth/route-guard";
-import { formatApiError, loginSearch } from "@/lib/auth/login-utils";
-import { VELON_CONTACT_EMAIL } from "@velon/shared";
-import { Activity, FileKey2, Headphones, LockKeyhole, Server, ShieldAlert } from "lucide-react";
+import { useState } from 'react';
+import { createFileRoute, Link, useRouter } from '@tanstack/react-router';
+import { Activity, FileKey2, Headphones, LockKeyhole, Server, ShieldAlert } from 'lucide-react';
+import { toast } from 'sonner';
+import { VELON_CONTACT_EMAIL } from '@velon/shared';
+import { AuthPortalShell } from '@/components/auth/auth-portal-shell';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { apiLogin } from '@/lib/api/client';
+import { isApiEnabled } from '@/lib/api/config';
+import { formatApiError, loginSearch } from '@/lib/auth/login-utils';
+import { redirectIfAdminAuthenticated } from '@/lib/auth/route-guard';
+import { saveSession } from '@/lib/auth/session';
 
-export const Route = createFileRoute("/platform/login")({
+export const Route = createFileRoute('/platform/login')({
   beforeLoad: () => {
     redirectIfAdminAuthenticated();
   },
   head: () => ({
     meta: [
-      { title: "Platform Admin · Velon-ERP" },
+      { title: 'Platform Admin · Velon-ERP' },
       {
-        name: "description",
-        content: "Secure sign-in for Velon-ERP platform operators and super administrators.",
+        name: 'description',
+        content: 'Secure sign-in for Velon-ERP platform operators and super administrators.',
       },
     ],
   }),
@@ -31,18 +31,18 @@ export const Route = createFileRoute("/platform/login")({
 const platformSignals = [
   {
     icon: ShieldAlert,
-    title: "Privileged access",
-    desc: "Super Admin, billing ops, and security roles only. All actions are audited.",
+    title: 'Privileged access',
+    desc: 'Super Admin, billing ops, and security roles only. All actions are audited.',
   },
   {
     icon: Server,
-    title: "Multi-tenant control",
-    desc: "Manage tenants, subscriptions, infrastructure, and platform-wide policies.",
+    title: 'Multi-tenant control',
+    desc: 'Manage tenants, subscriptions, infrastructure, and platform-wide policies.',
   },
   {
     icon: FileKey2,
-    title: "MFA enforced",
-    desc: "Step-up authentication required for destructive or cross-tenant operations.",
+    title: 'MFA enforced',
+    desc: 'Step-up authentication required for destructive or cross-tenant operations.',
   },
 ];
 
@@ -50,34 +50,34 @@ function PlatformLoginPage() {
   const router = useRouter();
   const useApi = isApiEnabled();
   const [busy, setBusy] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   async function onSignIn(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     try {
       if (!useApi) {
-        toast.error("Configure VITE_API_URL — demo platform auth was removed in Phase 2C.");
+        toast.error('Configure VITE_API_URL — demo platform auth was removed in Phase 2C.');
         return;
       }
       const res = await apiLogin(email, password);
-      if (res.route !== "admin") {
-        toast.error("This portal is for platform administrators only. Use workspace sign-in.");
+      if (res.route !== 'admin') {
+        toast.error('This portal is for platform administrators only. Use workspace sign-in.');
         return;
       }
       saveSession({
         accessToken: res.accessToken,
         refreshToken: res.refreshToken,
-        route: "admin",
+        route: 'admin',
         email,
-        scope: res.scope ?? "platform",
+        scope: res.scope ?? 'platform',
       });
-      toast.success("Signed in to platform control plane");
+      toast.success('Signed in to platform control plane');
       // Full navigation avoids a loader race while pathname is still /platform/login.
-      window.location.assign("/admin");
+      window.location.assign('/admin');
     } catch (err) {
-      toast.error(formatApiError(err, "Platform sign-in failed"));
+      toast.error(formatApiError(err, 'Platform sign-in failed'));
     } finally {
       setBusy(false);
     }
@@ -96,22 +96,31 @@ function PlatformLoginPage() {
       complianceText={
         <>
           Restricted to authorized Velon platform staff. Impersonation, tenant freeze, and billing
-          changes are logged with tamper-evident audit trails. See{" "}
-          <Link to="/privacy" className="text-amber-100">
+          changes are logged with tamper-evident audit trails. See{' '}
+          <Link
+            to="/privacy"
+            className="text-amber-100"
+          >
             Privacy Policy
-          </Link>{" "}
-          and{" "}
-          <Link to="/terms" className="text-amber-100">
+          </Link>{' '}
+          and{' '}
+          <Link
+            to="/terms"
+            className="text-amber-100"
+          >
             Terms
           </Link>
           .
         </>
       }
-      crossLink={{ label: "Tenant workspace sign-in →", to: "/login", search: loginSearch() }}
+      crossLink={{ label: 'Tenant workspace sign-in →', to: '/login', search: loginSearch() }}
     >
-      <form className="space-y-4" onSubmit={onSignIn}>
+      <form
+        className="space-y-4"
+        onSubmit={onSignIn}
+      >
         <div className="space-y-1">
-          <p className="text-xs font-medium uppercase tracking-wider text-white/45">
+          <p className="text-xs font-medium tracking-wider text-white/45 uppercase">
             Platform administrator
           </p>
           <p className="text-sm text-white/70">
@@ -142,7 +151,7 @@ function PlatformLoginPage() {
           disabled={busy}
           className="w-full bg-amber-500 text-black hover:bg-amber-400"
         >
-          {busy ? "Verifying…" : "Enter control plane"}
+          {busy ? 'Verifying…' : 'Enter control plane'}
         </Button>
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-4 text-xs text-white/45">
           <span className="flex items-center gap-1.5">

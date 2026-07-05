@@ -1,8 +1,12 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { TenantPlan } from "@velon/database";
-import { PLAN_CATALOG, planRegionalPricesFromDefinition, yearlyPriceFromMonthly } from "@velon/shared";
-import { PrismaService } from "../prisma/prisma.service";
-import type { UpdatePlanDefinitionDto } from "./dto/billing.dto";
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { TenantPlan } from '@velon/database';
+import {
+  PLAN_CATALOG,
+  planRegionalPricesFromDefinition,
+  yearlyPriceFromMonthly,
+} from '@velon/shared';
+import { PrismaService } from '../prisma/prisma.service';
+import type { UpdatePlanDefinitionDto } from './dto/billing.dto';
 
 export type PlanDefinitionView = {
   id: TenantPlan;
@@ -17,8 +21,8 @@ export type PlanDefinitionView = {
   globalMonthlyPrice: number;
   globalAnnualPrice: number;
   regionalPrices: {
-    india: { monthlyPrice: number; annualPrice: number; currency: "INR" };
-    global: { monthlyPrice: number; annualPrice: number; currency: "USD" };
+    india: { monthlyPrice: number; annualPrice: number; currency: 'INR' };
+    global: { monthlyPrice: number; annualPrice: number; currency: 'USD' };
   };
   storageLimitGb: number;
   invoiceLimitMo: number | null;
@@ -55,15 +59,15 @@ export class PlanDefinitionService {
       seatLimit: entry.seatLimit,
       monthlyPrice: regionalPrices.india.monthlyPrice,
       annualPrice: regionalPrices.india.annualPrice,
-      currency: "INR",
+      currency: 'INR',
       indiaMonthlyPrice: regionalPrices.india.monthlyPrice,
       indiaAnnualPrice: regionalPrices.india.annualPrice,
       globalMonthlyPrice: regionalPrices.global.monthlyPrice,
       globalAnnualPrice: regionalPrices.global.annualPrice,
       regionalPrices,
-      storageLimitGb: plan === "STARTER" ? 10 : plan === "GROWTH" ? 50 : 500,
-      invoiceLimitMo: plan === "STARTER" ? 500 : plan === "GROWTH" ? 5000 : null,
-      branchLimit: plan === "STARTER" ? 1 : plan === "GROWTH" ? 5 : null,
+      storageLimitGb: plan === 'STARTER' ? 10 : plan === 'GROWTH' ? 50 : 500,
+      invoiceLimitMo: plan === 'STARTER' ? 500 : plan === 'GROWTH' ? 5000 : null,
+      branchLimit: plan === 'STARTER' ? 1 : plan === 'GROWTH' ? 5 : null,
       trialDays: 14,
       isEnabled: true,
       description: entry.description,
@@ -71,9 +75,9 @@ export class PlanDefinitionService {
       modules: {
         hrm: true,
         crm: true,
-        finance: plan !== "STARTER",
+        finance: plan !== 'STARTER',
         inventory: true,
-        manufacturing: plan === "ENTERPRISE",
+        manufacturing: plan === 'ENTERPRISE',
       },
     };
   }
@@ -143,7 +147,7 @@ export class PlanDefinitionService {
 
   async listCatalog(): Promise<PlanDefinitionView[]> {
     const rows = await this.prisma.client.planDefinition.findMany({
-      orderBy: { plan: "asc" },
+      orderBy: { plan: 'asc' },
     });
     if (rows.length === 0) {
       return (Object.values(TenantPlan) as TenantPlan[]).map((p) => this.fallbackFromShared(p));
@@ -158,7 +162,7 @@ export class PlanDefinitionService {
 
   async updatePlan(plan: TenantPlan, dto: UpdatePlanDefinitionDto, actorId: string) {
     const existing = await this.prisma.client.planDefinition.findUnique({ where: { plan } });
-    if (!existing) throw new NotFoundException("Plan not found.");
+    if (!existing) throw new NotFoundException('Plan not found.');
 
     const updated = await this.prisma.client.planDefinition.update({
       where: { plan },
@@ -166,7 +170,7 @@ export class PlanDefinitionService {
         displayName: dto.displayName?.trim() ?? undefined,
         monthlyPrice: dto.indiaMonthlyPrice ?? dto.monthlyPrice,
         annualPrice: dto.indiaAnnualPrice ?? dto.annualPrice,
-        currency: dto.currency?.trim().toUpperCase() ?? "INR",
+        currency: dto.currency?.trim().toUpperCase() ?? 'INR',
         indiaMonthlyPrice: dto.indiaMonthlyPrice ?? dto.monthlyPrice,
         indiaAnnualPrice: dto.indiaAnnualPrice ?? dto.annualPrice,
         globalMonthlyPrice: dto.globalMonthlyPrice,
@@ -188,8 +192,8 @@ export class PlanDefinitionService {
     await this.prisma.client.auditLog.create({
       data: {
         actorId,
-        action: "billing.plan_definition_updated",
-        entityType: "plan",
+        action: 'billing.plan_definition_updated',
+        entityType: 'plan',
         entityId: plan,
         metadata: dto as object,
       },

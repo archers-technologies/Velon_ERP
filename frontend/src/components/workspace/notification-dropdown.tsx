@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from "react";
-import { Link } from "@tanstack/react-router";
-import { Bell } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { useEffect, useRef, useState } from 'react';
+import { Link } from '@tanstack/react-router';
+import { Bell } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 export type NotificationPreview = {
   id: string;
@@ -13,16 +13,16 @@ export type NotificationPreview = {
 };
 
 function priorityClass(priority?: string): string {
-  if (priority === "critical") return "border-destructive/30 bg-destructive/10 text-destructive";
-  if (priority === "high" || priority === "warning")
-    return "border-warning/40 bg-warning/15 text-warning-foreground";
-  return "border-border bg-muted/50 text-muted-foreground";
+  if (priority === 'critical') return 'border-destructive/30 bg-destructive/10 text-destructive';
+  if (priority === 'high' || priority === 'warning')
+    return 'border-warning/40 bg-warning/15 text-warning-foreground';
+  return 'border-border bg-muted/50 text-muted-foreground';
 }
 
 export function NotificationDropdown({
   items,
   viewAllHref,
-  viewAllLabel = "View All Notifications",
+  viewAllLabel = 'View All Notifications',
   unreadCount = 0,
   onMarkAllRead,
 }: {
@@ -43,8 +43,8 @@ export function NotificationDropdown({
         setOpen(false);
       }
     };
-    document.addEventListener("mousedown", onPointerDown);
-    return () => document.removeEventListener("mousedown", onPointerDown);
+    document.addEventListener('mousedown', onPointerDown);
+    return () => document.removeEventListener('mousedown', onPointerDown);
   }, [open]);
 
   return (
@@ -65,21 +65,21 @@ export function NotificationDropdown({
       >
         <Bell className="h-4 w-4" />
         {showBadge ? (
-          <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-foreground" />
+          <span className="bg-foreground absolute top-2 right-2 h-1.5 w-1.5 rounded-full" />
         ) : null}
       </Button>
       {open ? (
         <div
           className={cn(
-            "absolute right-0 top-full z-50 mt-2 w-[min(92vw,360px)] rounded-xl border border-border bg-popover text-popover-foreground shadow-lg",
-            "animate-in fade-in-0 zoom-in-95",
+            'border-border bg-popover text-popover-foreground absolute top-full right-0 z-50 mt-2 w-[min(92vw,360px)] rounded-xl border shadow-lg',
+            'animate-in fade-in-0 zoom-in-95',
           )}
         >
-          <div className="flex items-start justify-between gap-2 border-b border-border px-4 py-3">
+          <div className="border-border flex items-start justify-between gap-2 border-b px-4 py-3">
             <div>
               <p className="text-sm font-semibold">Notifications</p>
-              <p className="text-xs text-muted-foreground">
-                {unreadCount > 0 ? `${unreadCount} unread` : "Recent alerts and updates"}
+              <p className="text-muted-foreground text-xs">
+                {unreadCount > 0 ? `${unreadCount} unread` : 'Recent alerts and updates'}
               </p>
             </div>
             {onMarkAllRead && unreadCount > 0 ? (
@@ -96,7 +96,7 @@ export function NotificationDropdown({
           </div>
           <div className="max-h-80 overflow-y-auto p-2">
             {items.length === 0 ? (
-              <p className="px-2 py-6 text-center text-sm text-muted-foreground">
+              <p className="text-muted-foreground px-2 py-6 text-center text-sm">
                 No recent notifications
               </p>
             ) : (
@@ -104,14 +104,14 @@ export function NotificationDropdown({
                 {items.slice(0, 8).map((item) => (
                   <li
                     key={item.id}
-                    className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2.5"
+                    className="border-border/60 bg-muted/20 rounded-lg border px-3 py-2.5"
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <p className="text-sm font-medium leading-snug">{item.title}</p>
+                      <p className="text-sm leading-snug font-medium">{item.title}</p>
                       {item.priority ? (
                         <span
                           className={cn(
-                            "shrink-0 rounded-md border px-1.5 py-0.5 text-[10px] capitalize",
+                            'shrink-0 rounded-md border px-1.5 py-0.5 text-[10px] capitalize',
                             priorityClass(item.priority),
                           )}
                         >
@@ -120,10 +120,12 @@ export function NotificationDropdown({
                       ) : null}
                     </div>
                     {item.detail ? (
-                      <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{item.detail}</p>
+                      <p className="text-muted-foreground mt-1 line-clamp-2 text-xs">
+                        {item.detail}
+                      </p>
                     ) : null}
                     {item.timestamp ? (
-                      <p className="mt-1.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+                      <p className="text-muted-foreground mt-1.5 text-[10px] tracking-wide uppercase">
                         {item.timestamp}
                       </p>
                     ) : null}
@@ -132,7 +134,7 @@ export function NotificationDropdown({
               </ul>
             )}
           </div>
-          <div className="border-t border-border p-2">
+          <div className="border-border border-t p-2">
             <Button
               asChild
               variant="outline"

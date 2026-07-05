@@ -1,5 +1,5 @@
-import type { Prisma, PrismaClient } from "@velon/database";
-import { isPlatformRole } from "@velon/shared";
+import type { Prisma, PrismaClient } from '@velon/database';
+import { isPlatformRole } from '@velon/shared';
 
 type Db = PrismaClient | Prisma.TransactionClient;
 
@@ -17,10 +17,10 @@ export async function signupEmailBlockReason(db: Db, email: string): Promise<str
   });
   if (!user) return null;
   if (isPlatformRole(user.role)) {
-    return "This email is registered to a platform account and cannot create a workspace.";
+    return 'This email is registered to a platform account and cannot create a workspace.';
   }
   if (user.memberships.length > 0) {
-    return "This email is already registered. One email can own only one company workspace.";
+    return 'This email is already registered. One email can own only one company workspace.';
   }
   return null;
 }

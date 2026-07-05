@@ -1,4 +1,4 @@
-import { apiFetch } from "@/lib/api/client";
+import { apiFetch } from '@/lib/api/client';
 
 export type InventoryCategory = {
   id: string;
@@ -21,7 +21,76 @@ export type InventoryProduct = {
   barcode: string | null;
   imageDataUrl: string | null;
   categoryId: string | null;
+  hasVariants?: boolean;
+  variantCount?: number;
   category?: { id: string; name: string } | null;
+  attributes?: ProductVariantAttribute[];
+  variants?: ProductVariant[];
+};
+
+export type ProductVariantAttribute = {
+  id: string;
+  name: string;
+  sortOrder: number;
+  values: Array<{ id: string; value: string; sortOrder: number }>;
+};
+
+export type ProductVariant = {
+  id: string;
+  label: string;
+  sku: string;
+  barcode: string | null;
+  unitPrice: number;
+  costPrice: number;
+  salePrice: number | null;
+  effectivePrice: number;
+  imageDataUrl: string | null;
+  status: string;
+  sortOrder: number;
+  totalStock: number;
+  options: Array<{
+    attributeId: string;
+    attributeName: string;
+    valueId: string;
+    value: string;
+  }>;
+  stock?: Array<{
+    id: string;
+    warehouseId: string;
+    warehouseName: string;
+    quantity: number;
+    available: number;
+    minStock: number;
+    reorderLevel: number;
+  }>;
+};
+
+export type ProductVariantAttributeInput = {
+  name: string;
+  values: string[];
+};
+
+export type ProductVariantInput = {
+  id?: string;
+  label?: string;
+  sku: string;
+  barcode?: string;
+  unitPrice?: number;
+  costPrice?: number;
+  salePrice?: number;
+  quantity?: number;
+  minStock?: number;
+  reorderLevel?: number;
+  warehouseId?: string;
+  imageDataUrl?: string;
+  status?: string;
+  optionValues?: Array<{ attributeName: string; value: string }>;
+};
+
+export type ProductVariantsPayload = {
+  hasVariants: boolean;
+  attributes?: ProductVariantAttributeInput[];
+  variants?: ProductVariantInput[];
 };
 
 export type InventoryWarehouse = {
@@ -41,11 +110,11 @@ export type InventoryStockRow = {
   name: string;
   site: string;
   quantity: number;
-  stockLevel: "healthy" | "low" | "critical";
+  stockLevel: 'healthy' | 'low' | 'critical';
   safetyStock: number;
   reorderPoint: number;
-  abcClass: "A" | "B" | "C";
-  velocity: "fast" | "medium" | "slow";
+  abcClass: 'A' | 'B' | 'C';
+  velocity: 'fast' | 'medium' | 'slow';
   batchTracked: boolean;
   variantParent?: string;
   unitPrice: number;
@@ -54,14 +123,14 @@ export type InventoryStockRow = {
 function mapProduct(row: Record<string, unknown>): InventoryProduct {
   const price = row.unitPrice;
   const unitPrice =
-    price && typeof price === "object" && "toNumber" in price
+    price && typeof price === 'object' && 'toNumber' in price
       ? (price as { toNumber(): number }).toNumber()
       : Number(price ?? 0);
   return { ...row, unitPrice } as InventoryProduct;
 }
 
 export async function listInventoryCategories() {
-  return apiFetch<InventoryCategory[]>("/inventory/categories");
+  return apiFetch<InventoryCategory[]>('/inventory/categories');
 }
 
 export async function createInventoryCategory(body: {
@@ -69,8 +138,8 @@ export async function createInventoryCategory(body: {
   description?: string;
   parentId?: string;
 }) {
-  return apiFetch<InventoryCategory>("/inventory/categories", {
-    method: "POST",
+  return apiFetch<InventoryCategory>('/inventory/categories', {
+    method: 'POST',
     body: JSON.stringify(body),
   });
 }
@@ -80,21 +149,21 @@ export async function updateInventoryCategory(
   body: { name?: string; description?: string; parentId?: string },
 ) {
   return apiFetch<InventoryCategory>(`/inventory/categories/${id}`, {
-    method: "PATCH",
+    method: 'PATCH',
     body: JSON.stringify(body),
   });
 }
 
 export async function deleteInventoryCategory(id: string) {
-  return apiFetch<{ ok: boolean }>(`/inventory/categories/${id}`, { method: "DELETE" });
+  return apiFetch<{ ok: boolean }>(`/inventory/categories/${id}`, { method: 'DELETE' });
 }
 
 export async function listInventoryStock() {
-  return apiFetch<InventoryStockRow[]>("/inventory/stock");
+  return apiFetch<InventoryStockRow[]>('/inventory/stock');
 }
 
 export async function listInventoryProducts(search?: string) {
-  const q = search ? `?search=${encodeURIComponent(search)}` : "";
+  const q = search ? `?search=${encodeURIComponent(search)}` : '';
   const rows = await apiFetch<Record<string, unknown>[]>(`/inventory/products${q}`);
   return rows.map(mapProduct);
 }
@@ -104,13 +173,18 @@ export async function getInventoryProduct(id: string) {
   return mapProduct(row);
 }
 
+export async function searchInventoryVariants(query: string) {
+  const q = encodeURIComponent(query);
+  return apiFetch<ProductVariant[]>(`/inventory/variants/search?q=${q}`);
+}
+
 export async function listInventoryWarehouses() {
-  return apiFetch<InventoryWarehouse[]>("/inventory/warehouses");
+  return apiFetch<InventoryWarehouse[]>('/inventory/warehouses');
 }
 
 export async function createInventoryProduct(body: Record<string, unknown>) {
-  const row = await apiFetch<Record<string, unknown>>("/inventory/products", {
-    method: "POST",
+  const row = await apiFetch<Record<string, unknown>>('/inventory/products', {
+    method: 'POST',
     body: JSON.stringify(body),
   });
   return mapProduct(row);
@@ -118,7 +192,7 @@ export async function createInventoryProduct(body: Record<string, unknown>) {
 
 export async function updateInventoryProduct(id: string, body: Record<string, unknown>) {
   const row = await apiFetch<Record<string, unknown>>(`/inventory/products/${id}`, {
-    method: "PATCH",
+    method: 'PATCH',
     body: JSON.stringify(body),
   });
   return mapProduct(row);
@@ -132,8 +206,8 @@ export async function createInventoryWarehouse(body: {
   email?: string;
   managerName?: string;
 }) {
-  return apiFetch<InventoryWarehouse>("/inventory/warehouses", {
-    method: "POST",
+  return apiFetch<InventoryWarehouse>('/inventory/warehouses', {
+    method: 'POST',
     body: JSON.stringify(body),
   });
 }
@@ -151,14 +225,14 @@ export async function updateInventoryWarehouse(
   },
 ) {
   return apiFetch<InventoryWarehouse>(`/inventory/warehouses/${id}`, {
-    method: "PATCH",
+    method: 'PATCH',
     body: JSON.stringify(body),
   });
 }
 
 export async function updateInventoryStock(id: string, body: Record<string, unknown>) {
   return apiFetch<InventoryStockRow>(`/inventory/stock/${id}`, {
-    method: "PATCH",
+    method: 'PATCH',
     body: JSON.stringify(body),
   });
 }

@@ -1,13 +1,13 @@
-import { PlatformService } from "./platform.service";
-import { IDS } from "../../test/helpers/fixtures";
+import { IDS } from '../../test/helpers/fixtures';
 import {
   createMockAudit,
   createMockPrisma,
   createMockPrismaClient,
   createMockRedis,
-} from "../../test/helpers/mocks";
+} from '../../test/helpers/mocks';
+import { PlatformService } from './platform.service';
 
-describe("PlatformService", () => {
+describe('PlatformService', () => {
   const client = createMockPrismaClient({
     platformRevision: {
       findUnique: jest.fn(),
@@ -20,18 +20,18 @@ describe("PlatformService", () => {
 
   beforeEach(() => jest.clearAllMocks());
 
-  it("builds sync state from redis and audit mocks", async () => {
+  it('builds sync state from redis and audit mocks', async () => {
     redis.getRevision.mockResolvedValue(3);
     (client.platformRevision as { findUnique: jest.Mock }).findUnique.mockResolvedValue({
-      id: "main",
+      id: 'main',
       revision: 2,
-      updatedAt: new Date("2026-01-01"),
+      updatedAt: new Date('2026-01-01'),
     });
     client.auditLog.findMany.mockResolvedValue([
       {
-        action: "auth.login",
-        createdAt: new Date("2026-01-02"),
-        entityType: "user",
+        action: 'auth.login',
+        createdAt: new Date('2026-01-02'),
+        entityType: 'user',
         entityId: IDS.user,
       },
     ]);
@@ -39,27 +39,27 @@ describe("PlatformService", () => {
     const state = await service.getSyncState();
     expect(state.revision).toBe(3);
     expect(state.postgresConnected).toBe(true);
-    expect(state.events[0].kind).toBe("auth.login");
+    expect(state.events[0].kind).toBe('auth.login');
   });
 
-  it("aggregates overview metrics from tenant mocks", async () => {
+  it('aggregates overview metrics from tenant mocks', async () => {
     client.tenant.findMany.mockResolvedValue([
       {
         id: IDS.tenant,
-        name: "Acme",
-        plan: "STARTER",
-        status: "ACTIVE",
+        name: 'Acme',
+        plan: 'STARTER',
+        status: 'ACTIVE',
         mrr: 29,
-        country: "US",
+        country: 'US',
         usersCount: 3,
       },
       {
-        id: "tenant-2",
-        name: "Beta",
-        plan: "GROWTH",
-        status: "TRIAL",
+        id: 'tenant-2',
+        name: 'Beta',
+        plan: 'GROWTH',
+        status: 'TRIAL',
         mrr: 99,
-        country: "IN",
+        country: 'IN',
         usersCount: 5,
       },
     ]);

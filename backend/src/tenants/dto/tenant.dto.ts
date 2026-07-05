@@ -1,6 +1,6 @@
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { IndustryTemplate, TenantPlan, TenantStatus } from "@velon/database";
-import { IsEnum, IsInt, IsNumber, IsOptional, IsString, Min, MinLength } from "class-validator";
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsEnum, IsInt, IsNumber, IsOptional, IsString, Min, MinLength } from 'class-validator';
+import { IndustryTemplate, TenantPlan, TenantStatus } from '@velon/database';
 
 export class CreateTenantDto {
   @ApiProperty()

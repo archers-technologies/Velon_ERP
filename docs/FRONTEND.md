@@ -26,12 +26,12 @@ frontend/src/
 
 File-based routes in `frontend/src/routes/` generate `frontend/src/routeTree.gen.ts` via the TanStack router plugin.
 
-| Area | Route files |
-|------|-------------|
+| Area      | Route files                                                               |
+| --------- | ------------------------------------------------------------------------- |
 | Marketing | `index`, `features`, `pricing`, `about`, `contact`, `demo`, `help`, legal |
-| Auth | `login`, `forgot-password`, `platform.login`, `invite.$token` |
-| Workspace | `app.tsx` layout + `app.*.tsx` children |
-| Admin | `admin.tsx` layout + `admin.*.tsx` children |
+| Auth      | `login`, `forgot-password`, `platform.login`, `invite.$token`             |
+| Workspace | `app.tsx` layout + `app.*.tsx` children                                   |
+| Admin     | `admin.tsx` layout + `admin.*.tsx` children                               |
 
 ## Shells
 

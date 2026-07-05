@@ -1,12 +1,7 @@
-import {
-  CallHandler,
-  ExecutionContext,
-  Injectable,
-  NestInterceptor,
-} from "@nestjs/common";
-import { Observable } from "rxjs";
-import type { AuthenticatedUser } from "../auth/auth.types";
-import { runWithTenantContext } from "./tenant-context.storage";
+import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
+import { Observable } from 'rxjs';
+import type { AuthenticatedUser } from '../auth/auth.types';
+import { runWithTenantContext } from './tenant-context.storage';
 
 /** Binds JWT tenant context for the full request so repositories auto-scope queries. */
 @Injectable()
@@ -16,7 +11,7 @@ export class TenantContextInterceptor implements NestInterceptor {
     const user = req.user;
     if (
       !user ||
-      user.scope !== "tenant" ||
+      user.scope !== 'tenant' ||
       !user.tenantId ||
       !user.workspaceId ||
       !user.membershipId

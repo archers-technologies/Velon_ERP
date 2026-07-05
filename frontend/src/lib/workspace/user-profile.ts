@@ -1,7 +1,7 @@
-import { readWorkspaceName } from "@/lib/workspace/tenant-workspace";
+import { readWorkspaceName } from '@/lib/workspace/tenant-workspace';
 
-const PROFILE_KEY = "velon-workspace-user-profile";
-const SESSIONS_KEY = "velon-workspace-user-sessions";
+const PROFILE_KEY = 'velon-workspace-user-profile';
+const SESSIONS_KEY = 'velon-workspace-user-sessions';
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 
 export type WorkspaceTenantAssignment = {
@@ -17,7 +17,7 @@ export type WorkspaceUserProfile = {
   avatarDataUrl?: string;
   workspaceLogoDataUrl?: string;
   /** Square (sidebar) or wide (header bar). */
-  workspaceLogoAspect: "square" | "wide";
+  workspaceLogoAspect: 'square' | 'wide';
   brandAccentHex?: string;
   mfaEnabled: boolean;
   assignedTenants: WorkspaceTenantAssignment[];
@@ -34,41 +34,41 @@ export type WorkspaceUserSession = {
 
 function defaultTenants(workspaceName: string): WorkspaceTenantAssignment[] {
   const primary: WorkspaceTenantAssignment = {
-    id: "primary",
+    id: 'primary',
     name: workspaceName,
-    role: "Workspace Administrator",
+    role: 'Workspace Administrator',
   };
   return [
     primary,
     {
-      id: "demo-branch",
+      id: 'demo-branch',
       name: `${workspaceName} · West Branch`,
-      role: "Operations Manager",
+      role: 'Operations Manager',
     },
   ];
 }
 
 function profileFromEmail(email: string, workspaceName: string): WorkspaceUserProfile {
-  const local = email.split("@")[0] ?? "user";
+  const local = email.split('@')[0] ?? 'user';
   const fullName = local
     .split(/[._-]+/)
     .filter(Boolean)
     .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
-    .join(" ");
+    .join(' ');
   const tenants = defaultTenants(workspaceName);
   return {
     email,
-    fullName: fullName || "Workspace User",
-    role: tenants[0]?.role ?? "Workspace User",
-    workspaceLogoAspect: "square",
+    fullName: fullName || 'Workspace User',
+    role: tenants[0]?.role ?? 'Workspace User',
+    workspaceLogoAspect: 'square',
     mfaEnabled: false,
     assignedTenants: tenants,
-    activeTenantId: tenants[0]?.id ?? "primary",
+    activeTenantId: tenants[0]?.id ?? 'primary',
   };
 }
 
 export function readWorkspaceUserProfile(): WorkspaceUserProfile | null {
-  if (typeof window === "undefined") return null;
+  if (typeof window === 'undefined') return null;
   try {
     const raw = localStorage.getItem(PROFILE_KEY);
     if (!raw) return null;
@@ -99,29 +99,28 @@ export function bootstrapWorkspaceUser(input: {
     const tenants = existing.assignedTenants.length
       ? existing.assignedTenants
       : defaultTenants(workspaceName);
-    const primary = tenants.find((t) => t.id === "primary");
-    if (primary && workspaceName !== "Workspace") {
+    const primary = tenants.find((t) => t.id === 'primary');
+    if (primary && workspaceName !== 'Workspace') {
       primary.name = workspaceName;
     }
     writeWorkspaceUserProfile({
       ...existing,
       assignedTenants: tenants,
-      ...(input.fullName?.trim() ? { fullName: input.fullName.trim(), role: "Tenant Owner" } : {}),
+      ...(input.fullName?.trim() ? { fullName: input.fullName.trim(), role: 'Tenant Owner' } : {}),
     });
     return;
   }
   const profile = profileFromEmail(email, workspaceName);
   if (input.fullName?.trim()) {
     profile.fullName = input.fullName.trim();
-    profile.role = "Tenant Super Admin";
+    profile.role = 'Tenant Super Admin';
   }
   writeWorkspaceUserProfile(profile);
 }
 
 export function updateWorkspaceUserProfile(patch: Partial<WorkspaceUserProfile>) {
   const current =
-    readWorkspaceUserProfile() ??
-    profileFromEmail("user@workspace.local", readWorkspaceName());
+    readWorkspaceUserProfile() ?? profileFromEmail('user@workspace.local', readWorkspaceName());
   writeWorkspaceUserProfile({ ...current, ...patch });
 }
 
@@ -131,28 +130,28 @@ export function getUserInitials(fullName: string): string {
     .filter(Boolean)
     .slice(0, 2)
     .map((p) => p[0]?.toUpperCase())
-    .join("");
+    .join('');
 }
 
 export function readImageFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     if (!file.type.match(/^image\/(jpeg|jpg|png|webp)$/i)) {
-      reject(new Error("Use a JPG or PNG image."));
+      reject(new Error('Use a JPG or PNG image.'));
       return;
     }
     if (file.size > MAX_IMAGE_BYTES) {
-      reject(new Error("Image must be 2MB or smaller."));
+      reject(new Error('Image must be 2MB or smaller.'));
       return;
     }
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new Error("Could not read image."));
+    reader.onerror = () => reject(new Error('Could not read image.'));
     reader.readAsDataURL(file);
   });
 }
 
 export function readWorkspaceSessions(): WorkspaceUserSession[] {
-  if (typeof window === "undefined") return [];
+  if (typeof window === 'undefined') return [];
   try {
     const raw = localStorage.getItem(SESSIONS_KEY);
     if (raw) return JSON.parse(raw) as WorkspaceUserSession[];
@@ -164,29 +163,24 @@ export function readWorkspaceSessions(): WorkspaceUserSession[] {
 
 function detectCurrentDevice(ua: string): string {
   if (/iPhone|iPad|iPod/i.test(ua)) {
-    const browser = /CriOS/i.test(ua)
-      ? "Chrome"
-      : /FxiOS/i.test(ua)
-        ? "Firefox"
-        : "Safari";
-    const device = /iPad/i.test(ua) ? "iPad" : "iPhone";
+    const browser = /CriOS/i.test(ua) ? 'Chrome' : /FxiOS/i.test(ua) ? 'Firefox' : 'Safari';
+    const device = /iPad/i.test(ua) ? 'iPad' : 'iPhone';
     return `${device} · ${browser}`;
   }
-  if (/Android/i.test(ua)) return "Android · Chrome";
-  if (/Mac/i.test(ua)) return "Mac · Chrome";
-  if (/Win/i.test(ua)) return "Windows · Chrome";
-  return "Web browser";
+  if (/Android/i.test(ua)) return 'Android · Chrome';
+  if (/Mac/i.test(ua)) return 'Mac · Chrome';
+  if (/Win/i.test(ua)) return 'Windows · Chrome';
+  return 'Web browser';
 }
 
 function seedSessions(): WorkspaceUserSession[] {
   const now = new Date().toISOString();
-  const ua =
-    typeof navigator !== "undefined" ? navigator.userAgent : "Unknown device";
+  const ua = typeof navigator !== 'undefined' ? navigator.userAgent : 'Unknown device';
   return [
     {
-      id: "current",
+      id: 'current',
       device: detectCurrentDevice(ua),
-      location: "This device",
+      location: 'This device',
       lastActive: now,
       current: true,
     },
@@ -203,7 +197,7 @@ export function writeWorkspaceSessions(sessions: WorkspaceUserSession[]) {
 
 export function ensureWorkspaceSessions(): WorkspaceUserSession[] {
   const cached = readWorkspaceSessions();
-  const list = cached.filter((s) => s.id !== "mobile-demo");
+  const list = cached.filter((s) => s.id !== 'mobile-demo');
   if (list.length) {
     if (list.length !== cached.length) writeWorkspaceSessions(list);
     return list;
@@ -228,18 +222,18 @@ export function clearWorkspaceSessionCache() {
 }
 
 export async function extractDominantBrandColor(dataUrl: string): Promise<string> {
-  if (typeof document === "undefined") return "#2563eb";
+  if (typeof document === 'undefined') return '#2563eb';
   return new Promise((resolve) => {
     const img = new Image();
-    img.crossOrigin = "anonymous";
+    img.crossOrigin = 'anonymous';
     img.onload = () => {
-      const canvas = document.createElement("canvas");
+      const canvas = document.createElement('canvas');
       const size = 48;
       canvas.width = size;
       canvas.height = size;
-      const ctx = canvas.getContext("2d");
+      const ctx = canvas.getContext('2d');
       if (!ctx) {
-        resolve("#2563eb");
+        resolve('#2563eb');
         return;
       }
       ctx.drawImage(img, 0, 0, size, size);
@@ -256,16 +250,16 @@ export async function extractDominantBrandColor(dataUrl: string): Promise<string
         n++;
       }
       if (!n) {
-        resolve("#2563eb");
+        resolve('#2563eb');
         return;
       }
       const hex = (v: number) =>
         Math.min(220, Math.round(v / n))
           .toString(16)
-          .padStart(2, "0");
+          .padStart(2, '0');
       resolve(`#${hex(r)}${hex(g)}${hex(b)}`);
     };
-    img.onerror = () => resolve("#2563eb");
+    img.onerror = () => resolve('#2563eb');
     img.src = dataUrl;
   });
 }

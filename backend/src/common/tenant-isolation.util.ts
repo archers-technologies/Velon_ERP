@@ -11,6 +11,6 @@ export function withTenantScope<T extends Record<string, unknown>>(
 
 export function assertTenantAccess(recordTenantId: string, requestTenantId: string): void {
   if (recordTenantId !== requestTenantId) {
-    throw new Error("Cross-tenant access denied.");
+    throw new Error('Cross-tenant access denied.');
   }
 }

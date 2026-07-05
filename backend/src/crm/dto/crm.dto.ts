@@ -1,18 +1,11 @@
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsDateString, IsEmail, IsEnum, IsOptional, IsString, MinLength } from 'class-validator';
 import {
   CrmActivityStatus,
   CrmActivityType,
   CrmCustomerStatus,
   CrmNoteTargetType,
-} from "@velon/database";
-import {
-  IsDateString,
-  IsEmail,
-  IsEnum,
-  IsOptional,
-  IsString,
-  MinLength,
-} from "class-validator";
+} from '@velon/database';
 
 export class CreateCrmCustomerDto {
   @ApiProperty()

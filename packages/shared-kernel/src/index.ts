@@ -1,10 +1,8 @@
-export const API_VERSION = "v1";
+import { normalizeVelonRole, VelonRole } from './velon-role';
 
-export {
-  VELON_CONTACT_ADDRESS,
-  VELON_CONTACT_EMAIL,
-  VELON_CONTACT_PHONE,
-} from "./velon-contact";
+export const API_VERSION = 'v1';
+
+export { VELON_CONTACT_ADDRESS, VELON_CONTACT_EMAIL, VELON_CONTACT_PHONE } from './velon-contact';
 
 export {
   COUNTRY_CATALOG,
@@ -24,81 +22,80 @@ export {
   isKnownCurrencyCode,
   type CountryCode,
   type WorkspaceMoneyFormat,
-} from "./localization";
+} from './localization';
 
-export { VelonRole, normalizeVelonRole } from "./velon-role";
-import { VelonRole, normalizeVelonRole } from "./velon-role";
+export { VelonRole, normalizeVelonRole } from './velon-role';
 
-export type AuthScope = "platform" | "tenant";
+export type AuthScope = 'platform' | 'tenant';
 
 export const ROLE_PERMISSIONS: Record<VelonRole, string[]> = {
-  [VelonRole.SUPER_ADMIN]: ["*"],
+  [VelonRole.SUPER_ADMIN]: ['*'],
   [VelonRole.PLATFORM_SUPPORT]: [
-    "tenants:read",
-    "tenants:update",
-    "users:read",
-    "audit:read",
-    "notifications:read",
+    'tenants:read',
+    'tenants:update',
+    'users:read',
+    'audit:read',
+    'notifications:read',
   ],
   [VelonRole.TENANT_OWNER]: [
-    "workspace:*",
-    "tenant:read",
-    "tenant:update",
-    "users:read",
-    "users:invite",
-    "users:manage",
-    "departments:*",
-    "seats:read",
-    "billing:*",
-    "audit:read",
-    "crm:*",
-    "inventory:*",
-    "procurement:*",
-    "sales:*",
+    'workspace:*',
+    'tenant:read',
+    'tenant:update',
+    'users:read',
+    'users:invite',
+    'users:manage',
+    'departments:*',
+    'seats:read',
+    'billing:*',
+    'audit:read',
+    'crm:*',
+    'inventory:*',
+    'procurement:*',
+    'sales:*',
   ],
   [VelonRole.TENANT_ADMIN]: [
-    "workspace:*",
-    "tenant:read",
-    "tenant:update",
-    "users:read",
-    "users:invite",
-    "users:manage",
-    "departments:*",
-    "seats:read",
-    "billing:*",
-    "audit:read",
-    "crm:*",
-    "inventory:*",
-    "procurement:*",
-    "sales:*",
+    'workspace:*',
+    'tenant:read',
+    'tenant:update',
+    'users:read',
+    'users:invite',
+    'users:manage',
+    'departments:*',
+    'seats:read',
+    'billing:*',
+    'audit:read',
+    'crm:*',
+    'inventory:*',
+    'procurement:*',
+    'sales:*',
   ],
   [VelonRole.DEPARTMENT_ADMIN]: [
-    "workspace:read",
-    "workspace:write:department",
-    "users:read:department",
-    "crm:read",
-    "crm:write",
-    "inventory:read",
-    "inventory:write",
-    "procurement:read",
-    "procurement:write",
-    "sales:*",
+    'workspace:read',
+    'workspace:write:department',
+    'users:read:department',
+    'crm:read',
+    'crm:write',
+    'inventory:read',
+    'inventory:write',
+    'procurement:read',
+    'procurement:write',
+    'sales:*',
   ],
   [VelonRole.USER]: [
-    "workspace:read",
-    "workspace:write:limited",
-    "crm:read",
-    "inventory:read",
-    "procurement:read",
-    "sales:read",
+    'workspace:read',
+    'workspace:write:limited',
+    'crm:read',
+    'inventory:read',
+    'procurement:read',
+    'sales:read',
   ],
   [VelonRole.TENANT_USER]: [
-    "workspace:read",
-    "workspace:write:limited",
-    "crm:read",
-    "inventory:read",
-    "procurement:read",
-    "sales:read",
+    'workspace:read',
+    'workspace:write:limited',
+    'crm:read',
+    'inventory:read',
+    'procurement:read',
+    'sales:read',
   ],
 };
 
@@ -121,9 +118,9 @@ export function isTenantRole(role: VelonRole | string): boolean {
 export function roleHasPermission(role: VelonRole, permission: string): boolean {
   const normalized = normalizeVelonRole(role);
   const perms = ROLE_PERMISSIONS[normalized] ?? [];
-  if (perms.includes("*")) return true;
+  if (perms.includes('*')) return true;
   return perms.some(
-    (p) => p === permission || (p.endsWith(":*") && permission.startsWith(p.slice(0, -1))),
+    (p) => p === permission || (p.endsWith(':*') && permission.startsWith(p.slice(0, -1))),
   );
 }
 
@@ -151,9 +148,9 @@ export {
   isUnlimitedSeats,
   seatsRemaining,
   canAddSeat,
-} from "./seats";
+} from './seats';
 
-export { PLAN_CATALOG, planCatalogEntry, type PlanCatalogEntry } from "./plans";
+export { PLAN_CATALOG, planCatalogEntry, type PlanCatalogEntry } from './plans';
 
 export {
   isIndiaBilling,
@@ -162,7 +159,7 @@ export {
   type PlanRegionalPrices,
   type PricingRegion,
   type ResolvedPlanPrice,
-} from "./plan-pricing";
+} from './plan-pricing';
 
 export {
   PASSWORD_MIN_LENGTH,
@@ -172,7 +169,7 @@ export {
   passwordStrengthMessage,
   type PasswordRuleId,
   type PasswordRuleStatus,
-} from "./password-policy";
+} from './password-policy';
 
 export {
   PAYMENT_PROVIDERS,
@@ -189,7 +186,7 @@ export {
   type BillingInterval,
   type SubscriptionBillingStatus,
   type PaymentProviderId,
-} from "./billing";
+} from './billing';
 
 export {
   WORKSPACE_SIDEBAR_LABELS,
@@ -198,7 +195,7 @@ export {
   normalizeWorkspacePath,
   workspaceNavHasDuplicateCrm,
   type DashboardErrorKind,
-} from "./workspace-navigation";
+} from './workspace-navigation';
 
 export {
   WORKSPACE_ROLE_PRESETS,
@@ -206,9 +203,9 @@ export {
   rolePresetById,
   type RolePreset,
   type RolePresetId,
-} from "./role-presets";
+} from './role-presets';
 
-export { isAdminNavItemActive } from "./admin-navigation";
+export { isAdminNavItemActive } from './admin-navigation';
 
 export {
   DEMO_SEED_SOURCES,
@@ -217,25 +214,22 @@ export {
   inferDemoSeedSourceFromTenantName,
   isDemoSeedSource,
   type DemoSeedSource,
-} from "./seed-guards";
+} from './seed-guards';
 
 export {
   isProductionPlatformUser,
   isProductionTenant,
   productionPlatformUserWhere,
   productionTenantWhere,
-} from "./production-data";
+} from './production-data';
 
 export {
   DEFAULT_WORKSPACE_PUBLIC_DOMAIN,
   resolveWorkspacePublicDomain,
   tenantWorkspaceHost,
-} from "./workspace-host";
+} from './workspace-host';
 
-export {
-  TENANT_STATUS_COLUMN_HELP,
-  TENANT_STATUS_DESCRIPTIONS,
-} from "./tenant-status-help";
+export { TENANT_STATUS_COLUMN_HELP, TENANT_STATUS_DESCRIPTIONS } from './tenant-status-help';
 
 export {
   SETTINGS_PATHS,
@@ -249,7 +243,7 @@ export {
   workspaceAdminSearch,
   type SettingsUserTab,
   type WorkspaceAdminSection,
-} from "./settings-routes";
+} from './settings-routes';
 
 export {
   canReadCrm,
@@ -258,14 +252,14 @@ export {
   canWriteCrmNotes,
   canWriteCrmActivities,
   canManageCrmActivities,
-} from "./crm-permissions";
+} from './crm-permissions';
 
-export { canReadInventory, canManageInventory } from "./inventory-permissions";
+export { canReadInventory, canManageInventory } from './inventory-permissions';
 
 export {
   canReadProcurement,
   canManageProcurement,
   canApproveProcurement,
-} from "./procurement-permissions";
+} from './procurement-permissions';
 
-export { canReadSales, canWriteSales } from "./sales-permissions";
+export { canReadSales, canWriteSales } from './sales-permissions';

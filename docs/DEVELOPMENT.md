@@ -33,21 +33,21 @@ npm run dev
 
 ## Ports
 
-| Service | Port |
-|---------|------|
-| Web (Vite) | `8080` |
-| API | `3001` |
+| Service            | Port   |
+| ------------------ | ------ |
+| Web (Vite)         | `8080` |
+| API                | `3001` |
 | Postgres (compose) | `5432` |
-| Redis | `6379` |
+| Redis              | `6379` |
 
 Align `DATABASE_URL` with your Postgres port (compose uses `5432`; some local Homebrew setups use `5433` as in `.env.example`).
 
 ## Default URLs
 
-| Service | URL |
-|---------|-----|
-| Web | http://localhost:8080 |
-| API | http://localhost:3001 |
+| Service | URL                            |
+| ------- | ------------------------------ |
+| Web     | http://localhost:8080          |
+| API     | http://localhost:3001          |
 | Swagger | http://localhost:3001/api/docs |
 
 ## Useful commands
@@ -64,10 +64,10 @@ npm run format:check
 
 ## Accounts after seed
 
-| Portal | Credentials |
-|--------|-------------|
-| Platform admin (`/admin`) | `SUPER_ADMIN_EMAIL` + `SUPER_ADMIN_PASSWORD` |
-| Workspace (`/app`) | `DEV_TENANT_EMAIL` + `DEV_TENANT_PASSWORD` (if set before seed) |
+| Portal                    | Credentials                                                     |
+| ------------------------- | --------------------------------------------------------------- |
+| Platform admin (`/admin`) | `SUPER_ADMIN_EMAIL` + `SUPER_ADMIN_PASSWORD`                    |
+| Workspace (`/app`)        | `DEV_TENANT_EMAIL` + `DEV_TENANT_PASSWORD` (if set before seed) |
 
 ## Related docs
 

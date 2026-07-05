@@ -1,5 +1,5 @@
-import type { PrismaService } from "../../prisma/prisma.service";
-import { getActiveTenantContext } from "../tenant-context.storage";
+import type { PrismaService } from '../../prisma/prisma.service';
+import { getActiveTenantContext } from '../tenant-context.storage';
 
 /**
  * Base repository — every query is automatically scoped to JWT tenantId.

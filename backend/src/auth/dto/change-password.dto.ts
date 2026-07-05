@@ -1,5 +1,5 @@
-import { IsString, MinLength } from "class-validator";
-import { IsVelonPassword } from "../validators/is-velon-password.decorator";
+import { IsString, MinLength } from 'class-validator';
+import { IsVelonPassword } from '../validators/is-velon-password.decorator';
 
 export class ChangePasswordDto {
   @IsString()

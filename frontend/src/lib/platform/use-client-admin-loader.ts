@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
-import { isApiEnabled } from "@/lib/api/config";
-import { isAuthenticated } from "@/lib/auth/session";
+import { useEffect, useRef, useState } from 'react';
+import { isApiEnabled } from '@/lib/api/config';
+import { isAuthenticated } from '@/lib/auth/session';
 
 /**
  * Admin route loaders skip API calls during SSR (no browser session).
@@ -19,7 +19,7 @@ export function useClientAdminLoader<T>(
   }, [loaderData]);
 
   useEffect(() => {
-    if (!isApiEnabled() || !isAuthenticated("admin")) return;
+    if (!isApiEnabled() || !isAuthenticated('admin')) return;
     if (!isStale(loaderData) || reloaded.current) return;
     reloaded.current = true;
     void reload()

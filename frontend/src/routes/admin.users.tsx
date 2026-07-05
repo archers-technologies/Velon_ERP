@@ -1,21 +1,27 @@
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { useMemo, useState } from 'react';
+import { createFileRoute, useRouter } from '@tanstack/react-router';
 import {
-  createPlatformUser,
-  deletePlatformUser,
-  loadPlatformStaff,
-  setPlatformUserStatus,
-} from "@/lib/platform/admin-loaders";
-import { useMemo, useState } from "react";
-import { type AdminPlatformUser, type AdminUserStatus } from "@/lib/platform/admin-demo";
-import { PasswordRequirementsChecklist } from "@/components/auth/password-requirements-checklist";
-import { isPasswordStrong } from "@/lib/auth/password-policy";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  Ban,
+  KeyRound,
+  Lock,
+  MoreHorizontal,
+  Plus,
+  ScrollText,
+  Search,
+  Shield,
+  ShieldOff,
+  Trash2,
+  UserCheck,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { PasswordRequirementsChecklist } from '@/components/auth/password-requirements-checklist';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -23,14 +29,24 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import {
   Sheet,
   SheetContent,
@@ -38,47 +54,31 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
+} from '@/components/ui/sheet';
+import { isPasswordStrong } from '@/lib/auth/password-policy';
+import { type AdminPlatformUser, type AdminUserStatus } from '@/lib/platform/admin-demo';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
-import {
-  Plus,
-  Search,
-  MoreHorizontal,
-  Shield,
-  ShieldOff,
-  KeyRound,
-  Ban,
-  UserCheck,
-  ArrowUp,
-  ArrowDown,
-  ArrowUpDown,
-  Lock,
-  ScrollText,
-  Trash2,
-} from "lucide-react";
-import { toast } from "sonner";
+  createPlatformUser,
+  deletePlatformUser,
+  loadPlatformStaff,
+  setPlatformUserStatus,
+} from '@/lib/platform/admin-loaders';
+import { cn } from '@/lib/utils';
 
-export const Route = createFileRoute("/admin/users")({
+export const Route = createFileRoute('/admin/users')({
   loader: () => loadPlatformStaff(),
   component: AdminUsersPage,
 });
 
-type UserSortColumn = "username" | "name" | "email" | "role" | "status" | "lastActive";
+type UserSortColumn = 'username' | 'name' | 'email' | 'role' | 'status' | 'lastActive';
 
 function statusRank(s: AdminUserStatus): number {
   switch (s) {
-    case "Active":
+    case 'Active':
       return 0;
-    case "Invited":
+    case 'Invited':
       return 1;
-    case "Suspended":
+    case 'Suspended':
       return 2;
     default:
       return 3;
@@ -94,22 +94,22 @@ function compareUsers(
   const dir = desc ? -1 : 1;
   let cmp = 0;
   switch (col) {
-    case "username":
+    case 'username':
       cmp = a.username.localeCompare(b.username);
       break;
-    case "name":
+    case 'name':
       cmp = a.name.localeCompare(b.name);
       break;
-    case "email":
+    case 'email':
       cmp = a.email.localeCompare(b.email);
       break;
-    case "role":
+    case 'role':
       cmp = a.role.localeCompare(b.role);
       break;
-    case "status":
+    case 'status':
       cmp = statusRank(a.status) - statusRank(b.status);
       break;
-    case "lastActive":
+    case 'lastActive':
       cmp = a.lastActive.localeCompare(b.lastActive);
       break;
     default:
@@ -136,7 +136,7 @@ function SortTh({
   return (
     <th
       scope="col"
-      aria-sort={active ? (sortDesc ? "descending" : "ascending") : "none"}
+      aria-sort={active ? (sortDesc ? 'descending' : 'ascending') : 'none'}
       className="px-4 py-2 sm:px-5 sm:py-3"
     >
       <button
@@ -144,16 +144,22 @@ function SortTh({
         aria-label={active ? `${label} sorted` : `Sort by ${label}`}
         onClick={() => onSort(column)}
         className={cn(
-          "group inline-flex items-center gap-1 rounded-md py-1 pr-1 text-left text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground hover:bg-muted/80 hover:text-foreground",
-          active && "text-foreground",
+          'group text-muted-foreground hover:bg-muted/80 hover:text-foreground inline-flex items-center gap-1 rounded-md py-1 pr-1 text-left text-[10px] font-medium tracking-[0.12em] uppercase',
+          active && 'text-foreground',
         )}
       >
         {label}
         {active ? (
           sortDesc ? (
-            <ArrowDown className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            <ArrowDown
+              className="h-3.5 w-3.5 shrink-0"
+              aria-hidden
+            />
           ) : (
-            <ArrowUp className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            <ArrowUp
+              className="h-3.5 w-3.5 shrink-0"
+              aria-hidden
+            />
           )
         ) : (
           <ArrowUpDown
@@ -168,39 +174,39 @@ function SortTh({
 
 function statusBadgeClass(s: AdminUserStatus) {
   switch (s) {
-    case "Active":
-      return "border-success/25 bg-success/10 text-success";
-    case "Invited":
-      return "border-info/25 bg-info/10 text-info";
-    case "Suspended":
-      return "border-muted-foreground/30 bg-muted text-muted-foreground";
+    case 'Active':
+      return 'border-success/25 bg-success/10 text-success';
+    case 'Invited':
+      return 'border-info/25 bg-info/10 text-info';
+    case 'Suspended':
+      return 'border-muted-foreground/30 bg-muted text-muted-foreground';
     default:
-      return "border-border";
+      return 'border-border';
   }
 }
 
 function AdminUsersPage() {
   const router = useRouter();
   const users = Route.useLoaderData() as AdminPlatformUser[];
-  const [q, setQ] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | AdminUserStatus>("all");
-  const [sortColumn, setSortColumn] = useState<UserSortColumn>("name");
+  const [q, setQ] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | AdminUserStatus>('all');
+  const [sortColumn, setSortColumn] = useState<UserSortColumn>('name');
   const [sortDesc, setSortDesc] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [detail, setDetail] = useState<AdminPlatformUser | null>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteName, setInviteName] = useState("");
-  const [invitePassword, setInvitePassword] = useState("");
-  const [inviteRole, setInviteRole] = useState<"PLATFORM_SUPPORT" | "SUPER_ADMIN">(
-    "PLATFORM_SUPPORT",
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteName, setInviteName] = useState('');
+  const [invitePassword, setInvitePassword] = useState('');
+  const [inviteRole, setInviteRole] = useState<'PLATFORM_SUPPORT' | 'SUPER_ADMIN'>(
+    'PLATFORM_SUPPORT',
   );
   const [inviteBusy, setInviteBusy] = useState(false);
 
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     return users.filter((u) => {
-      if (statusFilter !== "all" && u.status !== statusFilter) return false;
+      if (statusFilter !== 'all' && u.status !== statusFilter) return false;
       if (!s) return true;
       return (
         u.name.toLowerCase().includes(s) ||
@@ -218,9 +224,9 @@ function AdminUsersPage() {
   }, [filtered, sortColumn, sortDesc]);
 
   const kpis = useMemo(() => {
-    const active = users.filter((u) => u.status === "Active").length;
-    const suspended = users.filter((u) => u.status === "Suspended").length;
-    const invited = users.filter((u) => u.status === "Invited").length;
+    const active = users.filter((u) => u.status === 'Active').length;
+    const suspended = users.filter((u) => u.status === 'Suspended').length;
+    const invited = users.filter((u) => u.status === 'Invited').length;
     const mfa = users.filter((u) => u.mfaEnabled).length;
     return {
       total: users.length,
@@ -250,13 +256,13 @@ function AdminUsersPage() {
 
   function bulkSuspend() {
     if (selected.size === 0) return;
-    toast.error("Bulk suspend is not yet available.");
+    toast.error('Bulk suspend is not yet available.');
     setSelected(new Set());
   }
 
   function bulkResetMfa() {
     if (selected.size === 0) return;
-    toast.error("MFA reset is not yet available.");
+    toast.error('MFA reset is not yet available.');
     setSelected(new Set());
   }
 
@@ -264,47 +270,47 @@ function AdminUsersPage() {
     <div className="space-y-6">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <Card className="border-border bg-card p-4">
-          <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          <div className="text-muted-foreground text-[10px] font-medium tracking-wide uppercase">
             Platform admins
           </div>
           <div className="mt-1 text-2xl font-semibold">{kpis.total}</div>
         </Card>
         <Card className="border-border bg-card p-4">
-          <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          <div className="text-muted-foreground text-[10px] font-medium tracking-wide uppercase">
             Active
           </div>
-          <div className="mt-1 text-2xl font-semibold text-success">{kpis.active}</div>
+          <div className="text-success mt-1 text-2xl font-semibold">{kpis.active}</div>
         </Card>
         <Card className="border-border bg-card p-4">
-          <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          <div className="text-muted-foreground text-[10px] font-medium tracking-wide uppercase">
             Suspended
           </div>
           <div className="mt-1 text-2xl font-semibold">{kpis.suspended}</div>
         </Card>
         <Card className="border-border bg-card p-4">
-          <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          <div className="text-muted-foreground text-[10px] font-medium tracking-wide uppercase">
             Invited
           </div>
-          <div className="mt-1 text-2xl font-semibold text-info">{kpis.invited}</div>
+          <div className="text-info mt-1 text-2xl font-semibold">{kpis.invited}</div>
         </Card>
         <Card className="border-border bg-card p-4">
-          <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          <div className="text-muted-foreground text-[10px] font-medium tracking-wide uppercase">
             MFA enrolled
           </div>
           <div className="mt-1 text-2xl font-semibold">{kpis.mfaPct}%</div>
-          <p className="mt-1 text-[11px] text-muted-foreground">Super Admin path enforced</p>
+          <p className="text-muted-foreground mt-1 text-[11px]">Super Admin path enforced</p>
         </Card>
       </div>
 
-      <Card className="flex flex-col gap-3 border-border bg-card p-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:p-5">
+      <Card className="border-border bg-card flex flex-col gap-3 p-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:p-5">
         <div className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-center">
           <div className="relative min-w-0 flex-1 sm:max-w-xs">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
             <Input
               placeholder="Search name, username, email, role…"
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              className="h-9 rounded-lg border-border bg-muted/40 pl-9"
+              className="border-border bg-muted/40 h-9 rounded-lg pl-9"
             />
           </div>
           <Select
@@ -323,13 +329,13 @@ function AdminUsersPage() {
           </Select>
         </div>
         <Button
-          className="shrink-0 rounded-lg bg-foreground text-background hover:bg-foreground/90"
+          className="bg-foreground text-background hover:bg-foreground/90 shrink-0 rounded-lg"
           type="button"
           onClick={() => {
-            setInviteEmail("");
-            setInviteName("");
-            setInvitePassword("");
-            setInviteRole("PLATFORM_SUPPORT");
+            setInviteEmail('');
+            setInviteName('');
+            setInvitePassword('');
+            setInviteRole('PLATFORM_SUPPORT');
             setInviteOpen(true);
           }}
         >
@@ -338,21 +344,39 @@ function AdminUsersPage() {
       </Card>
 
       {selected.size > 0 ? (
-        <Card className="flex flex-wrap items-center gap-2 border-border bg-muted/40 p-3 text-sm">
+        <Card className="border-border bg-muted/40 flex flex-wrap items-center gap-2 p-3 text-sm">
           <span className="text-muted-foreground">{selected.size} selected</span>
-          <Button size="sm" variant="outline" type="button" onClick={bulkSuspend}>
+          <Button
+            size="sm"
+            variant="outline"
+            type="button"
+            onClick={bulkSuspend}
+          >
             <Ban className="mr-1 h-3.5 w-3.5" /> Suspend
           </Button>
-          <Button size="sm" variant="outline" type="button" onClick={bulkResetMfa}>
+          <Button
+            size="sm"
+            variant="outline"
+            type="button"
+            onClick={bulkResetMfa}
+          >
             <KeyRound className="mr-1 h-3.5 w-3.5" /> Reset MFA
           </Button>
-          <Button size="sm" variant="ghost" type="button" onClick={() => setSelected(new Set())}>
+          <Button
+            size="sm"
+            variant="ghost"
+            type="button"
+            onClick={() => setSelected(new Set())}
+          >
             Clear
           </Button>
         </Card>
       ) : null}
 
-      <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+      <Dialog
+        open={inviteOpen}
+        onOpenChange={setInviteOpen}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Create platform user</DialogTitle>
@@ -408,7 +432,11 @@ function AdminUsersPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setInviteOpen(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setInviteOpen(false)}
+            >
               Cancel
             </Button>
             <Button
@@ -416,7 +444,7 @@ function AdminUsersPage() {
               className="bg-foreground text-background hover:bg-foreground/90"
               disabled={
                 inviteBusy ||
-                !inviteEmail.includes("@") ||
+                !inviteEmail.includes('@') ||
                 inviteName.trim().length < 1 ||
                 !isPasswordStrong(invitePassword)
               }
@@ -430,11 +458,11 @@ function AdminUsersPage() {
                       password: invitePassword,
                       role: inviteRole,
                     });
-                    toast.success("Platform user created");
+                    toast.success('Platform user created');
                     setInviteOpen(false);
                     await router.invalidate();
                   } catch (err) {
-                    toast.error(err instanceof Error ? err.message : "Could not create user");
+                    toast.error(err instanceof Error ? err.message : 'Could not create user');
                   } finally {
                     setInviteBusy(false);
                   }
@@ -447,7 +475,10 @@ function AdminUsersPage() {
         </DialogContent>
       </Dialog>
 
-      <Sheet open={detail !== null} onOpenChange={(o) => !o && setDetail(null)}>
+      <Sheet
+        open={detail !== null}
+        onOpenChange={(o) => !o && setDetail(null)}
+      >
         <SheetContent className="overflow-y-auto sm:max-w-lg">
           {detail ? (
             <>
@@ -461,11 +492,14 @@ function AdminUsersPage() {
                 <div className="flex flex-wrap gap-2">
                   <Badge
                     variant="outline"
-                    className={cn("rounded-md font-normal", statusBadgeClass(detail.status))}
+                    className={cn('rounded-md font-normal', statusBadgeClass(detail.status))}
                   >
                     {detail.status}
                   </Badge>
-                  <Badge variant="outline" className="gap-1 rounded-md font-normal">
+                  <Badge
+                    variant="outline"
+                    className="gap-1 rounded-md font-normal"
+                  >
                     {detail.mfaEnabled ? (
                       <>
                         <Shield className="h-3 w-3" /> MFA on
@@ -476,44 +510,51 @@ function AdminUsersPage() {
                       </>
                     )}
                   </Badge>
-                  <Badge variant="outline" className="rounded-md font-normal">
+                  <Badge
+                    variant="outline"
+                    className="rounded-md font-normal"
+                  >
                     {detail.role}
                   </Badge>
                 </div>
                 <div>
-                  <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <h4 className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
                     Effective permissions
                   </h4>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Derived from role template{" "}
+                  <p className="text-muted-foreground mt-2 text-xs">
+                    Derived from role template{' '}
                     <strong className="text-foreground">{detail.role}</strong> — matrix editing and
                     custom roles ship with IAM integration.
                   </p>
-                  <ul className="mt-2 list-inside list-disc text-xs text-muted-foreground">
+                  <ul className="text-muted-foreground mt-2 list-inside list-disc text-xs">
                     <li>
-                      Tenants: read{detail.role === "Super Admin" ? " / write / suspend" : ""}
+                      Tenants: read{detail.role === 'Super Admin' ? ' / write / suspend' : ''}
                     </li>
                     <li>
-                      Billing:{" "}
-                      {detail.role === "Billing" || detail.role === "Super Admin" ? "full" : "none"}
+                      Billing:{' '}
+                      {detail.role === 'Billing' || detail.role === 'Super Admin' ? 'full' : 'none'}
                     </li>
                     <li>
-                      Infrastructure: {detail.role === "Super Admin" ? "scoped" : "no access"}
+                      Infrastructure: {detail.role === 'Super Admin' ? 'scoped' : 'no access'}
                     </li>
                   </ul>
                 </div>
                 <Separator />
                 <div>
-                  <h4 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <h4 className="text-muted-foreground flex items-center gap-1.5 text-xs font-semibold tracking-wide uppercase">
                     <ScrollText className="h-3.5 w-3.5" /> Audit trail
                   </h4>
-                  <p className="mt-2 text-xs text-muted-foreground">
+                  <p className="text-muted-foreground mt-2 text-xs">
                     Per-user audit events are recorded in the platform audit log.
                   </p>
                 </div>
               </div>
               <SheetFooter className="mt-8">
-                <Button type="button" variant="outline" onClick={() => setDetail(null)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setDetail(null)}
+                >
                   Close
                 </Button>
               </SheetFooter>
@@ -523,15 +564,15 @@ function AdminUsersPage() {
       </Sheet>
 
       <Card className="border-border bg-card">
-        <div className="border-b border-border p-5">
+        <div className="border-border border-b p-5">
           <div className="text-sm font-semibold">Platform team</div>
-          <div className="text-xs text-muted-foreground">
+          <div className="text-muted-foreground text-xs">
             Internal staff — least privilege, MFA for privileged paths, bulk actions for ops
             efficiency
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-[860px] w-full text-sm">
+          <table className="w-full min-w-[860px] text-sm">
             <thead className="bg-muted/40 text-muted-foreground">
               <tr>
                 <th className="w-10 px-4 py-2 sm:px-5 sm:py-3">
@@ -592,125 +633,141 @@ function AdminUsersPage() {
             <tbody>
               {sorted.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center text-sm text-muted-foreground">
+                  <td
+                    colSpan={8}
+                    className="text-muted-foreground px-4 py-10 text-center text-sm"
+                  >
                     {users.length === 0
-                      ? "No users yet. Real platform and tenant users will appear here."
-                      : "No users match your filters."}
+                      ? 'No users yet. Real platform and tenant users will appear here.'
+                      : 'No users match your filters.'}
                   </td>
                 </tr>
               ) : (
                 sorted.map((u) => (
-                <tr key={u.id} className="border-t border-border hover:bg-muted/30">
-                  <td className="px-4 py-3 sm:px-5">
-                    <Checkbox
-                      checked={selected.has(u.id)}
-                      onCheckedChange={() => toggleSelect(u.id)}
-                      aria-label={`Select ${u.name}`}
-                    />
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-muted-foreground sm:px-5">
-                    {u.username}
-                  </td>
-                  <td className="px-4 py-3 font-medium sm:px-5">{u.name}</td>
-                  <td className="px-4 py-3 text-muted-foreground sm:px-5">{u.email}</td>
-                  <td className="px-4 py-3 sm:px-5">
-                    <Badge variant="outline" className="rounded-md border-border font-normal">
-                      {u.role}
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-3 sm:px-5">
-                    <Badge
-                      variant="outline"
-                      className={cn("rounded-md font-normal", statusBadgeClass(u.status))}
-                    >
-                      {u.status}
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground sm:px-5">
-                    {u.lastActive}
-                  </td>
-                  <td className="px-4 py-3 sm:px-5">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8"
-                          aria-label="Row actions"
+                  <tr
+                    key={u.id}
+                    className="border-border hover:bg-muted/30 border-t"
+                  >
+                    <td className="px-4 py-3 sm:px-5">
+                      <Checkbox
+                        checked={selected.has(u.id)}
+                        onCheckedChange={() => toggleSelect(u.id)}
+                        aria-label={`Select ${u.name}`}
+                      />
+                    </td>
+                    <td className="text-muted-foreground px-4 py-3 font-mono text-xs whitespace-nowrap sm:px-5">
+                      {u.username}
+                    </td>
+                    <td className="px-4 py-3 font-medium sm:px-5">{u.name}</td>
+                    <td className="text-muted-foreground px-4 py-3 sm:px-5">{u.email}</td>
+                    <td className="px-4 py-3 sm:px-5">
+                      <Badge
+                        variant="outline"
+                        className="border-border rounded-md font-normal"
+                      >
+                        {u.role}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3 sm:px-5">
+                      <Badge
+                        variant="outline"
+                        className={cn('rounded-md font-normal', statusBadgeClass(u.status))}
+                      >
+                        {u.status}
+                      </Badge>
+                    </td>
+                    <td className="text-muted-foreground px-4 py-3 text-xs sm:px-5">
+                      {u.lastActive}
+                    </td>
+                    <td className="px-4 py-3 sm:px-5">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8"
+                            aria-label="Row actions"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          align="end"
+                          className="w-52"
                         >
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-52">
-                        <DropdownMenuItem onSelect={() => setDetail(u)}>
-                          <UserCheck className="mr-2 h-4 w-4" /> View profile
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onSelect={() => toast.error("Password reset is not yet available.")}
-                        >
-                          <KeyRound className="mr-2 h-4 w-4" /> Reset password
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onSelect={() => toast.error("Session management is not yet available.")}
-                        >
-                          Active sessions
-                        </DropdownMenuItem>
-                        {u.status === "Active" ? (
+                          <DropdownMenuItem onSelect={() => setDetail(u)}>
+                            <UserCheck className="mr-2 h-4 w-4" /> View profile
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onSelect={() => toast.error('Password reset is not yet available.')}
+                          >
+                            <KeyRound className="mr-2 h-4 w-4" /> Reset password
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onSelect={() => toast.error('Session management is not yet available.')}
+                          >
+                            Active sessions
+                          </DropdownMenuItem>
+                          {u.status === 'Active' ? (
+                            <DropdownMenuItem
+                              className="text-destructive focus:text-destructive"
+                              onSelect={() => {
+                                void (async () => {
+                                  try {
+                                    await setPlatformUserStatus(u.id, false);
+                                    toast.success('User disabled');
+                                    await router.invalidate();
+                                  } catch (err) {
+                                    toast.error(
+                                      err instanceof Error ? err.message : 'Update failed',
+                                    );
+                                  }
+                                })();
+                              }}
+                            >
+                              <Ban className="mr-2 h-4 w-4" /> Disable
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem
+                              onSelect={() => {
+                                void (async () => {
+                                  try {
+                                    await setPlatformUserStatus(u.id, true);
+                                    toast.success('User enabled');
+                                    await router.invalidate();
+                                  } catch (err) {
+                                    toast.error(
+                                      err instanceof Error ? err.message : 'Update failed',
+                                    );
+                                  }
+                                })();
+                              }}
+                            >
+                              <UserCheck className="mr-2 h-4 w-4" /> Enable
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuSeparator />
                           <DropdownMenuItem
                             className="text-destructive focus:text-destructive"
                             onSelect={() => {
                               void (async () => {
                                 try {
-                                  await setPlatformUserStatus(u.id, false);
-                                  toast.success("User disabled");
+                                  await deletePlatformUser(u.id);
+                                  toast.success('Platform user deleted');
                                   await router.invalidate();
                                 } catch (err) {
-                                  toast.error(err instanceof Error ? err.message : "Update failed");
+                                  toast.error(err instanceof Error ? err.message : 'Delete failed');
                                 }
                               })();
                             }}
                           >
-                            <Ban className="mr-2 h-4 w-4" /> Disable
+                            <Trash2 className="mr-2 h-4 w-4" /> Delete user
                           </DropdownMenuItem>
-                        ) : (
-                          <DropdownMenuItem
-                            onSelect={() => {
-                              void (async () => {
-                                try {
-                                  await setPlatformUserStatus(u.id, true);
-                                  toast.success("User enabled");
-                                  await router.invalidate();
-                                } catch (err) {
-                                  toast.error(err instanceof Error ? err.message : "Update failed");
-                                }
-                              })();
-                            }}
-                          >
-                            <UserCheck className="mr-2 h-4 w-4" /> Enable
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          className="text-destructive focus:text-destructive"
-                          onSelect={() => {
-                            void (async () => {
-                              try {
-                                await deletePlatformUser(u.id);
-                                toast.success("Platform user deleted");
-                                await router.invalidate();
-                              } catch (err) {
-                                toast.error(err instanceof Error ? err.message : "Delete failed");
-                              }
-                            })();
-                          }}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" /> Delete user
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </td>
-                </tr>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
+                  </tr>
                 ))
               )}
             </tbody>

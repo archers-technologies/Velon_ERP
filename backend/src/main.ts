@@ -1,12 +1,12 @@
-import "reflect-metadata";
-import { ValidationPipe } from "@nestjs/common";
-import { NestFactory } from "@nestjs/core";
-import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
-import cookieParser from "cookie-parser";
-import helmet from "helmet";
-import { AppModule } from "./app.module";
-import { formatSmtpConfigForLog, smtpConfigured } from "./common/mail-delivery.util";
-import { isCorsOriginAllowed } from "./config/env";
+import 'reflect-metadata';
+import { ValidationPipe } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
+import { AppModule } from './app.module';
+import { formatSmtpConfigForLog, smtpConfigured } from './common/mail-delivery.util';
+import { isCorsOriginAllowed } from './config/env';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { rawBody: true });
@@ -26,7 +26,7 @@ async function bootstrap() {
     },
     credentials: true,
   });
-  app.setGlobalPrefix("api/v1");
+  app.setGlobalPrefix('api/v1');
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -36,19 +36,19 @@ async function bootstrap() {
   );
 
   const swagger = new DocumentBuilder()
-    .setTitle("Velon ERP API")
-    .setDescription("Production API for multi-tenant Velon ERP platform")
-    .setVersion("1.0")
+    .setTitle('Velon ERP API')
+    .setDescription('Production API for multi-tenant Velon ERP platform')
+    .setVersion('1.0')
     .addBearerAuth()
     .build();
-  SwaggerModule.setup("api/docs", app, SwaggerModule.createDocument(app, swagger));
+  SwaggerModule.setup('api/docs', app, SwaggerModule.createDocument(app, swagger));
 
   const port = Number(process.env.PORT || process.env.API_PORT || 3001);
-  await app.listen(port, "0.0.0.0");
+  await app.listen(port, '0.0.0.0');
   console.log(`Velon API listening on 0.0.0.0:${port}`);
   console.log(`Swagger: /api/docs`);
   console.log(formatSmtpConfigForLog());
-  console.log(`SMTP configured: ${smtpConfigured() ? "yes" : "no"}`);
+  console.log(`SMTP configured: ${smtpConfigured() ? 'yes' : 'no'}`);
 }
 
 bootstrap();

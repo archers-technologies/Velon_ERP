@@ -1,11 +1,13 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
+import { useCallback, useEffect, useState } from 'react';
+import { createFileRoute } from '@tanstack/react-router';
+import { toast } from 'sonner';
+import { canWriteCrmRecords, normalizeVelonRole } from '@velon/shared';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { getSessionMembershipRole } from '@/lib/auth/session';
 import {
   createCrmPipeline,
   createCrmStage,
@@ -13,20 +15,18 @@ import {
   loadCrmPipelines,
   setDefaultCrmPipeline,
   type CrmPipeline,
-} from "@/lib/crm/pipeline-api";
-import { getSessionMembershipRole } from "@/lib/auth/session";
-import { canWriteCrmRecords, normalizeVelonRole } from "@velon/shared";
+} from '@/lib/crm/pipeline-api';
 
-export const Route = createFileRoute("/app/crm/pipelines")({
+export const Route = createFileRoute('/app/crm/pipelines')({
   component: CrmPipelinesPage,
 });
 
 function CrmPipelinesPage() {
-  const canWrite = canWriteCrmRecords(normalizeVelonRole(getSessionMembershipRole() ?? "USER"));
+  const canWrite = canWriteCrmRecords(normalizeVelonRole(getSessionMembershipRole() ?? 'USER'));
   const [pipelines, setPipelines] = useState<CrmPipeline[]>([]);
   const [busy, setBusy] = useState(false);
-  const [form, setForm] = useState({ name: "", description: "" });
-  const [stageForm, setStageForm] = useState({ pipelineId: "", name: "", probability: "20" });
+  const [form, setForm] = useState({ name: '', description: '' });
+  const [stageForm, setStageForm] = useState({ pipelineId: '', name: '', probability: '20' });
 
   const refresh = useCallback(async () => {
     const rows = await loadCrmPipelines();
@@ -46,11 +46,11 @@ function CrmPipelinesPage() {
     setBusy(true);
     try {
       await createCrmPipeline(form);
-      toast.success("Pipeline created");
-      setForm({ name: "", description: "" });
+      toast.success('Pipeline created');
+      setForm({ name: '', description: '' });
       await refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed");
+      toast.error(err instanceof Error ? err.message : 'Failed');
     } finally {
       setBusy(false);
     }
@@ -66,11 +66,11 @@ function CrmPipelinesPage() {
         name: stageForm.name,
         probability: Number(stageForm.probability),
       });
-      toast.success("Stage created");
-      setStageForm((f) => ({ ...f, name: "", probability: "20" }));
+      toast.success('Stage created');
+      setStageForm((f) => ({ ...f, name: '', probability: '20' }));
       await refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed");
+      toast.error(err instanceof Error ? err.message : 'Failed');
     } finally {
       setBusy(false);
     }
@@ -82,7 +82,10 @@ function CrmPipelinesPage() {
         <div className="grid gap-4 lg:grid-cols-2">
           <Card className="border-border bg-card p-6">
             <h2 className="font-semibold">New pipeline</h2>
-            <form className="mt-4 grid gap-3" onSubmit={onCreatePipeline}>
+            <form
+              className="mt-4 grid gap-3"
+              onSubmit={onCreatePipeline}
+            >
               <div>
                 <Label>Name</Label>
                 <Input
@@ -98,7 +101,11 @@ function CrmPipelinesPage() {
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                 />
               </div>
-              <Button type="submit" disabled={busy} className="w-fit">
+              <Button
+                type="submit"
+                disabled={busy}
+                className="w-fit"
+              >
                 Add pipeline
               </Button>
             </form>
@@ -106,16 +113,22 @@ function CrmPipelinesPage() {
 
           <Card className="border-border bg-card p-6">
             <h2 className="font-semibold">New stage</h2>
-            <form className="mt-4 grid gap-3" onSubmit={onCreateStage}>
+            <form
+              className="mt-4 grid gap-3"
+              onSubmit={onCreateStage}
+            >
               <div>
                 <Label>Pipeline</Label>
                 <select
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
+                  className="border-input flex h-9 w-full rounded-md border bg-transparent px-3 text-sm"
                   value={stageForm.pipelineId}
                   onChange={(e) => setStageForm({ ...stageForm, pipelineId: e.target.value })}
                 >
                   {pipelines.map((p) => (
-                    <option key={p.id} value={p.id}>
+                    <option
+                      key={p.id}
+                      value={p.id}
+                    >
                       {p.name}
                     </option>
                   ))}
@@ -139,7 +152,11 @@ function CrmPipelinesPage() {
                   onChange={(e) => setStageForm({ ...stageForm, probability: e.target.value })}
                 />
               </div>
-              <Button type="submit" disabled={busy} className="w-fit">
+              <Button
+                type="submit"
+                disabled={busy}
+                className="w-fit"
+              >
                 Add stage
               </Button>
             </form>
@@ -148,11 +165,14 @@ function CrmPipelinesPage() {
       )}
 
       {pipelines.map((p) => (
-        <Card key={p.id} className="border-border bg-card p-6">
+        <Card
+          key={p.id}
+          className="border-border bg-card p-6"
+        >
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
               <h2 className="font-semibold">{p.name}</h2>
-              <p className="text-sm text-muted-foreground">{p.description ?? "No description"}</p>
+              <p className="text-muted-foreground text-sm">{p.description ?? 'No description'}</p>
             </div>
             <div className="flex items-center gap-2">
               {p.isDefault && <Badge>Default</Badge>}
@@ -163,7 +183,7 @@ function CrmPipelinesPage() {
                   onClick={() =>
                     void setDefaultCrmPipeline(p.id)
                       .then(() => refresh())
-                      .then(() => toast.success("Default pipeline set"))
+                      .then(() => toast.success('Default pipeline set'))
                   }
                 >
                   Set default
@@ -175,20 +195,20 @@ function CrmPipelinesPage() {
             {p.stages.map((s, i) => (
               <li
                 key={s.id}
-                className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-sm"
+                className="border-border flex items-center justify-between rounded-md border px-3 py-2 text-sm"
               >
                 <span>
-                  {i + 1}. {s.name}{" "}
+                  {i + 1}. {s.name}{' '}
                   <span className="text-muted-foreground">({s.probability}%)</span>
                 </span>
-                {canWrite && !["Won", "Lost"].includes(s.name) && (
+                {canWrite && !['Won', 'Lost'].includes(s.name) && (
                   <Button
                     size="sm"
                     variant="ghost"
                     onClick={() =>
                       void deleteCrmStage(s.id)
                         .then(() => refresh())
-                        .then(() => toast.success("Stage deleted"))
+                        .then(() => toast.success('Stage deleted'))
                         .catch((err) => toast.error(String(err)))
                     }
                   >
@@ -201,7 +221,7 @@ function CrmPipelinesPage() {
         </Card>
       ))}
       {pipelines.length === 0 && (
-        <p className="text-sm text-muted-foreground">Loading pipelines…</p>
+        <p className="text-muted-foreground text-sm">Loading pipelines…</p>
       )}
     </div>
   );

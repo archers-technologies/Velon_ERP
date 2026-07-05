@@ -5,14 +5,14 @@
 
 ## Commands
 
-| Command | Scope | Touches your DB? |
-|---------|-------|------------------|
-| `npm test` / `npm run test:unit` | Feature unit tests with mocks | **No** |
-| `npm run test:all` | Unit + security e2e | Security suite may |
-| `npm run test:security` | Isolation and auth e2e patterns | Yes (use `DATABASE_URL_TEST`) |
-| `npm run test:e2e` | Full API e2e | Yes (use `DATABASE_URL_TEST`) |
-| `npm run test:release-flow` | Release-flow e2e subset | Yes |
-| `npm run verify:release` | Release readiness script | No |
+| Command                          | Scope                           | Touches your DB?              |
+| -------------------------------- | ------------------------------- | ----------------------------- |
+| `npm test` / `npm run test:unit` | Feature unit tests with mocks   | **No**                        |
+| `npm run test:all`               | Unit + security e2e             | Security suite may            |
+| `npm run test:security`          | Isolation and auth e2e patterns | Yes (use `DATABASE_URL_TEST`) |
+| `npm run test:e2e`               | Full API e2e                    | Yes (use `DATABASE_URL_TEST`) |
+| `npm run test:release-flow`      | Release-flow e2e subset         | Yes                           |
+| `npm run verify:release`         | Release readiness script        | No                            |
 
 Shared specs live in `packages/shared-kernel/src/*.spec.ts` (permissions, navigation, password policy, billing).
 

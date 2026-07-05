@@ -1,44 +1,32 @@
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { useEffect, useMemo, useState } from 'react';
+import { createFileRoute, Link, useRouter } from '@tanstack/react-router';
 import {
-  changeTenantBillingPlan,
-  loadSubscriptionCommandCenter,
-  resetTenantSubscription,
-  updatePlanDefinition,
-} from "@/lib/platform/admin-loaders";
-import { emptySubscriptionCommandCenter } from "@/lib/workspace/empty-states";
+  AlertTriangle,
+  ArrowUpRight,
+  Building2,
+  CreditCard,
+  MoreHorizontal,
+  Percent,
+  Plus,
+  RefreshCw,
+  Search,
+  Sparkles,
+  TrendingDown,
+  TrendingUp,
+  Users,
+  Wallet,
+} from 'lucide-react';
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import {
-  approveBillingPayment,
-  extendTenantTrial,
-  loadPendingBillingPayments,
-  loadPlatformBillingPayments,
-  rejectBillingPayment,
-} from "@/lib/billing/subscription-api";
-import type {
-  SubscriptionBillingStatus,
-  SubscriptionClientRow,
-  SubscriptionPlanCatalogEntry,
-} from "@/lib/types/workspace-ui";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from '@/components/ui/chart';
 import {
   Dialog,
   DialogContent,
@@ -46,43 +34,55 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from "@/components/ui/chart";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { useAdminCurrency } from "@/contexts/admin-currency";
-import { cn } from "@/lib/utils";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import {
-  Plus,
-  Search,
-  TrendingUp,
-  TrendingDown,
-  CreditCard,
-  Users,
-  Percent,
-  AlertTriangle,
-  ArrowUpRight,
-  MoreHorizontal,
-  Sparkles,
-  Building2,
-  Wallet,
-  RefreshCw,
-} from "lucide-react";
-import { toast } from "sonner";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
+import { Switch } from '@/components/ui/switch';
+import { useAdminCurrency } from '@/contexts/admin-currency';
+import {
+  approveBillingPayment,
+  extendTenantTrial,
+  loadPendingBillingPayments,
+  loadPlatformBillingPayments,
+  rejectBillingPayment,
+} from '@/lib/billing/subscription-api';
+import {
+  changeTenantBillingPlan,
+  loadSubscriptionCommandCenter,
+  resetTenantSubscription,
+  updatePlanDefinition,
+} from '@/lib/platform/admin-loaders';
+import type {
+  SubscriptionBillingStatus,
+  SubscriptionClientRow,
+  SubscriptionPlanCatalogEntry,
+} from '@/lib/types/workspace-ui';
+import { cn } from '@/lib/utils';
+import { emptySubscriptionCommandCenter } from '@/lib/workspace/empty-states';
 
-export const Route = createFileRoute("/admin/subscriptions")({
+export const Route = createFileRoute('/admin/subscriptions')({
   loader: async () => {
     let data = emptySubscriptionCommandCenter();
     let loadError: string | null = null;
@@ -92,7 +92,7 @@ export const Route = createFileRoute("/admin/subscriptions")({
       loadError =
         err instanceof Error
           ? err.message
-          : "Could not load subscription data. Restart the API (npm run dev) and try again.";
+          : 'Could not load subscription data. Restart the API (npm run dev) and try again.';
     }
     const [pendingPayments, platformPayments] = await Promise.all([
       loadPendingBillingPayments().catch(() => []),
@@ -105,48 +105,48 @@ export const Route = createFileRoute("/admin/subscriptions")({
 
 const chartConfig = {
   mrr: {
-    label: "MRR",
-    theme: { light: "oklch(0.2 0 0)", dark: "oklch(0.92 0 0)" },
+    label: 'MRR',
+    theme: { light: 'oklch(0.2 0 0)', dark: 'oklch(0.92 0 0)' },
   },
 } satisfies ChartConfig;
 
 function billingBadgeClass(s: SubscriptionBillingStatus) {
   switch (s) {
-    case "Active":
-      return "border-success/25 bg-success/10 text-success";
-    case "Trial":
-      return "border-info/25 bg-info/10 text-info";
-    case "Past due":
-      return "border-warning/30 bg-warning/15 text-warning-foreground";
-    case "Cancelled":
-      return "border-muted-foreground/30 bg-muted text-muted-foreground";
+    case 'Active':
+      return 'border-success/25 bg-success/10 text-success';
+    case 'Trial':
+      return 'border-info/25 bg-info/10 text-info';
+    case 'Past due':
+      return 'border-warning/30 bg-warning/15 text-warning-foreground';
+    case 'Cancelled':
+      return 'border-muted-foreground/30 bg-muted text-muted-foreground';
     default:
-      return "border-border bg-muted/50";
+      return 'border-border bg-muted/50';
   }
 }
 
 function limitLabel(n: number, suffix: string) {
-  if (n === 0) return "∞";
+  if (n === 0) return '∞';
   return `${n}${suffix}`;
 }
 
-function tenantPlanToApi(plan: SubscriptionClientRow["plan"]): "STARTER" | "GROWTH" | "ENTERPRISE" {
-  if (plan === "Growth") return "GROWTH";
-  if (plan === "Enterprise") return "ENTERPRISE";
-  return "STARTER";
+function tenantPlanToApi(plan: SubscriptionClientRow['plan']): 'STARTER' | 'GROWTH' | 'ENTERPRISE' {
+  if (plan === 'Growth') return 'GROWTH';
+  if (plan === 'Enterprise') return 'ENTERPRISE';
+  return 'STARTER';
 }
 
 function formatProviderLabel(provider: string) {
-  if (provider === "BANK_TRANSFER") return "Bank transfer";
-  if (provider === "RAZORPAY") return "Razorpay";
-  return provider.replace(/_/g, " ");
+  if (provider === 'BANK_TRANSFER') return 'Bank transfer';
+  if (provider === 'RAZORPAY') return 'Razorpay';
+  return provider.replace(/_/g, ' ');
 }
 
-function catalogPlanToApi(planId: string): "STARTER" | "GROWTH" | "ENTERPRISE" {
+function catalogPlanToApi(planId: string): 'STARTER' | 'GROWTH' | 'ENTERPRISE' {
   const id = planId.toUpperCase();
-  if (id === "GROWTH" || id === "PROFESSIONAL") return "GROWTH";
-  if (id === "ENTERPRISE") return "ENTERPRISE";
-  return "STARTER";
+  if (id === 'GROWTH' || id === 'PROFESSIONAL') return 'GROWTH';
+  if (id === 'ENTERPRISE') return 'ENTERPRISE';
+  return 'STARTER';
 }
 
 function AdminSubscriptionsPage() {
@@ -154,22 +154,22 @@ function AdminSubscriptionsPage() {
   const { data, pendingPayments, platformPayments, loadError } = Route.useLoaderData();
   const { formatCurrency } = useAdminCurrency();
   const [paymentBusy, setPaymentBusy] = useState<string | null>(null);
-  const [planFilter, setPlanFilter] = useState<"all" | "Starter" | "Growth" | "Enterprise">("all");
-  const [statusFilter, setStatusFilter] = useState<"all" | SubscriptionBillingStatus>("all");
-  const [q, setQ] = useState("");
+  const [planFilter, setPlanFilter] = useState<'all' | 'Starter' | 'Growth' | 'Enterprise'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | SubscriptionBillingStatus>('all');
+  const [q, setQ] = useState('');
   const [planSheet, setPlanSheet] = useState<SubscriptionPlanCatalogEntry | null>(null);
   const [planDraft, setPlanDraft] = useState<SubscriptionPlanCatalogEntry | null>(null);
   const [planSaving, setPlanSaving] = useState(false);
   const [planChangeTarget, setPlanChangeTarget] = useState<SubscriptionClientRow | null>(null);
-  const [planChangeValue, setPlanChangeValue] = useState<"STARTER" | "GROWTH" | "ENTERPRISE">(
-    "STARTER",
+  const [planChangeValue, setPlanChangeValue] = useState<'STARTER' | 'GROWTH' | 'ENTERPRISE'>(
+    'STARTER',
   );
 
   const filteredClients = useMemo(() => {
     const s = q.trim().toLowerCase();
     return data.clients.filter((c) => {
-      if (planFilter !== "all" && c.plan !== planFilter) return false;
-      if (statusFilter !== "all" && c.billingStatus !== statusFilter) return false;
+      if (planFilter !== 'all' && c.plan !== planFilter) return false;
+      if (statusFilter !== 'all' && c.billingStatus !== statusFilter) return false;
       if (!s) return true;
       return c.clientName.toLowerCase().includes(s) || c.lastInvoiceId.toLowerCase().includes(s);
     });
@@ -193,7 +193,7 @@ function AdminSubscriptionsPage() {
         indiaAnnualPrice: planDraft.annualPrice ?? 0,
         monthlyPrice: planDraft.monthlyPrice ?? 0,
         annualPrice: planDraft.annualPrice ?? 0,
-        currency: "INR",
+        currency: 'INR',
         seatLimit: planDraft.limits.users === 0 ? null : planDraft.limits.users,
         storageLimitGb: planDraft.limits.storageGb,
         invoiceLimitMo:
@@ -203,11 +203,11 @@ function AdminSubscriptionsPage() {
         isEnabled: !planDraft.hiddenFromCatalog,
         modules: planDraft.modules,
       });
-      toast.success("Plan catalog saved");
+      toast.success('Plan catalog saved');
       setPlanSheet(null);
       await router.invalidate();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not save plan");
+      toast.error(err instanceof Error ? err.message : 'Could not save plan');
     } finally {
       setPlanSaving(false);
     }
@@ -219,8 +219,10 @@ function AdminSubscriptionsPage() {
         <Card className="border-destructive/40 bg-destructive/5 p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-semibold text-destructive">Subscription data unavailable</p>
-              <p className="mt-1 text-xs text-muted-foreground">{loadError}</p>
+              <p className="text-destructive text-sm font-semibold">
+                Subscription data unavailable
+              </p>
+              <p className="text-muted-foreground mt-1 text-xs">{loadError}</p>
             </div>
             <Button
               size="sm"
@@ -240,7 +242,7 @@ function AdminSubscriptionsPage() {
           <div className="mb-4 flex items-center justify-between gap-2">
             <div>
               <h2 className="text-sm font-semibold">Pending manual payments</h2>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Approve bank transfer requests to activate tenant subscriptions.
               </p>
             </div>
@@ -250,12 +252,12 @@ function AdminSubscriptionsPage() {
             {pendingPayments.map((p) => (
               <div
                 key={p.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-background px-4 py-3 text-sm"
+                className="border-border bg-background flex flex-wrap items-center justify-between gap-3 rounded-lg border px-4 py-3 text-sm"
               >
                 <div>
                   <p className="font-medium">{p.tenantName}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {p.tenantCode} · {p.invoiceNumber ?? "Invoice pending"} ·{" "}
+                  <p className="text-muted-foreground text-xs">
+                    {p.tenantCode} · {p.invoiceNumber ?? 'Invoice pending'} ·{' '}
                     {new Date(p.createdAt).toLocaleString()}
                   </p>
                 </div>
@@ -269,10 +271,12 @@ function AdminSubscriptionsPage() {
                         setPaymentBusy(p.id);
                         try {
                           await approveBillingPayment(p.id);
-                          toast.success(`${p.tenantName} payment approved — subscription activated`);
+                          toast.success(
+                            `${p.tenantName} payment approved — subscription activated`,
+                          );
                           await router.invalidate();
                         } catch (err) {
-                          toast.error(err instanceof Error ? err.message : "Approval failed");
+                          toast.error(err instanceof Error ? err.message : 'Approval failed');
                         } finally {
                           setPaymentBusy(null);
                         }
@@ -289,11 +293,11 @@ function AdminSubscriptionsPage() {
                       void (async () => {
                         setPaymentBusy(p.id);
                         try {
-                          await rejectBillingPayment(p.id, "Rejected by platform admin");
-                          toast.success("Payment rejected");
+                          await rejectBillingPayment(p.id, 'Rejected by platform admin');
+                          toast.success('Payment rejected');
                           await router.invalidate();
                         } catch (err) {
-                          toast.error(err instanceof Error ? err.message : "Rejection failed");
+                          toast.error(err instanceof Error ? err.message : 'Rejection failed');
                         } finally {
                           setPaymentBusy(null);
                         }
@@ -311,65 +315,77 @@ function AdminSubscriptionsPage() {
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <Card className="border-border bg-card p-4">
-          <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          <div className="text-muted-foreground text-[10px] font-medium tracking-wide uppercase">
             MRR (platform)
           </div>
           <div className="mt-1 text-xl font-semibold tracking-tight">
             {formatCurrency(data.mrrTotal)}
           </div>
-          <p className="mt-1 text-[11px] text-muted-foreground">Recurring · excl. one-time</p>
+          <p className="text-muted-foreground mt-1 text-[11px]">Recurring · excl. one-time</p>
         </Card>
         <Card className="border-border bg-card p-4">
-          <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          <div className="text-muted-foreground text-[10px] font-medium tracking-wide uppercase">
             Active paid
           </div>
           <div className="mt-1 text-xl font-semibold tracking-tight">
             {data.activePaidSubscriptions}
           </div>
-          <p className="mt-1 text-[11px] text-muted-foreground">{data.openTrials} trials running</p>
+          <p className="text-muted-foreground mt-1 text-[11px]">{data.openTrials} trials running</p>
         </Card>
         <Card className="border-border bg-card p-4">
-          <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          <div className="text-muted-foreground text-[10px] font-medium tracking-wide uppercase">
             By plan
           </div>
           <div className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
-            <Badge variant="outline" className="font-normal">
+            <Badge
+              variant="outline"
+              className="font-normal"
+            >
               S {data.activeByPlan.Starter}
             </Badge>
-            <Badge variant="outline" className="font-normal">
+            <Badge
+              variant="outline"
+              className="font-normal"
+            >
               G {data.activeByPlan.Growth}
             </Badge>
-            <Badge variant="outline" className="font-normal">
+            <Badge
+              variant="outline"
+              className="font-normal"
+            >
               E {data.activeByPlan.Enterprise}
             </Badge>
           </div>
         </Card>
         <Card className="border-border bg-card p-4">
-          <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          <div className="text-muted-foreground text-[10px] font-medium tracking-wide uppercase">
             Trial conversion
           </div>
           <div className="mt-1 flex items-baseline gap-1.5">
             <span className="text-xl font-semibold tracking-tight">{data.trialConversionPct}%</span>
-            <span className="text-[11px] text-success">30d</span>
+            <span className="text-success text-[11px]">30d</span>
           </div>
-          <p className="mt-1 text-[11px] text-muted-foreground">Trials → paid</p>
+          <p className="text-muted-foreground mt-1 text-[11px]">Trials → paid</p>
         </Card>
         <Card className="border-border bg-card p-4">
-          <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          <div className="text-muted-foreground text-[10px] font-medium tracking-wide uppercase">
             Churn
           </div>
           <div className="mt-1 flex items-center gap-1.5 text-xl font-semibold tracking-tight">
             {data.churnPct}%
-            <TrendingDown className="h-4 w-4 text-success" aria-hidden />
+            <TrendingDown
+              className="text-success h-4 w-4"
+              aria-hidden
+            />
           </div>
-          <p className="mt-1 text-[11px] text-muted-foreground">Cancelled / active</p>
+          <p className="text-muted-foreground mt-1 text-[11px]">Cancelled / active</p>
         </Card>
         <Card className="border-border bg-card p-4">
-          <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          <div className="text-muted-foreground text-[10px] font-medium tracking-wide uppercase">
             Dunning
           </div>
           <div className="mt-1 text-xl font-semibold tracking-tight">{data.dunningQueue}</div>
-          <p className="mt-1 text-[11px] text-muted-foreground">Auto-retry on</p>
+          <p className="text-muted-foreground mt-1 text-[11px]">Auto-retry on</p>
         </Card>
       </div>
 
@@ -378,19 +394,29 @@ function AdminSubscriptionsPage() {
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div>
               <div className="text-sm font-semibold">Revenue trend</div>
-              <p className="text-xs text-muted-foreground">Platform MRR · last 6 periods</p>
+              <p className="text-muted-foreground text-xs">Platform MRR · last 6 periods</p>
             </div>
-            <Badge variant="outline" className="gap-1 font-normal">
+            <Badge
+              variant="outline"
+              className="gap-1 font-normal"
+            >
               <TrendingUp className="h-3 w-3" />
               {data.netMovementLabel}
             </Badge>
           </div>
-          <ChartContainer config={chartConfig} className="mt-4 h-[200px] w-full">
+          <ChartContainer
+            config={chartConfig}
+            className="mt-4 h-[200px] w-full"
+          >
             <AreaChart
               data={data.revenueSparkline}
               margin={{ left: 0, right: 8, top: 8, bottom: 0 }}
             >
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted/40" vertical={false} />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                className="stroke-muted/40"
+                vertical={false}
+              />
               <XAxis
                 dataKey="month"
                 tickLine={false}
@@ -398,7 +424,10 @@ function AdminSubscriptionsPage() {
                 tickMargin={8}
                 className="text-[10px]"
               />
-              <YAxis hide domain={["dataMin - 200", "dataMax + 200"]} />
+              <YAxis
+                hide
+                domain={['dataMin - 200', 'dataMax + 200']}
+              />
               <ChartTooltip content={<ChartTooltipContent />} />
               <Area
                 dataKey="mrr"
@@ -411,23 +440,32 @@ function AdminSubscriptionsPage() {
             </AreaChart>
           </ChartContainer>
         </Card>
-        <Card className="flex flex-col justify-between border-border bg-card p-5 lg:col-span-2">
+        <Card className="border-border bg-card flex flex-col justify-between p-5 lg:col-span-2">
           <div>
             <div className="text-sm font-semibold">Lifecycle automation</div>
-            <p className="mt-1 text-xs text-muted-foreground">{data.gatewayLabel}</p>
+            <p className="text-muted-foreground mt-1 text-xs">{data.gatewayLabel}</p>
           </div>
           <Separator className="my-4" />
-          <ul className="space-y-3 text-xs text-muted-foreground">
+          <ul className="text-muted-foreground space-y-3 text-xs">
             <li className="flex gap-2">
-              <RefreshCw className="mt-0.5 h-3.5 w-3.5 shrink-0 text-foreground" aria-hidden />
+              <RefreshCw
+                className="text-foreground mt-0.5 h-3.5 w-3.5 shrink-0"
+                aria-hidden
+              />
               Invoices generate on renewal; webhooks sync AR to Finance module.
             </li>
             <li className="flex gap-2">
-              <Wallet className="mt-0.5 h-3.5 w-3.5 shrink-0 text-foreground" aria-hidden />
+              <Wallet
+                className="text-foreground mt-0.5 h-3.5 w-3.5 shrink-0"
+                aria-hidden
+              />
               Failed cards · 4 retries · then suspend + notify tenant admins.
             </li>
             <li className="flex gap-2">
-              <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-foreground" aria-hidden />
+              <Sparkles
+                className="text-foreground mt-0.5 h-3.5 w-3.5 shrink-0"
+                aria-hidden
+              />
               Offline payments: ops records receipt → marks invoice paid (audit trail).
             </li>
           </ul>
@@ -438,111 +476,125 @@ function AdminSubscriptionsPage() {
         <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
           <div>
             <h2 className="text-sm font-semibold">Plans &amp; packages</h2>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Pricing, limits, module gates, trials — edit opens catalog detail
             </p>
           </div>
         </div>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {data.catalogPlans.length === 0 ? (
-            <Card className="col-span-full border-border bg-card p-8 text-center text-sm text-muted-foreground">
+            <Card className="border-border bg-card text-muted-foreground col-span-full p-8 text-center text-sm">
               No subscription plans configured yet. Plans are seeded on first database migration.
             </Card>
           ) : (
             data.catalogPlans.map((p) => (
-            <Card key={p.id} className="flex flex-col border-border bg-card p-5">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-sm font-semibold">{p.name}</span>
-                  {p.hiddenFromCatalog ? (
-                    <Badge variant="secondary" className="text-[10px] font-normal">
-                      Hidden
-                    </Badge>
-                  ) : null}
+              <Card
+                key={p.id}
+                className="border-border bg-card flex flex-col p-5"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm font-semibold">{p.name}</span>
+                    {p.hiddenFromCatalog ? (
+                      <Badge
+                        variant="secondary"
+                        className="text-[10px] font-normal"
+                      >
+                        Hidden
+                      </Badge>
+                    ) : null}
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 shrink-0 text-xs"
+                    onClick={() => setPlanSheet(p)}
+                  >
+                    Edit plan
+                  </Button>
                 </div>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-7 shrink-0 text-xs"
-                  onClick={() => setPlanSheet(p)}
-                >
-                  Edit plan
-                </Button>
-              </div>
-              <div className="mt-3 text-2xl font-semibold tracking-tight">
-                {p.customPricing ? (
-                  "Custom"
-                ) : (
-                  <>
-                    {formatCurrency(p.monthlyPrice ?? 0)}
-                    <span className="text-sm font-normal text-muted-foreground"> /mo</span>
-                  </>
-                )}
-              </div>
-              {!p.customPricing && p.annualPrice != null ? (
-                <p className="text-[11px] text-muted-foreground">
-                  Annual {formatCurrency(p.annualPrice)} · ~1 mo free
+                <div className="mt-3 text-2xl font-semibold tracking-tight">
+                  {p.customPricing ? (
+                    'Custom'
+                  ) : (
+                    <>
+                      {formatCurrency(p.monthlyPrice ?? 0)}
+                      <span className="text-muted-foreground text-sm font-normal"> /mo</span>
+                    </>
+                  )}
+                </div>
+                {!p.customPricing && p.annualPrice != null ? (
+                  <p className="text-muted-foreground text-[11px]">
+                    Annual {formatCurrency(p.annualPrice)} · ~1 mo free
+                  </p>
+                ) : null}
+                <p className="text-muted-foreground mt-2 text-xs">{p.description}</p>
+                <p className="mt-2 text-xs font-medium">{p.seatsSummary}</p>
+                <div className="text-muted-foreground mt-3 grid grid-cols-2 gap-x-2 gap-y-1 text-[10px]">
+                  <span>Users cap</span>
+                  <span className="text-foreground text-right font-mono">
+                    {limitLabel(p.limits.users, '')}
+                  </span>
+                  <span>Storage</span>
+                  <span className="text-foreground text-right font-mono">
+                    {limitLabel(p.limits.storageGb, ' GB')}
+                  </span>
+                  <span>Invoices / mo</span>
+                  <span className="text-foreground text-right font-mono">
+                    {limitLabel(p.limits.invoicesPerMo, '')}
+                  </span>
+                  <span>Branches</span>
+                  <span className="text-foreground text-right font-mono">
+                    {limitLabel(p.limits.branches, '')}
+                  </span>
+                </div>
+                <p className="text-muted-foreground mt-2 text-[10px]">
+                  Default trial · {p.trialDaysDefault} days
                 </p>
-              ) : null}
-              <p className="mt-2 text-xs text-muted-foreground">{p.description}</p>
-              <p className="mt-2 text-xs font-medium">{p.seatsSummary}</p>
-              <div className="mt-3 grid grid-cols-2 gap-x-2 gap-y-1 text-[10px] text-muted-foreground">
-                <span>Users cap</span>
-                <span className="text-right font-mono text-foreground">
-                  {limitLabel(p.limits.users, "")}
-                </span>
-                <span>Storage</span>
-                <span className="text-right font-mono text-foreground">
-                  {limitLabel(p.limits.storageGb, " GB")}
-                </span>
-                <span>Invoices / mo</span>
-                <span className="text-right font-mono text-foreground">
-                  {limitLabel(p.limits.invoicesPerMo, "")}
-                </span>
-                <span>Branches</span>
-                <span className="text-right font-mono text-foreground">
-                  {limitLabel(p.limits.branches, "")}
-                </span>
-              </div>
-              <p className="mt-2 text-[10px] text-muted-foreground">
-                Default trial · {p.trialDaysDefault} days
-              </p>
-              <div className="mt-4 rounded-lg bg-muted/50 px-3 py-2 text-xs">
-                <span className="text-muted-foreground">Active renewals</span>
-                <span className="ml-2 font-medium">{p.activeRenewals}</span>
-              </div>
-            </Card>
-          ))
+                <div className="bg-muted/50 mt-4 rounded-lg px-3 py-2 text-xs">
+                  <span className="text-muted-foreground">Active renewals</span>
+                  <span className="ml-2 font-medium">{p.activeRenewals}</span>
+                </div>
+              </Card>
+            ))
           )}
         </div>
       </div>
 
       <Card className="border-border bg-card">
-        <div className="flex flex-col gap-4 border-b border-border p-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:p-5">
+        <div className="border-border flex flex-col gap-4 border-b p-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:p-5">
           <div>
             <div className="text-sm font-semibold">Client subscriptions</div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Live from tenant store · {filteredClients.length} shown · renewals &amp; failed pay
               highlighted
             </p>
           </div>
-          <Button size="sm" variant="outline" className="rounded-lg shrink-0" asChild>
+          <Button
+            size="sm"
+            variant="outline"
+            className="shrink-0 rounded-lg"
+            asChild
+          >
             <Link to="/admin/tenants">
               Open tenants <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
             </Link>
           </Button>
         </div>
-        <div className="flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:flex-wrap sm:items-center sm:p-5">
+        <div className="border-border flex flex-col gap-3 border-b p-4 sm:flex-row sm:flex-wrap sm:items-center sm:p-5">
           <div className="relative min-w-[200px] flex-1 sm:max-w-xs">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
             <Input
               placeholder="Search client or invoice…"
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              className="h-9 rounded-lg border-border bg-muted/40 pl-9"
+              className="border-border bg-muted/40 h-9 rounded-lg pl-9"
             />
           </div>
-          <Select value={planFilter} onValueChange={(v) => setPlanFilter(v as typeof planFilter)}>
+          <Select
+            value={planFilter}
+            onValueChange={(v) => setPlanFilter(v as typeof planFilter)}
+          >
             <SelectTrigger className="h-9 w-[150px] rounded-lg">
               <SelectValue placeholder="Plan" />
             </SelectTrigger>
@@ -570,20 +622,23 @@ function AdminSubscriptionsPage() {
           </Select>
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-[900px] w-full text-sm">
-            <thead className="bg-muted/40 text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+          <table className="w-full min-w-[900px] text-sm">
+            <thead className="bg-muted/40 text-muted-foreground text-[10px] tracking-[0.12em] uppercase">
               <tr>
                 {[
-                  "Client",
-                  "Plan",
-                  "Billing date",
-                  "Status",
-                  "MRR",
-                  "Last invoice",
-                  "Alerts",
-                  "",
+                  'Client',
+                  'Plan',
+                  'Billing date',
+                  'Status',
+                  'MRR',
+                  'Last invoice',
+                  'Alerts',
+                  '',
                 ].map((h) => (
-                  <th key={h || "a"} className="px-4 py-3 text-left font-medium sm:px-5">
+                  <th
+                    key={h || 'a'}
+                    className="px-4 py-3 text-left font-medium sm:px-5"
+                  >
                     {h}
                   </th>
                 ))}
@@ -592,117 +647,131 @@ function AdminSubscriptionsPage() {
             <tbody>
               {filteredClients.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center text-sm text-muted-foreground">
+                  <td
+                    colSpan={8}
+                    className="text-muted-foreground px-4 py-10 text-center text-sm"
+                  >
                     {data.clients.length === 0
-                      ? "No client subscriptions yet. New tenants will appear here after signup or Super Admin creation."
-                      : "No subscriptions match your filters."}
+                      ? 'No client subscriptions yet. New tenants will appear here after signup or Super Admin creation.'
+                      : 'No subscriptions match your filters.'}
                   </td>
                 </tr>
               ) : (
                 filteredClients.map((c: SubscriptionClientRow) => (
-                <tr
-                  key={c.tenantId}
-                  className={cn(
-                    "border-t border-border hover:bg-muted/30",
-                    (c.renewalSoon || c.failedPayment) && "bg-warning/5",
-                  )}
-                >
-                  <td className="px-4 py-3 font-medium sm:px-5">{c.clientName}</td>
-                  <td className="px-4 py-3 sm:px-5">
-                    <Badge variant="outline" className="rounded-md font-normal">
-                      {c.plan}
-                    </Badge>
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-muted-foreground sm:px-5">
-                    {c.billingDate}
-                  </td>
-                  <td className="px-4 py-3 sm:px-5">
-                    <Badge
-                      variant="outline"
-                      className={cn("rounded-md font-normal", billingBadgeClass(c.billingStatus))}
-                    >
-                      {c.billingStatus}
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-3 font-medium sm:px-5">{formatCurrency(c.mrr)}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-muted-foreground sm:px-5">
-                    {c.lastInvoiceId}
-                  </td>
-                  <td className="px-4 py-3 sm:px-5">
-                    <div className="flex flex-wrap gap-1">
-                      {c.renewalSoon ? (
-                        <Badge
-                          variant="outline"
-                          className="text-[10px] font-normal text-amber-800 dark:text-amber-200"
+                  <tr
+                    key={c.tenantId}
+                    className={cn(
+                      'border-border hover:bg-muted/30 border-t',
+                      (c.renewalSoon || c.failedPayment) && 'bg-warning/5',
+                    )}
+                  >
+                    <td className="px-4 py-3 font-medium sm:px-5">{c.clientName}</td>
+                    <td className="px-4 py-3 sm:px-5">
+                      <Badge
+                        variant="outline"
+                        className="rounded-md font-normal"
+                      >
+                        {c.plan}
+                      </Badge>
+                    </td>
+                    <td className="text-muted-foreground px-4 py-3 font-mono text-xs whitespace-nowrap sm:px-5">
+                      {c.billingDate}
+                    </td>
+                    <td className="px-4 py-3 sm:px-5">
+                      <Badge
+                        variant="outline"
+                        className={cn('rounded-md font-normal', billingBadgeClass(c.billingStatus))}
+                      >
+                        {c.billingStatus}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3 font-medium sm:px-5">{formatCurrency(c.mrr)}</td>
+                    <td className="text-muted-foreground px-4 py-3 font-mono text-xs sm:px-5">
+                      {c.lastInvoiceId}
+                    </td>
+                    <td className="px-4 py-3 sm:px-5">
+                      <div className="flex flex-wrap gap-1">
+                        {c.renewalSoon ? (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] font-normal text-amber-800 dark:text-amber-200"
+                          >
+                            Renewal ≤14d
+                          </Badge>
+                        ) : null}
+                        {c.failedPayment ? (
+                          <Badge
+                            variant="destructive"
+                            className="text-[10px] font-normal"
+                          >
+                            Failed pay
+                          </Badge>
+                        ) : null}
+                        {!c.renewalSoon && !c.failedPayment ? (
+                          <span className="text-muted-foreground text-xs">—</span>
+                        ) : null}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 sm:px-5">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8"
+                            aria-label="Actions"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          align="end"
+                          className="w-52"
                         >
-                          Renewal ≤14d
-                        </Badge>
-                      ) : null}
-                      {c.failedPayment ? (
-                        <Badge variant="destructive" className="text-[10px] font-normal">
-                          Failed pay
-                        </Badge>
-                      ) : null}
-                      {!c.renewalSoon && !c.failedPayment ? (
-                        <span className="text-xs text-muted-foreground">—</span>
-                      ) : null}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 sm:px-5">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8"
-                          aria-label="Actions"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-52">
-                        <DropdownMenuItem
-                          onSelect={() => {
-                            setPlanChangeTarget(c);
-                            setPlanChangeValue(tenantPlanToApi(c.plan));
-                          }}
-                        >
-                          Change plan
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onSelect={() => {
-                            void (async () => {
-                              try {
-                                await resetTenantSubscription(c.tenantId);
-                                toast.success("Subscription reset (+30 day renewal)");
-                                await router.invalidate();
-                              } catch (err) {
-                                toast.error(err instanceof Error ? err.message : "Reset failed");
-                              }
-                            })();
-                          }}
-                        >
-                          Reset subscription
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onSelect={() => {
-                            void (async () => {
-                              try {
-                                await extendTenantTrial(c.tenantId, 14);
-                                toast.success("Trial extended by 14 days");
-                                await router.invalidate();
-                              } catch (err) {
-                                toast.error(err instanceof Error ? err.message : "Extend trial failed");
-                              }
-                            })();
-                          }}
-                        >
-                          Extend trial (+14 days)
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </td>
-                </tr>
+                          <DropdownMenuItem
+                            onSelect={() => {
+                              setPlanChangeTarget(c);
+                              setPlanChangeValue(tenantPlanToApi(c.plan));
+                            }}
+                          >
+                            Change plan
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onSelect={() => {
+                              void (async () => {
+                                try {
+                                  await resetTenantSubscription(c.tenantId);
+                                  toast.success('Subscription reset (+30 day renewal)');
+                                  await router.invalidate();
+                                } catch (err) {
+                                  toast.error(err instanceof Error ? err.message : 'Reset failed');
+                                }
+                              })();
+                            }}
+                          >
+                            Reset subscription
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onSelect={() => {
+                              void (async () => {
+                                try {
+                                  await extendTenantTrial(c.tenantId, 14);
+                                  toast.success('Trial extended by 14 days');
+                                  await router.invalidate();
+                                } catch (err) {
+                                  toast.error(
+                                    err instanceof Error ? err.message : 'Extend trial failed',
+                                  );
+                                }
+                              })();
+                            }}
+                          >
+                            Extend trial (+14 days)
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
+                  </tr>
                 ))
               )}
             </tbody>
@@ -715,7 +784,7 @@ function AdminSubscriptionsPage() {
           <div className="mb-4 flex items-center justify-between gap-2">
             <div>
               <div className="text-sm font-semibold">Coupons &amp; trials</div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Promotional coupons are not enabled. Use Extend trial from the tenant actions menu.
               </p>
             </div>
@@ -724,23 +793,23 @@ function AdminSubscriptionsPage() {
             {data.coupons.map((c) => (
               <div
                 key={c.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-background px-4 py-3 text-sm"
+                className="border-border bg-background flex flex-wrap items-center justify-between gap-2 rounded-lg border px-4 py-3 text-sm"
               >
                 <div className="min-w-0">
                   <span className="font-mono font-semibold">{c.code}</span>
                   <span className="text-muted-foreground"> — {c.description}</span>
                   {c.usesLeft != null ? (
-                    <span className="ml-1 text-xs text-muted-foreground">({c.usesLeft} left)</span>
+                    <span className="text-muted-foreground ml-1 text-xs">({c.usesLeft} left)</span>
                   ) : null}
                 </div>
                 <Badge
                   variant="outline"
                   className={cn(
-                    "shrink-0 font-normal",
-                    c.active ? "border-success/25 text-success" : "",
+                    'shrink-0 font-normal',
+                    c.active ? 'border-success/25 text-success' : '',
                   )}
                 >
-                  {c.active ? "Active" : "Inactive"}
+                  {c.active ? 'Active' : 'Inactive'}
                 </Badge>
               </div>
             ))}
@@ -749,31 +818,34 @@ function AdminSubscriptionsPage() {
         <Card className="border-border bg-card p-6">
           <div className="mb-4">
             <div className="text-sm font-semibold">Invoices &amp; payments</div>
-            <p className="text-xs text-muted-foreground">Recent ledger · gateway status</p>
+            <p className="text-muted-foreground text-xs">Recent ledger · gateway status</p>
           </div>
           <div className="space-y-2">
             {data.invoiceLog.map((inv) => (
               <div
                 key={inv.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-background px-4 py-3 text-sm"
+                className="border-border bg-background flex flex-wrap items-center justify-between gap-2 rounded-lg border px-4 py-3 text-sm"
               >
                 <div className="min-w-0">
                   <div className="font-mono text-xs">{inv.id}</div>
-                  <div className="truncate text-xs text-muted-foreground">{inv.clientName}</div>
-                  <div className="text-[11px] text-muted-foreground">{inv.label}</div>
+                  <div className="text-muted-foreground truncate text-xs">{inv.clientName}</div>
+                  <div className="text-muted-foreground text-[11px]">{inv.label}</div>
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-1">
                   <span className="font-medium">{formatCurrency(inv.amount)}</span>
                   <div className="flex flex-wrap justify-end gap-1">
-                    <Badge variant="outline" className="text-[10px] font-normal">
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] font-normal"
+                    >
                       {inv.gateway}
                     </Badge>
                     <Badge
                       variant="outline"
                       className={cn(
-                        "text-[10px] font-normal",
-                        inv.status === "Paid" && "border-success/25 text-success",
-                        inv.status === "Failed" && "border-destructive/40 text-destructive",
+                        'text-[10px] font-normal',
+                        inv.status === 'Paid' && 'border-success/25 text-success',
+                        inv.status === 'Failed' && 'border-destructive/40 text-destructive',
                       )}
                     >
                       {inv.status}
@@ -787,57 +859,66 @@ function AdminSubscriptionsPage() {
       </div>
 
       <Card className="border-border bg-card p-6">
-          <div className="mb-4">
-            <div className="text-sm font-semibold">Subscription payments</div>
-            <p className="text-xs text-muted-foreground">
-              Bank transfer (manual approval) and Razorpay (verified online)
-            </p>
-          </div>
-          <div className="space-y-2">
-            {platformPayments.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No subscription payments yet.</p>
-            ) : (
-              platformPayments.slice(0, 12).map((p) => (
-                <div
-                  key={p.id}
-                  className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-background px-4 py-3 text-sm"
-                >
-                  <div className="min-w-0">
-                    <div className="font-medium">{p.tenantName}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {p.plan} · {formatProviderLabel(p.provider)}
-                      {p.providerOrderId ? ` · order ${p.providerOrderId}` : ""}
-                      {p.providerPaymentId ? ` · pay ${p.providerPaymentId}` : ""}
-                    </div>
-                    {p.failureReason ? (
-                      <div className="text-xs text-destructive">{p.failureReason}</div>
+        <div className="mb-4">
+          <div className="text-sm font-semibold">Subscription payments</div>
+          <p className="text-muted-foreground text-xs">
+            Bank transfer (manual approval) and Razorpay (verified online)
+          </p>
+        </div>
+        <div className="space-y-2">
+          {platformPayments.length === 0 ? (
+            <p className="text-muted-foreground text-sm">No subscription payments yet.</p>
+          ) : (
+            platformPayments.slice(0, 12).map((p) => (
+              <div
+                key={p.id}
+                className="border-border bg-background flex flex-wrap items-center justify-between gap-2 rounded-lg border px-4 py-3 text-sm"
+              >
+                <div className="min-w-0">
+                  <div className="font-medium">{p.tenantName}</div>
+                  <div className="text-muted-foreground text-xs">
+                    {p.plan} · {formatProviderLabel(p.provider)}
+                    {p.providerOrderId ? ` · order ${p.providerOrderId}` : ''}
+                    {p.providerPaymentId ? ` · pay ${p.providerPaymentId}` : ''}
+                  </div>
+                  {p.failureReason ? (
+                    <div className="text-destructive text-xs">{p.failureReason}</div>
+                  ) : null}
+                </div>
+                <div className="flex shrink-0 flex-col items-end gap-1">
+                  <span className="font-medium">
+                    {p.currency === 'INR' ? '₹' : '$'}
+                    {p.amount}
+                  </span>
+                  <div className="flex flex-wrap justify-end gap-1">
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] font-normal"
+                    >
+                      {p.status}
+                    </Badge>
+                    {p.verifiedAt ? (
+                      <Badge
+                        variant="outline"
+                        className="text-success text-[10px] font-normal"
+                      >
+                        Verified {new Date(p.verifiedAt).toLocaleDateString()}
+                      </Badge>
                     ) : null}
                   </div>
-                  <div className="flex shrink-0 flex-col items-end gap-1">
-                    <span className="font-medium">
-                      {p.currency === "INR" ? "₹" : "$"}
-                      {p.amount}
-                    </span>
-                    <div className="flex flex-wrap justify-end gap-1">
-                      <Badge variant="outline" className="text-[10px] font-normal">
-                        {p.status}
-                      </Badge>
-                      {p.verifiedAt ? (
-                        <Badge variant="outline" className="text-[10px] font-normal text-success">
-                          Verified {new Date(p.verifiedAt).toLocaleDateString()}
-                        </Badge>
-                      ) : null}
-                    </div>
-                  </div>
                 </div>
-              ))
-            )}
-          </div>
-        </Card>
+              </div>
+            ))
+          )}
+        </div>
+      </Card>
 
       <Card className="border-border bg-muted/20 p-4">
-        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-          <Building2 className="h-4 w-4 shrink-0 text-foreground" aria-hidden />
+        <div className="text-muted-foreground flex flex-wrap items-center gap-3 text-xs">
+          <Building2
+            className="text-foreground h-4 w-4 shrink-0"
+            aria-hidden
+          />
           <span>
             Bank transfer requires manual approve/reject. Razorpay payments activate only after
             backend signature verification or webhook confirmation.
@@ -845,13 +926,18 @@ function AdminSubscriptionsPage() {
         </div>
       </Card>
 
-      <Sheet open={planSheet !== null} onOpenChange={(o) => !o && setPlanSheet(null)}>
+      <Sheet
+        open={planSheet !== null}
+        onOpenChange={(o) => !o && setPlanSheet(null)}
+      >
         <SheetContent className="overflow-y-auto sm:max-w-md">
           {planSheet && planDraft ? (
             <>
               <SheetHeader>
                 <SheetTitle>Edit plan</SheetTitle>
-                <SheetDescription>Catalog pricing, limits, and module entitlements</SheetDescription>
+                <SheetDescription>
+                  Catalog pricing, limits, and module entitlements
+                </SheetDescription>
               </SheetHeader>
               <div className="mt-6 space-y-4 text-sm">
                 <div className="space-y-1.5">
@@ -895,7 +981,12 @@ function AdminSubscriptionsPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label htmlFor="plan-currency">Currency</Label>
-                    <Input id="plan-currency" value="INR" readOnly className="font-mono text-xs" />
+                    <Input
+                      id="plan-currency"
+                      value="INR"
+                      readOnly
+                      className="font-mono text-xs"
+                    />
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="plan-trial">Trial days</Label>
@@ -982,7 +1073,7 @@ function AdminSubscriptionsPage() {
                     />
                   </div>
                 </div>
-                <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
+                <div className="border-border flex items-center justify-between rounded-lg border px-3 py-2">
                   <span className="text-sm">Plan enabled in catalog</span>
                   <Switch
                     checked={!planDraft.hiddenFromCatalog}
@@ -992,18 +1083,23 @@ function AdminSubscriptionsPage() {
                   />
                 </div>
                 <div>
-                  <div className="text-xs font-medium text-muted-foreground">Module entitlements</div>
+                  <div className="text-muted-foreground text-xs font-medium">
+                    Module entitlements
+                  </div>
                   <ul className="mt-2 space-y-2">
                     {(
                       [
-                        ["hrm", "HRM"],
-                        ["crm", "CRM"],
-                        ["finance", "Finance"],
-                        ["inventory", "Inventory"],
-                        ["manufacturing", "Manufacturing"],
+                        ['hrm', 'HRM'],
+                        ['crm', 'CRM'],
+                        ['finance', 'Finance'],
+                        ['inventory', 'Inventory'],
+                        ['manufacturing', 'Manufacturing'],
                       ] as const
                     ).map(([k, lab]) => (
-                      <li key={k} className="flex items-center justify-between gap-2">
+                      <li
+                        key={k}
+                        className="flex items-center justify-between gap-2"
+                      >
                         <span>{lab}</span>
                         <Switch
                           checked={planDraft.modules[k]}
@@ -1021,10 +1117,10 @@ function AdminSubscriptionsPage() {
                 <Button
                   type="button"
                   disabled={planSaving}
-                  className="w-full bg-foreground text-background hover:bg-foreground/90"
+                  className="bg-foreground text-background hover:bg-foreground/90 w-full"
                   onClick={() => void savePlanDraft()}
                 >
-                  {planSaving ? "Saving…" : "Save catalog changes"}
+                  {planSaving ? 'Saving…' : 'Save catalog changes'}
                 </Button>
               </div>
             </>
@@ -1032,14 +1128,17 @@ function AdminSubscriptionsPage() {
         </SheetContent>
       </Sheet>
 
-      <Dialog open={planChangeTarget !== null} onOpenChange={(open) => !open && setPlanChangeTarget(null)}>
+      <Dialog
+        open={planChangeTarget !== null}
+        onOpenChange={(open) => !open && setPlanChangeTarget(null)}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Change tenant plan</DialogTitle>
             <DialogDescription>
               {planChangeTarget
                 ? `${planChangeTarget.clientName} · current ${planChangeTarget.plan}`
-                : "Select a new plan"}
+                : 'Select a new plan'}
             </DialogDescription>
           </DialogHeader>
           <Select
@@ -1056,7 +1155,11 @@ function AdminSubscriptionsPage() {
             </SelectContent>
           </Select>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setPlanChangeTarget(null)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setPlanChangeTarget(null)}
+            >
               Cancel
             </Button>
             <Button
@@ -1066,11 +1169,11 @@ function AdminSubscriptionsPage() {
                 void (async () => {
                   try {
                     await changeTenantBillingPlan(planChangeTarget.tenantId, planChangeValue);
-                    toast.success("Plan updated");
+                    toast.success('Plan updated');
                     setPlanChangeTarget(null);
                     await router.invalidate();
                   } catch (err) {
-                    toast.error(err instanceof Error ? err.message : "Plan change failed");
+                    toast.error(err instanceof Error ? err.message : 'Plan change failed');
                   }
                 })();
               }}

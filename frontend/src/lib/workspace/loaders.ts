@@ -1,6 +1,6 @@
-import { apiFetch } from "@/lib/api/client";
-import { isApiEnabled } from "@/lib/api/config";
-import type { InventoryRecord } from "@/lib/types/workspace-ui";
+import { apiFetch } from '@/lib/api/client';
+import { isApiEnabled } from '@/lib/api/config';
+import type { InventoryRecord } from '@/lib/types/workspace-ui';
 import {
   emptyAccountingWorkspace,
   emptyBranchesWorkspace,
@@ -13,19 +13,23 @@ import {
   emptyWorkspaceDashboard,
   emptyWorkspaceIdentity,
   emptyWorkspaceNavBadges,
-} from "@/lib/workspace/empty-states";
+} from '@/lib/workspace/empty-states';
 import {
   normalizeAccountingWorkspace,
   normalizeBranchesWorkspace,
   normalizeSalesCrmWorkspace,
-} from "@/lib/workspace/normalize";
+} from '@/lib/workspace/normalize';
 
-function canCallApiFromLoader(): boolean {
-  return typeof window !== "undefined" && isApiEnabled();
+function isBrowserLoader(): boolean {
+  return typeof window !== 'undefined';
+}
+
+function canCallAuthenticatedApi(): boolean {
+  return isBrowserLoader() && isApiEnabled();
 }
 
 async function tenantFetch<T>(path: string, fallback: () => T): Promise<T> {
-  if (!canCallApiFromLoader()) return fallback();
+  if (!canCallAuthenticatedApi()) return fallback();
   try {
     return await apiFetch<T>(path);
   } catch {
@@ -34,21 +38,30 @@ async function tenantFetch<T>(path: string, fallback: () => T): Promise<T> {
 }
 
 export async function loadWorkspaceDashboard() {
-  if (!canCallApiFromLoader()) {
-    throw new Error(
-      "API URL is not configured. Add VITE_API_URL in the web environment.",
-    );
+  if (!isBrowserLoader()) {
+    return emptyWorkspaceDashboard();
   }
-  return apiFetch<Awaited<ReturnType<typeof emptyWorkspaceDashboard>>>("/workspace/dashboard");
+  if (!isApiEnabled()) {
+    throw new Error('API URL is not configured. Add VITE_API_URL in the web environment.');
+  }
+  // Session tokens live in localStorage — fetch on the client after hydration.
+  return emptyWorkspaceDashboard();
+}
+
+export async function fetchWorkspaceDashboard() {
+  if (!isApiEnabled()) {
+    throw new Error('API URL is not configured. Add VITE_API_URL in the web environment.');
+  }
+  return apiFetch<Awaited<ReturnType<typeof emptyWorkspaceDashboard>>>('/workspace/dashboard');
 }
 
 export async function loadWorkspaceIdentity() {
-  if (!canCallApiFromLoader()) return emptyWorkspaceIdentity();
+  if (!canCallAuthenticatedApi()) return emptyWorkspaceIdentity();
   try {
     const ctx = await apiFetch<{
       workspace: { name: string };
       companyProfile: { website: string | null } | null;
-    }>("/workspace/context");
+    }>('/workspace/context');
     return {
       name: ctx.workspace.name,
       website: ctx.companyProfile?.website ?? null,
@@ -59,44 +72,44 @@ export async function loadWorkspaceIdentity() {
 }
 
 export async function loadWorkspaceNavBadges() {
-  return tenantFetch("/workspace/nav-badges", emptyWorkspaceNavBadges);
+  return tenantFetch('/workspace/nav-badges', emptyWorkspaceNavBadges);
 }
 
 export async function loadWorkspaceAlerts() {
-  return tenantFetch("/workspace/alerts", emptyWorkspaceAlerts);
+  return tenantFetch('/workspace/alerts', emptyWorkspaceAlerts);
 }
 
 export async function loadCustomersWorkspace() {
-  return tenantFetch("/workspace/customers", emptyCustomersWorkspace);
+  return tenantFetch('/workspace/customers', emptyCustomersWorkspace);
 }
 
 export async function loadSuppliersWorkspace() {
-  return tenantFetch("/workspace/suppliers", emptySuppliersWorkspace);
+  return tenantFetch('/workspace/suppliers', emptySuppliersWorkspace);
 }
 
 export async function loadSalesCrmWorkspace() {
-  const raw = await tenantFetch("/workspace/sales-crm", emptySalesCrmWorkspace);
+  const raw = await tenantFetch('/workspace/sales-crm', emptySalesCrmWorkspace);
   return normalizeSalesCrmWorkspace(raw);
 }
 
 export async function loadAccountingWorkspace() {
-  const raw = await tenantFetch("/workspace/accounting", emptyAccountingWorkspace);
+  const raw = await tenantFetch('/workspace/accounting', emptyAccountingWorkspace);
   return normalizeAccountingWorkspace(raw);
 }
 
 export async function loadFinanceReportsWorkspace() {
-  return tenantFetch("/workspace/reports", emptyFinanceReportsWorkspace);
+  return tenantFetch('/workspace/reports', emptyFinanceReportsWorkspace);
 }
 
 export async function loadBranchesWorkspace() {
-  const raw = await tenantFetch("/workspace/branches", emptyBranchesWorkspace);
+  const raw = await tenantFetch('/workspace/branches', emptyBranchesWorkspace);
   return normalizeBranchesWorkspace(raw);
 }
 
 export async function loadInventory() {
-  return tenantFetch("/workspace/inventory", () => [] as InventoryRecord[]);
+  return tenantFetch('/workspace/inventory', () => [] as InventoryRecord[]);
 }
 
 export async function loadPosBootstrap() {
-  return tenantFetch("/workspace/pos/bootstrap", emptyPosBootstrap);
+  return tenantFetch('/workspace/pos/bootstrap', emptyPosBootstrap);
 }

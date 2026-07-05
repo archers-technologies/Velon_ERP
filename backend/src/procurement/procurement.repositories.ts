@@ -1,7 +1,7 @@
-import { Injectable } from "@nestjs/common";
-import { Prisma, PurchaseOrderStatus, PurchaseRequestStatus } from "@velon/database";
-import { PrismaService } from "../prisma/prisma.service";
-import { TenantScopedRepository } from "../common/repositories/tenant-scoped.repository";
+import { Injectable } from '@nestjs/common';
+import { Prisma, PurchaseOrderStatus, PurchaseRequestStatus } from '@velon/database';
+import { TenantScopedRepository } from '../common/repositories/tenant-scoped.repository';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class PurchaseRequestRepository extends TenantScopedRepository {
@@ -13,11 +13,11 @@ export class PurchaseRequestRepository extends TenantScopedRepository {
     return this.prisma.client.purchaseRequest.findMany({
       where: this.where(status ? { status } : {}),
       include: {
-        items: { orderBy: { position: "asc" }, include: { product: true } },
+        items: { orderBy: { position: 'asc' }, include: { product: true } },
         requestedBy: { select: { id: true, name: true, email: true } },
         approvedBy: { select: { id: true, name: true, email: true } },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -25,14 +25,14 @@ export class PurchaseRequestRepository extends TenantScopedRepository {
     return this.prisma.client.purchaseRequest.findFirst({
       where: this.where({ id }),
       include: {
-        items: { orderBy: { position: "asc" }, include: { product: true } },
+        items: { orderBy: { position: 'asc' }, include: { product: true } },
         requestedBy: { select: { id: true, name: true, email: true } },
         approvedBy: { select: { id: true, name: true, email: true } },
       },
     });
   }
 
-  create(data: Omit<Prisma.PurchaseRequestUncheckedCreateInput, "tenantId">) {
+  create(data: Omit<Prisma.PurchaseRequestUncheckedCreateInput, 'tenantId'>) {
     return this.prisma.client.purchaseRequest.create({
       data: { ...data, tenantId: this.tenantId },
       include: { items: true },
@@ -44,7 +44,7 @@ export class PurchaseRequestRepository extends TenantScopedRepository {
       where: { id },
       data,
       include: {
-        items: { orderBy: { position: "asc" }, include: { product: true } },
+        items: { orderBy: { position: 'asc' }, include: { product: true } },
         requestedBy: { select: { id: true, name: true, email: true } },
         approvedBy: { select: { id: true, name: true, email: true } },
       },
@@ -62,11 +62,11 @@ export class PurchaseOrderRepository extends TenantScopedRepository {
     return this.prisma.client.purchaseOrder.findMany({
       where: this.where(status ? { status } : {}),
       include: {
-        items: { orderBy: { position: "asc" }, include: { product: true } },
+        items: { orderBy: { position: 'asc' }, include: { product: true } },
         supplier: true,
         approvedBy: { select: { id: true, name: true, email: true } },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -74,14 +74,14 @@ export class PurchaseOrderRepository extends TenantScopedRepository {
     return this.prisma.client.purchaseOrder.findFirst({
       where: this.where({ id }),
       include: {
-        items: { orderBy: { position: "asc" }, include: { product: true } },
+        items: { orderBy: { position: 'asc' }, include: { product: true } },
         supplier: true,
         approvedBy: { select: { id: true, name: true, email: true } },
       },
     });
   }
 
-  create(data: Omit<Prisma.PurchaseOrderUncheckedCreateInput, "tenantId">) {
+  create(data: Omit<Prisma.PurchaseOrderUncheckedCreateInput, 'tenantId'>) {
     return this.prisma.client.purchaseOrder.create({
       data: { ...data, tenantId: this.tenantId },
       include: { items: true, supplier: true },
@@ -93,7 +93,7 @@ export class PurchaseOrderRepository extends TenantScopedRepository {
       where: { id },
       data,
       include: {
-        items: { orderBy: { position: "asc" }, include: { product: true } },
+        items: { orderBy: { position: 'asc' }, include: { product: true } },
         supplier: true,
         approvedBy: { select: { id: true, name: true, email: true } },
       },

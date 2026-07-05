@@ -1,4 +1,4 @@
-declare module "nodemailer" {
+declare module 'nodemailer' {
   export interface TransportAuth {
     user: string;
     pass: string;

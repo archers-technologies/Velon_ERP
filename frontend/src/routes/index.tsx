@@ -1,32 +1,35 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { SiteHeader } from "@/components/marketing/site-header";
-import { SiteFooter } from "@/components/marketing/site-footer";
+import { createFileRoute, Link } from '@tanstack/react-router';
+import { ArrowRight, Boxes, Check, Zap } from 'lucide-react';
 import {
   PricingPreferenceControl,
   PricingPreferencePrompt,
   usePricingPreference,
-} from "@/components/billing/pricing-preference";
-import { formatPlanPriceForPreference } from "@/lib/billing/pricing-preferences";
-import { loadPublicSiteContentSafe } from "@/lib/cms/load-public";
-import { loginSearch } from "@/lib/auth/login-utils";
-import { loadPublicPlans, marketingPlanCards } from "@/lib/billing/public-api";
-import { ArrowRight, Boxes, Check, Zap } from "lucide-react";
+} from '@/components/billing/pricing-preference';
+import { SiteFooter } from '@/components/marketing/site-footer';
+import { SiteHeader } from '@/components/marketing/site-header';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { loginSearch } from '@/lib/auth/login-utils';
+import { formatPlanPriceForPreference } from '@/lib/billing/pricing-preferences';
+import { loadPublicPlans, marketingPlanCards } from '@/lib/billing/public-api';
+import { loadPublicSiteContentSafe } from '@/lib/cms/load-public';
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute('/')({
   loader: async () => {
-    const [siteContent, catalog] = await Promise.all([loadPublicSiteContentSafe(), loadPublicPlans()]);
+    const [siteContent, catalog] = await Promise.all([
+      loadPublicSiteContentSafe(),
+      loadPublicPlans(),
+    ]);
     return { siteContent, plans: marketingPlanCards(catalog) };
   },
   head: () => ({
     meta: [
-      { title: "Velon-ERP — The Proactive Business Operating System" },
+      { title: 'Velon-ERP — The Proactive Business Operating System' },
       {
-        name: "description",
+        name: 'description',
         content:
-          "Velon-ERP is a premium AI-ready ERP for inventory, billing, accounting, workforce and customers.",
+          'Velon-ERP is a premium AI-ready ERP for inventory, billing, accounting, workforce and customers.',
       },
     ],
   }),
@@ -45,73 +48,97 @@ function Home() {
   const { preference, updatePreference } = usePricingPreference();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="bg-background min-h-screen">
       <SiteHeader />
       <PricingPreferencePrompt />
 
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-hero" />
-        <div className="absolute inset-0 bg-gradient-mesh opacity-40" />
+        <div className="bg-gradient-hero absolute inset-0" />
+        <div className="bg-gradient-mesh absolute inset-0 opacity-40" />
         <div className="relative mx-auto max-w-7xl px-6 pt-20 pb-24 text-center">
           <Badge
             variant="outline"
-            className="mb-6 gap-2 rounded-full border-border bg-background/70 px-4 py-1.5 text-xs font-medium backdrop-blur"
+            className="border-border bg-background/70 mb-6 gap-2 rounded-full px-4 py-1.5 text-xs font-medium backdrop-blur"
           >
-            <span className="flex h-1.5 w-1.5 rounded-full bg-foreground" />
-            {hero.badge ?? "Velon-ERP"}
+            <span className="bg-foreground flex h-1.5 w-1.5 rounded-full" />
+            {hero.badge ?? 'Velon-ERP'}
           </Badge>
-          <h1 className="mx-auto max-w-4xl text-5xl font-semibold leading-[1.05] tracking-tight sm:text-6xl md:text-[72px]">
+          <h1 className="mx-auto max-w-4xl text-5xl leading-[1.05] font-semibold tracking-tight sm:text-6xl md:text-[72px]">
             {hero.title}
           </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
+          <p className="text-muted-foreground mx-auto mt-6 max-w-2xl text-lg leading-relaxed">
             {hero.subtitle}
           </p>
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
             <Button
               asChild
               size="lg"
-              className="h-12 rounded-xl bg-foreground px-7 text-background hover:bg-foreground/90"
+              className="bg-foreground text-background hover:bg-foreground/90 h-12 rounded-xl px-7"
             >
-              <Link to="/login" search={loginSearch({ tab: "signup" })}>
+              <Link
+                to="/login"
+                search={loginSearch({ tab: 'signup' })}
+              >
                 {hero.cta} <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="h-12 rounded-xl border-border px-7">
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="border-border h-12 rounded-xl px-7"
+            >
               <Link to="/pricing">{hero.ctaSecondary}</Link>
             </Button>
           </div>
         </div>
       </section>
 
-      <section id="features" className="mx-auto max-w-7xl px-6 py-24">
+      <section
+        id="features"
+        className="mx-auto max-w-7xl px-6 py-24"
+      >
         <div className="mb-14 max-w-2xl">
-          <Badge variant="outline" className="mb-3 rounded-full border-border">
+          <Badge
+            variant="outline"
+            className="border-border mb-3 rounded-full"
+          >
             Platform
           </Badge>
           <h2 className="text-4xl font-semibold tracking-tight">{features.headline}</h2>
-          <p className="mt-3 text-muted-foreground">{features.subhead}</p>
+          <p className="text-muted-foreground mt-3">{features.subhead}</p>
         </div>
-        <div className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border md:grid-cols-2 lg:grid-cols-3">
+        <div className="border-border bg-border grid gap-px overflow-hidden rounded-2xl border md:grid-cols-2 lg:grid-cols-3">
           {featureItems.map((item) => (
-            <div key={item.title} className="group relative bg-card p-7 transition hover:bg-gradient-pale">
-              <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl bg-foreground text-background">
+            <div
+              key={item.title}
+              className="group bg-card hover:bg-gradient-pale relative p-7 transition"
+            >
+              <div className="bg-foreground text-background mb-5 flex h-11 w-11 items-center justify-center rounded-xl">
                 <Boxes className="h-5 w-5" />
               </div>
               <h3 className="text-lg font-semibold tracking-tight">{item.title}</h3>
-              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{item.description}</p>
+              <p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">
+                {item.description}
+              </p>
             </div>
           ))}
         </div>
       </section>
 
       {testimonials.length > 0 && (
-        <section className="border-y border-border bg-muted/30 py-24">
+        <section className="border-border bg-muted/30 border-y py-24">
           <div className="mx-auto max-w-7xl px-6">
             <h2 className="text-3xl font-semibold tracking-tight">Trusted by growing teams</h2>
             <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {testimonials.map((t) => (
-                <Card key={`${t.author}-${t.company}`} className="border-border bg-card p-6">
-                  <p className="text-sm leading-relaxed text-muted-foreground">&ldquo;{t.quote}&rdquo;</p>
+                <Card
+                  key={`${t.author}-${t.company}`}
+                  className="border-border bg-card p-6"
+                >
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    &ldquo;{t.quote}&rdquo;
+                  </p>
                   <p className="mt-4 text-sm font-medium">
                     {t.author}
                     <span className="text-muted-foreground"> · {t.company}</span>
@@ -123,61 +150,83 @@ function Home() {
         </section>
       )}
 
-      <section id="pricing" className="border-t border-border bg-muted/40 py-24">
+      <section
+        id="pricing"
+        className="border-border bg-muted/40 border-t py-24"
+      >
         <div className="mx-auto max-w-7xl px-6">
           <div className="mb-14 text-center">
-            <Badge variant="outline" className="mb-3 rounded-full border-border bg-background">
+            <Badge
+              variant="outline"
+              className="border-border bg-background mb-3 rounded-full"
+            >
               Pricing
             </Badge>
             <h2 className="text-4xl font-semibold tracking-tight">{pricingContent.headline}</h2>
-            <p className="mx-auto mt-2 max-w-xl text-muted-foreground">{pricingContent.subhead}</p>
+            <p className="text-muted-foreground mx-auto mt-2 max-w-xl">{pricingContent.subhead}</p>
             <div className="mt-4">
-              <PricingPreferenceControl preference={preference} onChange={updatePreference} compact />
+              <PricingPreferenceControl
+                preference={preference}
+                onChange={updatePreference}
+                compact
+              />
             </div>
           </div>
           <div className="grid gap-6 md:grid-cols-3">
             {plans.map((p) => (
               <Card
                 key={p.name}
-                className={`relative p-7 transition ${p.featured ? "border-foreground bg-foreground text-background shadow-elegant" : "border-border bg-card hover:-translate-y-0.5"}`}
+                className={`relative p-7 transition ${p.featured ? 'border-foreground bg-foreground text-background shadow-elegant' : 'border-border bg-card hover:-translate-y-0.5'}`}
               >
                 {p.featured && (
-                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-background text-foreground hover:bg-background">
+                  <Badge className="bg-background text-foreground hover:bg-background absolute -top-3 left-1/2 -translate-x-1/2">
                     Most popular
                   </Badge>
                 )}
-                <div className={`text-sm font-medium ${p.featured ? "text-background/70" : "text-muted-foreground"}`}>
+                <div
+                  className={`text-sm font-medium ${p.featured ? 'text-background/70' : 'text-muted-foreground'}`}
+                >
                   {p.name}
                 </div>
                 <div className="mt-3 flex items-baseline gap-1">
                   <span className="text-4xl font-semibold tracking-tight">
-                    {p.isCustom ? "Custom" : formatPlanPriceForPreference(p, preference)}
+                    {p.isCustom ? 'Custom' : formatPlanPriceForPreference(p, preference)}
                   </span>
                   {!p.isCustom && (
-                    <span className={`text-sm ${p.featured ? "text-background/60" : "text-muted-foreground"}`}>
+                    <span
+                      className={`text-sm ${p.featured ? 'text-background/60' : 'text-muted-foreground'}`}
+                    >
                       /mo
                     </span>
                   )}
                 </div>
-                <p className={`mt-1 text-sm ${p.featured ? "text-background/70" : "text-muted-foreground"}`}>
+                <p
+                  className={`mt-1 text-sm ${p.featured ? 'text-background/70' : 'text-muted-foreground'}`}
+                >
                   {p.desc}
                 </p>
                 <ul className="mt-6 space-y-2.5 text-sm">
                   {p.features.map((f) => (
-                    <li key={f} className="flex items-center gap-2">
-                      <Check className={`h-4 w-4 ${p.featured ? "text-background" : "text-foreground"}`} /> {f}
+                    <li
+                      key={f}
+                      className="flex items-center gap-2"
+                    >
+                      <Check
+                        className={`h-4 w-4 ${p.featured ? 'text-background' : 'text-foreground'}`}
+                      />{' '}
+                      {f}
                     </li>
                   ))}
                 </ul>
                 <Button
                   asChild
-                  className={`mt-7 w-full rounded-lg ${p.featured ? "bg-background text-foreground hover:bg-background/90" : "bg-foreground text-background hover:bg-foreground/90"}`}
+                  className={`mt-7 w-full rounded-lg ${p.featured ? 'bg-background text-foreground hover:bg-background/90' : 'bg-foreground text-background hover:bg-foreground/90'}`}
                 >
                   <Link
-                    to={p.isCustom ? "/contact" : "/login"}
-                    search={p.isCustom ? undefined : { tab: "signup" }}
+                    to={p.isCustom ? '/contact' : '/login'}
+                    search={p.isCustom ? undefined : { tab: 'signup' }}
                   >
-                    {p.isCustom ? "Talk to sales" : "Start free trial"}
+                    {p.isCustom ? 'Talk to sales' : 'Start free trial'}
                   </Link>
                 </Button>
               </Card>
@@ -187,13 +236,19 @@ function Home() {
       </section>
 
       {faqItems.length > 0 && (
-        <section id="faq" className="mx-auto max-w-7xl px-6 py-24">
+        <section
+          id="faq"
+          className="mx-auto max-w-7xl px-6 py-24"
+        >
           <h2 className="text-3xl font-semibold tracking-tight">Frequently asked questions</h2>
           <div className="mt-10 grid gap-4 md:grid-cols-2">
             {faqItems.map((item) => (
-              <Card key={item.q} className="border-border bg-card p-6">
+              <Card
+                key={item.q}
+                className="border-border bg-card p-6"
+              >
                 <h3 className="font-semibold">{item.q}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{item.a}</p>
+                <p className="text-muted-foreground mt-2 text-sm">{item.a}</p>
               </Card>
             ))}
           </div>
@@ -201,20 +256,23 @@ function Home() {
       )}
 
       <section className="mx-auto max-w-7xl px-6 py-24">
-        <Card className="relative overflow-hidden border-border bg-foreground p-12 text-center text-background">
-          <div className="absolute inset-0 bg-gradient-mesh opacity-20" />
+        <Card className="border-border bg-foreground text-background relative overflow-hidden p-12 text-center">
+          <div className="bg-gradient-mesh absolute inset-0 opacity-20" />
           <div className="relative">
             <Zap className="mx-auto mb-4 h-9 w-9" />
             <h3 className="text-3xl font-semibold tracking-tight">{cta.title}</h3>
-            <p className="mx-auto mt-3 max-w-xl text-background/70">{cta.subtitle}</p>
+            <p className="text-background/70 mx-auto mt-3 max-w-xl">{cta.subtitle}</p>
             <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
               <Button
                 size="lg"
-                className="h-12 rounded-xl bg-background px-7 text-foreground hover:bg-background/90"
+                className="bg-background text-foreground hover:bg-background/90 h-12 rounded-xl px-7"
                 asChild
               >
-                {cta.primaryHref === "/login" ? (
-                  <Link to="/login" search={loginSearch({ tab: "signup" })}>
+                {cta.primaryHref === '/login' ? (
+                  <Link
+                    to="/login"
+                    search={loginSearch({ tab: 'signup' })}
+                  >
                     {cta.primaryLabel}
                   </Link>
                 ) : (
@@ -224,7 +282,7 @@ function Home() {
               <Button
                 size="lg"
                 variant="ghost"
-                className="h-12 rounded-xl px-7 text-background hover:bg-background/10"
+                className="text-background hover:bg-background/10 h-12 rounded-xl px-7"
                 asChild
               >
                 <Link to={cta.secondaryHref}>{cta.secondaryLabel}</Link>
@@ -234,7 +292,10 @@ function Home() {
         </Card>
       </section>
 
-      <SiteFooter footer={siteContent.footer} contact={siteContent.contact} />
+      <SiteFooter
+        footer={siteContent.footer}
+        contact={siteContent.contact}
+      />
     </div>
   );
 }

@@ -1,30 +1,30 @@
-import { apiFetch, apiGetPlatformOverview } from "@/lib/api/client";
-import { isApiEnabled } from "@/lib/api/config";
-import { mapApiTenant, toApiCreateBody, toApiUpdatePatch } from "@/lib/tenants/mappers";
-import type { IndustryTemplate, TenantPlan, TenantStatus } from "@/lib/platform/admin-demo";
-import type { TenantRecord } from "@/lib/types/workspace-ui";
-import {
-  emptyAlertsLogsCommandCenter,
-  emptyAutomationCommandCenter,
-  emptySalesCommercialFloor,
-  emptySubscriptionCommandCenter,
-} from "@/lib/workspace/empty-states";
+import { yearlyPriceFromMonthly } from '@velon/shared';
+import { apiFetch, apiGetPlatformOverview } from '@/lib/api/client';
+import { isApiEnabled } from '@/lib/api/config';
+import type { IndustryTemplate, TenantPlan, TenantStatus } from '@/lib/platform/admin-demo';
+import { mapApiTenant, toApiCreateBody, toApiUpdatePatch } from '@/lib/tenants/mappers';
 import type {
   PlatformActivityItem,
   PlatformSystemLog,
   SubscriptionBillingStatus,
   SubscriptionClientRow,
   SubscriptionPlanCatalogEntry,
-} from "@/lib/types/workspace-ui";
-import { yearlyPriceFromMonthly } from "@velon/shared";
+  TenantRecord,
+} from '@/lib/types/workspace-ui';
+import {
+  emptyAlertsLogsCommandCenter,
+  emptyAutomationCommandCenter,
+  emptySalesCommercialFloor,
+  emptySubscriptionCommandCenter,
+} from '@/lib/workspace/empty-states';
 
 function canCallApiFromLoader(): boolean {
-  return typeof window !== "undefined";
+  return typeof window !== 'undefined';
 }
 
 function requireApi(): boolean {
   if (!isApiEnabled()) {
-    console.warn("[velon] VITE_API_URL is required — demo store removed in Phase 2C.");
+    console.warn('[velon] VITE_API_URL is required — demo store removed in Phase 2C.');
     return false;
   }
   return canCallApiFromLoader();
@@ -46,38 +46,38 @@ function emptyPlatformOverview() {
     recentTenants: [] as {
       id: string;
       name: string;
-      plan: import("@/lib/platform/admin-demo").TenantPlan;
-      status: import("@/lib/platform/admin-demo").TenantStatus;
+      plan: import('@/lib/platform/admin-demo').TenantPlan;
+      status: import('@/lib/platform/admin-demo').TenantStatus;
       mrr: number;
       country: string;
       users: number;
     }[],
     revenueByMonth: [
-      { month: "Dec", mrr: 0 },
-      { month: "Jan", mrr: 0 },
-      { month: "Feb", mrr: 0 },
-      { month: "Mar", mrr: 0 },
-      { month: "Apr", mrr: 0 },
-      { month: "May", mrr: 0 },
+      { month: 'Dec', mrr: 0 },
+      { month: 'Jan', mrr: 0 },
+      { month: 'Feb', mrr: 0 },
+      { month: 'Mar', mrr: 0 },
+      { month: 'Apr', mrr: 0 },
+      { month: 'May', mrr: 0 },
     ],
     tenantSignupsByMonth: [
-      { month: "Dec", newTenants: 0 },
-      { month: "Jan", newTenants: 0 },
-      { month: "Feb", newTenants: 0 },
-      { month: "Mar", newTenants: 0 },
-      { month: "Apr", newTenants: 0 },
-      { month: "May", newTenants: 0 },
+      { month: 'Dec', newTenants: 0 },
+      { month: 'Jan', newTenants: 0 },
+      { month: 'Feb', newTenants: 0 },
+      { month: 'Mar', newTenants: 0 },
+      { month: 'Apr', newTenants: 0 },
+      { month: 'May', newTenants: 0 },
     ],
     planDistribution: [
-      { plan: "Starter", pct: 0 },
-      { plan: "Growth", pct: 0 },
-      { plan: "Enterprise", pct: 0 },
+      { plan: 'Starter', pct: 0 },
+      { plan: 'Growth', pct: 0 },
+      { plan: 'Enterprise', pct: 0 },
     ],
     moduleUsage: [
-      { module: "Finance & GL", pct: 0 },
-      { module: "CRM & pipeline", pct: 0 },
-      { module: "HRM & payroll", pct: 0 },
-      { module: "Inventory & WMS", pct: 0 },
+      { module: 'Finance & GL', pct: 0 },
+      { module: 'CRM & pipeline', pct: 0 },
+      { module: 'HRM & payroll', pct: 0 },
+      { module: 'Inventory & WMS', pct: 0 },
     ],
     activityFeed: [] as PlatformActivityItem[],
     systemLogs: [] as PlatformSystemLog[],
@@ -86,7 +86,7 @@ function emptyPlatformOverview() {
 
 export async function loadAdminTenants(): Promise<TenantRecord[]> {
   if (!requireApi()) return [];
-  const rows = await apiFetch<Parameters<typeof mapApiTenant>[0][]>("/tenants");
+  const rows = await apiFetch<Parameters<typeof mapApiTenant>[0][]>('/tenants');
   return rows.map(mapApiTenant);
 }
 
@@ -100,34 +100,34 @@ export async function loadPlatformStaff() {
       email: string;
       role: string;
       lastActive: string;
-      status: "Active" | "Suspended";
+      status: 'Active' | 'Suspended';
       mfaEnabled: boolean;
     }[]
-  >("/platform/users");
+  >('/platform/users');
 }
 
 export async function loadPlatformOverview(): Promise<PlatformOverviewData> {
   if (!requireApi()) return emptyPlatformOverview();
   const raw = await apiGetPlatformOverview();
   const planFromApi: Record<string, TenantPlan> = {
-    STARTER: "Starter",
-    GROWTH: "Growth",
-    ENTERPRISE: "Enterprise",
+    STARTER: 'Starter',
+    GROWTH: 'Growth',
+    ENTERPRISE: 'Enterprise',
   };
   const statusFromApi: Record<string, TenantStatus> = {
-    ACTIVE: "Active",
-    TRIAL: "Trial",
-    PAST_DUE: "Past due",
-    SUSPENDED: "Suspended",
+    ACTIVE: 'Active',
+    TRIAL: 'Trial',
+    PAST_DUE: 'Past due',
+    SUSPENDED: 'Suspended',
   };
-  type RecentTenantRow = PlatformOverviewData["recentTenants"][number];
-  const recentTenants = (
-    (raw as { recentTenants?: RecentTenantRow[] }).recentTenants ?? []
-  ).map((t) => ({
-    ...t,
-    plan: planFromApi[String(t.plan)] ?? t.plan,
-    status: statusFromApi[String(t.status)] ?? t.status,
-  }));
+  type RecentTenantRow = PlatformOverviewData['recentTenants'][number];
+  const recentTenants = ((raw as { recentTenants?: RecentTenantRow[] }).recentTenants ?? []).map(
+    (t) => ({
+      ...t,
+      plan: planFromApi[String(t.plan)] ?? t.plan,
+      status: statusFromApi[String(t.status)] ?? t.status,
+    }),
+  );
   return {
     ...(raw as PlatformOverviewData),
     recentTenants,
@@ -137,10 +137,10 @@ export async function loadPlatformOverview(): Promise<PlatformOverviewData> {
 export type PlatformDiagnosticsData = {
   activeTenants: number;
   activeUsers: number;
-  database: { postgres: "ok" | "degraded"; redis: "ok" | "degraded" };
-  migrations?: { applied: number; pending: number; status: "ok" | "degraded" };
-  api: { status: "ok" | "degraded" };
-  queue: { status: "ok" | "degraded"; label: string };
+  database: { postgres: 'ok' | 'degraded'; redis: 'ok' | 'degraded' };
+  migrations?: { applied: number; pending: number; status: 'ok' | 'degraded' };
+  api: { status: 'ok' | 'degraded' };
+  queue: { status: 'ok' | 'degraded'; label: string };
   recentSecurityEvents: {
     id: string;
     action: string;
@@ -157,15 +157,15 @@ export async function loadPlatformDiagnostics(): Promise<PlatformDiagnosticsData
     return {
       activeTenants: 0,
       activeUsers: 0,
-      database: { postgres: "degraded", redis: "degraded" },
-      api: { status: "degraded" },
-      queue: { status: "degraded", label: "Redis revision bus" },
+      database: { postgres: 'degraded', redis: 'degraded' },
+      api: { status: 'degraded' },
+      queue: { status: 'degraded', label: 'Redis revision bus' },
       recentSecurityEvents: [],
       recentErrors: [],
       checkedAt: new Date().toISOString(),
     };
   }
-  return apiFetch<PlatformDiagnosticsData>("/platform/diagnostics");
+  return apiFetch<PlatformDiagnosticsData>('/platform/diagnostics');
 }
 
 export async function createAdminTenant(input: {
@@ -178,9 +178,9 @@ export async function createAdminTenant(input: {
   slug?: string;
   industryTemplate: IndustryTemplate;
 }) {
-  if (!requireApi()) throw new Error("API required to create tenants.");
-  const row = await apiFetch<Parameters<typeof mapApiTenant>[0]>("/tenants", {
-    method: "POST",
+  if (!requireApi()) throw new Error('API required to create tenants.');
+  const row = await apiFetch<Parameters<typeof mapApiTenant>[0]>('/tenants', {
+    method: 'POST',
     body: JSON.stringify(toApiCreateBody(input)),
   });
   return mapApiTenant(row);
@@ -193,33 +193,33 @@ export async function updateAdminTenant(
     status?: TenantStatus;
     users?: number;
     mrr?: number;
-    modules?: TenantRecord["modules"];
+    modules?: TenantRecord['modules'];
   },
 ) {
-  if (!requireApi()) throw new Error("API required to update tenants.");
+  if (!requireApi()) throw new Error('API required to update tenants.');
   const row = await apiFetch<Parameters<typeof mapApiTenant>[0]>(`/tenants/${id}`, {
-    method: "PATCH",
+    method: 'PATCH',
     body: JSON.stringify(toApiUpdatePatch(patch)),
   });
   return mapApiTenant(row);
 }
 
 export async function deleteAdminTenant(id: string) {
-  if (!requireApi()) throw new Error("API required to delete tenants.");
-  return apiFetch<{ id: string; deleted: true }>(`/tenants/${id}`, { method: "DELETE" });
+  if (!requireApi()) throw new Error('API required to delete tenants.');
+  return apiFetch<{ id: string; deleted: true }>(`/tenants/${id}`, { method: 'DELETE' });
 }
 
 function apiPlanToTenantPlan(plan: string): TenantPlan {
-  if (plan === "GROWTH") return "Growth";
-  if (plan === "ENTERPRISE") return "Enterprise";
-  return "Starter";
+  if (plan === 'GROWTH') return 'Growth';
+  if (plan === 'ENTERPRISE') return 'Enterprise';
+  return 'Starter';
 }
 
 function apiStatusToBillingStatus(status: string): SubscriptionBillingStatus {
-  if (status === "TRIAL") return "Trial";
-  if (status === "SUSPENDED") return "Cancelled";
-  if (status === "PAST_DUE") return "Past due";
-  return "Active";
+  if (status === 'TRIAL') return 'Trial';
+  if (status === 'SUSPENDED') return 'Cancelled';
+  if (status === 'PAST_DUE') return 'Past due';
+  return 'Active';
 }
 
 function renewalWithinDays(renewalDate: string, days: number): boolean {
@@ -243,35 +243,36 @@ function mapCatalogPlan(
     trialDays?: number;
     isEnabled?: boolean;
     description?: string;
-    modules?: SubscriptionPlanCatalogEntry["modules"];
+    modules?: SubscriptionPlanCatalogEntry['modules'];
   },
   tenants: { plan: string; status: string }[],
 ): SubscriptionPlanCatalogEntry {
-  const activeRenewals = tenants.filter((t) => t.plan === plan.id && t.status === "ACTIVE").length;
+  const activeRenewals = tenants.filter((t) => t.plan === plan.id && t.status === 'ACTIVE').length;
   const users = plan.seatLimit ?? 0;
   const modules = plan.modules ?? {
     hrm: true,
     crm: true,
-    finance: plan.id !== "STARTER",
+    finance: plan.id !== 'STARTER',
     inventory: true,
-    manufacturing: plan.id === "ENTERPRISE",
+    manufacturing: plan.id === 'ENTERPRISE',
   };
   return {
     id: plan.id.toLowerCase(),
     name: plan.displayName,
     monthlyPrice: plan.monthlyPrice,
     annualPrice: plan.annualPrice ?? yearlyPriceFromMonthly(plan.monthlyPrice),
-    description: plan.description ?? "",
-    seatsSummary: plan.seatLimit ? `Up to ${plan.seatLimit} users` : "Unlimited users",
+    description: plan.description ?? '',
+    seatsSummary: plan.seatLimit ? `Up to ${plan.seatLimit} users` : 'Unlimited users',
     activeRenewals,
-    customPricing: plan.id === "ENTERPRISE",
+    customPricing: plan.id === 'ENTERPRISE',
     trialDaysDefault: plan.trialDays ?? 14,
     hiddenFromCatalog: plan.isEnabled === false,
     limits: {
       users,
-      storageGb: plan.storageLimitGb ?? (plan.id === "STARTER" ? 10 : plan.id === "GROWTH" ? 50 : 500),
-      invoicesPerMo: plan.invoiceLimitMo ?? (plan.id === "STARTER" ? 500 : 5000),
-      branches: plan.branchLimit ?? (plan.id === "STARTER" ? 1 : plan.id === "GROWTH" ? 5 : 99),
+      storageGb:
+        plan.storageLimitGb ?? (plan.id === 'STARTER' ? 10 : plan.id === 'GROWTH' ? 50 : 500),
+      invoicesPerMo: plan.invoiceLimitMo ?? (plan.id === 'STARTER' ? 500 : 5000),
+      branches: plan.branchLimit ?? (plan.id === 'STARTER' ? 1 : plan.id === 'GROWTH' ? 5 : 99),
     },
     modules,
   };
@@ -294,7 +295,7 @@ export async function loadSubscriptionCommandCenter() {
         trialDays: number;
         isEnabled: boolean;
         description?: string;
-        modules: SubscriptionPlanCatalogEntry["modules"];
+        modules: SubscriptionPlanCatalogEntry['modules'];
       }[];
       summary: {
         totalTenants: number;
@@ -315,7 +316,7 @@ export async function loadSubscriptionCommandCenter() {
         mrr: number;
         renewalDate: string;
       }[];
-    }>("/billing/platform/subscriptions");
+    }>('/billing/platform/subscriptions');
     const empty = emptySubscriptionCommandCenter();
     const byPlan = raw.byPlan ?? {};
     return {
@@ -344,7 +345,7 @@ export async function loadSubscriptionCommandCenter() {
       ),
     };
   } catch (err) {
-    throw err instanceof Error ? err : new Error("Failed to load subscription data from API.");
+    throw err instanceof Error ? err : new Error('Failed to load subscription data from API.');
   }
 }
 
@@ -372,47 +373,47 @@ export async function loadAlertsLogsCommandCenter() {
         actor: { email: string; name: string | null } | null;
         tenantId: string | null;
       }[]
-    >("/audit/logs");
+    >('/audit/logs');
 
     const empty = emptyAlertsLogsCommandCenter();
-    const auditLogs = logs.map((row): import("@/lib/types/workspace-ui").AuditLogRow => {
+    const auditLogs = logs.map((row): import('@/lib/types/workspace-ui').AuditLogRow => {
       const action = row.action;
-      const severity: import("@/lib/types/workspace-ui").LiveAlertSeverity =
-        action.includes("security") || action.includes("failed") || action.includes("suspended")
-          ? "critical"
-          : action.includes("billing") || action.includes("plan")
-            ? "warning"
-            : "info";
+      const severity: import('@/lib/types/workspace-ui').LiveAlertSeverity =
+        action.includes('security') || action.includes('failed') || action.includes('suspended')
+          ? 'critical'
+          : action.includes('billing') || action.includes('plan')
+            ? 'warning'
+            : 'info';
 
       return {
         id: row.id,
         isoDate: row.createdAt,
-        actor: row.actor?.email ?? "system",
-        actorRole: row.actor?.name ?? "platform",
+        actor: row.actor?.email ?? 'system',
+        actorRole: row.actor?.name ?? 'platform',
         action: row.action,
         entityKind: mapEntityKind(row.entityType),
         entityName: row.entityType,
-        entityRef: row.entityId ?? "—",
-        status: action.includes("failed") ? "failed" : "ok",
+        entityRef: row.entityId ?? '—',
+        status: action.includes('failed') ? 'failed' : 'ok',
         diffSummary: row.metadata ? JSON.stringify(row.metadata).slice(0, 120) : undefined,
-        tamper: "verified",
+        tamper: 'verified',
       };
     });
 
-    const liveAlerts = auditLogs.slice(0, 12).map(
-      (log): import("@/lib/types/workspace-ui").LiveAlertItem => ({
+    const liveAlerts = auditLogs
+      .slice(0, 12)
+      .map((log): import('@/lib/types/workspace-ui').LiveAlertItem => ({
         id: log.id,
-        title: log.action.replace(/\./g, " · "),
+        title: log.action.replace(/\./g, ' · '),
         severity:
-          log.action.includes("security") || log.action.includes("failed") ? "critical" : "info",
+          log.action.includes('security') || log.action.includes('failed') ? 'critical' : 'info',
         timeLabel: new Date(log.isoDate).toLocaleString(),
         grouped: false,
-        rcaHint: log.diffSummary ?? "Audit event recorded",
+        rcaHint: log.diffSummary ?? 'Audit event recorded',
         tags: [log.entityKind],
-      }),
-    );
+      }));
 
-    const criticalCount = liveAlerts.filter((a) => a.severity === "critical").length;
+    const criticalCount = liveAlerts.filter((a) => a.severity === 'critical').length;
 
     return {
       ...empty,
@@ -429,12 +430,12 @@ export async function loadAlertsLogsCommandCenter() {
   }
 }
 
-function mapEntityKind(entityType: string): import("@/lib/types/workspace-ui").AuditEntityKind {
-  if (entityType === "tenant") return "tenant";
-  if (entityType === "user") return "user";
-  if (entityType === "invoice") return "invoice";
-  if (entityType === "webhook") return "webhook";
-  return "system";
+function mapEntityKind(entityType: string): import('@/lib/types/workspace-ui').AuditEntityKind {
+  if (entityType === 'tenant') return 'tenant';
+  if (entityType === 'user') return 'user';
+  if (entityType === 'invoice') return 'invoice';
+  if (entityType === 'webhook') return 'webhook';
+  return 'system';
 }
 
 function buildSparklineFromLogs(
@@ -442,8 +443,8 @@ function buildSparklineFromLogs(
 ): { bucket: string; errors: number }[] {
   const buckets = new Map<string, number>();
   for (const log of logs) {
-    const hour = new Date(log.createdAt).toISOString().slice(11, 13) + ":00";
-    const isError = log.action.includes("failed") || log.action.includes("security");
+    const hour = new Date(log.createdAt).toISOString().slice(11, 13) + ':00';
+    const isError = log.action.includes('failed') || log.action.includes('security');
     if (isError) buckets.set(hour, (buckets.get(hour) ?? 0) + 1);
   }
   return Array.from(buckets.entries()).map(([bucket, errors]) => ({ bucket, errors }));
@@ -453,30 +454,30 @@ export async function createPlatformUser(input: {
   email: string;
   name: string;
   password: string;
-  role: "SUPER_ADMIN" | "PLATFORM_SUPPORT";
+  role: 'SUPER_ADMIN' | 'PLATFORM_SUPPORT';
 }) {
-  if (!requireApi()) throw new Error("API required to create platform users.");
-  return apiFetch<Awaited<ReturnType<typeof loadPlatformStaff>>[number]>("/platform/users", {
-    method: "POST",
+  if (!requireApi()) throw new Error('API required to create platform users.');
+  return apiFetch<Awaited<ReturnType<typeof loadPlatformStaff>>[number]>('/platform/users', {
+    method: 'POST',
     body: JSON.stringify(input),
   });
 }
 
 export async function setPlatformUserStatus(id: string, isActive: boolean) {
-  if (!requireApi()) throw new Error("API required to update platform users.");
+  if (!requireApi()) throw new Error('API required to update platform users.');
   return apiFetch<Awaited<ReturnType<typeof loadPlatformStaff>>[number]>(
     `/platform/users/${id}/status`,
-    { method: "PATCH", body: JSON.stringify({ isActive }) },
+    { method: 'PATCH', body: JSON.stringify({ isActive }) },
   );
 }
 
 export async function deletePlatformUser(id: string) {
-  if (!requireApi()) throw new Error("API required to delete platform users.");
-  return apiFetch<{ id: string; deleted: true }>(`/platform/users/${id}`, { method: "DELETE" });
+  if (!requireApi()) throw new Error('API required to delete platform users.');
+  return apiFetch<{ id: string; deleted: true }>(`/platform/users/${id}`, { method: 'DELETE' });
 }
 
 export async function updatePlanDefinition(
-  plan: "STARTER" | "GROWTH" | "ENTERPRISE",
+  plan: 'STARTER' | 'GROWTH' | 'ENTERPRISE',
   body: {
     displayName?: string;
     monthlyPrice?: number;
@@ -492,28 +493,31 @@ export async function updatePlanDefinition(
     branchLimit?: number | null;
     trialDays?: number;
     isEnabled?: boolean;
-    modules?: SubscriptionPlanCatalogEntry["modules"];
+    modules?: SubscriptionPlanCatalogEntry['modules'];
   },
 ) {
-  if (!requireApi()) throw new Error("API required to update plan catalog.");
+  if (!requireApi()) throw new Error('API required to update plan catalog.');
   return apiFetch(`/billing/platform/plans/${plan}`, {
-    method: "PATCH",
+    method: 'PATCH',
     body: JSON.stringify(body),
   });
 }
 
-export async function changeTenantBillingPlan(tenantId: string, plan: "STARTER" | "GROWTH" | "ENTERPRISE") {
-  if (!requireApi()) throw new Error("API required to change tenant plan.");
+export async function changeTenantBillingPlan(
+  tenantId: string,
+  plan: 'STARTER' | 'GROWTH' | 'ENTERPRISE',
+) {
+  if (!requireApi()) throw new Error('API required to change tenant plan.');
   return apiFetch<{ id: string; plan: string; mrr: number }>(
     `/billing/platform/tenants/${tenantId}/plan`,
-    { method: "PATCH", body: JSON.stringify({ plan }) },
+    { method: 'PATCH', body: JSON.stringify({ plan }) },
   );
 }
 
 export async function resetTenantSubscription(tenantId: string) {
-  if (!requireApi()) throw new Error("API required to reset subscription.");
+  if (!requireApi()) throw new Error('API required to reset subscription.');
   return apiFetch<{ id: string; renewalDate: string; status: string }>(
     `/billing/platform/tenants/${tenantId}/reset`,
-    { method: "POST" },
+    { method: 'POST' },
   );
 }

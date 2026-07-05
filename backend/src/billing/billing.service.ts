@@ -1,13 +1,13 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import { BillingInterval, TenantPlan, TenantStatus } from "@velon/database";
-import { planCatalogEntry, productionTenantWhere, seatLimitForPlan } from "@velon/shared";
-import { AuditService } from "../audit/audit.service";
-import { PrismaService } from "../prisma/prisma.service";
-import { BillingPricingService } from "./billing-pricing.service";
-import { SubscriptionAccessService } from "./subscription-access.service";
-import { SubscriptionService } from "./subscription.service";
-import { PlanDefinitionService } from "./plan-definition.service";
-import type { UpdatePlanDefinitionDto } from "./dto/billing.dto";
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BillingInterval, TenantPlan, TenantStatus } from '@velon/database';
+import { planCatalogEntry, productionTenantWhere, seatLimitForPlan } from '@velon/shared';
+import { AuditService } from '../audit/audit.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { BillingPricingService } from './billing-pricing.service';
+import type { UpdatePlanDefinitionDto } from './dto/billing.dto';
+import { PlanDefinitionService } from './plan-definition.service';
+import { SubscriptionAccessService } from './subscription-access.service';
+import { SubscriptionService } from './subscription.service';
 
 @Injectable()
 export class BillingService {
@@ -27,7 +27,7 @@ export class BillingService {
         displayName: plan.displayName,
         monthlyPrice: plan.globalMonthlyPrice,
         annualPrice: plan.globalAnnualPrice,
-        currency: "USD",
+        currency: 'USD',
         seatLimit: plan.seatLimit,
         description: plan.description,
         features: plan.features,
@@ -46,10 +46,9 @@ export class BillingService {
           id: plan.id,
           displayName: plan.displayName,
           monthlyPrice: resolved.monthlyEquivalent,
-          annualPrice:
-            (
-              await this.pricing.resolveForTenant(tenantId, plan.id, BillingInterval.YEARLY)
-            ).amount,
+          annualPrice: (
+            await this.pricing.resolveForTenant(tenantId, plan.id, BillingInterval.YEARLY)
+          ).amount,
           currency: resolved.currency,
           regionApplied: resolved.regionApplied,
           seatLimit: plan.seatLimit,
@@ -62,19 +61,19 @@ export class BillingService {
 
   async updatePlanDefinition(plan: TenantPlan, dto: UpdatePlanDefinitionDto, actorId: string) {
     if (dto.monthlyPrice !== undefined && dto.monthlyPrice < 0) {
-      throw new BadRequestException("Monthly price cannot be negative.");
+      throw new BadRequestException('Monthly price cannot be negative.');
     }
     if (dto.annualPrice !== undefined && dto.annualPrice < 0) {
-      throw new BadRequestException("Annual price cannot be negative.");
+      throw new BadRequestException('Annual price cannot be negative.');
     }
     if (dto.indiaMonthlyPrice !== undefined && dto.indiaMonthlyPrice < 0) {
-      throw new BadRequestException("India monthly price cannot be negative.");
+      throw new BadRequestException('India monthly price cannot be negative.');
     }
     if (dto.globalMonthlyPrice !== undefined && dto.globalMonthlyPrice < 0) {
-      throw new BadRequestException("Global monthly price cannot be negative.");
+      throw new BadRequestException('Global monthly price cannot be negative.');
     }
     if (dto.currency && !/^[A-Z]{3}$/.test(dto.currency.trim().toUpperCase())) {
-      throw new BadRequestException("Currency must be a valid 3-letter ISO code.");
+      throw new BadRequestException('Currency must be a valid 3-letter ISO code.');
     }
     return this.planDefinitions.updatePlan(plan, dto, actorId);
   }
@@ -94,7 +93,7 @@ export class BillingService {
         country: true,
         createdAt: true,
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
     });
 
     const byPlan = Object.fromEntries(
@@ -149,7 +148,7 @@ export class BillingService {
 
   async changeTenantPlan(tenantId: string, plan: TenantPlan, actorId: string) {
     const tenant = await this.prisma.client.tenant.findUnique({ where: { id: tenantId } });
-    if (!tenant) throw new NotFoundException("Tenant not found");
+    if (!tenant) throw new NotFoundException('Tenant not found');
 
     const activeSeats = await this.activeSeatCount(tenantId);
     this.assertPlanFitsSeats(plan, activeSeats);
@@ -167,8 +166,8 @@ export class BillingService {
     await this.audit.log({
       actorId,
       tenantId,
-      action: "billing.plan_changed",
-      entityType: "tenant",
+      action: 'billing.plan_changed',
+      entityType: 'tenant',
       entityId: tenantId,
       metadata: { from: tenant.plan, to: plan, mrr: resolved.monthlyEquivalent },
     });
@@ -184,7 +183,7 @@ export class BillingService {
 
   async resetTenantSubscription(tenantId: string, actorId: string) {
     const tenant = await this.prisma.client.tenant.findUnique({ where: { id: tenantId } });
-    if (!tenant) throw new NotFoundException("Tenant not found");
+    if (!tenant) throw new NotFoundException('Tenant not found');
 
     const renewalDate = new Date();
     renewalDate.setDate(renewalDate.getDate() + 30);
@@ -200,8 +199,8 @@ export class BillingService {
     await this.audit.log({
       actorId,
       tenantId,
-      action: "billing.subscription_reset",
-      entityType: "tenant",
+      action: 'billing.subscription_reset',
+      entityType: 'tenant',
       entityId: tenantId,
       metadata: { renewalDate: renewalDate.toISOString().slice(0, 10) },
     });
@@ -221,11 +220,13 @@ export class BillingService {
 
   async listPendingPayments() {
     const rows = await this.prisma.client.subscriptionPayment.findMany({
-      where: { status: "PENDING", provider: "BANK_TRANSFER" },
-      orderBy: { createdAt: "desc" },
+      where: { status: 'PENDING', provider: 'BANK_TRANSFER' },
+      orderBy: { createdAt: 'desc' },
       take: 50,
       include: {
-        subscription: { include: { tenant: { select: { id: true, name: true, tenantCode: true } } } },
+        subscription: {
+          include: { tenant: { select: { id: true, name: true, tenantCode: true } } },
+        },
         invoice: { select: { invoiceNumber: true, amount: true } },
       },
     });
@@ -234,7 +235,7 @@ export class BillingService {
 
   async listPlatformPayments() {
     const rows = await this.prisma.client.subscriptionPayment.findMany({
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
       take: 100,
       include: {
         subscription: {
@@ -281,7 +282,7 @@ export class BillingService {
       approvedAt: row.approvedAt?.toISOString() ?? null,
       invoiceNumber: row.invoice?.invoiceNumber ?? null,
       createdAt: row.createdAt.toISOString(),
-      manualApprovalOnly: row.provider === "BANK_TRANSFER",
+      manualApprovalOnly: row.provider === 'BANK_TRANSFER',
     };
   }
 
@@ -295,8 +296,8 @@ export class BillingService {
       await this.audit.log({
         actorId,
         tenantId: payment.tenantId,
-        action: "billing.payment_approved",
-        entityType: "subscription_payment",
+        action: 'billing.payment_approved',
+        entityType: 'subscription_payment',
         entityId: paymentId,
         metadata: { provider: payment.provider, amount: Number(payment.amount) },
       });
@@ -314,8 +315,8 @@ export class BillingService {
       await this.audit.log({
         actorId,
         tenantId: payment.tenantId,
-        action: "billing.payment_rejected",
-        entityType: "subscription_payment",
+        action: 'billing.payment_rejected',
+        entityType: 'subscription_payment',
         entityId: paymentId,
         metadata: {
           provider: payment.provider,

@@ -1,10 +1,18 @@
-import { BadRequestException, ForbiddenException, Injectable, UnauthorizedException } from "@nestjs/common";
-import { PaymentProvider, SubscriptionPaymentStatus } from "@velon/database";
-import { assertRazorpayConfigured, assertRazorpayWebhookConfigured } from "../config/razorpay.env";
-import { AuditService } from "../audit/audit.service";
-import { PrismaService } from "../prisma/prisma.service";
-import { SubscriptionService } from "./subscription.service";
-import { verifyRazorpayPaymentSignature, verifyRazorpayWebhookSignature } from "./providers/razorpay.util";
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { PaymentProvider, SubscriptionPaymentStatus } from '@velon/database';
+import { AuditService } from '../audit/audit.service';
+import { assertRazorpayConfigured, assertRazorpayWebhookConfigured } from '../config/razorpay.env';
+import { PrismaService } from '../prisma/prisma.service';
+import {
+  verifyRazorpayPaymentSignature,
+  verifyRazorpayWebhookSignature,
+} from './providers/razorpay.util';
+import { SubscriptionService } from './subscription.service';
 
 type RazorpayWebhookPayload = {
   event?: string;
@@ -47,11 +55,11 @@ export class RazorpayBillingService {
           where: { id: payment.id },
           data: {
             status: SubscriptionPaymentStatus.FAILED,
-            failureReason: "Signature verification failed",
+            failureReason: 'Signature verification failed',
           },
         });
       }
-      throw new BadRequestException("Invalid Razorpay payment signature");
+      throw new BadRequestException('Invalid Razorpay payment signature');
     }
 
     const payment = await this.prisma.client.subscriptionPayment.findFirst({
@@ -64,10 +72,10 @@ export class RazorpayBillingService {
     });
 
     if (!payment) {
-      throw new BadRequestException("Payment order not found for this workspace");
+      throw new BadRequestException('Payment order not found for this workspace');
     }
     if (payment.tenantId !== tenantId) {
-      throw new ForbiddenException("Payment does not belong to this workspace");
+      throw new ForbiddenException('Payment does not belong to this workspace');
     }
 
     const result = await this.subscriptions.activateFromVerifiedPayment(payment.id, {
@@ -80,8 +88,8 @@ export class RazorpayBillingService {
       await this.audit.log({
         actorId: actorId,
         tenantId,
-        action: "billing.razorpay_payment_verified",
-        entityType: "subscription_payment",
+        action: 'billing.razorpay_payment_verified',
+        entityType: 'subscription_payment',
         entityId: payment.id,
         metadata: { orderId, paymentId, provider: PaymentProvider.RAZORPAY },
       });
@@ -94,17 +102,17 @@ export class RazorpayBillingService {
   async handleWebhook(rawBody: Buffer, signature: string | undefined, eventId: string | undefined) {
     const secrets = assertRazorpayWebhookConfigured();
     if (!signature || !verifyRazorpayWebhookSignature(rawBody, signature, secrets.webhookSecret)) {
-      throw new UnauthorizedException("Invalid Razorpay webhook signature");
+      throw new UnauthorizedException('Invalid Razorpay webhook signature');
     }
 
     let payload: RazorpayWebhookPayload;
     try {
-      payload = JSON.parse(rawBody.toString("utf8")) as RazorpayWebhookPayload;
+      payload = JSON.parse(rawBody.toString('utf8')) as RazorpayWebhookPayload;
     } catch {
-      throw new BadRequestException("Invalid webhook payload");
+      throw new BadRequestException('Invalid webhook payload');
     }
 
-    const eventType = payload.event ?? "unknown";
+    const eventType = payload.event ?? 'unknown';
     const providerEventId = eventId ?? `${eventType}:${JSON.stringify(payload).slice(0, 64)}`;
 
     const existingEvent = await this.prisma.client.billingWebhookEvent.findUnique({
@@ -140,37 +148,37 @@ export class RazorpayBillingService {
 
     if (!payment) {
       await this.markWebhookProcessed(webhookRecord.id);
-      return { received: true, ignored: true, reason: "unknown_order" };
+      return { received: true, ignored: true, reason: 'unknown_order' };
     }
 
-    const normalizedStatus = (entity.status ?? "").toLowerCase();
-    if (normalizedStatus === "captured" || normalizedStatus === "authorized") {
+    const normalizedStatus = (entity.status ?? '').toLowerCase();
+    if (normalizedStatus === 'captured' || normalizedStatus === 'authorized') {
       await this.subscriptions.activateFromVerifiedPayment(payment.id, {
         providerPaymentId: entity.id,
         verifiedAt: new Date(),
       });
       await this.audit.log({
         tenantId: payment.tenantId,
-        action: "billing.razorpay_webhook_payment_confirmed",
-        entityType: "subscription_payment",
+        action: 'billing.razorpay_webhook_payment_confirmed',
+        entityType: 'subscription_payment',
         entityId: payment.id,
         metadata: { eventType, paymentId: entity.id, orderId: entity.order_id },
       });
-    } else if (normalizedStatus === "failed") {
+    } else if (normalizedStatus === 'failed') {
       if (payment.status === SubscriptionPaymentStatus.PENDING) {
         await this.prisma.client.subscriptionPayment.update({
           where: { id: payment.id },
           data: {
             status: SubscriptionPaymentStatus.FAILED,
             providerPaymentId: entity.id,
-            failureReason: entity.error_description ?? "Payment failed",
+            failureReason: entity.error_description ?? 'Payment failed',
           },
         });
       }
       await this.audit.log({
         tenantId: payment.tenantId,
-        action: "billing.razorpay_webhook_payment_failed",
-        entityType: "subscription_payment",
+        action: 'billing.razorpay_webhook_payment_failed',
+        entityType: 'subscription_payment',
         entityId: payment.id,
         metadata: { eventType, paymentId: entity.id, orderId: entity.order_id },
       });

@@ -1,8 +1,8 @@
-import { ForbiddenException, Injectable, UnauthorizedException } from "@nestjs/common";
-import { SubscriptionBillingStatus, TenantStatus } from "@velon/database";
-import { isBillingPortalPath, subscriptionAllowsWorkspaceAccess } from "@velon/shared";
-import { PrismaService } from "../prisma/prisma.service";
-import { SubscriptionService } from "./subscription.service";
+import { ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { SubscriptionBillingStatus, TenantStatus } from '@velon/database';
+import { isBillingPortalPath, subscriptionAllowsWorkspaceAccess } from '@velon/shared';
+import { PrismaService } from '../prisma/prisma.service';
+import { SubscriptionService } from './subscription.service';
 
 @Injectable()
 export class SubscriptionAccessService {
@@ -17,20 +17,24 @@ export class SubscriptionAccessService {
       select: { status: true, deletedAt: true },
     });
     if (!tenant || tenant.deletedAt) {
-      throw new ForbiddenException("Workspace unavailable. Contact support.");
+      throw new ForbiddenException('Workspace unavailable. Contact support.');
     }
     if (tenant.status === TenantStatus.SUSPENDED) {
-      throw new ForbiddenException("Tenant suspended. Contact support or visit billing to reactivate.");
+      throw new ForbiddenException(
+        'Tenant suspended. Contact support or visit billing to reactivate.',
+      );
     }
 
     const sub = await this.subscriptions.ensureForTenant(tenantId);
 
     if (sub.status === SubscriptionBillingStatus.SUSPENDED) {
-      throw new ForbiddenException("Workspace suspended. Contact support or visit billing to reactivate.");
+      throw new ForbiddenException(
+        'Workspace suspended. Contact support or visit billing to reactivate.',
+      );
     }
 
     if (sub.status === SubscriptionBillingStatus.CANCELLED) {
-      throw new ForbiddenException("Subscription cancelled. Visit billing to restore access.");
+      throw new ForbiddenException('Subscription cancelled. Visit billing to restore access.');
     }
 
     if (
@@ -39,12 +43,16 @@ export class SubscriptionAccessService {
       !isBillingPortalPath(requestPath)
     ) {
       throw new ForbiddenException(
-        "Subscription past due. ERP access is restricted until payment is received. Visit billing to pay.",
+        'Subscription past due. ERP access is restricted until payment is received. Visit billing to pay.',
       );
     }
 
-    if (!subscriptionAllowsWorkspaceAccess(sub.status) && requestPath && !isBillingPortalPath(requestPath)) {
-      throw new ForbiddenException("Subscription inactive. Visit billing to restore access.");
+    if (
+      !subscriptionAllowsWorkspaceAccess(sub.status) &&
+      requestPath &&
+      !isBillingPortalPath(requestPath)
+    ) {
+      throw new ForbiddenException('Subscription inactive. Visit billing to restore access.');
     }
   }
 

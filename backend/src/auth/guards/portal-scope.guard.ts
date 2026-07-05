@@ -4,11 +4,11 @@ import {
   ForbiddenException,
   Injectable,
   UnauthorizedException,
-} from "@nestjs/common";
-import { Reflector } from "@nestjs/core";
-import type { AuthenticatedUser } from "../auth.types";
-import { AuditService } from "../../audit/audit.service";
-import { PORTAL_SCOPE_KEY, type PortalScope } from "../decorators/portal-scope.decorator";
+} from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { AuditService } from '../../audit/audit.service';
+import type { AuthenticatedUser } from '../auth.types';
+import { PORTAL_SCOPE_KEY, type PortalScope } from '../decorators/portal-scope.decorator';
 
 /**
  * Enforces platform vs tenant portal separation on API routes.
@@ -28,16 +28,23 @@ export class PortalScopeGuard implements CanActivate {
     ]);
     if (!required) return true;
 
-    const req = context.switchToHttp().getRequest<{ user?: AuthenticatedUser; ip?: string; headers: Record<string, string | string[] | undefined>; path: string }>();
+    const req = context
+      .switchToHttp()
+      .getRequest<{
+        user?: AuthenticatedUser;
+        ip?: string;
+        headers: Record<string, string | string[] | undefined>;
+        path: string;
+      }>();
     const user = req.user;
-    if (!user) throw new UnauthorizedException("Authentication required.");
+    if (!user) throw new UnauthorizedException('Authentication required.');
 
     if (user.scope !== required) {
       await this.audit.logSecurityViolation({
         actorId: user.id,
         tenantId: user.tenantId,
-        action: "security.portal_scope_violation",
-        entityType: "portal",
+        action: 'security.portal_scope_violation',
+        entityType: 'portal',
         entityId: required,
         metadata: {
           requiredScope: required,
@@ -45,12 +52,13 @@ export class PortalScopeGuard implements CanActivate {
           path: req.path,
         },
         ipAddress: req.ip,
-        userAgent: typeof req.headers["user-agent"] === "string" ? req.headers["user-agent"] : undefined,
+        userAgent:
+          typeof req.headers['user-agent'] === 'string' ? req.headers['user-agent'] : undefined,
       });
       throw new ForbiddenException(
-        required === "platform"
-          ? "Platform access required. Tenant sessions cannot access this resource."
-          : "Workspace access required. Platform sessions cannot access this resource.",
+        required === 'platform'
+          ? 'Platform access required. Tenant sessions cannot access this resource.'
+          : 'Workspace access required. Platform sessions cannot access this resource.',
       );
     }
     return true;

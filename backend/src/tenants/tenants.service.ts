@@ -1,21 +1,21 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import * as crypto from "crypto";
-import { IndustryTemplate, Prisma, TenantPlan, TenantStatus } from "@velon/database";
-import { planCatalogEntry, productionTenantWhere, seatLimitForPlan } from "@velon/shared";
-import { AuditService } from "../audit/audit.service";
-import { cleanupUsersWithoutMemberships } from "../common/tenant-lifecycle.util";
-import { PrismaService } from "../prisma/prisma.service";
-import { RedisService } from "../redis/redis.service";
-import { SubscriptionService } from "../billing/subscription.service";
-import type { CreateTenantDto, UpdateTenantDto } from "./dto/tenant.dto";
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import * as crypto from 'crypto';
+import { IndustryTemplate, Prisma, TenantPlan, TenantStatus } from '@velon/database';
+import { planCatalogEntry, productionTenantWhere, seatLimitForPlan } from '@velon/shared';
+import { AuditService } from '../audit/audit.service';
+import { SubscriptionService } from '../billing/subscription.service';
+import { cleanupUsersWithoutMemberships } from '../common/tenant-lifecycle.util';
+import { PrismaService } from '../prisma/prisma.service';
+import { RedisService } from '../redis/redis.service';
+import type { CreateTenantDto, UpdateTenantDto } from './dto/tenant.dto';
 
 function slugify(name: string) {
   return (
     name
       .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "")
-      .slice(0, 48) || "tenant"
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 48) || 'tenant'
   );
 }
 
@@ -29,10 +29,10 @@ export class TenantsService {
   ) {}
 
   private formatLastActive(at: Date | null | undefined): string {
-    if (!at) return "Never";
+    if (!at) return 'Never';
     const diffMs = Date.now() - at.getTime();
     const mins = Math.floor(diffMs / 60_000);
-    if (mins < 1) return "Just now";
+    if (mins < 1) return 'Just now';
     if (mins < 60) return `${mins}m ago`;
     const hours = Math.floor(mins / 60);
     if (hours < 48) return `${hours}h ago`;
@@ -44,7 +44,7 @@ export class TenantsService {
   private async lastActiveLabelForTenant(tenantId: string): Promise<string> {
     const row = await this.prisma.client.tenantMembership.findFirst({
       where: { tenantId, isActive: true },
-      orderBy: { user: { lastLoginAt: "desc" } },
+      orderBy: { user: { lastLoginAt: 'desc' } },
       select: { user: { select: { lastLoginAt: true } } },
     });
     return this.formatLastActive(row?.user.lastLoginAt);
@@ -54,7 +54,7 @@ export class TenantsService {
     t: Prisma.TenantGetPayload<object> & {
       workspace?: { countryCode: string; currency: string; currencySymbol: string | null } | null;
     },
-    lastActiveLabel = "Never",
+    lastActiveLabel = 'Never',
   ) {
     return {
       id: t.id,
@@ -82,7 +82,7 @@ export class TenantsService {
         crm: true,
         finance: true,
         inventory: true,
-        manufacturing: t.industryTemplate === "MANUFACTURING",
+        manufacturing: t.industryTemplate === 'MANUFACTURING',
       },
     };
   }
@@ -90,7 +90,7 @@ export class TenantsService {
   async findAll() {
     const rows = await this.prisma.client.tenant.findMany({
       where: productionTenantWhere(),
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
       include: {
         workspace: { select: { countryCode: true, currency: true, currencySymbol: true } },
       },
@@ -102,14 +102,14 @@ export class TenantsService {
 
   async create(dto: CreateTenantDto, actorId: string) {
     const slug = slugify(dto.slug ?? dto.name);
-    const cap = dto.plan === "ENTERPRISE" ? 500 : dto.plan === "GROWTH" ? 120 : 20;
+    const cap = dto.plan === 'ENTERPRISE' ? 500 : dto.plan === 'GROWTH' ? 120 : 20;
     const renewal = new Date();
     renewal.setDate(renewal.getDate() + 30);
     const row = await this.prisma.client.tenant.create({
       data: {
         name: dto.name.trim(),
         slug,
-        tenantCode: `TNT-${crypto.randomBytes(3).toString("hex").toUpperCase()}`,
+        tenantCode: `TNT-${crypto.randomBytes(3).toString('hex').toUpperCase()}`,
         country: dto.country.trim(),
         plan: dto.plan,
         status: dto.status,
@@ -122,14 +122,14 @@ export class TenantsService {
     });
     await this.redis.bumpRevision();
     await this.redis.publish(
-      "velon:platform:events",
-      JSON.stringify({ kind: "tenant.created", id: row.id }),
+      'velon:platform:events',
+      JSON.stringify({ kind: 'tenant.created', id: row.id }),
     );
     await this.audit.log({
       actorId,
       tenantId: row.id,
-      action: "tenant.created",
-      entityType: "tenant",
+      action: 'tenant.created',
+      entityType: 'tenant',
       entityId: row.id,
     });
     await this.subscriptions.ensureForTenant(row.id, {
@@ -143,7 +143,7 @@ export class TenantsService {
 
   async update(id: string, dto: UpdateTenantDto, actorId: string) {
     const existing = await this.prisma.client.tenant.findUnique({ where: { id } });
-    if (!existing) throw new NotFoundException("Tenant not found");
+    if (!existing) throw new NotFoundException('Tenant not found');
 
     const data: Prisma.TenantUpdateInput = {};
     if (dto.plan !== undefined) {
@@ -186,8 +186,8 @@ export class TenantsService {
     await this.audit.log({
       actorId,
       tenantId: id,
-      action: "tenant.updated",
-      entityType: "tenant",
+      action: 'tenant.updated',
+      entityType: 'tenant',
       entityId: id,
       metadata: dto as Prisma.InputJsonValue,
     });
@@ -199,17 +199,22 @@ export class TenantsService {
       where: { id, ...productionTenantWhere() },
       include: { memberships: { select: { userId: true } } },
     });
-    if (!existing) throw new NotFoundException("Tenant not found");
+    if (!existing) throw new NotFoundException('Tenant not found');
 
     const memberUserIds = existing.memberships.map((m) => m.userId);
 
     await this.audit.log({
       actorId,
       tenantId: id,
-      action: "tenant.deleted",
-      entityType: "tenant",
+      action: 'tenant.deleted',
+      entityType: 'tenant',
       entityId: id,
-      metadata: { name: existing.name, tenantCode: existing.tenantCode, slug: existing.slug, soft: true },
+      metadata: {
+        name: existing.name,
+        tenantCode: existing.tenantCode,
+        slug: existing.slug,
+        soft: true,
+      },
     });
 
     await this.subscriptions.platformSuspend(id);
@@ -228,8 +233,8 @@ export class TenantsService {
     await cleanupUsersWithoutMemberships(this.prisma.client, memberUserIds);
     await this.redis.bumpRevision();
     await this.redis.publish(
-      "velon:platform:events",
-      JSON.stringify({ kind: "tenant.deleted", id }),
+      'velon:platform:events',
+      JSON.stringify({ kind: 'tenant.deleted', id }),
     );
 
     return { id, deleted: true as const, soft: true as const };

@@ -1,28 +1,23 @@
-import { INestApplication, ValidationPipe } from "@nestjs/common";
-import { Test } from "@nestjs/testing";
-import { createHmac } from "crypto";
-import request from "supertest";
-import { AppModule } from "../src/app.module";
-import { setRazorpayOrderCreatorForTests } from "../src/billing/providers/razorpay.client";
-import {
-  cleanupTenantUser,
-  disconnectTestDb,
-  prisma,
-  seedTenantUser,
-} from "./helpers/tenant-seed";
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
+import { createHmac } from 'crypto';
+import request from 'supertest';
+import { AppModule } from '../src/app.module';
+import { setRazorpayOrderCreatorForTests } from '../src/billing/providers/razorpay.client';
+import { cleanupTenantUser, disconnectTestDb, prisma, seedTenantUser } from './helpers/tenant-seed';
 
 const hasDatabase = Boolean(process.env.DATABASE_URL);
 const describeIfDb = hasDatabase ? describe : describe.skip;
 
-describeIfDb("Billing — Razorpay and manual bank transfer (e2e)", () => {
+describeIfDb('Billing — Razorpay and manual bank transfer (e2e)', () => {
   let app: INestApplication;
   const tag = Date.now();
   const ownerEmail = `billing-owner-${tag}@billing.test`;
   const otherEmail = `billing-other-${tag}@billing.test`;
-  let ownerToken = "";
-  let otherToken = "";
-  let tenantId = "";
-  let otherTenantId = "";
+  let ownerToken = '';
+  let otherToken = '';
+  let tenantId = '';
+  let otherTenantId = '';
 
   const razorpayEnv = {
     RAZORPAY_ENABLED: process.env.RAZORPAY_ENABLED,
@@ -33,16 +28,16 @@ describeIfDb("Billing — Razorpay and manual bank transfer (e2e)", () => {
   };
 
   beforeAll(async () => {
-    if (!process.env.REDIS_URL) process.env.REDIS_URL = "redis://127.0.0.1:6379";
+    if (!process.env.REDIS_URL) process.env.REDIS_URL = 'redis://127.0.0.1:6379';
 
-    process.env.RAZORPAY_ENABLED = "false";
+    process.env.RAZORPAY_ENABLED = 'false';
     delete process.env.RAZORPAY_KEY_ID;
     delete process.env.RAZORPAY_KEY_SECRET;
     delete process.env.RAZORPAY_WEBHOOK_SECRET;
 
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
     app = moduleRef.createNestApplication({ rawBody: true });
-    app.setGlobalPrefix("api/v1");
+    app.setGlobalPrefix('api/v1');
     app.useGlobalPipes(
       new ValidationPipe({ whitelist: true, transform: true, forbidNonWhitelisted: true }),
     );
@@ -54,12 +49,12 @@ describeIfDb("Billing — Razorpay and manual bank transfer (e2e)", () => {
     otherTenantId = other.tenant.id;
 
     const loginOwner = await request(app.getHttpServer())
-      .post("/api/v1/auth/login")
+      .post('/api/v1/auth/login')
       .send({ email: ownerEmail, password: seeded.password });
     ownerToken = (loginOwner.body.data ?? loginOwner.body).accessToken;
 
     const loginOther = await request(app.getHttpServer())
-      .post("/api/v1/auth/login")
+      .post('/api/v1/auth/login')
       .send({ email: otherEmail, password: other.password });
     otherToken = (loginOther.body.data ?? loginOther.body).accessToken;
   });
@@ -68,12 +63,14 @@ describeIfDb("Billing — Razorpay and manual bank transfer (e2e)", () => {
     process.env.RAZORPAY_ENABLED = razorpayEnv.RAZORPAY_ENABLED;
     if (razorpayEnv.RAZORPAY_KEY_ID) process.env.RAZORPAY_KEY_ID = razorpayEnv.RAZORPAY_KEY_ID;
     else delete process.env.RAZORPAY_KEY_ID;
-    if (razorpayEnv.RAZORPAY_KEY_SECRET) process.env.RAZORPAY_KEY_SECRET = razorpayEnv.RAZORPAY_KEY_SECRET;
+    if (razorpayEnv.RAZORPAY_KEY_SECRET)
+      process.env.RAZORPAY_KEY_SECRET = razorpayEnv.RAZORPAY_KEY_SECRET;
     else delete process.env.RAZORPAY_KEY_SECRET;
     if (razorpayEnv.RAZORPAY_WEBHOOK_SECRET) {
       process.env.RAZORPAY_WEBHOOK_SECRET = razorpayEnv.RAZORPAY_WEBHOOK_SECRET;
     } else delete process.env.RAZORPAY_WEBHOOK_SECRET;
-    if (razorpayEnv.RAZORPAY_CURRENCY) process.env.RAZORPAY_CURRENCY = razorpayEnv.RAZORPAY_CURRENCY;
+    if (razorpayEnv.RAZORPAY_CURRENCY)
+      process.env.RAZORPAY_CURRENCY = razorpayEnv.RAZORPAY_CURRENCY;
 
     setRazorpayOrderCreatorForTests(null);
     await cleanupTenantUser(ownerEmail);
@@ -82,10 +79,10 @@ describeIfDb("Billing — Razorpay and manual bank transfer (e2e)", () => {
     await disconnectTestDb();
   });
 
-  it("payment-config hides Razorpay when disabled", async () => {
+  it('payment-config hides Razorpay when disabled', async () => {
     const res = await request(app.getHttpServer())
-      .get("/api/v1/billing/payment-config")
-      .set("Authorization", `Bearer ${ownerToken}`);
+      .get('/api/v1/billing/payment-config')
+      .set('Authorization', `Bearer ${ownerToken}`);
     expect(res.status).toBe(200);
     const body = res.body.data ?? res.body;
     expect(body.bankTransfer).toBe(true);
@@ -93,39 +90,39 @@ describeIfDb("Billing — Razorpay and manual bank transfer (e2e)", () => {
     expect(body.razorpay.keyId).toBeNull();
   });
 
-  it("rejects Razorpay checkout when disabled", async () => {
+  it('rejects Razorpay checkout when disabled', async () => {
     const res = await request(app.getHttpServer())
-      .post("/api/v1/billing/checkout")
-      .set("Authorization", `Bearer ${ownerToken}`)
+      .post('/api/v1/billing/checkout')
+      .set('Authorization', `Bearer ${ownerToken}`)
       .send({
-        plan: "STARTER",
-        billingInterval: "MONTHLY",
-        provider: "RAZORPAY",
+        plan: 'STARTER',
+        billingInterval: 'MONTHLY',
+        provider: 'RAZORPAY',
         idempotencyKey: `rzp-disabled-${tag}`,
       });
     expect(res.status).toBe(400);
   });
 
-  it("bank transfer checkout still works", async () => {
+  it('bank transfer checkout still works', async () => {
     const res = await request(app.getHttpServer())
-      .post("/api/v1/billing/checkout")
-      .set("Authorization", `Bearer ${ownerToken}`)
+      .post('/api/v1/billing/checkout')
+      .set('Authorization', `Bearer ${ownerToken}`)
       .send({
-        plan: "STARTER",
-        billingInterval: "MONTHLY",
-        provider: "BANK_TRANSFER",
+        plan: 'STARTER',
+        billingInterval: 'MONTHLY',
+        provider: 'BANK_TRANSFER',
         idempotencyKey: `bank-${tag}`,
       });
     expect([200, 201]).toContain(res.status);
     const body = res.body.data ?? res.body;
-    expect(body.session.provider).toBe("BANK_TRANSFER");
+    expect(body.session.provider).toBe('BANK_TRANSFER');
     expect(body.session.instructions).toBeTruthy();
   });
 
-  describe("with Razorpay configured", () => {
-    const keySecret = "test_razorpay_secret";
-    const webhookSecret = "whsec_test_billing";
-    let orderId = "";
+  describe('with Razorpay configured', () => {
+    const keySecret = 'test_razorpay_secret';
+    const webhookSecret = 'whsec_test_billing';
+    let orderId = '';
     const paymentId = `pay_${tag}`;
     /** Snapshot so we can restore platform plan prices after pinning known test amounts. */
     let starterPlanSnapshot: {
@@ -139,15 +136,15 @@ describeIfDb("Billing — Razorpay and manual bank transfer (e2e)", () => {
     } | null = null;
 
     beforeAll(async () => {
-      process.env.RAZORPAY_ENABLED = "true";
-      process.env.RAZORPAY_KEY_ID = "rzp_test_key";
+      process.env.RAZORPAY_ENABLED = 'true';
+      process.env.RAZORPAY_KEY_ID = 'rzp_test_key';
       process.env.RAZORPAY_KEY_SECRET = keySecret;
       process.env.RAZORPAY_WEBHOOK_SECRET = webhookSecret;
-      process.env.RAZORPAY_CURRENCY = "INR";
+      process.env.RAZORPAY_CURRENCY = 'INR';
 
       // Pin STARTER regional prices so assertions are independent of admin-edited catalog data.
       starterPlanSnapshot = await prisma.planDefinition.findUnique({
-        where: { plan: "STARTER" },
+        where: { plan: 'STARTER' },
         select: {
           monthlyPrice: true,
           annualPrice: true,
@@ -159,22 +156,22 @@ describeIfDb("Billing — Razorpay and manual bank transfer (e2e)", () => {
         },
       });
       await prisma.planDefinition.upsert({
-        where: { plan: "STARTER" },
+        where: { plan: 'STARTER' },
         update: {
           monthlyPrice: 49,
           annualPrice: 539,
-          currency: "INR",
+          currency: 'INR',
           indiaMonthlyPrice: 49,
           indiaAnnualPrice: 539,
           globalMonthlyPrice: 49,
           globalAnnualPrice: 539,
         },
         create: {
-          plan: "STARTER",
-          displayName: "Starter",
+          plan: 'STARTER',
+          displayName: 'Starter',
           monthlyPrice: 49,
           annualPrice: 539,
-          currency: "INR",
+          currency: 'INR',
           indiaMonthlyPrice: 49,
           indiaAnnualPrice: 539,
           globalMonthlyPrice: 49,
@@ -190,14 +187,14 @@ describeIfDb("Billing — Razorpay and manual bank transfer (e2e)", () => {
           moduleFinance: false,
           moduleInventory: true,
           moduleManufacturing: false,
-          description: "E2E pinned Starter plan",
+          description: 'E2E pinned Starter plan',
         },
       });
 
       // Ensure billing tenants use India regional pricing (INR table, not USD×FX).
       await prisma.workspace.updateMany({
         where: { tenantId: { in: [tenantId, otherTenantId] } },
-        data: { countryCode: "IN", currency: "INR" },
+        data: { countryCode: 'IN', currency: 'INR' },
       });
 
       setRazorpayOrderCreatorForTests(async (input) => {
@@ -207,7 +204,7 @@ describeIfDb("Billing — Razorpay and manual bank transfer (e2e)", () => {
           amount: input.amountMinor,
           currency: input.currency,
           receipt: input.receipt,
-          status: "created",
+          status: 'created',
         };
       });
     });
@@ -221,7 +218,7 @@ describeIfDb("Billing — Razorpay and manual bank transfer (e2e)", () => {
       });
       if (starterPlanSnapshot) {
         await prisma.planDefinition.update({
-          where: { plan: "STARTER" },
+          where: { plan: 'STARTER' },
           data: {
             monthlyPrice: starterPlanSnapshot.monthlyPrice as number,
             annualPrice: starterPlanSnapshot.annualPrice as number,
@@ -233,133 +230,133 @@ describeIfDb("Billing — Razorpay and manual bank transfer (e2e)", () => {
           },
         });
       }
-      process.env.RAZORPAY_ENABLED = "false";
+      process.env.RAZORPAY_ENABLED = 'false';
       delete process.env.RAZORPAY_KEY_ID;
       delete process.env.RAZORPAY_KEY_SECRET;
       delete process.env.RAZORPAY_WEBHOOK_SECRET;
       setRazorpayOrderCreatorForTests(null);
     });
 
-    it("India tenant Starter charges ₹49 (4900 paise), not USD converted", async () => {
+    it('India tenant Starter charges ₹49 (4900 paise), not USD converted', async () => {
       await prisma.subscriptionPayment.deleteMany({ where: { tenantId } });
       await prisma.subscriptionInvoice.deleteMany({ where: { tenantId } });
       const res = await request(app.getHttpServer())
-        .post("/api/v1/billing/checkout")
-        .set("Authorization", `Bearer ${ownerToken}`)
+        .post('/api/v1/billing/checkout')
+        .set('Authorization', `Bearer ${ownerToken}`)
         .send({
-          plan: "STARTER",
-          billingInterval: "MONTHLY",
-          provider: "RAZORPAY",
+          plan: 'STARTER',
+          billingInterval: 'MONTHLY',
+          provider: 'RAZORPAY',
           idempotencyKey: `rzp-india-starter-${tag}`,
         });
       expect([200, 201]).toContain(res.status);
       const body = res.body.data ?? res.body;
-      expect(body.razorpay?.currency).toBe("INR");
+      expect(body.razorpay?.currency).toBe('INR');
       expect(body.razorpay?.amount).toBe(4900);
       expect(Number(body.invoice?.amount ?? body.invoice.amount)).toBe(49);
     });
 
-    it("allows retry after checkout cancel", async () => {
+    it('allows retry after checkout cancel', async () => {
       await prisma.subscriptionPayment.deleteMany({ where: { tenantId } });
       const checkout = await request(app.getHttpServer())
-        .post("/api/v1/billing/checkout")
-        .set("Authorization", `Bearer ${ownerToken}`)
+        .post('/api/v1/billing/checkout')
+        .set('Authorization', `Bearer ${ownerToken}`)
         .send({
-          plan: "STARTER",
-          billingInterval: "MONTHLY",
-          provider: "RAZORPAY",
+          plan: 'STARTER',
+          billingInterval: 'MONTHLY',
+          provider: 'RAZORPAY',
           idempotencyKey: `rzp-cancel-${tag}`,
         });
       const orderId = (checkout.body.data ?? checkout.body).razorpay.orderId;
       const cancel = await request(app.getHttpServer())
-        .post("/api/v1/billing/checkout/cancel")
-        .set("Authorization", `Bearer ${ownerToken}`)
+        .post('/api/v1/billing/checkout/cancel')
+        .set('Authorization', `Bearer ${ownerToken}`)
         .send({ orderId });
       expect(cancel.status).toBe(201);
       expect((cancel.body.data ?? cancel.body).cancelled).toBe(true);
 
       const retry = await request(app.getHttpServer())
-        .post("/api/v1/billing/checkout")
-        .set("Authorization", `Bearer ${ownerToken}`)
+        .post('/api/v1/billing/checkout')
+        .set('Authorization', `Bearer ${ownerToken}`)
         .send({
-          plan: "STARTER",
-          billingInterval: "MONTHLY",
-          provider: "RAZORPAY",
+          plan: 'STARTER',
+          billingInterval: 'MONTHLY',
+          provider: 'RAZORPAY',
           idempotencyKey: `rzp-retry-${tag}`,
         });
       expect([200, 201]).toContain(retry.status);
       expect((retry.body.data ?? retry.body).razorpay?.amount).toBe(4900);
     });
 
-    it("creates Razorpay order with database plan amount", async () => {
+    it('creates Razorpay order with database plan amount', async () => {
       await prisma.subscriptionPayment.deleteMany({ where: { tenantId } });
       const res = await request(app.getHttpServer())
-        .post("/api/v1/billing/checkout")
-        .set("Authorization", `Bearer ${ownerToken}`)
+        .post('/api/v1/billing/checkout')
+        .set('Authorization', `Bearer ${ownerToken}`)
         .send({
-          plan: "GROWTH",
-          billingInterval: "MONTHLY",
-          provider: "RAZORPAY",
+          plan: 'GROWTH',
+          billingInterval: 'MONTHLY',
+          provider: 'RAZORPAY',
           idempotencyKey: `rzp-order-${tag}`,
         });
       expect([200, 201]).toContain(res.status);
       const body = res.body.data ?? res.body;
       expect(body.razorpay?.orderId).toBeTruthy();
-      expect(body.razorpay?.keyId).toBe("rzp_test_key");
+      expect(body.razorpay?.keyId).toBe('rzp_test_key');
       expect(body.razorpay?.amount).toBeGreaterThan(0);
-      expect(body.razorpay?.currency).toBe("INR");
+      expect(body.razorpay?.currency).toBe('INR');
       orderId = body.razorpay.orderId;
     });
 
-    it("rejects invalid Razorpay signature without activating subscription", async () => {
+    it('rejects invalid Razorpay signature without activating subscription', async () => {
       await prisma.subscriptionPayment.deleteMany({ where: { tenantId } });
       const checkout = await request(app.getHttpServer())
-        .post("/api/v1/billing/checkout")
-        .set("Authorization", `Bearer ${ownerToken}`)
+        .post('/api/v1/billing/checkout')
+        .set('Authorization', `Bearer ${ownerToken}`)
         .send({
-          plan: "GROWTH",
-          billingInterval: "MONTHLY",
-          provider: "RAZORPAY",
+          plan: 'GROWTH',
+          billingInterval: 'MONTHLY',
+          provider: 'RAZORPAY',
           idempotencyKey: `rzp-invalid-${tag}`,
         });
       const badOrderId = (checkout.body.data ?? checkout.body).razorpay.orderId;
 
       const res = await request(app.getHttpServer())
-        .post("/api/v1/billing/razorpay/verify")
-        .set("Authorization", `Bearer ${ownerToken}`)
+        .post('/api/v1/billing/razorpay/verify')
+        .set('Authorization', `Bearer ${ownerToken}`)
         .send({
           razorpay_order_id: badOrderId,
           razorpay_payment_id: `pay_invalid_${tag}`,
-          razorpay_signature: "invalid-signature",
+          razorpay_signature: 'invalid-signature',
         });
       expect(res.status).toBe(400);
 
       const sub = await request(app.getHttpServer())
-        .get("/api/v1/billing/subscription")
-        .set("Authorization", `Bearer ${ownerToken}`);
-      expect((sub.body.data ?? sub.body).status).not.toBe("ACTIVE");
+        .get('/api/v1/billing/subscription')
+        .set('Authorization', `Bearer ${ownerToken}`);
+      expect((sub.body.data ?? sub.body).status).not.toBe('ACTIVE');
     });
 
-    it("activates subscription after valid signature verification", async () => {
+    it('activates subscription after valid signature verification', async () => {
       await prisma.subscriptionPayment.deleteMany({ where: { tenantId } });
       const checkout = await request(app.getHttpServer())
-        .post("/api/v1/billing/checkout")
-        .set("Authorization", `Bearer ${ownerToken}`)
+        .post('/api/v1/billing/checkout')
+        .set('Authorization', `Bearer ${ownerToken}`)
         .send({
-          plan: "GROWTH",
-          billingInterval: "MONTHLY",
-          provider: "RAZORPAY",
+          plan: 'GROWTH',
+          billingInterval: 'MONTHLY',
+          provider: 'RAZORPAY',
           idempotencyKey: `rzp-verify-${tag}`,
         });
       orderId = (checkout.body.data ?? checkout.body).razorpay.orderId;
 
-      const signature = createHmac("sha256", keySecret)
+      const signature = createHmac('sha256', keySecret)
         .update(`${orderId}|${paymentId}`)
-        .digest("hex");
+        .digest('hex');
 
       const res = await request(app.getHttpServer())
-        .post("/api/v1/billing/razorpay/verify")
-        .set("Authorization", `Bearer ${ownerToken}`)
+        .post('/api/v1/billing/razorpay/verify')
+        .set('Authorization', `Bearer ${ownerToken}`)
         .send({
           razorpay_order_id: orderId,
           razorpay_payment_id: paymentId,
@@ -367,11 +364,11 @@ describeIfDb("Billing — Razorpay and manual bank transfer (e2e)", () => {
         });
       expect([200, 201]).toContain(res.status);
       const body = res.body.data ?? res.body;
-      expect(body.subscription.status).toBe("ACTIVE");
+      expect(body.subscription.status).toBe('ACTIVE');
 
       const again = await request(app.getHttpServer())
-        .post("/api/v1/billing/razorpay/verify")
-        .set("Authorization", `Bearer ${ownerToken}`)
+        .post('/api/v1/billing/razorpay/verify')
+        .set('Authorization', `Bearer ${ownerToken}`)
         .send({
           razorpay_order_id: orderId,
           razorpay_payment_id: paymentId,
@@ -381,26 +378,26 @@ describeIfDb("Billing — Razorpay and manual bank transfer (e2e)", () => {
       expect((again.body.data ?? again.body).payment.alreadyVerified).toBe(true);
     });
 
-    it("enforces tenant isolation on verification", async () => {
+    it('enforces tenant isolation on verification', async () => {
       await prisma.subscriptionPayment.deleteMany({ where: { tenantId: otherTenantId } });
       const checkout = await request(app.getHttpServer())
-        .post("/api/v1/billing/checkout")
-        .set("Authorization", `Bearer ${otherToken}`)
+        .post('/api/v1/billing/checkout')
+        .set('Authorization', `Bearer ${otherToken}`)
         .send({
-          plan: "STARTER",
-          billingInterval: "MONTHLY",
-          provider: "RAZORPAY",
+          plan: 'STARTER',
+          billingInterval: 'MONTHLY',
+          provider: 'RAZORPAY',
           idempotencyKey: `rzp-other-${tag}`,
         });
       const otherOrderId = (checkout.body.data ?? checkout.body).razorpay.orderId;
       const otherPaymentId = `pay_other_${tag}`;
-      const signature = createHmac("sha256", keySecret)
+      const signature = createHmac('sha256', keySecret)
         .update(`${otherOrderId}|${otherPaymentId}`)
-        .digest("hex");
+        .digest('hex');
 
       const cross = await request(app.getHttpServer())
-        .post("/api/v1/billing/razorpay/verify")
-        .set("Authorization", `Bearer ${ownerToken}`)
+        .post('/api/v1/billing/razorpay/verify')
+        .set('Authorization', `Bearer ${ownerToken}`)
         .send({
           razorpay_order_id: otherOrderId,
           razorpay_payment_id: otherPaymentId,
@@ -409,67 +406,67 @@ describeIfDb("Billing — Razorpay and manual bank transfer (e2e)", () => {
       expect(cross.status).toBe(400);
     });
 
-    it("accepts valid webhook signature and is idempotent", async () => {
+    it('accepts valid webhook signature and is idempotent', async () => {
       await prisma.subscriptionPayment.deleteMany({ where: { tenantId: otherTenantId } });
       const checkout = await request(app.getHttpServer())
-        .post("/api/v1/billing/checkout")
-        .set("Authorization", `Bearer ${otherToken}`)
+        .post('/api/v1/billing/checkout')
+        .set('Authorization', `Bearer ${otherToken}`)
         .send({
-          plan: "STARTER",
-          billingInterval: "MONTHLY",
-          provider: "RAZORPAY",
+          plan: 'STARTER',
+          billingInterval: 'MONTHLY',
+          provider: 'RAZORPAY',
           idempotencyKey: `rzp-webhook-${tag}`,
         });
       const webhookOrderId = (checkout.body.data ?? checkout.body).razorpay.orderId;
       const webhookPaymentId = `pay_webhook_${tag}`;
 
       const payload = {
-        event: "payment.captured",
+        event: 'payment.captured',
         payload: {
           payment: {
             entity: {
               id: webhookPaymentId,
               order_id: webhookOrderId,
-              status: "captured",
+              status: 'captured',
               amount: 40700,
-              currency: "INR",
+              currency: 'INR',
             },
           },
         },
       };
       const raw = JSON.stringify(payload);
-      const signature = createHmac("sha256", webhookSecret).update(raw).digest("hex");
+      const signature = createHmac('sha256', webhookSecret).update(raw).digest('hex');
       const eventId = `evt_${tag}`;
 
       const first = await request(app.getHttpServer())
-        .post("/api/v1/billing/webhooks/razorpay")
-        .set("x-razorpay-signature", signature)
-        .set("x-razorpay-event-id", eventId)
-        .set("Content-Type", "application/json")
+        .post('/api/v1/billing/webhooks/razorpay')
+        .set('x-razorpay-signature', signature)
+        .set('x-razorpay-event-id', eventId)
+        .set('Content-Type', 'application/json')
         .send(raw);
       expect(first.status).toBe(201);
 
       const sub = await request(app.getHttpServer())
-        .get("/api/v1/billing/subscription")
-        .set("Authorization", `Bearer ${otherToken}`);
-      expect((sub.body.data ?? sub.body).status).toBe("ACTIVE");
+        .get('/api/v1/billing/subscription')
+        .set('Authorization', `Bearer ${otherToken}`);
+      expect((sub.body.data ?? sub.body).status).toBe('ACTIVE');
 
       const duplicate = await request(app.getHttpServer())
-        .post("/api/v1/billing/webhooks/razorpay")
-        .set("x-razorpay-signature", signature)
-        .set("x-razorpay-event-id", eventId)
-        .set("Content-Type", "application/json")
+        .post('/api/v1/billing/webhooks/razorpay')
+        .set('x-razorpay-signature', signature)
+        .set('x-razorpay-event-id', eventId)
+        .set('Content-Type', 'application/json')
         .send(raw);
       expect(duplicate.status).toBe(201);
       expect((duplicate.body.data ?? duplicate.body).duplicate).toBe(true);
     });
 
-    it("rejects webhook with invalid signature", async () => {
-      const payload = JSON.stringify({ event: "payment.captured", payload: {} });
+    it('rejects webhook with invalid signature', async () => {
+      const payload = JSON.stringify({ event: 'payment.captured', payload: {} });
       const res = await request(app.getHttpServer())
-        .post("/api/v1/billing/webhooks/razorpay")
-        .set("x-razorpay-signature", "bad-signature")
-        .set("Content-Type", "application/json")
+        .post('/api/v1/billing/webhooks/razorpay')
+        .set('x-razorpay-signature', 'bad-signature')
+        .set('Content-Type', 'application/json')
         .send(payload);
       expect(res.status).toBe(401);
     });

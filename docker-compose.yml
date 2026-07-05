@@ -4,7 +4,7 @@ services:
     container_name: velon-postgres
     restart: unless-stopped
     ports:
-      - "5432:5432"
+      - '5432:5432'
     environment:
       POSTGRES_USER: velon
       POSTGRES_PASSWORD: velon_dev_password
@@ -12,7 +12,7 @@ services:
     volumes:
       - velon_pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U velon -d velon_erp"]
+      test: ['CMD-SHELL', 'pg_isready -U velon -d velon_erp']
       interval: 5s
       timeout: 5s
       retries: 10
@@ -22,11 +22,11 @@ services:
     container_name: velon-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - velon_redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 5s
       timeout: 3s
       retries: 10
@@ -36,17 +36,17 @@ services:
     container_name: velon-mongodb
     restart: unless-stopped
     ports:
-      - "27017:27017"
+      - '27017:27017'
     environment:
       MONGO_INITDB_DATABASE: velon_erp
     volumes:
       - velon_mongo_data:/data/db
     healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      test: ['CMD', 'mongosh', '--quiet', '--eval', "db.adminCommand('ping').ok"]
       interval: 5s
       timeout: 5s
       retries: 10
-    profiles: ["mongo"]
+    profiles: ['mongo']
 
   api:
     build:
@@ -55,20 +55,20 @@ services:
     container_name: velon-api
     restart: unless-stopped
     ports:
-      - "3001:3001"
+      - '3001:3001'
     env_file:
       - .env
     environment:
       DATABASE_URL: postgresql://velon:velon_dev_password@postgres:5432/velon_erp?schema=public
       REDIS_URL: redis://redis:6379
-      API_PORT: "3001"
+      API_PORT: '3001'
       CORS_ORIGINS: http://localhost:8080,http://localhost:3000
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    profiles: ["full"]
+    profiles: ['full']
 
   web:
     build:
@@ -77,14 +77,14 @@ services:
     container_name: velon-web
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - '8080:8080'
     env_file:
       - .env
     environment:
       VITE_API_URL: https://velonerp-production.up.railway.app/
     depends_on:
       - api
-    profiles: ["full"]
+    profiles: ['full']
 
 volumes:
   velon_pg_data:

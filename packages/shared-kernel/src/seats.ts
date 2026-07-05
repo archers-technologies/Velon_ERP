@@ -1,5 +1,5 @@
 /** Seat = active user account consuming a license. */
-export type SeatPlan = "STARTER" | "GROWTH" | "ENTERPRISE";
+export type SeatPlan = 'STARTER' | 'GROWTH' | 'ENTERPRISE';
 
 export const SEAT_LIMITS: Record<SeatPlan, number | null> = {
   STARTER: 5,

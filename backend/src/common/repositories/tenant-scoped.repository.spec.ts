@@ -1,7 +1,7 @@
-import { TenantScopedRepository } from "./tenant-scoped.repository";
-import { runWithTenantContext } from "../tenant-context.storage";
-import { IDS } from "../../../test/helpers/fixtures";
-import { createMockPrisma } from "../../../test/helpers/mocks";
+import { IDS } from '../../../test/helpers/fixtures';
+import { createMockPrisma } from '../../../test/helpers/mocks';
+import { runWithTenantContext } from '../tenant-context.storage';
+import { TenantScopedRepository } from './tenant-scoped.repository';
 
 class TestRepo extends TenantScopedRepository {
   exposeTenantId() {
@@ -13,14 +13,14 @@ class TestRepo extends TenantScopedRepository {
   }
 }
 
-describe("TenantScopedRepository", () => {
+describe('TenantScopedRepository', () => {
   const repo = new TestRepo(createMockPrisma());
 
-  it("requires active tenant context", () => {
+  it('requires active tenant context', () => {
     expect(() => repo.exposeTenantId()).toThrow(/Tenant context is not available/);
   });
 
-  it("injects tenantId into every where clause", () => {
+  it('injects tenantId into every where clause', () => {
     runWithTenantContext(
       {
         tenantId: IDS.tenant,
@@ -30,8 +30,8 @@ describe("TenantScopedRepository", () => {
       },
       () => {
         expect(repo.exposeTenantId()).toBe(IDS.tenant);
-        expect(repo.exposeWhere({ id: "row-1" })).toEqual({
-          id: "row-1",
+        expect(repo.exposeWhere({ id: 'row-1' })).toEqual({
+          id: 'row-1',
           tenantId: IDS.tenant,
         });
         expect(repo.exposeWhere()).toEqual({ tenantId: IDS.tenant });

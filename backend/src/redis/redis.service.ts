@@ -1,13 +1,13 @@
-import { Injectable, OnModuleDestroy } from "@nestjs/common";
-import Redis from "ioredis";
-import { getRedisUrl } from "../config/env";
+import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import Redis from 'ioredis';
+import { getRedisUrl } from '../config/env';
 
 @Injectable()
 export class RedisService implements OnModuleDestroy {
   readonly client: Redis;
 
   constructor() {
-    const isTest = process.env.NODE_ENV === "test";
+    const isTest = process.env.NODE_ENV === 'test';
     this.client = new Redis(getRedisUrl(), {
       enableOfflineQueue: isTest,
       enableReadyCheck: true,
@@ -15,7 +15,7 @@ export class RedisService implements OnModuleDestroy {
       connectTimeout: isTest ? 10_000 : 5_000,
       retryStrategy: (times) => Math.min(times * 50, 2_000),
     });
-    this.client.on("error", () => {
+    this.client.on('error', () => {
       // Health checks expose Redis state; request handlers should degrade gracefully.
     });
   }
@@ -26,7 +26,7 @@ export class RedisService implements OnModuleDestroy {
 
   async getRevision(): Promise<number> {
     try {
-      const v = await this.client.get("velon:platform:revision");
+      const v = await this.client.get('velon:platform:revision');
       return v ? Number(v) : 0;
     } catch {
       return 0;
@@ -35,7 +35,7 @@ export class RedisService implements OnModuleDestroy {
 
   async bumpRevision(): Promise<number> {
     try {
-      return await this.client.incr("velon:platform:revision");
+      return await this.client.incr('velon:platform:revision');
     } catch {
       return 0;
     }

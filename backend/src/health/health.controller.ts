@@ -1,11 +1,11 @@
-import { Controller, Get, ServiceUnavailableException } from "@nestjs/common";
-import { ApiTags } from "@nestjs/swagger";
-import { smtpConfigured } from "../common/mail-delivery.util";
-import { PrismaService } from "../prisma/prisma.service";
-import { RedisService } from "../redis/redis.service";
+import { Controller, Get, ServiceUnavailableException } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+import { smtpConfigured } from '../common/mail-delivery.util';
+import { PrismaService } from '../prisma/prisma.service';
+import { RedisService } from '../redis/redis.service';
 
-@ApiTags("health")
-@Controller("health")
+@ApiTags('health')
+@Controller('health')
 export class HealthController {
   constructor(
     private readonly prisma: PrismaService,
@@ -15,51 +15,51 @@ export class HealthController {
   @Get()
   check() {
     return {
-      status: "ok",
-      service: "Velon ERP API",
+      status: 'ok',
+      service: 'Velon ERP API',
     };
   }
 
-  @Get("live")
+  @Get('live')
   live() {
     return {
-      status: "ok",
+      status: 'ok',
       timestamp: new Date().toISOString(),
-      service: "velon-api",
+      service: 'velon-api',
     };
   }
 
-  @Get("ready")
+  @Get('ready')
   async ready() {
-    const services: Record<string, "up" | "down"> = { postgres: "down", redis: "down" };
+    const services: Record<string, 'up' | 'down'> = { postgres: 'down', redis: 'down' };
     try {
       await this.prisma.client.$queryRaw`SELECT 1`;
-      services.postgres = "up";
+      services.postgres = 'up';
     } catch {
-      services.postgres = "down";
+      services.postgres = 'down';
     }
 
     try {
       await this.redis.client.ping();
-      services.redis = "up";
+      services.redis = 'up';
     } catch {
-      services.redis = "down";
+      services.redis = 'down';
     }
 
-    if (services.postgres !== "up" || services.redis !== "up") {
+    if (services.postgres !== 'up' || services.redis !== 'up') {
       throw new ServiceUnavailableException({
-        status: "degraded",
+        status: 'degraded',
         timestamp: new Date().toISOString(),
         services,
       });
     }
 
     return {
-      status: "ok",
+      status: 'ok',
       timestamp: new Date().toISOString(),
       services: {
         ...services,
-        smtp: smtpConfigured() ? "configured" : "not_configured",
+        smtp: smtpConfigured() ? 'configured' : 'not_configured',
       },
     };
   }

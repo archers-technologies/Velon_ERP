@@ -1,7 +1,7 @@
-import { ForbiddenException, Injectable } from "@nestjs/common";
-import { canAddSeat, seatLimitForPlan, seatsRemaining } from "@velon/shared";
-import { PrismaService } from "../prisma/prisma.service";
-import { getActiveTenantContext } from "../common/tenant-context.storage";
+import { ForbiddenException, Injectable } from '@nestjs/common';
+import { canAddSeat, seatLimitForPlan, seatsRemaining } from '@velon/shared';
+import { getActiveTenantContext } from '../common/tenant-context.storage';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class SeatsService {
@@ -22,7 +22,7 @@ export class SeatsService {
   }
 
   async countPendingInvites(tenantId = this.tenantId()): Promise<number> {
-    const { InvitationStatus } = await import("@velon/database");
+    const { InvitationStatus } = await import('@velon/database');
     return this.prisma.client.tenantInvitation.count({
       where: {
         tenantId,

@@ -1,13 +1,13 @@
-import { authFetch } from "@/lib/api/client";
-import { isApiEnabled } from "@/lib/api/config";
-import { CMS_DEFAULTS } from "@/lib/cms/defaults";
+import { authFetch } from '@/lib/api/client';
+import { isApiEnabled } from '@/lib/api/config';
+import { CMS_DEFAULTS } from '@/lib/cms/defaults';
 
 export type PublicSiteContent = typeof CMS_DEFAULTS;
 
 export async function loadPublicSiteContentSafe(): Promise<PublicSiteContent> {
   if (!isApiEnabled()) return CMS_DEFAULTS;
   try {
-    const raw = await authFetch<Record<string, unknown>>("/public/site-content");
+    const raw = await authFetch<Record<string, unknown>>('/public/site-content');
     return {
       hero: { ...CMS_DEFAULTS.hero, ...(raw.hero as object) },
       features: { ...CMS_DEFAULTS.features, ...(raw.features as object) },

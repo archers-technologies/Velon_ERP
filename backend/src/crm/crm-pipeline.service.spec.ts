@@ -1,28 +1,23 @@
-import { BadRequestException, ForbiddenException, NotFoundException } from "@nestjs/common";
-import { CrmLeadStatus } from "@velon/database";
-import { CrmPipelineService } from "./crm-pipeline.service";
-import { IDS, META, tenantOwner, tenantUser } from "../../test/helpers/fixtures";
-import { createMockAudit, createRepoMock } from "../../test/helpers/mocks";
+import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { CrmLeadStatus } from '@velon/database';
+import { IDS, META, tenantOwner, tenantUser } from '../../test/helpers/fixtures';
+import { createMockAudit, createRepoMock } from '../../test/helpers/mocks';
+import { CrmPipelineService } from './crm-pipeline.service';
 
-describe("CrmPipelineService", () => {
-  const leads = createRepoMock(["findMany", "findById", "findByIdAny", "create", "update"]);
+describe('CrmPipelineService', () => {
+  const leads = createRepoMock(['findMany', 'findById', 'findByIdAny', 'create', 'update']);
   const pipelines = createRepoMock([
-    "findMany",
-    "findById",
-    "findDefault",
-    "create",
-    "update",
-    "clearDefaultFlag",
-    "count",
+    'findMany',
+    'findById',
+    'findDefault',
+    'create',
+    'update',
+    'clearDefaultFlag',
+    'count',
   ]);
-  const stages = createRepoMock(["findMany", "findById", "create", "update", "delete", "reorder"]);
-  const opportunities = createRepoMock([
-    "findMany",
-    "findById",
-    "create",
-    "update",
-  ]);
-  const customers = createRepoMock(["create"]);
+  const stages = createRepoMock(['findMany', 'findById', 'create', 'update', 'delete', 'reorder']);
+  const opportunities = createRepoMock(['findMany', 'findById', 'create', 'update']);
+  const customers = createRepoMock(['create']);
   const audit = createMockAudit();
 
   let service: CrmPipelineService;
@@ -39,35 +34,35 @@ describe("CrmPipelineService", () => {
     );
   });
 
-  it("denies lead creation for read-only users", async () => {
+  it('denies lead creation for read-only users', async () => {
     await expect(
-      service.createLead(tenantUser(), { companyName: "X", contactName: "Y" }, META),
+      service.createLead(tenantUser(), { companyName: 'X', contactName: 'Y' }, META),
     ).rejects.toThrow(ForbiddenException);
   });
 
-  describe("leads", () => {
-    it("creates a lead with audit trail", async () => {
+  describe('leads', () => {
+    it('creates a lead with audit trail', async () => {
       leads.create.mockResolvedValue({
         id: IDS.lead,
-        companyName: "Prospect Co",
+        companyName: 'Prospect Co',
         status: CrmLeadStatus.NEW,
       });
       const row = await service.createLead(
         tenantOwner(),
-        { companyName: "Prospect Co", contactName: "Jane" },
+        { companyName: 'Prospect Co', contactName: 'Jane' },
         META,
       );
       expect(row.id).toBe(IDS.lead);
       expect(audit.log).toHaveBeenCalledWith(
-        expect.objectContaining({ action: "crm.lead_created" }),
+        expect.objectContaining({ action: 'crm.lead_created' }),
       );
     });
 
-    it("converts an open lead into customer and opportunity", async () => {
+    it('converts an open lead into customer and opportunity', async () => {
       leads.findByIdAny.mockResolvedValue({
         id: IDS.lead,
-        companyName: "Prospect Co",
-        email: "j@example.test",
+        companyName: 'Prospect Co',
+        email: 'j@example.test',
         phone: null,
         industry: null,
         notes: null,
@@ -76,12 +71,12 @@ describe("CrmPipelineService", () => {
       });
       pipelines.findById.mockResolvedValue({
         id: IDS.pipeline,
-        stages: [{ id: IDS.stage, name: "Qualified", probability: 40 }],
+        stages: [{ id: IDS.stage, name: 'Qualified', probability: 40 }],
       });
-      customers.create.mockResolvedValue({ id: IDS.customer, companyName: "Prospect Co" });
+      customers.create.mockResolvedValue({ id: IDS.customer, companyName: 'Prospect Co' });
       opportunities.create.mockResolvedValue({
         id: IDS.opportunity,
-        title: "Prospect Co opportunity",
+        title: 'Prospect Co opportunity',
       });
       leads.update.mockResolvedValue({});
 
@@ -104,7 +99,7 @@ describe("CrmPipelineService", () => {
       );
     });
 
-    it("rejects converting an already converted lead", async () => {
+    it('rejects converting an already converted lead', async () => {
       leads.findByIdAny.mockResolvedValue({
         id: IDS.lead,
         status: CrmLeadStatus.CONVERTED,
@@ -114,9 +109,9 @@ describe("CrmPipelineService", () => {
       );
     });
 
-    it("returns not found for missing lead", async () => {
+    it('returns not found for missing lead', async () => {
       leads.findById.mockResolvedValue(null);
-      await expect(service.getLead(tenantOwner(), "missing")).rejects.toThrow(NotFoundException);
+      await expect(service.getLead(tenantOwner(), 'missing')).rejects.toThrow(NotFoundException);
     });
   });
 });
