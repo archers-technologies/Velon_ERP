@@ -1,7 +1,7 @@
-import type { AuditService } from "../audit/audit.service";
-import type { PrismaService } from "../prisma/prisma.service";
-import type { RedisService } from "../redis/redis.service";
-import type { VelonLogger } from "../common/logger.service";
+import type { AuditService } from "../../src/audit/audit.service";
+import type { PrismaService } from "../../src/prisma/prisma.service";
+import type { RedisService } from "../../src/redis/redis.service";
+import type { VelonLogger } from "../../src/common/logger.service";
 
 type MockModel = {
   findUnique: jest.Mock;

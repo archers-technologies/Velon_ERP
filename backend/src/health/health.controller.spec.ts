@@ -1,6 +1,6 @@
 import { ServiceUnavailableException } from "@nestjs/common";
 import { HealthController } from "./health.controller";
-import { createMockPrisma, createMockPrismaClient, createMockRedis } from "../test-utils/mocks";
+import { createMockPrisma, createMockPrismaClient, createMockRedis } from "../../test/helpers/mocks";
 
 describe("HealthController", () => {
   const client = createMockPrismaClient();

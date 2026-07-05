@@ -1,12 +1,32 @@
 {
   "moduleFileExtensions": ["js", "json", "ts"],
-  "rootDir": ".",
+  "rootDir": "..",
   "testEnvironment": "node",
-  "testRegex": ".e2e-spec.ts$",
-  "transform": {
-    "^.+\\.(t|j)s$": "ts-jest"
+  "testMatch": ["<rootDir>/test/**/*.e2e-spec.ts"],
+  "setupFiles": ["<rootDir>/test/setup-env.ts"],
+  "moduleNameMapper": {
+    "^@velon/shared$": "<rootDir>/../packages/shared-kernel/src/index.ts",
+    "^@velon/shared/(.*)$": "<rootDir>/../packages/shared-kernel/src/$1.ts",
+    "^@velon/database$": "<rootDir>/../packages/database/src/index.ts"
   },
-  "globalSetup": "<rootDir>/global-setup.ts",
-  "setupFiles": ["<rootDir>/setup-env.ts"],
+  "transform": {
+    "^.+\\.tsx?$": [
+      "ts-jest",
+      {
+        "tsconfig": {
+          "module": "commonjs",
+          "esModuleInterop": true,
+          "types": ["jest", "node"],
+          "paths": {
+            "@velon/database": ["../packages/database/src/index.ts"],
+            "@velon/shared": ["../packages/shared-kernel/src/index.ts"],
+            "@velon/shared/*": ["../packages/shared-kernel/src/*"]
+          },
+          "baseUrl": "."
+        }
+      }
+    ]
+  },
+  "globalSetup": "<rootDir>/test/global-setup.ts",
   "testTimeout": 60000
 }

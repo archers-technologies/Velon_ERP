@@ -4,14 +4,14 @@
   "testEnvironment": "node",
   "roots": ["<rootDir>/src", "<rootDir>/../packages/shared-kernel/src"],
   "testRegex": ".*\\.spec\\.ts$",
-  "setupFiles": ["<rootDir>/src/test-utils/setup-unit.ts"],
+  "setupFiles": ["<rootDir>/test/helpers/setup-unit.ts"],
   "moduleNameMapper": {
     "^@velon/shared$": "<rootDir>/../packages/shared-kernel/src/index.ts",
     "^@velon/shared/(.*)$": "<rootDir>/../packages/shared-kernel/src/$1.ts",
     "^@velon/database$": "<rootDir>/../packages/database/src/index.ts"
   },
   "transform": {
-    "^.+\\.(t|j)s$": [
+    "^.+\\.tsx?$": [
       "ts-jest",
       {
         "tsconfig": {

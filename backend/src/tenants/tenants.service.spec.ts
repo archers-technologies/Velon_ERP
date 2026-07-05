@@ -1,11 +1,11 @@
 import { TenantsService } from "./tenants.service";
-import { IDS } from "../test-utils/fixtures";
+import { IDS } from "../../test/helpers/fixtures";
 import {
   createMockAudit,
   createMockPrisma,
   createMockPrismaClient,
   createMockRedis,
-} from "../test-utils/mocks";
+} from "../../test/helpers/mocks";
 
 describe("TenantsService", () => {
   const client = createMockPrismaClient();

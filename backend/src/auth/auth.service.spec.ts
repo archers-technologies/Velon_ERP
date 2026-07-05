@@ -3,14 +3,14 @@ import { JwtService } from "@nestjs/jwt";
 import { UserRole } from "@velon/database";
 import * as bcrypt from "bcrypt";
 import { AuthService } from "./auth.service";
-import { IDS } from "../test-utils/fixtures";
+import { IDS } from "../../test/helpers/fixtures";
 import {
   createMockAudit,
   createMockLogger,
   createMockPrisma,
   createMockPrismaClient,
   createMockRedis,
-} from "../test-utils/mocks";
+} from "../../test/helpers/mocks";
 
 jest.mock("bcrypt", () => ({
   compare: jest.fn(),

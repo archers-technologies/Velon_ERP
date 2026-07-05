@@ -1,8 +1,8 @@
 import { ForbiddenException } from "@nestjs/common";
 import { SubscriptionBillingStatus, TenantStatus } from "@velon/database";
 import { SubscriptionAccessService } from "./subscription-access.service";
-import { IDS } from "../test-utils/fixtures";
-import { createMockPrisma, createMockPrismaClient } from "../test-utils/mocks";
+import { IDS } from "../../test/helpers/fixtures";
+import { createMockPrisma, createMockPrismaClient } from "../../test/helpers/mocks";
 
 describe("SubscriptionAccessService", () => {
   const client = createMockPrismaClient();

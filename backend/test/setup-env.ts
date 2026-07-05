@@ -3,7 +3,7 @@ import { config } from "dotenv";
 import { resolve } from "node:path";
 
 /** Jest setup — load env for integration tests */
-config({ path: resolve(__dirname, "../../../.env") });
+config({ path: resolve(__dirname, "../../.env") });
 
 /** Always run e2e as test — prevents real SMTP sends to *.test addresses from .env development mode. */
 process.env.NODE_ENV = "test";

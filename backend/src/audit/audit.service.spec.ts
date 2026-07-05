@@ -1,6 +1,6 @@
 import { AuditService } from "./audit.service";
-import { IDS } from "../test-utils/fixtures";
-import { createMockPrisma, createMockPrismaClient } from "../test-utils/mocks";
+import { IDS } from "../../test/helpers/fixtures";
+import { createMockPrisma, createMockPrismaClient } from "../../test/helpers/mocks";
 
 describe("AuditService", () => {
   const client = createMockPrismaClient();

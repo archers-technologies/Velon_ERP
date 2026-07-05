@@ -1,8 +1,8 @@
 import { ForbiddenException } from "@nestjs/common";
 import { TenantPlan } from "@velon/database";
 import { SeatsService } from "./seats.service";
-import { IDS } from "../test-utils/fixtures";
-import { createMockPrisma, createMockPrismaClient } from "../test-utils/mocks";
+import { IDS } from "../../test/helpers/fixtures";
+import { createMockPrisma, createMockPrismaClient } from "../../test/helpers/mocks";
 import { runWithTenantContext } from "../common/tenant-context.storage";
 
 describe("SeatsService", () => {

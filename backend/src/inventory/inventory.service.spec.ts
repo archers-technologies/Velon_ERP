@@ -1,8 +1,8 @@
 import { BadRequestException, ForbiddenException, NotFoundException } from "@nestjs/common";
 import { InventoryAbcClass, InventoryVelocity } from "@velon/database";
 import { InventoryService } from "./inventory.service";
-import { IDS, META, tenantOwner, tenantUser } from "../test-utils/fixtures";
-import { createMockAudit, createMockPrisma, createMockPrismaClient, createRepoMock } from "../test-utils/mocks";
+import { IDS, META, tenantOwner, tenantUser } from "../../test/helpers/fixtures";
+import { createMockAudit, createMockPrisma, createMockPrismaClient, createRepoMock } from "../../test/helpers/mocks";
 
 function stockRow(overrides: Record<string, unknown> = {}) {
   return {

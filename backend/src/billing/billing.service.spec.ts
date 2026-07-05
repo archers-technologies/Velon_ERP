@@ -1,7 +1,7 @@
 import { BadRequestException } from "@nestjs/common";
 import { TenantPlan } from "@velon/database";
 import { BillingService } from "./billing.service";
-import { createMockAudit, createMockPrisma, createMockPrismaClient } from "../test-utils/mocks";
+import { createMockAudit, createMockPrisma, createMockPrismaClient } from "../../test/helpers/mocks";
 
 describe("BillingService", () => {
   const client = createMockPrismaClient();

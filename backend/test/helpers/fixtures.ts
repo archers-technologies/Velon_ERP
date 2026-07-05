@@ -1,7 +1,7 @@
 import { VelonRole } from "@velon/shared";
-import type { AuthenticatedUser } from "../auth/auth.types";
+import type { AuthenticatedUser } from "../../src/auth/auth.types";
 
-/** Stable dummy IDs — never touch a real database. */
+/** Stable test IDs — used only in unit tests, never in runtime or the database. */
 export const IDS = {
   tenant: "tenant-test-001",
   workspace: "workspace-test-001",

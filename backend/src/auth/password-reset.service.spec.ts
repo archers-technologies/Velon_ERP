@@ -1,8 +1,8 @@
 import { BadRequestException } from "@nestjs/common";
 import { createHash } from "node:crypto";
 import { PasswordResetService } from "./password-reset.service";
-import { IDS } from "../test-utils/fixtures";
-import { createMockAudit, createMockPrisma, createMockPrismaClient } from "../test-utils/mocks";
+import { IDS } from "../../test/helpers/fixtures";
+import { createMockAudit, createMockPrisma, createMockPrismaClient } from "../../test/helpers/mocks";
 import { getAuthOtpSecret } from "../config/env";
 import * as mail from "../common/mail-delivery.util";
 

@@ -1,5 +1,5 @@
 import { CmsService } from "./cms.service";
-import { createMockPrisma, createMockPrismaClient } from "../test-utils/mocks";
+import { createMockPrisma, createMockPrismaClient } from "../../test/helpers/mocks";
 
 describe("CmsService", () => {
   const client = createMockPrismaClient();

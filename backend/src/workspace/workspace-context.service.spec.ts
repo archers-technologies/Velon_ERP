@@ -1,7 +1,7 @@
 import { ForbiddenException, UnauthorizedException } from "@nestjs/common";
 import { WorkspaceContextService } from "./workspace-context.service";
-import { IDS, platformAdmin, tenantOwner } from "../test-utils/fixtures";
-import { createMockPrisma, createMockPrismaClient } from "../test-utils/mocks";
+import { IDS, platformAdmin, tenantOwner } from "../../test/helpers/fixtures";
+import { createMockPrisma, createMockPrismaClient } from "../../test/helpers/mocks";
 
 describe("WorkspaceContextService", () => {
   const client = createMockPrismaClient();

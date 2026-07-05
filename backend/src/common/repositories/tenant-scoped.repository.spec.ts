@@ -1,7 +1,7 @@
 import { TenantScopedRepository } from "./tenant-scoped.repository";
 import { runWithTenantContext } from "../tenant-context.storage";
-import { IDS } from "../../test-utils/fixtures";
-import { createMockPrisma } from "../../test-utils/mocks";
+import { IDS } from "../../../test/helpers/fixtures";
+import { createMockPrisma } from "../../../test/helpers/mocks";
 
 class TestRepo extends TenantScopedRepository {
   exposeTenantId() {

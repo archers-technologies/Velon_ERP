@@ -1,7 +1,7 @@
 import { BadRequestException, ForbiddenException, NotFoundException } from "@nestjs/common";
 import { SuppliersService } from "./suppliers.service";
-import { IDS, META, tenantOwner, tenantUser } from "../test-utils/fixtures";
-import { createMockAudit, createRepoMock } from "../test-utils/mocks";
+import { IDS, META, tenantOwner, tenantUser } from "../../test/helpers/fixtures";
+import { createMockAudit, createRepoMock } from "../../test/helpers/mocks";
 
 describe("SuppliersService", () => {
   const suppliers = createRepoMock([

@@ -1,7 +1,7 @@
 import { NotFoundException } from "@nestjs/common";
 import { TenantResourcesService } from "./tenant-resources.service";
-import { IDS, tenantOwner } from "../test-utils/fixtures";
-import { createRepoMock } from "../test-utils/mocks";
+import { IDS, tenantOwner } from "../../test/helpers/fixtures";
+import { createRepoMock } from "../../test/helpers/mocks";
 
 describe("TenantResourcesService", () => {
   const customers = createRepoMock(["create", "findMany", "findById"]);

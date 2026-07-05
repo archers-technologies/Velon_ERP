@@ -1,8 +1,8 @@
 import { BadRequestException, ForbiddenException, NotFoundException } from "@nestjs/common";
 import { CrmLeadStatus } from "@velon/database";
 import { CrmPipelineService } from "./crm-pipeline.service";
-import { IDS, META, tenantOwner, tenantUser } from "../test-utils/fixtures";
-import { createMockAudit, createRepoMock } from "../test-utils/mocks";
+import { IDS, META, tenantOwner, tenantUser } from "../../test/helpers/fixtures";
+import { createMockAudit, createRepoMock } from "../../test/helpers/mocks";
 
 describe("CrmPipelineService", () => {
   const leads = createRepoMock(["findMany", "findById", "findByIdAny", "create", "update"]);

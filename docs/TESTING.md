@@ -20,9 +20,9 @@ Shared specs live in `packages/shared-kernel/src/*.spec.ts` (permissions, naviga
 
 Unit tests exercise **service public APIs** with injected mocks for Prisma, Redis, mail, and repositories. They never open a real database connection for assertions.
 
-- Setup: `backend/src/test-utils/setup-unit.ts` (clears `DATABASE_URL`, sets JWT/OTP secrets)
-- Fixtures: `backend/src/test-utils/fixtures.ts` (dummy tenant/user IDs)
-- Mocks: `backend/src/test-utils/mocks.ts` (`createMockPrisma`, `createRepoMock`, …)
+- Setup: `backend/test/helpers/setup-unit.ts` (clears `DATABASE_URL`, sets JWT/OTP secrets)
+- Fixtures: `backend/test/helpers/fixtures.ts` (test-only tenant/user IDs)
+- Mocks: `backend/test/helpers/mocks.ts` (`createMockPrisma`, `createRepoMock`, …)
 
 Coverage includes auth, CRM, inventory, sales, procurement, suppliers, billing access, seats, workspace context, tenants, platform, CMS, health, audit, and tenant resources.
 

@@ -1,8 +1,8 @@
 import { BadRequestException, ForbiddenException, NotFoundException } from "@nestjs/common";
 import { CrmQuotationStatus } from "@velon/database";
 import { CrmQuotationService } from "./crm-quotation.service";
-import { IDS, META, tenantOwner, tenantUser } from "../test-utils/fixtures";
-import { createMockAudit, createMockPrisma, createMockPrismaClient, createRepoMock } from "../test-utils/mocks";
+import { IDS, META, tenantOwner, tenantUser } from "../../test/helpers/fixtures";
+import { createMockAudit, createMockPrisma, createMockPrismaClient, createRepoMock } from "../../test/helpers/mocks";
 
 describe("CrmQuotationService", () => {
   const quotations = createRepoMock([
