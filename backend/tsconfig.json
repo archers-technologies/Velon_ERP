@@ -15,9 +15,12 @@
     "strict": true,
     "esModuleInterop": true,
     "paths": {
-      "@velon/database": ["../packages/database/src/index.ts"],
-      "@velon/shared": ["../packages/shared-kernel/src/index.ts"],
-      "@velon/shared/*": ["../packages/shared-kernel/src/*"]
+      "@velon/database": ["../packages/database/dist/index"],
+      "@velon/shared": ["../packages/shared-kernel/dist/index"],
+      "@velon/shared/signup-verification": ["../packages/shared-kernel/dist/signup-verification"],
+      "@velon/shared/password-reset-verification": [
+        "../packages/shared-kernel/dist/password-reset-verification"
+      ]
     }
   },
   "include": ["src/**/*"],

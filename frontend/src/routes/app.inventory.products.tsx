@@ -155,6 +155,19 @@ function InventoryProductsPage() {
 
   async function handleSave() {
     if (!canManage || !form.name.trim()) return;
+    if (hasVariants) {
+      const hasAttribute = variantAttributes.some(
+        (a) => a.name.trim() && a.values.some((v) => v.trim()),
+      );
+      if (!hasAttribute) {
+        toast.error('Add at least one attribute with values when variants are enabled.');
+        return;
+      }
+      if (variantRows.length === 0) {
+        toast.error('Generate variants from your attributes before saving.');
+        return;
+      }
+    }
     setBusy(true);
     try {
       const variantsPayload = buildVariantsPayload(

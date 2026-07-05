@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "paths": {
+      "@velon/database": ["../packages/database/dist/index"],
+      "@velon/shared": ["../packages/shared-kernel/dist/index"],
+      "@velon/shared/signup-verification": ["../packages/shared-kernel/dist/signup-verification"],
+      "@velon/shared/password-reset-verification": [
+        "../packages/shared-kernel/dist/password-reset-verification"
+      ]
+    }
+  },
+  "exclude": ["node_modules", "dist", "test", "scripts", "src/**/*.spec.ts"]
+}
