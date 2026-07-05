@@ -12,7 +12,7 @@
     }
   },
   "scripts": {
-    "generate": "node --env-file=../../.env ../../node_modules/.bin/prisma generate",
+    "generate": "prisma generate",
     "migrate:dev": "node --env-file=../../.env ../../node_modules/.bin/prisma migrate dev",
     "migrate:deploy": "node --env-file=../../.env ../../node_modules/.bin/prisma migrate deploy",
     "migrate:verify": "node scripts/verify-migrate-deploy.mjs",
