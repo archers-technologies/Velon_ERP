@@ -7,6 +7,7 @@ import {
 import { InventoryProductStatus } from '@velon/database';
 import { canManageInventory, canReadInventory, normalizeVelonRole } from '@velon/shared';
 import type { AuthenticatedUser } from '../auth/auth.types';
+import { rethrowPrismaAsBadRequest } from '../common/prisma-errors';
 import { PrismaService } from '../prisma/prisma.service';
 import type { ProductVariantAttributeInputDto, ProductVariantInputDto } from './dto/inventory.dto';
 import {
@@ -154,12 +155,26 @@ export class InventoryVariantsService {
     if (!attributes.length) {
       throw new BadRequestException('Add at least one attribute when variants are enabled.');
     }
+    const names = new Set<string>();
     for (const attr of attributes) {
       const name = attr.name?.trim();
       if (!name) throw new BadRequestException('Attribute name cannot be empty.');
+      const normalized = name.toLowerCase();
+      if (names.has(normalized)) {
+        throw new BadRequestException(`Duplicate attribute name: ${name}`);
+      }
+      names.add(normalized);
       const values = (attr.values ?? []).map((v) => v.trim()).filter(Boolean);
       if (!values.length) {
         throw new BadRequestException(`Attribute "${name}" must have at least one value.`);
+      }
+      const valueSet = new Set<string>();
+      for (const value of values) {
+        const key = value.toLowerCase();
+        if (valueSet.has(key)) {
+          throw new BadRequestException(`Duplicate value "${value}" in attribute "${name}".`);
+        }
+        valueSet.add(key);
       }
     }
   }
@@ -223,6 +238,18 @@ export class InventoryVariantsService {
     }
   }
 
+  async assertProductSkuAvailable(sku: string, excludeProductId?: string) {
+    const existingProduct = await this.products.findBySku(sku);
+    if (existingProduct && existingProduct.id !== excludeProductId) {
+      throw new BadRequestException('SKU already exists.');
+    }
+
+    const existingVariant = await this.variants.findBySku(sku);
+    if (existingVariant) {
+      throw new BadRequestException(`SKU already exists on a product variant: ${sku}`);
+    }
+  }
+
   async saveVariantsForProduct(
     user: AuthenticatedUser,
     productId: string,
@@ -246,111 +273,115 @@ export class InventoryVariantsService {
     this.validateAttributeInputs(attrs);
     await this.validateVariantInputs(variants, user.tenantId!, productId);
 
-    await this.prisma.client.$transaction(async (tx) => {
-      await tx.inventoryProductVariantOption.deleteMany({
-        where: { variant: { productId, tenantId: user.tenantId } },
-      });
-      await tx.inventoryStock.deleteMany({
-        where: { productId, tenantId: user.tenantId, variantId: { not: null } },
-      });
-      await tx.inventoryProductVariant.deleteMany({
-        where: { productId, tenantId: user.tenantId },
-      });
-      await tx.inventoryProductVariantAttribute.deleteMany({
-        where: { productId, tenantId: user.tenantId },
-      });
-
-      const attributeValueMap = new Map<string, string>();
-
-      for (let ai = 0; ai < attrs.length; ai++) {
-        const attrInput = attrs[ai]!;
-        const attribute = await tx.inventoryProductVariantAttribute.create({
-          data: {
-            tenantId: user.tenantId!,
-            productId,
-            name: attrInput.name.trim(),
-            sortOrder: ai,
-          },
+    try {
+      await this.prisma.client.$transaction(async (tx) => {
+        await tx.inventoryProductVariantOption.deleteMany({
+          where: { variant: { productId, tenantId: user.tenantId } },
         });
-        const values = attrInput.values.map((v) => v.trim()).filter(Boolean);
-        for (let vi = 0; vi < values.length; vi++) {
-          const val = await tx.inventoryProductVariantAttributeValue.create({
-            data: {
-              tenantId: user.tenantId!,
-              attributeId: attribute.id,
-              value: values[vi]!,
-              sortOrder: vi,
-            },
-          });
-          attributeValueMap.set(`${attrInput.name.trim()}::${values[vi]!}`, val.id);
-        }
-      }
-
-      for (let vi = 0; vi < variants.length; vi++) {
-        const v = variants[vi]!;
-        const label =
-          v.label?.trim() ||
-          buildVariantLabel(
-            (v.optionValues ?? []).map((ov) => ov.value?.trim() ?? '').filter(Boolean),
-          );
-        if (!label) throw new BadRequestException('Each variant must have a label.');
-
-        const variant = await tx.inventoryProductVariant.create({
-          data: {
-            tenantId: user.tenantId!,
-            productId,
-            label,
-            sku: v.sku.trim(),
-            barcode: v.barcode?.trim() || null,
-            unitPrice: v.unitPrice ?? 0,
-            costPrice: v.costPrice ?? 0,
-            salePrice: v.salePrice ?? null,
-            imageDataUrl: v.imageDataUrl || null,
-            status: v.status ?? InventoryProductStatus.ACTIVE,
-            sortOrder: vi,
-          },
+        await tx.inventoryStock.deleteMany({
+          where: { productId, tenantId: user.tenantId, variantId: { not: null } },
+        });
+        await tx.inventoryProductVariant.deleteMany({
+          where: { productId, tenantId: user.tenantId },
+        });
+        await tx.inventoryProductVariantAttribute.deleteMany({
+          where: { productId, tenantId: user.tenantId },
         });
 
-        const optionValueIds: string[] = [];
-        for (const ov of v.optionValues ?? []) {
-          const key = `${ov.attributeName?.trim()}::${ov.value?.trim()}`;
-          const valueId = attributeValueMap.get(key);
-          if (!valueId) {
-            throw new BadRequestException(`Invalid option combination for variant "${label}".`);
-          }
-          optionValueIds.push(valueId);
-        }
+        const attributeValueMap = new Map<string, string>();
 
-        if (optionValueIds.length) {
-          await tx.inventoryProductVariantOption.createMany({
-            data: optionValueIds.map((attributeValueId) => ({
-              variantId: variant.id,
-              attributeValueId,
-            })),
-          });
-        }
-
-        const warehouseId = v.warehouseId ?? defaultWarehouseId;
-        if (warehouseId) {
-          await tx.inventoryStock.create({
+        for (let ai = 0; ai < attrs.length; ai++) {
+          const attrInput = attrs[ai]!;
+          const attribute = await tx.inventoryProductVariantAttribute.create({
             data: {
               tenantId: user.tenantId!,
               productId,
-              variantId: variant.id,
-              warehouseId,
-              quantity: v.quantity ?? 0,
-              minStock: v.minStock ?? 0,
-              reorderLevel: v.reorderLevel ?? 0,
+              name: attrInput.name.trim(),
+              sortOrder: ai,
             },
           });
+          const values = attrInput.values.map((v) => v.trim()).filter(Boolean);
+          for (let vi = 0; vi < values.length; vi++) {
+            const val = await tx.inventoryProductVariantAttributeValue.create({
+              data: {
+                tenantId: user.tenantId!,
+                attributeId: attribute.id,
+                value: values[vi]!,
+                sortOrder: vi,
+              },
+            });
+            attributeValueMap.set(`${attrInput.name.trim()}::${values[vi]!}`, val.id);
+          }
         }
-      }
 
-      await tx.inventoryProduct.update({
-        where: { id: productId },
-        data: { hasVariants: true },
+        for (let vi = 0; vi < variants.length; vi++) {
+          const v = variants[vi]!;
+          const label =
+            v.label?.trim() ||
+            buildVariantLabel(
+              (v.optionValues ?? []).map((ov) => ov.value?.trim() ?? '').filter(Boolean),
+            );
+          if (!label) throw new BadRequestException('Each variant must have a label.');
+
+          const variant = await tx.inventoryProductVariant.create({
+            data: {
+              tenantId: user.tenantId!,
+              productId,
+              label,
+              sku: v.sku.trim(),
+              barcode: v.barcode?.trim() || null,
+              unitPrice: v.unitPrice ?? 0,
+              costPrice: v.costPrice ?? 0,
+              salePrice: v.salePrice ?? null,
+              imageDataUrl: v.imageDataUrl || null,
+              status: v.status ?? InventoryProductStatus.ACTIVE,
+              sortOrder: vi,
+            },
+          });
+
+          const optionValueIds: string[] = [];
+          for (const ov of v.optionValues ?? []) {
+            const key = `${ov.attributeName?.trim()}::${ov.value?.trim()}`;
+            const valueId = attributeValueMap.get(key);
+            if (!valueId) {
+              throw new BadRequestException(`Invalid option combination for variant "${label}".`);
+            }
+            optionValueIds.push(valueId);
+          }
+
+          if (optionValueIds.length) {
+            await tx.inventoryProductVariantOption.createMany({
+              data: optionValueIds.map((attributeValueId) => ({
+                variantId: variant.id,
+                attributeValueId,
+              })),
+            });
+          }
+
+          const warehouseId = v.warehouseId ?? defaultWarehouseId;
+          if (warehouseId) {
+            await tx.inventoryStock.create({
+              data: {
+                tenantId: user.tenantId!,
+                productId,
+                variantId: variant.id,
+                warehouseId,
+                quantity: v.quantity ?? 0,
+                minStock: v.minStock ?? 0,
+                reorderLevel: v.reorderLevel ?? 0,
+              },
+            });
+          }
+        }
+
+        await tx.inventoryProduct.update({
+          where: { id: productId },
+          data: { hasVariants: true },
+        });
       });
-    });
+    } catch (err) {
+      rethrowPrismaAsBadRequest(err, 'Could not save product variants.');
+    }
 
     return this.getProductWithVariants(user, productId);
   }

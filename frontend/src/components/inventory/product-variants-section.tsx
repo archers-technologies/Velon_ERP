@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { forwardRef, useImperativeHandle, useMemo, useState } from 'react';
 import { Plus, Trash2, Wand2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,9 +26,14 @@ import type {
 } from '@/lib/inventory/api';
 import {
   generateVariantsFromAttributes,
+  syncAttributeValuesFromText,
   type VariantAttributeDraft,
   type VariantRowDraft,
 } from '@/lib/inventory/variants';
+
+export type ProductVariantsSectionHandle = {
+  syncAttributes: () => VariantAttributeDraft[];
+};
 
 type ProductVariantsSectionProps = {
   enabled: boolean;
@@ -47,21 +52,37 @@ function newAttribute(): VariantAttributeDraft {
   return { id: crypto.randomUUID(), name: '', values: [''] };
 }
 
-export function ProductVariantsSection({
-  enabled,
-  onEnabledChange,
-  readOnly = false,
-  baseSku,
-  defaultPrice,
-  warehouseId,
-  attributes,
-  onAttributesChange,
-  variants,
-  onVariantsChange,
-}: ProductVariantsSectionProps) {
+export const ProductVariantsSection = forwardRef<
+  ProductVariantsSectionHandle,
+  ProductVariantsSectionProps
+>(function ProductVariantsSection(
+  {
+    enabled,
+    onEnabledChange,
+    readOnly = false,
+    baseSku,
+    defaultPrice,
+    warehouseId,
+    attributes,
+    onAttributesChange,
+    variants,
+    onVariantsChange,
+  },
+  ref,
+) {
   const [valuesText, setValuesText] = useState<Record<string, string>>({});
 
   const canEdit = !readOnly;
+
+  function syncAllAttributes(): VariantAttributeDraft[] {
+    const synced = syncAttributeValuesFromText(attributes, valuesText);
+    onAttributesChange(synced);
+    return synced;
+  }
+
+  useImperativeHandle(ref, () => ({
+    syncAttributes: syncAllAttributes,
+  }));
 
   function updateAttribute(id: string, patch: Partial<VariantAttributeDraft>) {
     onAttributesChange(attributes.map((a) => (a.id === id ? { ...a, ...patch } : a)));
@@ -85,7 +106,8 @@ export function ProductVariantsSection({
   }
 
   function generateVariants() {
-    const generated = generateVariantsFromAttributes(attributes, baseSku, defaultPrice);
+    const synced = syncAllAttributes();
+    const generated = generateVariantsFromAttributes(synced, baseSku, defaultPrice);
     onVariantsChange(generated);
   }
 
@@ -321,7 +343,7 @@ export function ProductVariantsSection({
       ) : null}
     </div>
   );
-}
+});
 
 export function buildVariantsPayload(
   enabled: boolean,

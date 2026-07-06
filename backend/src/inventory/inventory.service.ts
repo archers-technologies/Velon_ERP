@@ -212,8 +212,7 @@ export class InventoryService {
   async createProduct(user: AuthenticatedUser, dto: CreateInventoryProductDto, meta: AuditMeta) {
     this.assertManage(user);
     const sku = dto.sku?.trim() || (await this.nextSku());
-    const existing = await this.products.findBySku(sku);
-    if (existing) throw new BadRequestException('SKU already exists.');
+    await this.variantsService.assertProductSkuAvailable(sku);
 
     const product = await this.products.create({
       sku,
@@ -233,56 +232,63 @@ export class InventoryService {
       createdById: user.id,
     });
 
-    let defaultWarehouseId: string | undefined;
-    if (dto.site?.trim()) {
-      let warehouse = await this.warehouses.findByName(dto.site.trim());
-      if (!warehouse) {
-        const code = this.warehouseCode(dto.site);
-        warehouse = await this.warehouses.create({
-          code,
-          name: dto.site.trim(),
-        });
+    try {
+      let defaultWarehouseId: string | undefined;
+      if (dto.site?.trim()) {
+        let warehouse = await this.warehouses.findByName(dto.site.trim());
+        if (!warehouse) {
+          const code = this.warehouseCode(dto.site);
+          warehouse = await this.warehouses.create({
+            code,
+            name: dto.site.trim(),
+          });
+        }
+        defaultWarehouseId = warehouse.id;
+        if (!dto.hasVariants) {
+          await this.stock.create({
+            productId: product.id,
+            warehouseId: warehouse.id,
+            quantity: dto.quantity ?? 0,
+            minStock: dto.safetyStock ?? 0,
+            reorderLevel: dto.reorderPoint ?? 0,
+          });
+        }
+      } else if (dto.variants?.hasVariants && dto.variants.variants?.length) {
+        const defaultWarehouse = (await this.warehouses.findMany(true))[0];
+        defaultWarehouseId = defaultWarehouse?.id;
       }
-      defaultWarehouseId = warehouse.id;
-      if (!dto.hasVariants) {
-        await this.stock.create({
-          productId: product.id,
-          warehouseId: warehouse.id,
-          quantity: dto.quantity ?? 0,
-          minStock: dto.safetyStock ?? 0,
-          reorderLevel: dto.reorderPoint ?? 0,
-        });
+
+      if (dto.variants?.hasVariants) {
+        await this.variantsService.saveVariantsForProduct(
+          user,
+          product.id,
+          true,
+          dto.variants.attributes,
+          dto.variants.variants,
+          defaultWarehouseId,
+        );
       }
-    } else if (dto.variants?.hasVariants && dto.variants.variants?.length) {
-      const defaultWarehouse = (await this.warehouses.findMany(true))[0];
-      defaultWarehouseId = defaultWarehouse?.id;
+
+      await this.audit.log({
+        actorId: user.id,
+        tenantId: user.tenantId,
+        action: 'inventory.product_created',
+        entityType: 'inventory_product',
+        entityId: product.id,
+        metadata: { sku: product.sku, name: product.name },
+        ipAddress: meta.ip,
+        userAgent: meta.ua,
+      });
+
+      return dto.variants?.hasVariants
+        ? this.variantsService.getProductWithVariants(user, product.id)
+        : product;
+    } catch (err) {
+      await this.prisma.client.inventoryProduct
+        .delete({ where: { id: product.id } })
+        .catch(() => undefined);
+      throw err;
     }
-
-    if (dto.variants?.hasVariants) {
-      await this.variantsService.saveVariantsForProduct(
-        user,
-        product.id,
-        true,
-        dto.variants.attributes,
-        dto.variants.variants,
-        defaultWarehouseId,
-      );
-    }
-
-    await this.audit.log({
-      actorId: user.id,
-      tenantId: user.tenantId,
-      action: 'inventory.product_created',
-      entityType: 'inventory_product',
-      entityId: product.id,
-      metadata: { sku: product.sku, name: product.name },
-      ipAddress: meta.ip,
-      userAgent: meta.ua,
-    });
-
-    return dto.variants?.hasVariants
-      ? this.variantsService.getProductWithVariants(user, product.id)
-      : product;
   }
 
   async updateProduct(

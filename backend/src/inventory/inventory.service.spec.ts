@@ -59,6 +59,7 @@ describe('InventoryService', () => {
     listVariantsForProduct: jest.fn(),
     searchVariants: jest.fn(),
     deactivateVariant: jest.fn(),
+    assertProductSkuAvailable: jest.fn(),
   };
 
   let service: InventoryService;
@@ -115,15 +116,16 @@ describe('InventoryService', () => {
 
   describe('products', () => {
     it('rejects duplicate SKU', async () => {
-      products.count.mockResolvedValue(0);
-      products.findBySku.mockResolvedValue({ id: 'existing' });
+      variantsService.assertProductSkuAvailable.mockRejectedValue(
+        new BadRequestException('SKU already exists.'),
+      );
       await expect(
         service.createProduct(tenantOwner(), { name: 'Widget', sku: 'SKU-1' }, META),
       ).rejects.toThrow(BadRequestException);
     });
 
     it('creates product and writes audit entry', async () => {
-      products.findBySku.mockResolvedValue(null);
+      variantsService.assertProductSkuAvailable.mockResolvedValue(undefined);
       products.create.mockResolvedValue({ id: IDS.product, sku: 'SKU-00001', name: 'Widget' });
       const product = await service.createProduct(
         tenantOwner(),

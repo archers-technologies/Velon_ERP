@@ -8,8 +8,13 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { InvitationStatus, UserRole } from '@velon/database';
-import { getCountryByCode, getCurrencySymbol, normalizeVelonRole, VelonRole } from '@velon/shared';
-import { EMAIL_EVENT_TYPES } from '@velon/shared';
+import {
+  EMAIL_EVENT_TYPES,
+  getCountryByCode,
+  getCurrencySymbol,
+  normalizeVelonRole,
+  VelonRole,
+} from '@velon/shared';
 import { AuditService } from '../audit/audit.service';
 import { AuthService } from '../auth/auth.service';
 import type { AuthenticatedUser } from '../auth/auth.types';

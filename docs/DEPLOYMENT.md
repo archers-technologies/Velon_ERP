@@ -7,7 +7,7 @@
 
 | Component | Platform | Config                                                                                                   |
 | --------- | -------- | -------------------------------------------------------------------------------------------------------- |
-| Web       | Vercel   | [`vercel.json`](../vercel.json) — TanStack Start + Nitro (see [Vercel](#vercel-web-ui)) |
+| Web       | Vercel   | [`vercel.json`](../vercel.json) — TanStack Start + Nitro (see [Vercel](#vercel-web-ui))                  |
 | API       | Railway  | `railway.json` — `backend/Dockerfile.api`, migrate deploy pre-command, healthcheck `/api/v1/health/live` |
 
 Set `VITE_API_URL` on Vercel to the public Railway API origin.
@@ -20,11 +20,11 @@ Nitro (Vercel preset) writes the deployable **Build Output API** bundle to `fron
 
 ### `vercel.json` (repo root)
 
-| Field | Value |
-| ----- | ----- |
-| `framework` | `tanstack-start` |
-| `installCommand` | `npm ci` |
-| `buildCommand` | `npm run build:vercel` |
+| Field            | Value                  |
+| ---------------- | ---------------------- |
+| `framework`      | `tanstack-start`       |
+| `installCommand` | `npm ci`               |
+| `buildCommand`   | `npm run build:vercel` |
 
 Do **not** add `outputDirectory` — Nitro emits the Build Output API layout automatically.
 
@@ -32,35 +32,35 @@ Do **not** add `outputDirectory` — Nitro emits the Build Output API layout aut
 
 In **Vercel → Project → Settings → General**:
 
-| Setting | Value | Notes |
-| ------- | ----- | ----- |
-| **Root Directory** | `.` (repo root) | Default for this monorepo. |
-| **Framework Preset** | TanStack Start | Overridden by `vercel.json#framework` on deploy. |
-| **Build Command** | `npm run build:vercel` | Builds frontend + syncs `.vercel/output` to repo root. |
-| **Install Command** | `npm ci` | Installs all workspaces. |
-| **Output Directory** | *(empty / default)* | **Never** set `dist`, `output`, or `.vercel/output` here. |
-| **Node.js Version** | 22.x or newer | Project currently uses 24.x. |
+| Setting              | Value                  | Notes                                                     |
+| -------------------- | ---------------------- | --------------------------------------------------------- |
+| **Root Directory**   | `.` (repo root)        | Default for this monorepo.                                |
+| **Framework Preset** | TanStack Start         | Overridden by `vercel.json#framework` on deploy.          |
+| **Build Command**    | `npm run build:vercel` | Builds frontend + syncs `.vercel/output` to repo root.    |
+| **Install Command**  | `npm ci`               | Installs all workspaces.                                  |
+| **Output Directory** | _(empty / default)_    | **Never** set `dist`, `output`, or `.vercel/output` here. |
+| **Node.js Version**  | 22.x or newer          | Project currently uses 24.x.                              |
 
 ### Environment variables
 
 Set in **Vercel → Settings → Environment Variables** (Production and Preview). See [`.env.vercel.example`](../.env.vercel.example):
 
-| Variable | Purpose |
-| -------- | ------- |
-| `VITE_API_URL` | Public Railway API origin (e.g. `https://…up.railway.app/`) |
-| `VITE_PUBLIC_WORKSPACE_DOMAIN` | Workspace host branding (e.g. `velonerp.com`) |
+| Variable                       | Purpose                                                     |
+| ------------------------------ | ----------------------------------------------------------- |
+| `VITE_API_URL`                 | Public Railway API origin (e.g. `https://…up.railway.app/`) |
+| `VITE_PUBLIC_WORKSPACE_DOMAIN` | Workspace host branding (e.g. `velonerp.com`)               |
 
 Only `VITE_*` variables belong on Vercel. Secrets and database URLs stay on Railway.
 
 ### Troubleshooting
 
-| Symptom | Fix |
-| ------- | --- |
-| `No Output Directory named "dist" found` | Framework preset is **Vite** instead of **TanStack Start**. Deploy with root `vercel.json` (`framework: tanstack-start`) and clear **Output Directory** in the dashboard. |
-| `No Output Directory named "output" found` | Clear **Output Directory** in the dashboard. Do not set it manually. |
-| Build succeeds but deploy fails | Confirm `buildCommand` is `npm run build:vercel` and `.vercel/output/` exists at repo root after build. |
-| `Could not find workspace` / missing `@velon/shared` | Install must run from monorepo root: `cd .. && npm ci`. |
-| API calls fail in production | Set `VITE_API_URL` to the Railway API URL; confirm Railway `CORS_ORIGINS` includes your Vercel domain. |
+| Symptom                                              | Fix                                                                                                                                                                       |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `No Output Directory named "dist" found`             | Framework preset is **Vite** instead of **TanStack Start**. Deploy with root `vercel.json` (`framework: tanstack-start`) and clear **Output Directory** in the dashboard. |
+| `No Output Directory named "output" found`           | Clear **Output Directory** in the dashboard. Do not set it manually.                                                                                                      |
+| Build succeeds but deploy fails                      | Confirm `buildCommand` is `npm run build:vercel` and `.vercel/output/` exists at repo root after build.                                                                   |
+| `Could not find workspace` / missing `@velon/shared` | Install must run from monorepo root: `cd .. && npm ci`.                                                                                                                   |
+| API calls fail in production                         | Set `VITE_API_URL` to the Railway API URL; confirm Railway `CORS_ORIGINS` includes your Vercel domain.                                                                    |
 
 ### Local web-only build (sanity check)
 

@@ -44,6 +44,22 @@ describe('InventoryVariantsService', () => {
     ).rejects.toThrow(BadRequestException);
   });
 
+  it('rejects duplicate attribute names when variants enabled', async () => {
+    products.findById.mockResolvedValue({ id: IDS.product });
+    await expect(
+      service.saveVariantsForProduct(
+        tenantOwner(),
+        IDS.product,
+        true,
+        [
+          { name: 'Color', values: ['Black'] },
+          { name: 'Color', values: ['Red'] },
+        ],
+        [{ sku: 'SKU-A', optionValues: [{ attributeName: 'Color', value: 'Black' }] }],
+      ),
+    ).rejects.toThrow(/Duplicate attribute name/);
+  });
+
   it('rejects duplicate SKU in variant batch', async () => {
     products.findById.mockResolvedValue({ id: IDS.product });
     variants.findBySku.mockResolvedValue(null);

@@ -9,6 +9,7 @@ import {
   parseSettingsUserTab,
   VelonRole,
 } from '@velon/shared';
+import { EmailPreferencesPanel } from '@/components/email/email-preferences-panel';
 import { SettingsWorkspaceShortcuts } from '@/components/settings/settings-workspace-shortcuts';
 import {
   WorkspaceProfileIdentityPanel,
@@ -57,7 +58,6 @@ import {
   type ReceiptFormat,
 } from '@/lib/shared/printer-settings';
 import { updateCompanyProfile, updateWorkspaceSettings } from '@/lib/tenants/admin-api';
-import { EmailPreferencesPanel } from '@/components/email/email-preferences-panel';
 
 const settingsTabs = ['general', 'regional', 'printers', 'profile', 'security', 'email'] as const;
 type SettingsTab = (typeof settingsTabs)[number];

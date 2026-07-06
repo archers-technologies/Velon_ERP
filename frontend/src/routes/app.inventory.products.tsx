@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { Barcode, Package, Plus } from 'lucide-react';
 import { toast } from 'sonner';
@@ -8,6 +8,7 @@ import {
   buildVariantsPayload,
   ProductVariantsSection,
   variantsFromProductDetail,
+  type ProductVariantsSectionHandle,
 } from '@/components/inventory/product-variants-section';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -43,7 +44,12 @@ import {
   type InventoryProduct,
   type InventoryWarehouse,
 } from '@/lib/inventory/api';
-import type { VariantAttributeDraft, VariantRowDraft } from '@/lib/inventory/variants';
+import {
+  findDuplicateVariantBarcodes,
+  findDuplicateVariantSkus,
+  type VariantAttributeDraft,
+  type VariantRowDraft,
+} from '@/lib/inventory/variants';
 
 export const Route = createFileRoute('/app/inventory/products')({
   component: InventoryProductsPage,
@@ -61,6 +67,7 @@ function InventoryProductsPage() {
   const [hasVariants, setHasVariants] = useState(false);
   const [variantAttributes, setVariantAttributes] = useState<VariantAttributeDraft[]>([]);
   const [variantRows, setVariantRows] = useState<VariantRowDraft[]>([]);
+  const variantsSectionRef = useRef<ProductVariantsSectionHandle>(null);
   const [form, setForm] = useState({
     name: '',
     sku: '',
@@ -167,12 +174,29 @@ function InventoryProductsPage() {
         toast.error('Generate variants from your attributes before saving.');
         return;
       }
+      const duplicateSku = findDuplicateVariantSkus(variantRows);
+      if (duplicateSku) {
+        toast.error(`Each variant needs a unique SKU. Duplicate: ${duplicateSku}`);
+        return;
+      }
+      const duplicateBarcode = findDuplicateVariantBarcodes(variantRows);
+      if (duplicateBarcode) {
+        toast.error(`Each variant barcode must be unique. Duplicate: ${duplicateBarcode}`);
+        return;
+      }
+      if (variantRows.some((variant) => !variant.sku.trim())) {
+        toast.error('Every variant must have a SKU.');
+        return;
+      }
     }
     setBusy(true);
     try {
+      const syncedAttributes = hasVariants
+        ? (variantsSectionRef.current?.syncAttributes() ?? variantAttributes)
+        : variantAttributes;
       const variantsPayload = buildVariantsPayload(
         hasVariants,
-        variantAttributes,
+        syncedAttributes,
         variantRows,
         form.warehouseId,
       );
@@ -350,6 +374,7 @@ function InventoryProductsPage() {
             </div>
           </div>
           <ProductVariantsSection
+            ref={variantsSectionRef}
             enabled={hasVariants}
             onEnabledChange={(enabled) => {
               setHasVariants(enabled);

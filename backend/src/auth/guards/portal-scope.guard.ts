@@ -28,14 +28,12 @@ export class PortalScopeGuard implements CanActivate {
     ]);
     if (!required) return true;
 
-    const req = context
-      .switchToHttp()
-      .getRequest<{
-        user?: AuthenticatedUser;
-        ip?: string;
-        headers: Record<string, string | string[] | undefined>;
-        path: string;
-      }>();
+    const req = context.switchToHttp().getRequest<{
+      user?: AuthenticatedUser;
+      ip?: string;
+      headers: Record<string, string | string[] | undefined>;
+      path: string;
+    }>();
     const user = req.user;
     if (!user) throw new UnauthorizedException('Authentication required.');
 

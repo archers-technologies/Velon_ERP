@@ -13,8 +13,8 @@ import {
   planCatalogEntry,
   TRIAL_DAYS_DEFAULT,
 } from '@velon/shared';
-import { PrismaService } from '../prisma/prisma.service';
 import { EmailLifecycleService } from '../email/email-lifecycle.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { BillingPricingService } from './billing-pricing.service';
 import type { CheckoutSession } from './providers/payment-provider.types';
 

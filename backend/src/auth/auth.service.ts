@@ -446,11 +446,7 @@ export class AuthService {
           trialEndsAt: renewal,
           currentPeriodEnd: renewal,
         });
-        void this.emailLifecycle.notifyTrialStarted(
-          result.tenant.id,
-          sub.id,
-          sub.plan,
-        );
+        void this.emailLifecycle.notifyTrialStarted(result.tenant.id, sub.id, sub.plan);
       } catch (err) {
         this.log.dbFailure('subscription.provision', err, { tenantId: result.tenant.id });
       }
