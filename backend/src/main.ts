@@ -3,19 +3,29 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
+import { json, urlencoded, type Request } from 'express';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { formatSmtpConfigForLog, smtpConfigured } from './common/mail-delivery.util';
 import { isCorsOriginAllowed } from './config/env';
 
+type RawBodyRequest = Request & { rawBody?: Buffer };
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     rawBody: true,
-    bodyParser: {
-      json: { limit: '2mb' },
-      urlencoded: { limit: '2mb', extended: true },
-    },
+    bodyParser: false,
   });
+
+  app.use(
+    json({
+      limit: '2mb',
+      verify: (req, _res, buf) => {
+        (req as RawBodyRequest).rawBody = buf;
+      },
+    }),
+  );
+  app.use(urlencoded({ limit: '2mb', extended: true }));
 
   app.use(helmet());
   app.use(cookieParser());
