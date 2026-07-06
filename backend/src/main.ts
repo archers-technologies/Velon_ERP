@@ -9,7 +9,13 @@ import { formatSmtpConfigForLog, smtpConfigured } from './common/mail-delivery.u
 import { isCorsOriginAllowed } from './config/env';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { rawBody: true });
+  const app = await NestFactory.create(AppModule, {
+    rawBody: true,
+    bodyParser: {
+      json: { limit: '2mb' },
+      urlencoded: { limit: '2mb', extended: true },
+    },
+  });
 
   app.use(helmet());
   app.use(cookieParser());

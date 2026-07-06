@@ -33,7 +33,12 @@ export class ApiResponseFilter implements ExceptionFilter {
         }
       }
     } else if (exception instanceof Error) {
-      this.logger.error(exception.message, exception.stack);
+      if (exception.name === 'PayloadTooLargeError') {
+        status = HttpStatus.PAYLOAD_TOO_LARGE;
+        message = 'Request payload is too large. Try a smaller product image (under 512 KB).';
+      } else {
+        this.logger.error(exception.message, exception.stack);
+      }
     }
 
     const isProduction = process.env.NODE_ENV === 'production';
