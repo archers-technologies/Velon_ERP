@@ -23,12 +23,13 @@ export function getFromName(): string {
 }
 
 export function getFromEmail(): string {
-  return (
+  const raw =
     process.env.SMTP_FROM_EMAIL?.trim() ||
     process.env.SMTP_FROM?.trim() ||
     process.env.RESEND_FROM?.trim() ||
-    getSupportEmail()
-  );
+    getSupportEmail();
+  const match = raw.match(/<([^>]+)>/);
+  return (match ? match[1] : raw).trim();
 }
 
 export function resolveEmailProvider(): EmailProviderId {

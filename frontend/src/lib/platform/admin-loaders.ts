@@ -60,6 +60,10 @@ function emptyPlatformOverview() {
       { month: 'Apr', mrr: 0 },
       { month: 'May', mrr: 0 },
     ],
+    revenueByDay: Array.from({ length: 30 }, (_, i) => ({
+      month: `Day ${i + 1}`,
+      mrr: 0,
+    })),
     tenantSignupsByMonth: [
       { month: 'Dec', newTenants: 0 },
       { month: 'Jan', newTenants: 0 },
@@ -128,9 +132,14 @@ export async function loadPlatformOverview(): Promise<PlatformOverviewData> {
       status: statusFromApi[String(t.status)] ?? t.status,
     }),
   );
+  const empty = emptyPlatformOverview();
   return {
+    ...empty,
     ...(raw as PlatformOverviewData),
     recentTenants,
+    revenueByDay:
+      (raw as { revenueByDay?: PlatformOverviewData['revenueByDay'] }).revenueByDay ??
+      empty.revenueByDay,
   };
 }
 

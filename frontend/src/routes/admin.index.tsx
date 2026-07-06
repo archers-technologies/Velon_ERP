@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import {
   Activity,
@@ -35,6 +36,7 @@ import { TenantStatusPill } from '@/components/workspace/tenant-status-pill';
 import { useAdminCurrency } from '@/contexts/admin-currency';
 import { loadPlatformOverview } from '@/lib/platform/admin-loaders';
 import type { PlatformActivityItem } from '@/lib/types/workspace-ui';
+import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/admin/')({
   loader: () => loadPlatformOverview(),
@@ -54,6 +56,27 @@ const signupChartConfig = {
     theme: { light: 'oklch(0.45 0.12 250)', dark: 'oklch(0.72 0.12 250)' },
   },
 } satisfies ChartConfig;
+
+type RevenuePeriod = '1W' | '1M' | '3M' | '1Y';
+
+function revenueSeriesForPeriod(
+  period: RevenuePeriod,
+  byDay: { month: string; mrr: number }[],
+  byMonth: { month: string; mrr: number }[],
+) {
+  switch (period) {
+    case '1W':
+      return byDay.slice(-7);
+    case '1M':
+      return byDay;
+    case '3M':
+      return byMonth.slice(-3);
+    case '1Y':
+      return byMonth;
+    default:
+      return byMonth.slice(-6);
+  }
+}
 
 function activityIcon(kind: PlatformActivityItem['kind']) {
   switch (kind) {
@@ -85,8 +108,13 @@ function logLevelClass(level: 'info' | 'warn' | 'error') {
 function AdminOverviewPage() {
   const { formatCurrency } = useAdminCurrency();
   const o = Route.useLoaderData();
+  const [revenuePeriod, setRevenuePeriod] = useState<RevenuePeriod>('1M');
   const tenants = o.recentTenants;
   const seatPct = Math.min(100, Math.round((o.totalSeatsAllocated / o.licenseSeatCapacity) * 100));
+  const revenueChartData = useMemo(
+    () => revenueSeriesForPeriod(revenuePeriod, o.revenueByDay, o.revenueByMonth),
+    [revenuePeriod, o.revenueByDay, o.revenueByMonth],
+  );
 
   return (
     <div className="space-y-6">
@@ -203,13 +231,19 @@ function AdminOverviewPage() {
               </div>
             </div>
             <div className="border-border bg-muted/40 flex items-center gap-1 rounded-lg border p-0.5">
-              {['1W', '1M', '3M', '1Y'].map((p, i) => (
+              {(['1W', '1M', '3M', '1Y'] as const).map((p) => (
                 <Button
                   key={p}
                   type="button"
                   size="sm"
                   variant="ghost"
-                  className={`h-7 px-2.5 text-xs ${i === 1 ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'}`}
+                  className={cn(
+                    'h-7 px-2.5 text-xs',
+                    revenuePeriod === p
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground',
+                  )}
+                  onClick={() => setRevenuePeriod(p)}
                 >
                   {p}
                 </Button>
@@ -221,7 +255,7 @@ function AdminOverviewPage() {
             className="aspect-[21/9] max-h-[280px] min-h-[200px] w-full"
           >
             <AreaChart
-              data={o.revenueByMonth}
+              data={revenueChartData}
               margin={{ left: 0, right: 8, top: 8, bottom: 0 }}
             >
               <defs>

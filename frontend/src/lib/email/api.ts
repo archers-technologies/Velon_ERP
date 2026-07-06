@@ -82,6 +82,30 @@ export async function sendTestPlatformEmail(key: string, toEmail: string) {
   });
 }
 
+export type MailConfigurationStatus = {
+  configured: boolean;
+  provider: string;
+  smtpConfigured: boolean;
+  resendConfigured: boolean;
+  sendgridConfigured: boolean;
+  redisQueue: boolean;
+  warnings: string[];
+};
+
+export async function loadPlatformMailStatus() {
+  return apiFetch<MailConfigurationStatus>('/email/platform/status');
+}
+
+export async function sendPlatformConnectivityTest(toEmail: string) {
+  return apiFetch<{ sent: boolean; skipped?: boolean; reason?: string; status: MailConfigurationStatus }>(
+    '/email/platform/test',
+    {
+      method: 'POST',
+      body: JSON.stringify({ toEmail }),
+    },
+  );
+}
+
 export async function loadPlatformEmailLogs(params?: { tenantId?: string; status?: string }) {
   const qs = new URLSearchParams();
   if (params?.tenantId) qs.set('tenantId', params.tenantId);

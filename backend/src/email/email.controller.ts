@@ -16,6 +16,7 @@ import {
 } from './dto/email.dto';
 import { getAppBaseUrl } from './email-env.util';
 import { EmailLifecycleService } from './email-lifecycle.service';
+import { NotificationService } from './notification.service';
 import { EmailLogService } from './email-log.service';
 import { EmailPreferenceService } from './email-preference.service';
 import { EMAIL_SUPPORT_REPLY_TEMPLATES } from './email-support-templates';
@@ -30,7 +31,26 @@ export class EmailController {
     private readonly logs: EmailLogService,
     private readonly preferences: EmailPreferenceService,
     private readonly lifecycle: EmailLifecycleService,
+    private readonly notifications: NotificationService,
   ) {}
+
+  @Get('platform/status')
+  @RequirePortalScope('platform')
+  @UseGuards(JwtAuthGuard, PortalScopeGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.PLATFORM_SUPPORT)
+  @ApiBearerAuth()
+  platformMailStatus() {
+    return this.notifications.getMailConfigurationStatus();
+  }
+
+  @Post('platform/test')
+  @RequirePortalScope('platform')
+  @UseGuards(JwtAuthGuard, PortalScopeGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN)
+  @ApiBearerAuth()
+  platformConnectivityTest(@Body() dto: SendTestEmailDto) {
+    return this.notifications.sendConnectivityTest(dto.toEmail);
+  }
 
   @Get('platform/templates')
   @RequirePortalScope('platform')

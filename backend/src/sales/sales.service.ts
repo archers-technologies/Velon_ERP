@@ -8,6 +8,7 @@ import { CrmQuotationStatus, Prisma, SalesOrderStatus } from '@velon/database';
 import { canReadSales, canWriteSales, normalizeVelonRole } from '@velon/shared';
 import { AuditService } from '../audit/audit.service';
 import type { AuthenticatedUser } from '../auth/auth.types';
+import { NotificationService } from '../email/notification.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { SalesOrderRepository } from './sales.repositories';
 
@@ -19,6 +20,7 @@ export class SalesService {
     private readonly orders: SalesOrderRepository,
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
+    private readonly notifications: NotificationService,
   ) {}
 
   private assertRead(user: AuthenticatedUser) {
@@ -142,6 +144,31 @@ export class SalesService {
       ipAddress: meta.ip,
       userAgent: meta.ua,
     });
+
+    if (user.tenantId) {
+      void (async () => {
+        try {
+          const workspace = await this.prisma.client.workspace.findFirst({
+            where: { id: user.workspaceId, tenantId: user.tenantId },
+            select: { name: true, currency: true },
+          });
+          await this.notifications.notifySalesOrderCreated({
+            tenantId: user.tenantId!,
+            salesOrderId: created.id,
+            orderNumber: created.orderNumber,
+            userId: user.id,
+            email: user.email,
+            userName: user.email,
+            workspaceName: workspace?.name ?? 'your workspace',
+            status: created.status,
+            total: String(created.total),
+            currency: workspace?.currency ?? 'USD',
+          });
+        } catch {
+          /* notification must not block sales operations */
+        }
+      })();
+    }
 
     return created;
   }

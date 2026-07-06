@@ -22,6 +22,7 @@
     }
   },
   "scripts": {
+    "prebuild": "find src \\( -name '*.js' -o -name '*.js.map' -o -name '*.d.ts' \\) -type f -delete 2>/dev/null || true",
     "build": "tsc -p tsconfig.json"
   },
   "devDependencies": {

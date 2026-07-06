@@ -33,7 +33,12 @@ describe('PasswordResetService', () => {
     },
   };
   const audit = createMockAudit();
-  const service = new PasswordResetService(prisma, redis as never, audit as never);
+  const notifications = {
+    notifyPasswordResetOtp: jest.fn().mockResolvedValue({ delivered: true }),
+    notifyPasswordChanged: jest.fn().mockResolvedValue(undefined),
+    getMailConfigurationStatus: jest.fn().mockReturnValue({ configured: true }),
+  };
+  const service = new PasswordResetService(prisma, redis as never, audit as never, notifications as never);
 
   beforeEach(() => {
     jest.clearAllMocks();

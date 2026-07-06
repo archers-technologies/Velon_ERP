@@ -44,6 +44,7 @@ describe('CrmQuotationService', () => {
       pdf as never,
       audit as never,
       prisma,
+      { notifyQuotationCreated: jest.fn().mockResolvedValue(undefined), notifyQuotationSent: jest.fn().mockResolvedValue(undefined), notifyQuotationApproved: jest.fn().mockResolvedValue(undefined), notifyQuotationRejected: jest.fn().mockResolvedValue(undefined) } as never,
     );
   });
 

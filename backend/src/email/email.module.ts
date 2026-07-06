@@ -9,6 +9,7 @@ import { EmailProviderService } from './email-provider.service';
 import { EmailQueueService } from './email-queue.service';
 import { EmailSchedulerService } from './email-scheduler.service';
 import { EmailTemplateService } from './email-template.service';
+import { NotificationService } from './notification.service';
 import { EmailController } from './email.controller';
 
 @Module({
@@ -24,7 +25,14 @@ import { EmailController } from './email.controller';
     EmailQueueService,
     EmailLifecycleService,
     EmailSchedulerService,
+    NotificationService,
   ],
-  exports: [EmailLifecycleService, EmailLogService, EmailPreferenceService, EmailTemplateService],
+  exports: [
+    EmailLifecycleService,
+    EmailLogService,
+    EmailPreferenceService,
+    EmailTemplateService,
+    NotificationService,
+  ],
 })
 export class EmailModule {}

@@ -23,6 +23,11 @@ dist-ssr
 .vercel
 backups/
 
+# Accidental tsc output in shared-kernel source (breaks Vite ESM — build goes to dist/)
+packages/shared-kernel/src/**/*.js
+packages/shared-kernel/src/**/*.js.map
+packages/shared-kernel/src/**/*.d.ts
+
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars

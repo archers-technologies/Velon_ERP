@@ -14,11 +14,14 @@ import { guardDisabledAdminPath } from '@/lib/auth/production-routes';
 import {
   loadPlatformEmailLogs,
   loadPlatformEmailTemplates,
+  loadPlatformMailStatus,
   resendPlatformEmailLog,
+  sendPlatformConnectivityTest,
   sendTestPlatformEmail,
   updatePlatformEmailTemplate,
   type EmailLogRecord,
   type EmailTemplateRecord,
+  type MailConfigurationStatus,
 } from '@/lib/email/api';
 
 export const Route = createFileRoute('/admin/settings/email')({
@@ -41,18 +44,21 @@ function AdminEmailSettingsPage() {
   const [draft, setDraft] = useState<Partial<EmailTemplateRecord>>({});
   const [testEmail, setTestEmail] = useState('');
   const [loading, setLoading] = useState(true);
+  const [mailStatus, setMailStatus] = useState<MailConfigurationStatus | null>(null);
 
   const selected = templates.find((t) => t.key === selectedKey) ?? null;
 
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      const [tpls, emailLogs] = await Promise.all([
+      const [tpls, emailLogs, status] = await Promise.all([
         loadPlatformEmailTemplates(),
         loadPlatformEmailLogs(),
+        loadPlatformMailStatus(),
       ]);
       setTemplates(tpls);
       setLogs(emailLogs);
+      setMailStatus(status);
       if (!selectedKey && tpls[0]) setSelectedKey(tpls[0].key);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to load email settings');
@@ -98,6 +104,21 @@ function AdminEmailSettingsPage() {
     }
   };
 
+  const sendConnectivityTest = async () => {
+    if (!testEmail.trim()) return;
+    try {
+      const result = await sendPlatformConnectivityTest(testEmail.trim());
+      if (result.sent) {
+        toast.success('Connectivity test email queued');
+      } else {
+        toast.error(result.reason ?? 'Mail provider is not configured');
+      }
+      void refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Connectivity test failed');
+    }
+  };
+
   return (
     <div className="space-y-6 p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -124,6 +145,50 @@ function AdminEmailSettingsPage() {
           Refresh
         </Button>
       </div>
+
+      {mailStatus ? (
+        <Card className="space-y-3 p-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="font-medium">Mail provider</h2>
+            <Badge variant={mailStatus.configured ? 'default' : 'destructive'}>
+              {mailStatus.configured ? mailStatus.provider : 'not configured'}
+            </Badge>
+            {mailStatus.redisQueue ? (
+              <Badge variant="outline">Queue enabled</Badge>
+            ) : (
+              <Badge variant="secondary">Inline delivery</Badge>
+            )}
+          </div>
+          {mailStatus.warnings.length > 0 ? (
+            <ul className="text-muted-foreground list-disc space-y-1 pl-5 text-sm">
+              {mailStatus.warnings.map((warning) => (
+                <li key={warning}>{warning}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-muted-foreground text-sm">
+              SMTP: {mailStatus.smtpConfigured ? 'yes' : 'no'} · Resend:{' '}
+              {mailStatus.resendConfigured ? 'yes' : 'no'}
+            </p>
+          )}
+          <div className="flex flex-wrap gap-2 border-t pt-3">
+            <Input
+              className="max-w-xs"
+              placeholder="Test recipient email"
+              type="email"
+              value={testEmail}
+              onChange={(e) => setTestEmail(e.target.value)}
+            />
+            <Button
+              variant="outline"
+              onClick={() => void sendConnectivityTest()}
+            >
+              <Send className="mr-2 size-4" />
+              Send connectivity test
+            </Button>
+          </div>
+        </Card>
+      ) : null}
 
       <Tabs defaultValue="templates">
         <TabsList>

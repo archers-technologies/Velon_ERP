@@ -39,6 +39,8 @@ describe('AuthService', () => {
       redis as never,
       log,
       subscriptions as never,
+      { notifySignup: jest.fn(), notifyTrialStarted: jest.fn() } as never,
+      { notifyLogin: jest.fn(), notifyPasswordChanged: jest.fn() } as never,
     );
   });
 

@@ -43,6 +43,8 @@ describe('PlatformService', () => {
   });
 
   it('aggregates overview metrics from tenant mocks', async () => {
+    const now = new Date();
+    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 15);
     client.tenant.findMany.mockResolvedValue([
       {
         id: IDS.tenant,
@@ -52,6 +54,7 @@ describe('PlatformService', () => {
         mrr: 29,
         country: 'US',
         usersCount: 3,
+        createdAt: lastMonth,
       },
       {
         id: 'tenant-2',
@@ -61,6 +64,7 @@ describe('PlatformService', () => {
         mrr: 99,
         country: 'IN',
         usersCount: 5,
+        createdAt: now,
       },
     ]);
     client.auditLog.findMany.mockResolvedValue([]);
@@ -71,5 +75,9 @@ describe('PlatformService', () => {
     expect(overview.trialCount).toBe(1);
     expect(overview.totalSeatsAllocated).toBe(8);
     expect(overview.recentTenants).toHaveLength(2);
+    expect(overview.revenueByMonth.length).toBe(12);
+    expect(overview.revenueByDay.length).toBe(30);
+    expect(overview.revenueByMonth.at(-1)?.mrr).toBe(128);
+    expect(overview.tenantSignupsByMonth.length).toBe(6);
   });
 });

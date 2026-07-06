@@ -10,7 +10,18 @@ describe('HealthController', () => {
   const client = createMockPrismaClient();
   const prisma = createMockPrisma(client);
   const redis = createMockRedis();
-  const controller = new HealthController(prisma, redis as never);
+  const notifications = {
+    getMailConfigurationStatus: jest.fn(() => ({
+      configured: true,
+      provider: 'smtp',
+      smtpConfigured: true,
+      resendConfigured: false,
+      sendgridConfigured: false,
+      redisQueue: true,
+      warnings: [],
+    })),
+  };
+  const controller = new HealthController(prisma, redis as never, notifications as never);
 
   beforeEach(() => jest.clearAllMocks());
 

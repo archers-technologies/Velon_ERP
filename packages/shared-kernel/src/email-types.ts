@@ -36,6 +36,19 @@ export const EMAIL_TEMPLATE_KEYS = {
   GRACE_PERIOD_STARTED: 'grace_period_started',
   ACCOUNT_SUSPENDED_BILLING: 'account_suspended_billing',
   PASSWORD_RESET: 'password_reset',
+  PASSWORD_CHANGED: 'password_changed',
+  LOGIN_ALERT: 'login_alert',
+  QUOTATION_CREATED: 'quotation_created',
+  QUOTATION_SENT: 'quotation_sent',
+  QUOTATION_APPROVED: 'quotation_approved',
+  QUOTATION_REJECTED: 'quotation_rejected',
+  SALES_ORDER_CREATED: 'sales_order_created',
+  SALES_ORDER_UPDATED: 'sales_order_updated',
+  INVENTORY_PRODUCT_MAJOR_UPDATE: 'inventory_product_major_update',
+  API_KEY_CREATED: 'api_key_created',
+  API_KEY_REGENERATED: 'api_key_regenerated',
+  API_KEY_DISABLED: 'api_key_disabled',
+  ADMIN_SETTINGS_CHANGED: 'admin_settings_changed',
 } as const;
 
 export type EmailTemplateKey = (typeof EMAIL_TEMPLATE_KEYS)[keyof typeof EMAIL_TEMPLATE_KEYS];
@@ -64,6 +77,19 @@ export const EMAIL_EVENT_TYPES = {
   TRIAL_EXPIRED: 'trial.expired',
   ONBOARDING_STEP: 'onboarding.step',
   DUNNING_REMINDER: 'dunning.reminder',
+  USER_LOGGED_IN: 'user.logged_in',
+  USER_PASSWORD_CHANGED: 'user.password_changed',
+  CRM_QUOTATION_CREATED: 'crm.quotation_created',
+  CRM_QUOTATION_SENT: 'crm.quotation_sent',
+  CRM_QUOTATION_APPROVED: 'crm.quotation_approved',
+  CRM_QUOTATION_REJECTED: 'crm.quotation_rejected',
+  SALES_ORDER_CREATED: 'sales.order_created',
+  SALES_ORDER_UPDATED: 'sales.order_updated',
+  INVENTORY_PRODUCT_MAJOR_UPDATE: 'inventory.product_major_update',
+  API_KEY_CREATED: 'api_key.created',
+  API_KEY_REGENERATED: 'api_key.regenerated',
+  API_KEY_DISABLED: 'api_key.disabled',
+  ADMIN_SETTINGS_CHANGED: 'admin.settings_changed',
 } as const;
 
 export type EmailEventType = (typeof EMAIL_EVENT_TYPES)[keyof typeof EMAIL_EVENT_TYPES];
@@ -95,6 +121,15 @@ export type EmailMergeContext = {
   subscription?: { status?: string; renewalDate?: string };
   invoice?: { number?: string; amount?: string; currency?: string };
   payment?: { status?: string; date?: string };
+  quotation?: { number?: string; status?: string; total?: string; currency?: string };
+  salesOrder?: { number?: string; status?: string; total?: string; currency?: string };
+  product?: { name?: string; sku?: string; action?: string };
+  security?: {
+    loginTime?: string;
+    ipAddress?: string;
+    device?: string;
+    warning?: string;
+  };
   loginUrl?: string;
   billingUrl?: string;
   invoiceUrl?: string;
@@ -136,6 +171,26 @@ export const TRANSACTIONAL_TEMPLATE_KEYS = new Set<string>([
   EMAIL_TEMPLATE_KEYS.GRACE_PERIOD_STARTED,
   EMAIL_TEMPLATE_KEYS.ACCOUNT_SUSPENDED_BILLING,
   EMAIL_TEMPLATE_KEYS.PASSWORD_RESET,
+  EMAIL_TEMPLATE_KEYS.PASSWORD_CHANGED,
+  EMAIL_TEMPLATE_KEYS.QUOTATION_CREATED,
+  EMAIL_TEMPLATE_KEYS.QUOTATION_SENT,
+  EMAIL_TEMPLATE_KEYS.QUOTATION_APPROVED,
+  EMAIL_TEMPLATE_KEYS.QUOTATION_REJECTED,
+  EMAIL_TEMPLATE_KEYS.SALES_ORDER_CREATED,
+  EMAIL_TEMPLATE_KEYS.SALES_ORDER_UPDATED,
+  EMAIL_TEMPLATE_KEYS.INVENTORY_PRODUCT_MAJOR_UPDATE,
+  EMAIL_TEMPLATE_KEYS.ADMIN_SETTINGS_CHANGED,
+]);
+
+/** Security-sensitive emails — always delivered; not user-configurable. */
+export const SECURITY_TEMPLATE_KEYS = new Set<string>([
+  EMAIL_TEMPLATE_KEYS.LOGIN_ALERT,
+  EMAIL_TEMPLATE_KEYS.PASSWORD_RESET,
+  EMAIL_TEMPLATE_KEYS.PASSWORD_CHANGED,
+  EMAIL_TEMPLATE_KEYS.API_KEY_CREATED,
+  EMAIL_TEMPLATE_KEYS.API_KEY_REGENERATED,
+  EMAIL_TEMPLATE_KEYS.API_KEY_DISABLED,
+  EMAIL_TEMPLATE_KEYS.ADMIN_SETTINGS_CHANGED,
 ]);
 
 export const MARKETING_TEMPLATE_KEYS = new Set<string>([

@@ -26,9 +26,11 @@ import { verifySignupVerificationToken } from '@velon/shared/signup-verification
 import { AuditService } from '../audit/audit.service';
 import { SubscriptionService } from '../billing/subscription.service';
 import { VelonLogger } from '../common/logger.service';
+import type { RequestMeta } from '../common/request-meta.util';
 import { signupEmailBlockReason } from '../common/tenant-lifecycle.util';
 import { getAuthOtpSecret, getJwtAccessSecret } from '../config/env';
 import { EmailLifecycleService } from '../email/email-lifecycle.service';
+import { NotificationService } from '../email/notification.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import type { AuthSessionResponse, TokenIssueContext } from './auth.types';
@@ -60,6 +62,7 @@ export class AuthService {
     @Inject(forwardRef(() => SubscriptionService))
     private readonly subscriptions: SubscriptionService,
     private readonly emailLifecycle: EmailLifecycleService,
+    private readonly notifications: NotificationService,
   ) {}
 
   private hashRefresh(token: string) {
@@ -192,7 +195,7 @@ export class AuthService {
     };
   }
 
-  async login(dto: LoginDto): Promise<AuthSessionResponse> {
+  async login(dto: LoginDto, meta?: RequestMeta): Promise<AuthSessionResponse> {
     const email = dto.email.trim().toLowerCase();
     this.log.auth('login.attempt', { email });
 
@@ -233,6 +236,11 @@ export class AuthService {
         scope: ctx.scope,
         route: ctx.scope === 'platform' ? 'admin' : 'app',
       });
+
+      void this.sendLoginNotification(user, ctx, meta).catch((err) => {
+        this.log.authFailure('login.notification_failed', { email, reason: String(err) });
+      });
+
       return this.toSessionResponse(tokens);
     } catch (err) {
       if (err instanceof UnauthorizedException) throw err;
@@ -546,6 +554,50 @@ export class AuthService {
       entityId: userId,
     });
 
+    const membership = await this.prisma.client.tenantMembership.findFirst({
+      where: { userId, isActive: true },
+      include: { tenant: { include: { workspace: true } } },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    void this.notifications
+      .notifyPasswordChanged({
+        userId: user.id,
+        email: user.email,
+        userName: user.name ?? user.email,
+        tenantId: membership?.tenantId ?? null,
+        workspaceName:
+          membership?.tenant.workspace?.name ?? membership?.tenant.name ?? 'Velon ERP Platform',
+      })
+      .catch(() => undefined);
+
     return { ok: true as const };
+  }
+
+  private async sendLoginNotification(
+    user: { id: string; email: string; name: string | null },
+    ctx: TokenIssueContext,
+    meta?: RequestMeta,
+  ) {
+    let workspaceName = 'Velon ERP Platform';
+    let tenantId: string | null = null;
+
+    if (ctx.scope === 'tenant') {
+      tenantId = ctx.tenantId ?? null;
+      const workspace = await this.prisma.client.workspace.findFirst({
+        where: { id: ctx.workspaceId, tenantId: ctx.tenantId },
+        select: { name: true },
+      });
+      workspaceName = workspace?.name ?? 'your workspace';
+    }
+
+    await this.notifications.notifyLogin({
+      userId: user.id,
+      email: user.email,
+      userName: user.name ?? user.email,
+      tenantId,
+      workspaceName,
+      meta,
+    });
   }
 }

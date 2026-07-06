@@ -6,8 +6,14 @@ import cookieParser from 'cookie-parser';
 import { json, urlencoded, type Request } from 'express';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
-import { formatSmtpConfigForLog, smtpConfigured } from './common/mail-delivery.util';
+import {
+  formatMailProviderForLog,
+  formatSmtpConfigForLog,
+  resolveMailProvider,
+  smtpConfigured,
+} from './common/mail-delivery.util';
 import { isCorsOriginAllowed } from './config/env';
+import { NotificationService } from './email/notification.service';
 
 type RawBodyRequest = Request & { rawBody?: Buffer };
 
@@ -61,9 +67,15 @@ async function bootstrap() {
 
   const port = Number(process.env.PORT || process.env.API_PORT || 3001);
   await app.listen(port, '0.0.0.0');
+
+  const notifications = app.get(NotificationService);
+  notifications.logStartupMailStatus();
+
   console.log(`Velon API listening on 0.0.0.0:${port}`);
   console.log(`Swagger: /api/docs`);
   console.log(formatSmtpConfigForLog());
+  console.log(formatMailProviderForLog());
+  console.log(`Mail provider resolved: ${resolveMailProvider()}`);
   console.log(`SMTP configured: ${smtpConfigured() ? 'yes' : 'no'}`);
 }
 

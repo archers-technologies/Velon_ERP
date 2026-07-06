@@ -1,4 +1,4 @@
-import { MARKETING_TEMPLATE_KEYS, TRANSACTIONAL_TEMPLATE_KEYS } from '@velon/shared';
+import { EMAIL_TEMPLATE_KEYS, MARKETING_TEMPLATE_KEYS, TRANSACTIONAL_TEMPLATE_KEYS } from '@velon/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailPreferenceService } from './email-preference.service';
 
@@ -48,6 +48,23 @@ describe('EmailPreferenceService', () => {
     expect(TRANSACTIONAL_TEMPLATE_KEYS.has('payment_failed')).toBe(true);
     expect(MARKETING_TEMPLATE_KEYS.has('payment_failed')).toBe(false);
     const result = service.canSendTemplate('payment_failed', defaultPref);
+    expect(result.allowed).toBe(true);
+  });
+
+  it('always allows security login alerts even when transactional disabled', () => {
+    const result = service.canSendTemplate(EMAIL_TEMPLATE_KEYS.LOGIN_ALERT, {
+      ...defaultPref,
+      transactionalEnabled: false,
+      securityAlertsEnabled: false,
+    });
+    expect(result.allowed).toBe(true);
+  });
+
+  it('always allows password changed alerts', () => {
+    const result = service.canSendTemplate(EMAIL_TEMPLATE_KEYS.PASSWORD_CHANGED, {
+      ...defaultPref,
+      transactionalEnabled: false,
+    });
     expect(result.allowed).toBe(true);
   });
 });

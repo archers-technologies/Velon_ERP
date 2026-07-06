@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { AuditModule } from '../audit/audit.module';
 import { AuthModule } from '../auth/auth.module';
+import { EmailModule } from '../email/email.module';
 import { TenantContextInterceptor } from '../common/tenant-context.interceptor';
 import { CrmCustomerViewController } from './crm-customer-view.controller';
 import { CrmPipelineController } from './crm-pipeline.controller';
@@ -16,7 +17,7 @@ import { CrmService } from './crm.service';
 import { ProposalPdfService } from './proposal-pdf.service';
 
 @Module({
-  imports: [AuditModule, AuthModule],
+  imports: [AuditModule, AuthModule, EmailModule],
   controllers: [
     CrmController,
     CrmPipelineController,

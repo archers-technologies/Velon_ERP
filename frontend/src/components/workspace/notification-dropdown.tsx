@@ -51,8 +51,6 @@ export function NotificationDropdown({
     <div
       ref={containerRef}
       className="relative"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
     >
       <Button
         variant="ghost"
@@ -104,7 +102,8 @@ export function NotificationDropdown({
                 {items.slice(0, 8).map((item) => (
                   <li
                     key={item.id}
-                    className="border-border/60 bg-muted/20 rounded-lg border px-3 py-2.5"
+                    className="border-border/60 bg-muted/20 hover:bg-muted/40 cursor-pointer rounded-lg border px-3 py-2.5"
+                    onClick={() => setOpen(false)}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <p className="text-sm leading-snug font-medium">{item.title}</p>

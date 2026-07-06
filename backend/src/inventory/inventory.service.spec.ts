@@ -74,6 +74,7 @@ describe('InventoryService', () => {
       audit as never,
       prisma,
       variantsService as never,
+      { notifyInventoryProductMajorUpdate: jest.fn().mockResolvedValue(undefined) } as never,
     );
   });
 

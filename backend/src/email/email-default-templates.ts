@@ -214,4 +214,129 @@ export const DEFAULT_EMAIL_TEMPLATES: DefaultEmailTemplate[] = [
     htmlBody: `<p>Hi {{user.name}},</p><p>Your {{plan.name}} subscription for {{workspace.name}} is active again. Welcome back.</p>${cta('Open Workspace', 'loginUrl')}`,
     textBody: 'Hi {{user.name}},\n\nSubscription reactivated.\n\n{{loginUrl}}',
   },
+  {
+    key: EMAIL_TEMPLATE_KEYS.LOGIN_ALERT,
+    name: 'New Login Alert',
+    category: 'SECURITY',
+    subject: 'New sign-in to your VelonERP account',
+    previewText: 'A new sign-in was detected on your account.',
+    htmlBody: `<p>Hi {{user.name}},</p><p>We detected a new sign-in to your VelonERP account.</p><ul><li><strong>Time:</strong> {{security.loginTime}}</li><li><strong>Workspace:</strong> {{workspace.name}}</li><li><strong>IP address:</strong> {{security.ipAddress}}</li><li><strong>Device:</strong> {{security.device}}</li></ul><p><strong>{{security.warning}}</strong></p>`,
+    textBody:
+      'Hi {{user.name}},\n\nNew sign-in detected.\nTime: {{security.loginTime}}\nWorkspace: {{workspace.name}}\nIP: {{security.ipAddress}}\nDevice: {{security.device}}\n\n{{security.warning}}',
+  },
+  {
+    key: EMAIL_TEMPLATE_KEYS.PASSWORD_CHANGED,
+    name: 'Password Changed',
+    category: 'SECURITY',
+    subject: 'Your VelonERP password was changed',
+    htmlBody: `<p>Hi {{user.name}},</p><p>Your VelonERP password for <strong>{{workspace.name}}</strong> was changed successfully.</p><p><strong>If this wasn't you, please reset your password or contact support immediately.</strong></p><p>Contact: {{supportEmail}}</p>`,
+    textBody:
+      "Hi {{user.name}},\n\nYour VelonERP password was changed.\n\nIf this wasn't you, please reset your password or contact support immediately.\n\n{{supportEmail}}",
+  },
+  {
+    key: EMAIL_TEMPLATE_KEYS.PASSWORD_RESET,
+    name: 'Password Reset OTP',
+    category: 'SECURITY',
+    subject: 'Your VelonERP password reset code',
+    htmlBody: `<p>Hi {{user.name}},</p><p>Your VelonERP password reset verification code is:</p><p style="font-size:24px;font-weight:700;letter-spacing:4px">{{otpCode}}</p><p>This code expires in 10 minutes.</p>`,
+    textBody: 'Hi {{user.name}},\n\nYour password reset code is {{otpCode}}. It expires in 10 minutes.',
+  },
+  {
+    key: EMAIL_TEMPLATE_KEYS.QUOTATION_CREATED,
+    name: 'Quotation Created',
+    category: 'TRANSACTIONAL',
+    subject: 'Quotation {{quotation.number}} created in {{workspace.name}}',
+    htmlBody: `<p>Hi {{user.name}},</p><p>A new quotation <strong>{{quotation.number}}</strong> was created in <strong>{{workspace.name}}</strong>.</p><p>Status: {{quotation.status}}</p>${cta('View Quotation', 'loginUrl')}`,
+    textBody:
+      'Hi {{user.name}},\n\nQuotation {{quotation.number}} was created in {{workspace.name}}.\n\n{{loginUrl}}',
+  },
+  {
+    key: EMAIL_TEMPLATE_KEYS.QUOTATION_SENT,
+    name: 'Quotation Sent',
+    category: 'TRANSACTIONAL',
+    subject: 'Quotation {{quotation.number}} sent to customer',
+    htmlBody: `<p>Hi {{user.name}},</p><p>Quotation <strong>{{quotation.number}}</strong> was sent from <strong>{{workspace.name}}</strong>.</p><p>Total: {{quotation.currency}} {{quotation.total}}</p>${cta('Open Workspace', 'loginUrl')}`,
+    textBody:
+      'Hi {{user.name}},\n\nQuotation {{quotation.number}} was sent.\n\n{{loginUrl}}',
+  },
+  {
+    key: EMAIL_TEMPLATE_KEYS.QUOTATION_APPROVED,
+    name: 'Quotation Approved',
+    category: 'TRANSACTIONAL',
+    subject: 'Quotation {{quotation.number}} approved',
+    htmlBody: `<p>Hi {{user.name}},</p><p>Quotation <strong>{{quotation.number}}</strong> in <strong>{{workspace.name}}</strong> was approved.</p>${cta('Open Workspace', 'loginUrl')}`,
+    textBody:
+      'Hi {{user.name}},\n\nQuotation {{quotation.number}} was approved.\n\n{{loginUrl}}',
+  },
+  {
+    key: EMAIL_TEMPLATE_KEYS.QUOTATION_REJECTED,
+    name: 'Quotation Rejected',
+    category: 'TRANSACTIONAL',
+    subject: 'Quotation {{quotation.number}} rejected',
+    htmlBody: `<p>Hi {{user.name}},</p><p>Quotation <strong>{{quotation.number}}</strong> in <strong>{{workspace.name}}</strong> was rejected.</p>${cta('Open Workspace', 'loginUrl')}`,
+    textBody:
+      'Hi {{user.name}},\n\nQuotation {{quotation.number}} was rejected.\n\n{{loginUrl}}',
+  },
+  {
+    key: EMAIL_TEMPLATE_KEYS.SALES_ORDER_CREATED,
+    name: 'Sales Order Created',
+    category: 'TRANSACTIONAL',
+    subject: 'Sales order {{salesOrder.number}} created',
+    htmlBody: `<p>Hi {{user.name}},</p><p>Sales order <strong>{{salesOrder.number}}</strong> was created in <strong>{{workspace.name}}</strong>.</p><p>Status: {{salesOrder.status}}</p><p>Total: {{salesOrder.currency}} {{salesOrder.total}}</p>${cta('Open Workspace', 'loginUrl')}`,
+    textBody:
+      'Hi {{user.name}},\n\nSales order {{salesOrder.number}} was created.\n\n{{loginUrl}}',
+  },
+  {
+    key: EMAIL_TEMPLATE_KEYS.SALES_ORDER_UPDATED,
+    name: 'Sales Order Updated',
+    category: 'TRANSACTIONAL',
+    subject: 'Sales order {{salesOrder.number}} updated',
+    htmlBody: `<p>Hi {{user.name}},</p><p>Sales order <strong>{{salesOrder.number}}</strong> in <strong>{{workspace.name}}</strong> was updated.</p><p>Status: {{salesOrder.status}}</p>${cta('Open Workspace', 'loginUrl')}`,
+    textBody:
+      'Hi {{user.name}},\n\nSales order {{salesOrder.number}} was updated.\n\n{{loginUrl}}',
+  },
+  {
+    key: EMAIL_TEMPLATE_KEYS.INVENTORY_PRODUCT_MAJOR_UPDATE,
+    name: 'Inventory Product Update',
+    category: 'TRANSACTIONAL',
+    subject: 'Product {{product.name}} updated in {{workspace.name}}',
+    htmlBody: `<p>Hi {{user.name}},</p><p>Product <strong>{{product.name}}</strong> (SKU: {{product.sku}}) was {{product.action}} in <strong>{{workspace.name}}</strong>.</p>${cta('Open Inventory', 'loginUrl')}`,
+    textBody:
+      'Hi {{user.name}},\n\nProduct {{product.name}} ({{product.sku}}) was {{product.action}}.\n\n{{loginUrl}}',
+  },
+  {
+    key: EMAIL_TEMPLATE_KEYS.API_KEY_CREATED,
+    name: 'API Key Created',
+    category: 'SECURITY',
+    subject: 'New API key created for {{workspace.name}}',
+    htmlBody: `<p>Hi {{user.name}},</p><p>A new API key was created for <strong>{{workspace.name}}</strong>.</p><p><strong>If you did not authorize this, disable the key and contact support immediately.</strong></p>`,
+    textBody:
+      'Hi {{user.name}},\n\nA new API key was created for {{workspace.name}}.\n\nIf unauthorized, disable the key and contact support.',
+  },
+  {
+    key: EMAIL_TEMPLATE_KEYS.API_KEY_REGENERATED,
+    name: 'API Key Regenerated',
+    category: 'SECURITY',
+    subject: 'API key regenerated for {{workspace.name}}',
+    htmlBody: `<p>Hi {{user.name}},</p><p>An API key was regenerated for <strong>{{workspace.name}}</strong>.</p><p><strong>If you did not authorize this, disable the key and contact support immediately.</strong></p>`,
+    textBody:
+      'Hi {{user.name}},\n\nAn API key was regenerated for {{workspace.name}}.\n\nIf unauthorized, disable the key and contact support.',
+  },
+  {
+    key: EMAIL_TEMPLATE_KEYS.API_KEY_DISABLED,
+    name: 'API Key Disabled',
+    category: 'SECURITY',
+    subject: 'API key disabled for {{workspace.name}}',
+    htmlBody: `<p>Hi {{user.name}},</p><p>An API key was disabled for <strong>{{workspace.name}}</strong>.</p>`,
+    textBody: 'Hi {{user.name}},\n\nAn API key was disabled for {{workspace.name}}.',
+  },
+  {
+    key: EMAIL_TEMPLATE_KEYS.ADMIN_SETTINGS_CHANGED,
+    name: 'Admin Settings Changed',
+    category: 'SECURITY',
+    subject: 'Security-sensitive settings changed in {{workspace.name}}',
+    htmlBody: `<p>Hi {{user.name}},</p><p>Security-sensitive settings were changed in <strong>{{workspace.name}}</strong>.</p><p><strong>If you did not make this change, contact support immediately.</strong></p>`,
+    textBody:
+      'Hi {{user.name}},\n\nSecurity-sensitive settings were changed in {{workspace.name}}.\n\nIf unauthorized, contact support.',
+  },
 ];

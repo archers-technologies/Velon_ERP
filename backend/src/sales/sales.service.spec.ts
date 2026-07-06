@@ -18,7 +18,12 @@ describe('SalesService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new SalesService(orders as never, prisma, audit as never);
+    service = new SalesService(
+      orders as never,
+      prisma,
+      audit as never,
+      { notifySalesOrderCreated: jest.fn().mockResolvedValue(undefined) } as never,
+    );
   });
 
   it('denies write for read-only users', async () => {

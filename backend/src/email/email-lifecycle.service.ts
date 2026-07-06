@@ -150,6 +150,24 @@ export class EmailLifecycleService {
       case EMAIL_EVENT_TYPES.DUNNING_REMINDER:
         await this.onDunningReminder(payload);
         break;
+      case EMAIL_EVENT_TYPES.USER_LOGGED_IN:
+        await this.onUserLoggedIn(payload);
+        break;
+      case EMAIL_EVENT_TYPES.USER_PASSWORD_CHANGED:
+        await this.onPasswordChanged(payload);
+        break;
+      case EMAIL_EVENT_TYPES.CRM_QUOTATION_CREATED:
+      case EMAIL_EVENT_TYPES.CRM_QUOTATION_SENT:
+      case EMAIL_EVENT_TYPES.CRM_QUOTATION_APPROVED:
+      case EMAIL_EVENT_TYPES.CRM_QUOTATION_REJECTED:
+        await this.onQuotationEvent(payload);
+        break;
+      case EMAIL_EVENT_TYPES.SALES_ORDER_CREATED:
+        await this.onSalesOrderCreated(payload);
+        break;
+      case EMAIL_EVENT_TYPES.INVENTORY_PRODUCT_MAJOR_UPDATE:
+        await this.onInventoryProductMajorUpdate(payload);
+        break;
       default:
         this.log.warn(`Unhandled email event: ${eventType}`);
     }
@@ -571,6 +589,71 @@ export class EmailLifecycleService {
       context: payload.context as EmailMergeContext,
       delayMs: Number(payload.delayMs ?? 0),
       cta: { label: 'Update Billing', urlVar: 'billingUrl' },
+    });
+  }
+
+  private async onUserLoggedIn(payload: Record<string, unknown>) {
+    const ctx = this.buildBaseContext(payload.context as EmailMergeContext);
+    await this.sendLifecycleEmail({
+      templateKey: EMAIL_TEMPLATE_KEYS.LOGIN_ALERT,
+      toEmail: String(payload.email),
+      userId: String(payload.userId),
+      tenantId: payload.tenantId ? String(payload.tenantId) : null,
+      idempotencyKey: String(payload.idempotencyKey ?? `login:${payload.userId}`),
+      context: ctx,
+      skipPreferenceCheck: true,
+    });
+  }
+
+  private async onPasswordChanged(payload: Record<string, unknown>) {
+    const ctx = this.buildBaseContext(payload.context as EmailMergeContext);
+    await this.sendLifecycleEmail({
+      templateKey: EMAIL_TEMPLATE_KEYS.PASSWORD_CHANGED,
+      toEmail: String(payload.email),
+      userId: String(payload.userId),
+      tenantId: payload.tenantId ? String(payload.tenantId) : null,
+      idempotencyKey: String(payload.idempotencyKey ?? `password_changed:${payload.userId}`),
+      context: ctx,
+      skipPreferenceCheck: true,
+    });
+  }
+
+  private async onQuotationEvent(payload: Record<string, unknown>) {
+    const ctx = this.buildBaseContext(payload.context as EmailMergeContext);
+    await this.sendLifecycleEmail({
+      templateKey: String(payload.templateKey),
+      toEmail: String(payload.email),
+      userId: String(payload.userId),
+      tenantId: String(payload.tenantId),
+      idempotencyKey: `${payload.templateKey}:${payload.quotationId}`,
+      context: ctx,
+      cta: { label: 'Open Workspace', urlVar: 'loginUrl' },
+    });
+  }
+
+  private async onSalesOrderCreated(payload: Record<string, unknown>) {
+    const ctx = this.buildBaseContext(payload.context as EmailMergeContext);
+    await this.sendLifecycleEmail({
+      templateKey: EMAIL_TEMPLATE_KEYS.SALES_ORDER_CREATED,
+      toEmail: String(payload.email),
+      userId: String(payload.userId),
+      tenantId: String(payload.tenantId),
+      idempotencyKey: `sales_order_created:${payload.salesOrderId}`,
+      context: ctx,
+      cta: { label: 'Open Workspace', urlVar: 'loginUrl' },
+    });
+  }
+
+  private async onInventoryProductMajorUpdate(payload: Record<string, unknown>) {
+    const ctx = this.buildBaseContext(payload.context as EmailMergeContext);
+    await this.sendLifecycleEmail({
+      templateKey: EMAIL_TEMPLATE_KEYS.INVENTORY_PRODUCT_MAJOR_UPDATE,
+      toEmail: String(payload.email),
+      userId: String(payload.userId),
+      tenantId: String(payload.tenantId),
+      idempotencyKey: `inventory_product:${payload.productId}:${payload.action}`,
+      context: ctx,
+      cta: { label: 'Open Inventory', urlVar: 'loginUrl' },
     });
   }
 

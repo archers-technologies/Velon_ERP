@@ -9,6 +9,7 @@ import { CrmQuotationApprovalAction, CrmQuotationStatus } from '@velon/database'
 import { canReadCrm, canWriteCrmRecords, normalizeVelonRole } from '@velon/shared';
 import { AuditService } from '../audit/audit.service';
 import type { AuthenticatedUser } from '../auth/auth.types';
+import { NotificationService } from '../email/notification.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CrmOpportunityRepository } from './crm-pipeline.repositories';
 import {
@@ -59,6 +60,7 @@ export class CrmQuotationService {
     private readonly pdf: ProposalPdfService,
     private readonly audit: AuditService,
     private readonly prisma: PrismaService,
+    private readonly notifications: NotificationService,
   ) {}
 
   private assertRead(user: AuthenticatedUser) {
@@ -129,6 +131,62 @@ export class CrmQuotationService {
     };
   }
 
+  private async workspaceName(user: AuthenticatedUser): Promise<string> {
+    if (!user.workspaceId || !user.tenantId) return 'your workspace';
+    const workspace = await this.prisma.client.workspace.findFirst({
+      where: { id: user.workspaceId, tenantId: user.tenantId },
+      select: { name: true },
+    });
+    return workspace?.name ?? 'your workspace';
+  }
+
+  private notifyQuotation(
+    user: AuthenticatedUser,
+    row: { id: string; quotationNumber: string; status: string; total?: unknown; currency?: string },
+    kind: 'created' | 'sent' | 'approved' | 'rejected',
+  ) {
+    if (!user.tenantId) return;
+
+    void (async () => {
+      try {
+        const workspaceName = await this.workspaceName(user);
+        const base = {
+          tenantId: user.tenantId!,
+          quotationId: row.id,
+          quotationNumber: row.quotationNumber,
+          userId: user.id,
+          email: user.email,
+          userName: user.email,
+          workspaceName,
+        };
+
+        switch (kind) {
+          case 'created':
+            await this.notifications.notifyQuotationCreated({
+              ...base,
+              status: row.status,
+            });
+            break;
+          case 'sent':
+            await this.notifications.notifyQuotationSent({
+              ...base,
+              total: String(row.total ?? '0'),
+              currency: row.currency ?? 'USD',
+            });
+            break;
+          case 'approved':
+            await this.notifications.notifyQuotationApproved(base);
+            break;
+          case 'rejected':
+            await this.notifications.notifyQuotationRejected(base);
+            break;
+        }
+      } catch {
+        /* notification must not block CRM operations */
+      }
+    })();
+  }
+
   // ─── Quotations ──────────────────────────────────────────
 
   listQuotations(user: AuthenticatedUser, query: CrmQuotationQueryDto) {
@@ -176,6 +234,7 @@ export class CrmQuotationService {
       ipAddress: meta.ip,
       userAgent: meta.ua,
     });
+    this.notifyQuotation(user, row, 'created');
     return row;
   }
 
@@ -472,6 +531,7 @@ export class CrmQuotationService {
       ipAddress: meta.ip,
       userAgent: meta.ua,
     });
+    this.notifyQuotation(user, row, 'sent');
     return { ...row, portalToken };
   }
 
@@ -504,6 +564,7 @@ export class CrmQuotationService {
       ipAddress: meta.ip,
       userAgent: meta.ua,
     });
+    this.notifyQuotation(user, row, 'approved');
     return row;
   }
 
@@ -533,6 +594,7 @@ export class CrmQuotationService {
       ipAddress: meta.ip,
       userAgent: meta.ua,
     });
+    this.notifyQuotation(user, row, 'rejected');
     return row;
   }
 

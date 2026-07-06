@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {
-  EMAIL_TEMPLATE_KEYS,
   MARKETING_TEMPLATE_KEYS,
+  SECURITY_TEMPLATE_KEYS,
   TRANSACTIONAL_TEMPLATE_KEYS,
 } from '@velon/shared';
 import { PrismaService } from '../prisma/prisma.service';
@@ -79,6 +79,10 @@ export class EmailPreferenceService {
       trainingAnnouncementsOptIn: boolean;
     },
   ): { allowed: boolean; reason?: string } {
+    if (SECURITY_TEMPLATE_KEYS.has(templateKey)) {
+      return { allowed: true };
+    }
+
     if (TRANSACTIONAL_TEMPLATE_KEYS.has(templateKey)) {
       if (!pref.transactionalEnabled) {
         return { allowed: false, reason: 'transactional_disabled' };
@@ -94,9 +98,6 @@ export class EmailPreferenceService {
         if (!pref.billingAlertsEnabled) {
           return { allowed: false, reason: 'billing_alerts_disabled' };
         }
-      }
-      if (templateKey === EMAIL_TEMPLATE_KEYS.PASSWORD_RESET && !pref.securityAlertsEnabled) {
-        return { allowed: false, reason: 'security_alerts_disabled' };
       }
       return { allowed: true };
     }

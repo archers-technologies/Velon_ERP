@@ -9,6 +9,7 @@ import { InventoryAbcClass, InventoryProductStatus, InventoryVelocity } from '@v
 import { canManageInventory, canReadInventory, normalizeVelonRole } from '@velon/shared';
 import { AuditService } from '../audit/audit.service';
 import type { AuthenticatedUser } from '../auth/auth.types';
+import { NotificationService } from '../email/notification.service';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   AdjustInventoryStockDto,
@@ -59,7 +60,38 @@ export class InventoryService {
     private readonly audit: AuditService,
     private readonly prisma: PrismaService,
     private readonly variantsService: InventoryVariantsService,
+    private readonly notifications: NotificationService,
   ) {}
+
+  private notifyInventoryProduct(
+    user: AuthenticatedUser,
+    product: { id: string; name: string; sku: string },
+    action: 'created' | 'updated',
+  ) {
+    if (!user.tenantId) return;
+
+    void (async () => {
+      try {
+        const workspace = await this.prisma.client.workspace.findFirst({
+          where: { id: user.workspaceId, tenantId: user.tenantId },
+          select: { name: true },
+        });
+        await this.notifications.notifyInventoryProductMajorUpdate({
+          tenantId: user.tenantId!,
+          productId: product.id,
+          userId: user.id,
+          email: user.email,
+          userName: user.email,
+          workspaceName: workspace?.name ?? 'your workspace',
+          productName: product.name,
+          sku: product.sku,
+          action,
+        });
+      } catch {
+        /* notification must not block inventory operations */
+      }
+    })();
+  }
 
   private role(user: AuthenticatedUser) {
     return normalizeVelonRole(user.role);
@@ -280,6 +312,8 @@ export class InventoryService {
         userAgent: meta.ua,
       });
 
+      this.notifyInventoryProduct(user, product, 'created');
+
       return dto.variants?.hasVariants
         ? this.variantsService.getProductWithVariants(user, product.id)
         : product;
@@ -340,6 +374,19 @@ export class InventoryService {
       ipAddress: meta.ip,
       userAgent: meta.ua,
     });
+
+    const majorUpdate =
+      dto.status !== undefined ||
+      dto.unitPrice !== undefined ||
+      dto.name !== undefined ||
+      dto.hasVariants !== undefined;
+    if (majorUpdate) {
+      this.notifyInventoryProduct(
+        user,
+        { id: updated.id, name: updated.name, sku: updated.sku },
+        'updated',
+      );
+    }
 
     return dto.variants !== undefined
       ? this.variantsService.getProductWithVariants(user, id)

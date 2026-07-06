@@ -11,8 +11,9 @@ import {
   verifyPasswordResetVerificationToken,
 } from '@velon/shared/password-reset-verification';
 import { AuditService } from '../audit/audit.service';
-import { formatMailProviderForLog, sendTransactionalMail } from '../common/mail-delivery.util';
+import { formatMailProviderForLog } from '../common/mail-delivery.util';
 import { getAuthOtpSecret } from '../config/env';
+import { NotificationService } from '../email/notification.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { PASSWORD_RESET_GENERIC_MESSAGE } from './dto/password-reset.dto';
@@ -40,6 +41,7 @@ export class PasswordResetService {
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
     private readonly audit: AuditService,
+    private readonly notifications: NotificationService,
   ) {}
 
   private normalizeEmail(email: string): string {
@@ -201,7 +203,24 @@ export class PasswordResetService {
     });
 
     await this.redis.client.del(sessionKey);
-    await this.deliverPasswordChangedEmail({ to: user.email });
+
+    const userRecord = await this.prisma.client.user.findUnique({ where: { id: user.id } });
+    const membership = await this.prisma.client.tenantMembership.findFirst({
+      where: { userId: user.id, isActive: true },
+      include: { tenant: { include: { workspace: true } } },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    void this.notifications
+      .notifyPasswordChanged({
+        userId: user.id,
+        email: user.email,
+        userName: userRecord?.name ?? user.email,
+        tenantId: membership?.tenantId ?? null,
+        workspaceName:
+          membership?.tenant.workspace?.name ?? membership?.tenant.name ?? 'Velon ERP Platform',
+      })
+      .catch(() => undefined);
 
     return { ok: true as const };
   }
@@ -211,77 +230,30 @@ export class PasswordResetService {
     code: string;
   }): Promise<{ delivered: boolean; devCode?: string }> {
     this.log.log(`Password reset OTP email attempt for ${input.to}\n${formatMailProviderForLog()}`);
-    try {
-      const mail = await sendTransactionalMail({
-        to: input.to,
-        subject: 'Your Velon-ERP password reset code',
-        text: `Your Velon-ERP password reset verification code is ${input.code}. It expires in 10 minutes.`,
-        html: `<p>Your Velon-ERP password reset verification code is:</p><p style="font-size:24px;font-weight:700;letter-spacing:4px">${input.code}</p><p>This code expires in 10 minutes.</p>`,
-      });
-      if (mail.delivered) return { delivered: true };
-      if (process.env.NODE_ENV !== 'production') {
-        this.log.log(`[dev password reset OTP] ${input.to}: ${input.code}`);
-        return { delivered: false, devCode: input.code };
-      }
 
-      if (
-        mail.skippedReason === 'smtp_not_configured' ||
-        mail.skippedReason === 'resend_not_configured' ||
-        mail.skippedReason === 'mail_not_configured'
-      ) {
-        throw new ServiceUnavailableException(
-          'Email delivery is not configured. Set RESEND_API_KEY + RESEND_FROM on the API service (recommended on Railway), or set MAIL_PROVIDER=smtp with SMTP credentials.',
-        );
-      }
-      if (mail.skippedReason === 'resend_send_failed') {
-        if (mail.resendFailureDetail) {
-          const d = mail.resendFailureDetail;
-          this.log.error(
-            [
-              `Password reset OTP Resend failure for ${input.to}`,
-              `status=${d.statusCode}`,
-              `body=${d.body}`,
-              `message=${d.message}`,
-            ].join(' '),
-          );
-        }
-        throw new ServiceUnavailableException(
-          'Could not send verification email. Check Resend credentials and sender domain, then try again.',
-        );
-      }
-      if (mail.skippedReason === 'smtp_send_failed' || mail.skippedReason === 'smtp_timeout') {
-        throw new ServiceUnavailableException(
-          process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_SERVICE_NAME
-            ? 'Email server timed out. Railway Hobby/Trial plans block outbound SMTP — use Resend (RESEND_API_KEY + RESEND_FROM) instead.'
-            : 'Could not send verification email. Check SMTP credentials and try again.',
-        );
-      }
-      throw new ServiceUnavailableException('Email delivery failed. Try again shortly.');
-    } catch (err) {
-      if (err instanceof ServiceUnavailableException) throw err;
-      this.log.warn(`Password reset OTP email failed for ${input.to}: ${String(err)}`);
+    const user = await this.prisma.client.user.findUnique({ where: { email: input.to } });
+    const result = await this.notifications.notifyPasswordResetOtp({
+      email: input.to,
+      userName: user?.name ?? input.to,
+      code: input.code,
+    });
+
+    if (result.delivered) return { delivered: true };
+
+    const mailStatus = this.notifications.getMailConfigurationStatus();
+    if (process.env.NODE_ENV !== 'production') {
+      this.log.log(`[dev password reset OTP] ${input.to}: ${input.code}`);
+      return { delivered: false, devCode: input.code };
     }
 
-    if (process.env.NODE_ENV === 'production') {
+    if (!mailStatus.configured) {
       throw new ServiceUnavailableException(
-        'Could not send verification email. Check Resend credentials and try again.',
+        'Email delivery is not configured. Set RESEND_API_KEY + RESEND_FROM on the API service (recommended on Railway), or set MAIL_PROVIDER=smtp with SMTP credentials.',
       );
     }
 
-    this.log.log(`[dev password reset OTP] ${input.to}: ${input.code}`);
-    return { delivered: false, devCode: input.code };
-  }
-
-  private async deliverPasswordChangedEmail(input: { to: string }) {
-    try {
-      await sendTransactionalMail({
-        to: input.to,
-        subject: 'Your Velon-ERP password was changed',
-        text: 'Your Velon-ERP workspace password was changed. If you did not make this change, contact support immediately.',
-        html: '<p>Your Velon-ERP workspace password was changed.</p><p>If you did not make this change, contact support immediately.</p>',
-      });
-    } catch (err) {
-      this.log.warn(`Password changed email failed for ${input.to}: ${String(err)}`);
-    }
+    throw new ServiceUnavailableException(
+      'Could not send verification email. Check mail provider credentials and try again.',
+    );
   }
 }

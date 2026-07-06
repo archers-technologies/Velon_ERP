@@ -13,6 +13,77 @@ import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import type { CreatePlatformUserDto } from './dto/platform-user.dto';
 
+type TenantTimelineInput = Pick<Tenant, 'createdAt' | 'mrr'>;
+
+function sumMrrAt(tenants: TenantTimelineInput[], at: Date): number {
+  return tenants.filter((t) => t.createdAt <= at).reduce((s, t) => s + Number(t.mrr), 0);
+}
+
+function monthBucketLabel(date: Date, includeYear: boolean): string {
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    ...(includeYear ? { year: '2-digit' } : {}),
+  });
+}
+
+function buildRevenueByDay(tenants: TenantTimelineInput[], days: number) {
+  const now = new Date();
+  const result: { month: string; mrr: number }[] = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const at = new Date(now);
+    at.setHours(23, 59, 59, 999);
+    at.setDate(at.getDate() - i);
+    result.push({
+      month: at.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      mrr: sumMrrAt(tenants, at),
+    });
+  }
+  return result;
+}
+
+function buildRevenueByMonth(tenants: TenantTimelineInput[], months: number) {
+  const now = new Date();
+  const includeYear = months > 6;
+  const result: { month: string; mrr: number }[] = [];
+  for (let i = months - 1; i >= 0; i--) {
+    const at = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59, 999);
+    result.push({
+      month: monthBucketLabel(at, includeYear),
+      mrr: sumMrrAt(tenants, at),
+    });
+  }
+  return result;
+}
+
+function buildSignupsByMonth(tenants: Pick<Tenant, 'createdAt'>[], months: number) {
+  const now = new Date();
+  const includeYear = months > 6;
+  const buckets: { key: string; month: string; newTenants: number }[] = [];
+  for (let i = months - 1; i >= 0; i--) {
+    const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    buckets.push({
+      key: `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}`,
+      month: monthBucketLabel(start, includeYear),
+      newTenants: 0,
+    });
+  }
+  for (const tenant of tenants) {
+    const created = tenant.createdAt;
+    const key = `${created.getFullYear()}-${String(created.getMonth() + 1).padStart(2, '0')}`;
+    const bucket = buckets.find((b) => b.key === key);
+    if (bucket) bucket.newTenants += 1;
+  }
+  return buckets.map(({ month, newTenants }) => ({ month, newTenants }));
+}
+
+function growthPctBetween(series: { mrr: number }[]): number {
+  if (series.length < 2) return 0;
+  const prev = series[series.length - 2]?.mrr ?? 0;
+  const curr = series[series.length - 1]?.mrr ?? 0;
+  if (prev <= 0) return curr > 0 ? 100 : 0;
+  return Math.round(((curr - prev) / prev) * 100);
+}
+
 @Injectable()
 export class PlatformService {
   constructor(
@@ -67,9 +138,13 @@ export class PlatformService {
       select: { id: true, action: true, createdAt: true, entityType: true },
     });
 
+    const revenueByMonth = buildRevenueByMonth(tenants, 12);
+    const revenueByDay = buildRevenueByDay(tenants, 30);
+    const tenantSignupsByMonth = buildSignupsByMonth(tenants, 6);
+
     return {
       mrrTotal,
-      arrGrowthPct: 0,
+      arrGrowthPct: growthPctBetween(revenueByMonth),
       activeTenantCount,
       trialCount,
       totalSeatsAllocated,
@@ -86,8 +161,9 @@ export class PlatformService {
         country: t.country,
         users: t.usersCount,
       })),
-      revenueByMonth: [{ month: 'Current', mrr: mrrTotal }],
-      tenantSignupsByMonth: [{ month: 'Current', newTenants: tenants.length }],
+      revenueByMonth,
+      revenueByDay,
+      tenantSignupsByMonth,
       planDistribution: [
         { plan: 'Starter', pct: Math.round((planCounts.STARTER / planTotal) * 100) },
         { plan: 'Growth', pct: Math.round((planCounts.GROWTH / planTotal) * 100) },
