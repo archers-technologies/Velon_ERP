@@ -158,8 +158,8 @@ export class InventoryController {
 
   @Get('stock')
   @RequirePermission('inventory:read', 'inventory:*')
-  listStock(@CurrentUser() user: AuthenticatedUser) {
-    return this.inventory.listStock(user);
+  listStock(@CurrentUser() user: AuthenticatedUser, @Query('expiryFilter') expiryFilter?: string) {
+    return this.inventory.listStock(user, expiryFilter);
   }
 
   @Post('stock/adjust')

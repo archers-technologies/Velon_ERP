@@ -46,6 +46,8 @@ type InventoryItemInput = {
   batchTracked?: boolean;
   variantParent?: string;
   unitPrice?: number;
+  mfgDate?: string;
+  expiryDate?: string;
 };
 
 function mapVelocity(v?: 'fast' | 'medium' | 'slow') {
@@ -79,6 +81,8 @@ export async function createInventoryItem(input: InventoryItemInput) {
     abcClass: input.abcClass,
     velocity: mapVelocity(input.velocity),
     batchTracked: input.batchTracked,
+    mfgDate: input.mfgDate,
+    expiryDate: input.expiryDate,
     variantParent: input.variantParent,
     unitPrice: input.unitPrice,
   });
@@ -94,6 +98,8 @@ export async function updateInventoryItem(id: string, patch: InventoryItemInput)
     abcClass: patch.abcClass,
     velocity: mapVelocity(patch.velocity),
     batchTracked: patch.batchTracked,
+    mfgDate: patch.mfgDate,
+    expiryDate: patch.expiryDate,
     variantParent: patch.variantParent,
     unitPrice: patch.unitPrice,
   });

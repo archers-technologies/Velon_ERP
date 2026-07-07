@@ -39,6 +39,16 @@ export type InventoryRecord = {
   velocity: 'fast' | 'medium' | 'slow';
   /** Lot / batch traceability enabled */
   batchTracked: boolean;
+  mfgDate?: string;
+  expiryDate?: string;
+  expiryStatus?: 'ok' | 'expiring_soon' | 'expired' | 'no_expiry';
+  batches?: Array<{
+    id: string;
+    quantity: number;
+    mfgDate: string;
+    expiryDate: string;
+    expiryStatus: string;
+  }>;
   /** Optional parent product when this row is a variant */
   variantParent?: string;
   /** Demo unit cost / list price for sorting and extension value (replace with costing integration). */
@@ -563,6 +573,8 @@ export type CreateInventoryInput = Pick<InventoryRecord, 'name' | 'site' | 'quan
       | 'abcClass'
       | 'velocity'
       | 'batchTracked'
+      | 'mfgDate'
+      | 'expiryDate'
       | 'variantParent'
       | 'unitPrice'
     >

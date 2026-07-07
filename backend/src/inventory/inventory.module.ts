@@ -2,8 +2,9 @@ import { Module } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { AuditModule } from '../audit/audit.module';
 import { AuthModule } from '../auth/auth.module';
-import { EmailModule } from '../email/email.module';
 import { TenantContextInterceptor } from '../common/tenant-context.interceptor';
+import { EmailModule } from '../email/email.module';
+import { InventoryBatchService } from './inventory-batch.service';
 import { INVENTORY_VARIANT_REPOSITORIES } from './inventory-variants.repositories';
 import { InventoryVariantsService } from './inventory-variants.service';
 import { InventoryController } from './inventory.controller';
@@ -15,11 +16,12 @@ import { InventoryService } from './inventory.service';
   controllers: [InventoryController],
   providers: [
     InventoryService,
+    InventoryBatchService,
     InventoryVariantsService,
     ...INVENTORY_REPOSITORIES,
     ...INVENTORY_VARIANT_REPOSITORIES,
     { provide: APP_INTERCEPTOR, useClass: TenantContextInterceptor },
   ],
-  exports: [InventoryService, InventoryVariantsService],
+  exports: [InventoryService, InventoryVariantsService, InventoryBatchService],
 })
 export class InventoryModule {}

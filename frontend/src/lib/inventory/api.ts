@@ -118,6 +118,16 @@ export type InventoryStockRow = {
   batchTracked: boolean;
   variantParent?: string;
   unitPrice: number;
+  mfgDate?: string;
+  expiryDate?: string;
+  expiryStatus?: 'ok' | 'expiring_soon' | 'expired' | 'no_expiry';
+  batches?: Array<{
+    id: string;
+    quantity: number;
+    mfgDate: string;
+    expiryDate: string;
+    expiryStatus: string;
+  }>;
 };
 
 function mapProduct(row: Record<string, unknown>): InventoryProduct {
@@ -158,8 +168,9 @@ export async function deleteInventoryCategory(id: string) {
   return apiFetch<{ ok: boolean }>(`/inventory/categories/${id}`, { method: 'DELETE' });
 }
 
-export async function listInventoryStock() {
-  return apiFetch<InventoryStockRow[]>('/inventory/stock');
+export async function listInventoryStock(expiryFilter?: string) {
+  const q = expiryFilter ? `?expiryFilter=${encodeURIComponent(expiryFilter)}` : '';
+  return apiFetch<InventoryStockRow[]>(`/inventory/stock${q}`);
 }
 
 export async function listInventoryProducts(search?: string) {

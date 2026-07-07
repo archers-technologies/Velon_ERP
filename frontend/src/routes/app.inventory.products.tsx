@@ -10,9 +10,11 @@ import {
   variantsFromProductDetail,
   type ProductVariantsSectionHandle,
 } from '@/components/inventory/product-variants-section';
+import { ExpiryDateFields } from '@/components/inventory/expiry-date-fields';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -79,6 +81,9 @@ function InventoryProductsPage() {
     unitPrice: '0',
     status: 'ACTIVE',
   });
+  const [batchTracked, setBatchTracked] = useState(false);
+  const [mfgDate, setMfgDate] = useState('');
+  const [expiryDate, setExpiryDate] = useState('');
 
   const refresh = useCallback(async () => {
     const [p, c, w] = await Promise.all([
@@ -111,6 +116,9 @@ function InventoryProductsPage() {
       unitPrice: '0',
       status: 'ACTIVE',
     });
+    setBatchTracked(false);
+    setMfgDate('');
+    setExpiryDate('');
   }
 
   async function startEdit(p: InventoryProduct) {
@@ -212,6 +220,9 @@ function InventoryProductsPage() {
         variants: variantsPayload,
         site: warehouses.find((w) => w.id === form.warehouseId)?.name,
         quantity: hasVariants ? 0 : Number.parseInt(form.quantity, 10) || 0,
+        batchTracked,
+        mfgDate: batchTracked ? mfgDate : undefined,
+        expiryDate: batchTracked ? expiryDate : undefined,
       };
       if (editingId) {
         await updateInventoryProduct(editingId, body);
@@ -267,6 +278,25 @@ function InventoryProductsPage() {
                 />
               </div>
             )}
+            {!editingId && !hasVariants ? (
+              <div className="sm:col-span-2 space-y-3">
+                <label className="flex cursor-pointer items-center gap-2 text-sm">
+                  <Checkbox
+                    checked={batchTracked}
+                    onCheckedChange={(c) => setBatchTracked(c === true)}
+                  />
+                  This product has manufacturing and expiry dates.
+                </label>
+                <ExpiryDateFields
+                  enabled={batchTracked}
+                  mfgDate={mfgDate}
+                  expiryDate={expiryDate}
+                  onMfgDateChange={setMfgDate}
+                  onExpiryDateChange={setExpiryDate}
+                  idPrefix="product"
+                />
+              </div>
+            ) : null}
             <div className="sm:col-span-2">
               <MoreOptionsSection
                 open={productMoreOpen}

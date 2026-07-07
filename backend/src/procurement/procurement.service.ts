@@ -13,6 +13,7 @@ import {
 } from '@velon/shared';
 import { AuditService } from '../audit/audit.service';
 import type { AuthenticatedUser } from '../auth/auth.types';
+import { InventoryBatchService } from '../inventory/inventory-batch.service';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   ApproveDto,
@@ -32,6 +33,7 @@ export class ProcurementService {
     private readonly orders: PurchaseOrderRepository,
     private readonly audit: AuditService,
     private readonly prisma: PrismaService,
+    private readonly batches: InventoryBatchService,
   ) {}
 
   private role(user: AuthenticatedUser) {
@@ -345,6 +347,9 @@ export class ProcurementService {
         });
 
         if (item.productId) {
+          const product = await tx.inventoryProduct.findFirst({
+            where: { id: item.productId, tenantId: user.tenantId! },
+          });
           const existing = await tx.inventoryStock.findFirst({
             where: {
               tenantId: user.tenantId!,
@@ -352,20 +357,44 @@ export class ProcurementService {
               warehouseId: dto.warehouseId,
             },
           });
+          let stockId: string;
           if (existing) {
-            await tx.inventoryStock.update({
-              where: { id: existing.id },
-              data: { quantity: existing.quantity + line.quantity },
-            });
+            stockId = existing.id;
+            if (!product?.batchTracked) {
+              await tx.inventoryStock.update({
+                where: { id: existing.id },
+                data: { quantity: existing.quantity + line.quantity },
+              });
+            }
           } else {
-            await tx.inventoryStock.create({
+            const created = await tx.inventoryStock.create({
               data: {
                 tenantId: user.tenantId!,
                 productId: item.productId,
                 warehouseId: dto.warehouseId,
-                quantity: line.quantity,
+                quantity: product?.batchTracked ? 0 : line.quantity,
               },
             });
+            stockId = created.id;
+          }
+
+          if (product?.batchTracked) {
+            if (!line.mfgDate?.trim() || !line.expiryDate?.trim()) {
+              throw new BadRequestException(
+                `MFG and expiry dates are required when receiving batch-tracked product "${item.description}".`,
+              );
+            }
+            await this.batches.addBatch(
+              user.tenantId!,
+              stockId,
+              {
+                quantity: line.quantity,
+                mfgDate: line.mfgDate,
+                expiryDate: line.expiryDate,
+                unitCost: Number(item.unitPrice),
+              },
+              tx,
+            );
           }
         }
       }
@@ -395,7 +424,12 @@ export class ProcurementService {
       entityId: id,
       metadata: {
         warehouseId: dto.warehouseId,
-        lines: dto.lines.map((l) => ({ orderItemId: l.orderItemId, quantity: l.quantity })),
+        lines: dto.lines.map((l) => ({
+          orderItemId: l.orderItemId,
+          quantity: l.quantity,
+          mfgDate: l.mfgDate,
+          expiryDate: l.expiryDate,
+        })),
       } satisfies Prisma.InputJsonObject,
       ipAddress: meta.ip,
       userAgent: meta.ua,

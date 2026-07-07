@@ -12,6 +12,7 @@ import {
   TrendingDown,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { ExpiryDateFields, ExpiryStatusBadge } from '@/components/inventory/expiry-date-fields';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -116,8 +117,17 @@ function InventoryPage() {
   const { formatCurrency } = useWorkspaceCurrency();
   const items = Route.useLoaderData();
   const [listSort, setListSort] = useState<InventoryListSort>('name_asc');
+  const [expiryFilter, setExpiryFilter] = useState('all');
 
-  const sortedItems = useMemo(() => sortInventoryRows(items, listSort), [items, listSort]);
+  const filteredItems = useMemo(() => {
+    if (expiryFilter === 'all') return items;
+    return items.filter((i) => i.expiryStatus === expiryFilter);
+  }, [items, expiryFilter]);
+
+  const sortedItems = useMemo(
+    () => sortInventoryRows(filteredItems, listSort),
+    [filteredItems, listSort],
+  );
 
   const stats = useMemo(() => {
     const totalSkus = items.length;
@@ -168,6 +178,8 @@ function InventoryPage() {
   const [abcClass, setAbcClass] = useState<InventoryRecord['abcClass']>('B');
   const [velocity, setVelocity] = useState<InventoryRecord['velocity']>('medium');
   const [batchTracked, setBatchTracked] = useState(false);
+  const [mfgDate, setMfgDate] = useState('');
+  const [expiryDate, setExpiryDate] = useState('');
   const [variantParent, setVariantParent] = useState('');
 
   function resetInventoryForm() {
@@ -182,6 +194,8 @@ function InventoryPage() {
     setAbcClass('B');
     setVelocity('medium');
     setBatchTracked(false);
+    setMfgDate('');
+    setExpiryDate('');
     setVariantParent('');
   }
 
@@ -202,6 +216,8 @@ function InventoryPage() {
     setAbcClass(item.abcClass);
     setVelocity(item.velocity);
     setBatchTracked(item.batchTracked);
+    setMfgDate(item.mfgDate ?? '');
+    setExpiryDate(item.expiryDate ?? '');
     setVariantParent(item.variantParent ?? '');
     setOpen(true);
   }
@@ -212,16 +228,29 @@ function InventoryPage() {
       const ss = Number.parseInt(safetyStock, 10);
       const rp = Number.parseInt(reorderPoint, 10);
       const price = Number.parseFloat(unitPrice);
+      const qty = Number.parseInt(quantity, 10) || 0;
+      if (batchTracked && qty > 0 && (!mfgDate || !expiryDate)) {
+        toast.error(
+          'MFG and EXP dates are required for products with manufacturing and expiry dates.',
+        );
+        return;
+      }
+      if (batchTracked && mfgDate && expiryDate && expiryDate < mfgDate) {
+        toast.error('Expiry date cannot be earlier than manufacturing date.');
+        return;
+      }
       const data = {
         name: name.trim(),
         site: site.trim(),
-        quantity: Number.parseInt(quantity, 10) || 0,
+        quantity: qty,
         sku: sku.trim() || undefined,
         safetyStock: Number.isFinite(ss) ? ss : undefined,
         reorderPoint: Number.isFinite(rp) ? rp : undefined,
         abcClass,
         velocity,
         batchTracked,
+        mfgDate: batchTracked ? mfgDate : undefined,
+        expiryDate: batchTracked ? expiryDate : undefined,
         variantParent: variantParent.trim() || undefined,
         unitPrice: Number.isFinite(price) ? price : undefined,
       };
@@ -500,8 +529,16 @@ function InventoryPage() {
                     checked={batchTracked}
                     onCheckedChange={(c) => setBatchTracked(c === true)}
                   />
-                  Batch / lot traceability (receiving and expiry by batch)
+                  This product has manufacturing and expiry dates.
                 </label>
+                <ExpiryDateFields
+                  enabled={batchTracked}
+                  mfgDate={mfgDate}
+                  expiryDate={expiryDate}
+                  onMfgDateChange={setMfgDate}
+                  onExpiryDateChange={setExpiryDate}
+                  idPrefix="inv-desk"
+                />
               </div>
               <DialogFooter>
                 <Button
@@ -537,6 +574,20 @@ function InventoryPage() {
                     className="text-muted-foreground h-4 w-4"
                     aria-hidden
                   />
+                  <Select
+                    value={expiryFilter}
+                    onValueChange={setExpiryFilter}
+                  >
+                    <SelectTrigger className="h-9 w-[180px] rounded-lg text-xs">
+                      <SelectValue placeholder="Expiry filter" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All stock</SelectItem>
+                      <SelectItem value="expired">Expired</SelectItem>
+                      <SelectItem value="expiring_soon">Expiring soon</SelectItem>
+                      <SelectItem value="no_expiry">Without expiry</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <Select
                     value={listSort}
                     onValueChange={(v) => setListSort(v as InventoryListSort)}
@@ -587,6 +638,8 @@ function InventoryPage() {
                     <TableHead className="text-right text-[10px] tracking-wider uppercase">
                       Ext. value
                     </TableHead>
+                    <TableHead className="text-[10px] tracking-wider uppercase">MFG Date</TableHead>
+                    <TableHead className="text-[10px] tracking-wider uppercase">EXP Date</TableHead>
                     <TableHead className="text-[10px] tracking-wider uppercase">ABC</TableHead>
                     <TableHead className="text-[10px] tracking-wider uppercase">Scan</TableHead>
                     <TableHead className="text-[10px] tracking-wider uppercase">Status</TableHead>
@@ -622,6 +675,15 @@ function InventoryPage() {
                       </TableCell>
                       <TableCell className="text-right text-xs font-medium tabular-nums">
                         {formatCurrency(extensionValue(item))}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-xs tabular-nums">
+                        {item.mfgDate ?? '—'}
+                      </TableCell>
+                      <TableCell className="text-xs tabular-nums">
+                        <div className="flex items-center gap-1.5">
+                          <span>{item.expiryDate ?? '—'}</span>
+                          <ExpiryStatusBadge status={item.expiryStatus} />
+                        </div>
                       </TableCell>
                       <TableCell>
                         <Badge

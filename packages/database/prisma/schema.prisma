@@ -294,6 +294,7 @@ model Tenant {
   inventoryProductVariants         InventoryProductVariant[]
   inventoryWarehouses              InventoryWarehouse[]
   inventoryStock                   InventoryStock[]
+  inventoryStockBatches            InventoryStockBatch[]
   suppliers             Supplier[]
   supplierContacts      SupplierContact[]
   supplierThreads       SupplierThread[]
@@ -368,9 +369,10 @@ model Workspace {
   currency       String   @default("INR")
   currencySymbol String?
   language       String   @default("en")
-  dateFormat     String   @default("DD/MM/YYYY")
-  numberFormat   String   @default("en-IN")
-  isActive       Boolean  @default(true)
+  dateFormat       String   @default("DD/MM/YYYY")
+  numberFormat     String   @default("en-IN")
+  expiringSoonDays Int      @default(30)
+  isActive         Boolean  @default(true)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -981,6 +983,7 @@ model InventoryProduct {
   imageDataUrl  String?
   barcode       String?
   unitPrice     Decimal                @default(0) @db.Decimal(12, 2)
+  costPrice     Decimal                @default(0) @db.Decimal(12, 2)
   abcClass      InventoryAbcClass      @default(B)
   velocity      InventoryVelocity      @default(MEDIUM)
   batchTracked  Boolean                @default(false)
@@ -1125,11 +1128,33 @@ model InventoryStock {
   product   InventoryProduct         @relation(fields: [productId], references: [id], onDelete: Cascade)
   variant   InventoryProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
   warehouse InventoryWarehouse       @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  batches   InventoryStockBatch[]
 
   @@index([tenantId])
   @@index([tenantId, warehouseId])
   @@index([tenantId, productId, warehouseId])
   @@index([tenantId, variantId, warehouseId])
+}
+
+/// Batch-level stock with manufacturing and expiry dates (FEFO).
+model InventoryStockBatch {
+  id          String   @id @default(cuid())
+  tenantId    String
+  stockId     String
+  quantity    Int      @default(0)
+  mfgDate     DateTime @db.Date
+  expiryDate  DateTime @db.Date
+  unitCost    Decimal  @default(0) @db.Decimal(12, 2)
+  batchNumber String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  stock  InventoryStock @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([tenantId, stockId])
+  @@index([tenantId, expiryDate])
 }
 
 model Supplier {
@@ -1347,6 +1372,8 @@ model SalesOrderItem {
   description  String
   quantity     Int
   unitPrice    Decimal @db.Decimal(12, 2)
+  unitCost     Decimal @default(0) @db.Decimal(12, 2)
+  discount     Decimal @default(0) @db.Decimal(12, 2)
   taxAmount    Decimal @db.Decimal(12, 2)
   lineTotal    Decimal @db.Decimal(12, 2)
 

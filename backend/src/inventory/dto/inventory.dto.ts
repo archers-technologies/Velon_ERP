@@ -239,6 +239,22 @@ export class CreateInventoryProductDto {
   @IsBoolean()
   batchTracked?: boolean;
 
+  @ApiPropertyOptional({ description: 'YYYY-MM-DD — required when batchTracked and quantity > 0' })
+  @IsOptional()
+  @IsString()
+  mfgDate?: string;
+
+  @ApiPropertyOptional({ description: 'YYYY-MM-DD — required when batchTracked and quantity > 0' })
+  @IsOptional()
+  @IsString()
+  expiryDate?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  costPrice?: number;
+
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
@@ -321,6 +337,12 @@ export class UpdateInventoryProductDto {
   @IsOptional()
   @IsNumber()
   unitPrice?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  costPrice?: number;
 
   @ApiPropertyOptional({ enum: InventoryAbcClass })
   @IsOptional()
@@ -451,6 +473,26 @@ export class AdjustInventoryStockDto {
   @IsOptional()
   @IsString()
   reason?: string;
+
+  @ApiPropertyOptional({
+    description: 'YYYY-MM-DD — required for positive delta on batch-tracked products',
+  })
+  @IsOptional()
+  @IsString()
+  mfgDate?: string;
+
+  @ApiPropertyOptional({
+    description: 'YYYY-MM-DD — required for positive delta on batch-tracked products',
+  })
+  @IsOptional()
+  @IsString()
+  expiryDate?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  unitCost?: number;
 }
 
 export class TransferInventoryStockDto {
@@ -533,6 +575,16 @@ export class UpdateStockLevelsDto {
   @IsOptional()
   @IsBoolean()
   batchTracked?: boolean;
+
+  @ApiPropertyOptional({ description: 'YYYY-MM-DD — required when batchTracked and quantity > 0' })
+  @IsOptional()
+  @IsString()
+  mfgDate?: string;
+
+  @ApiPropertyOptional({ description: 'YYYY-MM-DD — required when batchTracked and quantity > 0' })
+  @IsOptional()
+  @IsString()
+  expiryDate?: string;
 
   @ApiPropertyOptional()
   @IsOptional()

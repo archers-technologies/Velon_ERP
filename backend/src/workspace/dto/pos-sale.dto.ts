@@ -24,6 +24,11 @@ export class PosSaleLineDto {
   @IsNumber()
   @Min(0)
   unitPrice!: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  discount?: number;
 }
 
 export class CommitPosSaleDto {

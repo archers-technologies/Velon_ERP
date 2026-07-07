@@ -121,7 +121,10 @@ export async function approvePurchaseOrder(id: string) {
 
 export async function receivePurchaseOrder(
   id: string,
-  body: { warehouseId: string; lines: { orderItemId: string; quantity: number }[] },
+  body: {
+    warehouseId: string;
+    lines: { orderItemId: string; quantity: number; mfgDate?: string; expiryDate?: string }[];
+  },
 ) {
   return apiFetch<PurchaseOrder>(`/procurement/orders/${id}/receive`, {
     method: 'POST',

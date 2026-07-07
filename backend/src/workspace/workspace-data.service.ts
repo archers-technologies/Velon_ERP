@@ -10,17 +10,14 @@ import {
 } from '@velon/database';
 import { canReadInventory, normalizeVelonRole, planCatalogEntry } from '@velon/shared';
 import { AuditService } from '../audit/audit.service';
+import { InventoryBatchService } from '../inventory/inventory-batch.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { SeatsService } from '../tenant-admin/seats.service';
+import type { ReportsQueryDto } from './dto/reports-query.dto';
 import { WorkspaceContextService } from './workspace-context.service';
+import { WorkspaceReportsService, type PosSaleAuditMeta } from './workspace-reports.service';
 
-type PosSaleAuditMeta = {
-  total?: number;
-  lineCount?: number;
-  inventoryRowsTouched?: number;
-  customerName?: string;
-  lines?: Array<{ name: string; qty: number; unitPrice: number }>;
-};
+type PosSaleAuditMetaLegacy = PosSaleAuditMeta;
 
 /** Tenant-scoped workspace readiness data — company, subscription, team, activity. */
 @Injectable()
@@ -30,6 +27,8 @@ export class WorkspaceDataService {
     private readonly seats: SeatsService,
     private readonly audit: AuditService,
     private readonly prisma: PrismaService,
+    private readonly reportsService: WorkspaceReportsService,
+    private readonly batches: InventoryBatchService,
   ) {}
 
   private monthStart(): Date {
@@ -39,9 +38,14 @@ export class WorkspaceDataService {
     return d;
   }
 
-  private parsePosMeta(metadata: unknown): PosSaleAuditMeta {
-    if (!metadata || typeof metadata !== 'object') return {};
-    return metadata as PosSaleAuditMeta;
+  private parsePosMeta(metadata: unknown): PosSaleAuditMetaLegacy {
+    return this.reportsService.parsePosMeta(metadata);
+  }
+
+  private async defaultReportQuery(
+    user: Parameters<WorkspaceContextService['resolve']>[0],
+  ): Promise<ReportsQueryDto> {
+    return { preset: 'this_month' };
   }
 
   private async posSalesAudit(tenantId: string, since?: Date) {
@@ -57,27 +61,21 @@ export class WorkspaceDataService {
   }
 
   private summarizePosSales(rows: Awaited<ReturnType<typeof this.posSalesAudit>>) {
-    let paidMtd = 0;
-    let dueMtd = 0;
-    let revenueMtd = 0;
-    const invoices = rows.map((row) => {
-      const meta = this.parsePosMeta(row.metadata);
-      const amount = Number(meta.total ?? 0);
-      const paid = row.action === 'pos.sale_paid';
-      if (paid) paidMtd += amount;
-      else dueMtd += amount;
-      revenueMtd += amount;
-      return {
-        id: row.entityId ?? row.id,
-        customer: meta.customerName ?? 'Walk-in',
-        amount,
-        status: paid ? ('paid' as const) : ('due' as const),
-        date: row.createdAt.toISOString().slice(0, 10),
-        at: row.createdAt.toISOString(),
-        lineCount: meta.lineCount ?? 0,
-      };
-    });
-    return { paidMtd, dueMtd, revenueMtd, invoices };
+    const pos = this.reportsService.summarizePosSales(rows, 0);
+    return {
+      paidMtd: pos.paidTotal,
+      dueMtd: pos.dueTotal,
+      revenueMtd: pos.netSales,
+      invoices: pos.invoices.map((i) => ({
+        id: i.id,
+        customer: i.customer,
+        amount: i.amount,
+        status: i.status === 'return' ? ('due' as const) : i.status,
+        date: i.date,
+        at: i.at,
+        lineCount: i.lineCount,
+      })),
+    };
   }
 
   async dashboard(user: Parameters<WorkspaceContextService['resolve']>[0]) {
@@ -561,50 +559,57 @@ export class WorkspaceDataService {
     };
   }
 
-  async accounting(user: Parameters<WorkspaceContextService['resolve']>[0]) {
+  async accounting(
+    user: Parameters<WorkspaceContextService['resolve']>[0],
+    query?: ReportsQueryDto,
+  ) {
     const ctx = await this.workspaceContext.resolve(user);
     const tenantId = ctx.tenantId;
-    const monthStart = this.monthStart();
+    const period = this.reportsService.resolvePeriod(ctx.workspace.timezone, query);
 
-    const [customers, stocks, openPoRows, suppliers, posRows, recentAudit] = await Promise.all([
-      this.prisma.client.crmCustomer.count({ where: { tenantId, archivedAt: null } }),
-      this.prisma.client.inventoryStock.findMany({
-        where: { tenantId },
-        include: { product: true },
-      }),
-      this.prisma.client.purchaseOrder.findMany({
-        where: {
-          tenantId,
-          status: { in: ['DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'SENT', 'PARTIALLY_RECEIVED'] },
-        },
-        select: { total: true },
-      }),
-      this.prisma.client.supplier.count({ where: { tenantId, status: 'ACTIVE' } }),
-      this.posSalesAudit(tenantId, monthStart),
-      this.prisma.client.auditLog.findMany({
-        where: { tenantId },
-        orderBy: { createdAt: 'desc' },
-        take: 30,
-        include: { actor: { select: { email: true, name: true } } },
-      }),
-    ]);
+    const [customers, stocks, openPoRows, suppliers, posRows, recentAudit, company] =
+      await Promise.all([
+        this.prisma.client.crmCustomer.count({ where: { tenantId, archivedAt: null } }),
+        this.prisma.client.inventoryStock.findMany({
+          where: { tenantId },
+          include: { product: true, variant: true },
+        }),
+        this.prisma.client.purchaseOrder.findMany({
+          where: {
+            tenantId,
+            status: { in: ['DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'SENT', 'PARTIALLY_RECEIVED'] },
+          },
+          select: { total: true },
+        }),
+        this.prisma.client.supplier.count({ where: { tenantId, status: 'ACTIVE' } }),
+        this.reportsService.posSalesInPeriod(tenantId, period, query?.warehouseId),
+        this.prisma.client.auditLog.findMany({
+          where: { tenantId },
+          orderBy: { createdAt: 'desc' },
+          take: 30,
+          include: { actor: { select: { email: true, name: true } } },
+        }),
+        this.prisma.client.companyProfile.findFirst({ where: { tenantId } }),
+      ]);
 
-    const pos = this.summarizePosSales(posRows);
     const payables =
       Math.round(openPoRows.reduce((sum, po) => sum + Number(po.total), 0) * 100) / 100;
-    const inventoryValue = stocks.reduce(
-      (sum, row) => sum + (row.quantity - row.reservedQty) * Number(row.product.unitPrice),
-      0,
-    );
-    const cogsMtd = Math.round(pos.revenueMtd * 0.55 * 100) / 100;
-    const netOperating = Math.round((pos.revenueMtd - cogsMtd - payables * 0.1) * 100) / 100;
+    const expensesMtd = Math.round(payables * 0.15 * 100) / 100;
+    const pos = this.reportsService.summarizePosSales(posRows, expensesMtd);
+    const inventoryValue = stocks.reduce((sum, row) => {
+      const available = row.quantity - row.reservedQty;
+      const cost = row.variant ? Number(row.variant.costPrice) : Number(row.product.costPrice ?? 0);
+      return sum + available * cost;
+    }, 0);
+    const hasExpenses = expensesMtd > 0;
+    const netOperating = hasExpenses ? pos.netProfit : pos.grossProfit;
 
     const cashByDay = new Map<string, { inflow: number; outflow: number }>();
     for (const inv of pos.invoices) {
       const day = inv.date;
       const cur = cashByDay.get(day) ?? { inflow: 0, outflow: 0 };
       if (inv.status === 'paid') cur.inflow += inv.amount;
-      else cur.outflow += inv.amount;
+      else if (inv.status === 'due') cur.outflow += inv.amount;
       cashByDay.set(day, cur);
     }
     const cashFlowTrend = [...cashByDay.entries()]
@@ -612,18 +617,30 @@ export class WorkspaceDataService {
       .map(([period, v]) => ({ period, inflow: v.inflow, outflow: v.outflow }));
 
     return {
+      period: {
+        preset: period.preset,
+        startDate: period.startDate,
+        endDate: period.endDate,
+        label: period.label,
+      },
       kpis: {
-        cashbook: Math.round(pos.paidMtd * 100) / 100,
-        expensesMtd: Math.round(payables * 0.15 * 100) / 100,
-        receivables: Math.round(pos.dueMtd * 100) / 100,
+        cashbook: pos.paidTotal,
+        expensesMtd,
+        receivables: pos.dueTotal,
         payables,
-        recognizedRevenueMtd: Math.round(pos.revenueMtd * 100) / 100,
-        cogsMtd,
+        recognizedRevenueMtd: pos.netSales,
+        grossSales: pos.grossSales,
+        discounts: pos.discounts,
+        returns: pos.returns,
+        cogsMtd: pos.cogs,
+        grossProfit: pos.grossProfit,
         netOperating,
+        profitLabel: hasExpenses ? 'Net Profit / Loss' : 'Gross Profit',
+        hasExpenses,
       },
       agingAr:
-        pos.dueMtd > 0
-          ? [{ bucket: 'POS tickets (due)', amount: Math.round(pos.dueMtd * 100) / 100 }]
+        pos.dueTotal > 0
+          ? [{ bucket: 'POS tickets (due)', amount: Math.round(pos.dueTotal * 100) / 100 }]
           : [],
       agingAp: payables > 0 ? [{ bucket: 'Open POs', amount: payables }] : [],
       cashFlowTrend,
@@ -693,25 +710,45 @@ export class WorkspaceDataService {
         stockSkus: stocks.length,
         posSalesMtd: pos.invoices.length,
         inventoryValue: Math.round(inventoryValue * 100) / 100,
+        companyName: company?.legalName ?? ctx.workspace.name,
+        currency: ctx.workspace.currency,
       },
     };
   }
 
-  async reports(user: Parameters<WorkspaceContextService['resolve']>[0]) {
-    const accounting = await this.accounting(user);
+  async reports(user: Parameters<WorkspaceContextService['resolve']>[0], query?: ReportsQueryDto) {
+    const accounting = await this.accounting(user, query);
     const revenueMtd = accounting.kpis.recognizedRevenueMtd;
     const expensesMtd = accounting.kpis.expensesMtd;
     const netMarginPct =
       revenueMtd > 0 ? Math.round((accounting.kpis.netOperating / revenueMtd) * 100) : 0;
 
+    const ctx = await this.workspaceContext.resolve(user);
+    const period = this.reportsService.resolvePeriod(ctx.workspace.timezone, query);
+    const posRows = await this.reportsService.posSalesInPeriod(
+      ctx.tenantId,
+      period,
+      query?.warehouseId,
+    );
+    const pos = this.reportsService.summarizePosSales(posRows, expensesMtd);
+
     return {
+      period: accounting.period,
       kpis: {
         operatingCash: accounting.kpis.cashbook,
         netMarginPct,
         receivables: accounting.kpis.receivables,
         payables: accounting.kpis.payables,
         revenueMtd,
+        grossSales: accounting.kpis.grossSales,
+        discounts: accounting.kpis.discounts,
+        returns: accounting.kpis.returns,
+        netSales: revenueMtd,
+        cogs: accounting.kpis.cogsMtd,
+        grossProfit: accounting.kpis.grossProfit,
         expensesMtd,
+        netProfit: accounting.kpis.netOperating,
+        profitLabel: accounting.kpis.profitLabel,
         budgetVariancePct: 0,
       },
       alerts: accounting.controlAlerts,
@@ -725,6 +762,10 @@ export class WorkspaceDataService {
         { name: 'Operating', value: expensesMtd },
       ].filter((row) => row.value > 0),
       expenseDrill: [],
+      productSales: pos.productSales,
+      customerSales: pos.customerSales,
+      paymentMethods: pos.paymentMethods,
+      dailyTrend: pos.dailyTrend,
       taskQueues: {
         approvals: accounting.apBills.map((bill) => ({
           id: bill.id,
@@ -742,12 +783,13 @@ export class WorkspaceDataService {
         label: a.action,
         at: a.at,
       })),
-      catalog: accounting.invoices.slice(0, 12).map((inv) => ({
+      catalog: pos.invoices.slice(0, 50).map((inv) => ({
         id: inv.id,
-        label: inv.label,
-        amount: inv.amt,
-        status: inv.status,
+        label: `${inv.id} · ${inv.customer}`,
+        amount: inv.amount,
+        status: inv.status === 'return' ? 'Return' : inv.status === 'paid' ? 'Paid' : 'Pending',
       })),
+      _live: accounting._live,
     };
   }
 
@@ -857,10 +899,19 @@ export class WorkspaceDataService {
   async inventory(user: Parameters<WorkspaceContextService['resolve']>[0]) {
     if (!canReadInventory(normalizeVelonRole(user.role))) return [];
     const ctx = await this.workspaceContext.resolve(user);
+    const ws = await this.prisma.client.workspace.findFirst({
+      where: { tenantId: ctx.tenantId },
+      select: { expiringSoonDays: true },
+    });
+    const soonDays = ws?.expiringSoonDays ?? 30;
 
     const stocks = await this.prisma.client.inventoryStock.findMany({
       where: { tenantId: ctx.tenantId },
-      include: { product: true, warehouse: true },
+      include: {
+        product: true,
+        warehouse: true,
+        batches: { where: { quantity: { gt: 0 } }, orderBy: { expiryDate: 'asc' } },
+      },
       orderBy: { updatedAt: 'desc' },
     });
 
@@ -868,6 +919,16 @@ export class WorkspaceDataService {
       const available = row.quantity - row.reservedQty;
       const stockLevel =
         available <= row.minStock ? 'critical' : available <= row.reorderLevel ? 'low' : 'healthy';
+      const batches = row.batches.map((b) => this.batches.mapBatchForApi(b, soonDays));
+      const nearestExpiry = batches[0]?.expiryDate;
+      const expiryStatus = batches.some((b) => b.expiryStatus === 'expired')
+        ? 'expired'
+        : batches.some((b) => b.expiryStatus === 'expiring_soon')
+          ? 'expiring_soon'
+          : batches.length
+            ? 'ok'
+            : 'no_expiry';
+
       return {
         id: row.id,
         sku: row.product.sku,
@@ -882,6 +943,10 @@ export class WorkspaceDataService {
         batchTracked: row.product.batchTracked,
         variantParent: row.product.variantParent ?? undefined,
         unitPrice: Number(row.product.unitPrice),
+        mfgDate: batches[0]?.mfgDate,
+        expiryDate: nearestExpiry,
+        expiryStatus,
+        batches,
       };
     });
   }
@@ -977,7 +1042,13 @@ export class WorkspaceDataService {
   async commitPosSale(
     user: Parameters<WorkspaceContextService['resolve']>[0],
     input: {
-      lines: Array<{ inventoryId?: string; name: string; qty: number; unitPrice: number }>;
+      lines: Array<{
+        inventoryId?: string;
+        name: string;
+        qty: number;
+        unitPrice: number;
+        discount?: number;
+      }>;
       kind: 'paid' | 'due';
       customerName?: string;
     },
@@ -990,40 +1061,63 @@ export class WorkspaceDataService {
       throw new BadRequestException('Add at least one line to the ticket before settling.');
     }
 
-    let total = 0;
+    let grossTotal = 0;
+    let discountTotal = 0;
+    let cogsTotal = 0;
     let inventoryRowsTouched = 0;
-    const stockUpdates: Array<{ id: string; nextQty: number; name: string }> = [];
+    let warehouseId: string | undefined;
 
-    for (const line of input.lines) {
-      total += line.qty * line.unitPrice;
-      if (!line.inventoryId) continue;
+    const lineMeta: PosSaleAuditMeta['lines'] = [];
 
-      const row = await this.prisma.client.inventoryStock.findFirst({
-        where: { id: line.inventoryId, tenantId },
-      });
-      if (!row) continue;
+    await this.prisma.client.$transaction(async (tx) => {
+      for (const line of input.lines) {
+        const lineDiscount = line.discount ?? 0;
+        grossTotal += line.qty * line.unitPrice;
+        discountTotal += lineDiscount;
 
-      const nextQty = row.quantity - line.qty;
-      if (nextQty < 0) {
-        throw new BadRequestException(`Insufficient stock for ${line.name}.`);
+        if (!line.inventoryId) {
+          lineMeta.push({
+            name: line.name,
+            qty: line.qty,
+            unitPrice: line.unitPrice,
+            discount: lineDiscount,
+            unitCost: 0,
+          });
+          continue;
+        }
+
+        const row = await tx.inventoryStock.findFirst({
+          where: { id: line.inventoryId, tenantId },
+          include: { product: true, warehouse: true },
+        });
+        if (!row) continue;
+
+        warehouseId = warehouseId ?? row.warehouseId;
+        const { allocations, totalCost } = await this.batches.allocateAndDeduct(
+          tenantId,
+          row.id,
+          line.qty,
+          tx,
+        );
+        cogsTotal += totalCost;
+        inventoryRowsTouched += 1;
+
+        const unitCost = line.qty > 0 ? Math.round((totalCost / line.qty) * 100) / 100 : 0;
+        lineMeta.push({
+          name: line.name,
+          qty: line.qty,
+          unitPrice: line.unitPrice,
+          discount: lineDiscount,
+          unitCost,
+          inventoryId: row.id,
+          warehouseId: row.warehouseId,
+          batchAllocations: allocations,
+        });
       }
-      stockUpdates.push({ id: row.id, nextQty, name: line.name });
-      inventoryRowsTouched += 1;
-    }
+    });
 
     const invoiceId = `POS-${new Date().getFullYear()}-${Date.now().toString(36).toUpperCase().slice(-8)}`;
-    const roundedTotal = Math.round(total * 100) / 100;
-
-    if (stockUpdates.length > 0) {
-      await this.prisma.client.$transaction(
-        stockUpdates.map((u) =>
-          this.prisma.client.inventoryStock.update({
-            where: { id: u.id },
-            data: { quantity: u.nextQty },
-          }),
-        ),
-      );
-    }
+    const netTotal = Math.round((grossTotal - discountTotal) * 100) / 100;
 
     await this.audit.log({
       actorId: ctx.user.id,
@@ -1032,20 +1126,127 @@ export class WorkspaceDataService {
       entityType: 'pos_ticket',
       entityId: invoiceId,
       metadata: {
-        total: roundedTotal,
+        total: netTotal,
+        grossTotal: Math.round(grossTotal * 100) / 100,
+        discountTotal: Math.round(discountTotal * 100) / 100,
+        cogsTotal: Math.round(cogsTotal * 100) / 100,
         lineCount: input.lines.length,
         inventoryRowsTouched,
         customerName: input.customerName ?? 'Walk-in',
-        lines: input.lines.map((l) => ({
-          name: l.name,
-          qty: l.qty,
-          unitPrice: l.unitPrice,
-        })),
+        warehouseId,
+        status: input.kind === 'paid' ? 'paid' : 'due',
+        lines: lineMeta,
       },
       ipAddress: meta?.ip,
       userAgent: meta?.ua,
     });
 
-    return { invoiceId, total: roundedTotal, inventoryRowsTouched };
+    return {
+      invoiceId,
+      total: netTotal,
+      inventoryRowsTouched,
+      cogsTotal: Math.round(cogsTotal * 100) / 100,
+    };
+  }
+
+  async exportReport(
+    user: Parameters<WorkspaceContextService['resolve']>[0],
+    query: ReportsQueryDto,
+    format: 'csv' | 'pdf' = 'csv',
+  ) {
+    const ctx = await this.workspaceContext.resolve(user);
+    const reports = await this.reports(user, query);
+    const period = this.reportsService.resolvePeriod(ctx.workspace.timezone, query);
+
+    let branchName: string | undefined;
+    if (query.warehouseId) {
+      const wh = await this.prisma.client.inventoryWarehouse.findFirst({
+        where: { id: query.warehouseId, tenantId: ctx.tenantId },
+      });
+      branchName = wh?.name;
+    }
+
+    const payload = this.reportsService.buildExportPayload({
+      companyName:
+        (reports._live as { companyName?: string } | undefined)?.companyName ?? ctx.workspace.name,
+      reportName: 'Sales & Profit Report',
+      period,
+      currency: ctx.workspace.currency,
+      branchName,
+      totals: {
+        grossSales: reports.kpis.grossSales,
+        discounts: reports.kpis.discounts,
+        returns: reports.kpis.returns,
+        netSales: reports.kpis.netSales,
+        cogs: reports.kpis.cogs,
+        grossProfit: reports.kpis.grossProfit,
+        expenses: reports.kpis.expensesMtd,
+        netProfit: reports.kpis.netProfit,
+        taxTotal: 0,
+        ticketCount: reports.catalog?.length ?? 0,
+      },
+      rows: (reports.catalog ?? []).map((row) => ({
+        id: row.id,
+        label: row.label,
+        amount: row.amount,
+        status: row.status,
+      })),
+      filters: {
+        preset: period.preset,
+        startDate: period.startDate,
+        endDate: period.endDate,
+        ...(branchName ? { branch: branchName } : {}),
+      },
+    });
+
+    await this.audit.log({
+      actorId: ctx.user.id,
+      tenantId: ctx.tenantId,
+      action: 'reports.exported',
+      entityType: 'sales_report',
+      entityId: period.label,
+      metadata: { format, period: period.label, preset: period.preset },
+      ipAddress: undefined,
+      userAgent: undefined,
+    });
+
+    if (format === 'pdf') {
+      return { format, payload, contentType: 'application/json' };
+    }
+
+    const csvRows: string[][] = [
+      ['Company', payload.header.companyName],
+      ['Report', payload.header.reportName],
+      ['Period', payload.header.periodLabel],
+      ['Generated', payload.header.generatedAt],
+      ['Currency', payload.header.currency],
+      [],
+      ['Gross Sales', String(payload.totals.grossSales)],
+      ['Discounts', String(payload.totals.discounts)],
+      ['Returns', String(payload.totals.returns)],
+      ['Net Sales', String(payload.totals.netSales)],
+      ['COGS', String(payload.totals.cogs)],
+      ['Gross Profit', String(payload.totals.grossProfit)],
+      ['Expenses', String(payload.totals.expenses)],
+      [reports.kpis.profitLabel, String(payload.totals.netProfit)],
+      [],
+      ['Detail ID', 'Label', 'Amount', 'Status'],
+      ...payload.rows.map((r) => [
+        String(r.id),
+        String(r.label),
+        String(r.amount),
+        String(r.status),
+      ]),
+    ];
+
+    return {
+      format: 'csv',
+      contentType: 'text/csv',
+      filename: `velon-sales-report-${period.startDate}-${period.endDate}.csv`,
+      body: csvRows
+        .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))
+        .join('\n'),
+      payload,
+    };
   }
 }

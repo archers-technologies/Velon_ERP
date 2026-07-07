@@ -76,26 +76,46 @@ export class SalesService {
     const year = new Date().getFullYear();
     const orderNumber = await this.orders.nextOrderNumber(year);
 
-    const lineItems = quotation.items.map((item) => {
-      const qty = Math.max(1, Math.round(Number(item.quantity)));
-      const unitPrice = Number(item.unitPrice);
-      const discount = Number(item.discount);
-      const lineTotal = Number(item.lineTotal);
-      const net = qty * unitPrice - discount;
-      const taxAmount = Math.max(0, Math.round((lineTotal - net) * 100) / 100);
+    const lineItems = await Promise.all(
+      quotation.items.map(async (item) => {
+        const qty = Math.max(1, Math.round(Number(item.quantity)));
+        const unitPrice = Number(item.unitPrice);
+        const discount = Number(item.discount);
+        const lineTotal = Number(item.lineTotal);
+        const net = qty * unitPrice - discount;
+        const taxAmount = Math.max(0, Math.round((lineTotal - net) * 100) / 100);
 
-      return {
-        tenantId: user.tenantId!,
-        productId: item.productId,
-        description: item.description?.trim()
-          ? `${item.itemName} — ${item.description.trim()}`
-          : item.itemName,
-        quantity: qty,
-        unitPrice,
-        taxAmount,
-        lineTotal,
-      };
-    });
+        let unitCost = 0;
+        if (item.variantId) {
+          const variant = await this.prisma.client.inventoryProductVariant.findFirst({
+            where: { id: item.variantId, tenantId: user.tenantId! },
+            select: { costPrice: true },
+          });
+          unitCost = Number(variant?.costPrice ?? 0);
+        } else if (item.productId) {
+          const product = await this.prisma.client.inventoryProduct.findFirst({
+            where: { id: item.productId, tenantId: user.tenantId! },
+            select: { costPrice: true },
+          });
+          unitCost = Number(product?.costPrice ?? 0);
+        }
+
+        return {
+          tenantId: user.tenantId!,
+          productId: item.productId,
+          variantId: item.variantId,
+          description: item.description?.trim()
+            ? `${item.itemName} — ${item.description.trim()}`
+            : item.itemName,
+          quantity: qty,
+          unitPrice,
+          unitCost,
+          discount,
+          taxAmount,
+          lineTotal,
+        };
+      }),
+    );
 
     const created = await this.prisma.client.$transaction(async (tx) => {
       const order = await tx.salesOrder.create({

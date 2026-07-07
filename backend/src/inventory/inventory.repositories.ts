@@ -155,22 +155,32 @@ export class InventoryStockRepository extends TenantScopedRepository {
     super(prisma);
   }
 
-  findMany() {
+  findMany(opts?: { includeBatches?: boolean }) {
     return this.prisma.client.inventoryStock.findMany({
       where: this.where(),
       include: {
         product: true,
         warehouse: true,
         variant: true,
+        ...(opts?.includeBatches
+          ? { batches: { where: { quantity: { gt: 0 } }, orderBy: { expiryDate: 'asc' } } }
+          : {}),
       },
       orderBy: { updatedAt: 'desc' },
     });
   }
 
-  findById(id: string) {
+  findById(id: string, includeBatches = false) {
     return this.prisma.client.inventoryStock.findFirst({
       where: this.where({ id }),
-      include: { product: true, warehouse: true, variant: true },
+      include: {
+        product: true,
+        warehouse: true,
+        variant: true,
+        ...(includeBatches
+          ? { batches: { where: { quantity: { gt: 0 } }, orderBy: { expiryDate: 'asc' } } }
+          : {}),
+      },
     });
   }
 

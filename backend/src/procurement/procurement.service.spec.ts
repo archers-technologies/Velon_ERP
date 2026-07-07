@@ -15,11 +15,18 @@ describe('ProcurementService', () => {
   const audit = createMockAudit();
   const client = createMockPrismaClient();
   const prisma = createMockPrisma(client);
+  const batches = { addBatch: jest.fn() };
   let service: ProcurementService;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new ProcurementService(requests as never, orders as never, audit as never, prisma);
+    service = new ProcurementService(
+      requests as never,
+      orders as never,
+      audit as never,
+      prisma,
+      batches as never,
+    );
   });
 
   it('denies manage actions for read-only users', async () => {

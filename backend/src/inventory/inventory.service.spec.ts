@@ -61,6 +61,14 @@ describe('InventoryService', () => {
     deactivateVariant: jest.fn(),
     assertProductSkuAvailable: jest.fn(),
   };
+  const batches = {
+    addBatch: jest.fn(),
+    allocateAndDeduct: jest.fn(),
+    mapBatchForApi: jest.fn(),
+    validateBatchDates: jest.fn(),
+    listBatchesForStock: jest.fn(),
+    resolveBatchFilterStatus: jest.fn(),
+  };
 
   let service: InventoryService;
 
@@ -75,6 +83,7 @@ describe('InventoryService', () => {
       prisma,
       variantsService as never,
       { notifyInventoryProductMajorUpdate: jest.fn().mockResolvedValue(undefined) } as never,
+      batches as never,
     );
   });
 
@@ -176,6 +185,8 @@ describe('InventoryService', () => {
 
       stock.update.mockResolvedValue(stockRow({ quantity: 5, reservedQty: 0 }));
       stock.findByProductWarehouse.mockResolvedValue(stockRow({ quantity: 3 }));
+      stock.findById.mockResolvedValue(stockRow({ quantity: 5, reservedQty: 0 }));
+      (client.workspace.findFirst as jest.Mock).mockResolvedValue({ expiringSoonDays: 30 });
       const updated = await service.adjustStock(
         tenantOwner(),
         { productId: IDS.product, warehouseId: IDS.warehouse, delta: 2 },

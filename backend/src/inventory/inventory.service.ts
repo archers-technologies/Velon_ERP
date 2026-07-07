@@ -22,6 +22,7 @@ import {
   UpdateInventoryWarehouseDto,
   UpdateStockLevelsDto,
 } from './dto/inventory.dto';
+import { InventoryBatchService } from './inventory-batch.service';
 import { InventoryVariantsService } from './inventory-variants.service';
 import {
   InventoryCategoryRepository,
@@ -61,7 +62,30 @@ export class InventoryService {
     private readonly prisma: PrismaService,
     private readonly variantsService: InventoryVariantsService,
     private readonly notifications: NotificationService,
+    private readonly batches: InventoryBatchService,
   ) {}
+
+  private async expiringSoonDays(tenantId: string): Promise<number> {
+    const ws = await this.prisma.client.workspace.findFirst({
+      where: { tenantId },
+      select: { expiringSoonDays: true },
+    });
+    return ws?.expiringSoonDays ?? 30;
+  }
+
+  private requireBatchDates(
+    batchTracked: boolean,
+    quantity: number,
+    mfgDate?: string,
+    expiryDate?: string,
+  ) {
+    if (!batchTracked || quantity <= 0) return;
+    if (!mfgDate?.trim() || !expiryDate?.trim()) {
+      throw new BadRequestException(
+        'Manufacturing and expiry dates are required for batch-tracked stock.',
+      );
+    }
+  }
 
   private notifyInventoryProduct(
     user: AuthenticatedUser,
@@ -123,37 +147,61 @@ export class InventoryService {
     return slug || `WH-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
   }
 
-  mapStockRow(row: {
-    id: string;
-    quantity: number;
-    reservedQty: number;
-    minStock: number;
-    reorderLevel: number;
-    product: {
-      sku: string;
-      name: string;
-      unitPrice: { toNumber(): number };
-      abcClass: InventoryAbcClass;
-      velocity: InventoryVelocity;
-      batchTracked: boolean;
-      variantParent: string | null;
-      hasVariants?: boolean;
-    };
-    warehouse: { name: string };
-    variant?: {
+  mapStockRow(
+    row: {
       id: string;
-      label: string;
-      sku: string;
-      unitPrice: { toNumber(): number };
-      salePrice: { toNumber(): number } | null;
-    } | null;
-  }) {
+      quantity: number;
+      reservedQty: number;
+      minStock: number;
+      reorderLevel: number;
+      product: {
+        sku: string;
+        name: string;
+        unitPrice: { toNumber(): number };
+        costPrice?: { toNumber(): number };
+        abcClass: InventoryAbcClass;
+        velocity: InventoryVelocity;
+        batchTracked: boolean;
+        variantParent: string | null;
+        hasVariants?: boolean;
+      };
+      warehouse: { name: string };
+      variant?: {
+        id: string;
+        label: string;
+        sku: string;
+        unitPrice: { toNumber(): number };
+        salePrice: { toNumber(): number } | null;
+      } | null;
+      batches?: Array<{
+        id: string;
+        quantity: number;
+        mfgDate: Date;
+        expiryDate: Date;
+        unitCost: { toNumber(): number };
+        batchNumber: string | null;
+      }>;
+    },
+    expiringSoonDays = 30,
+  ) {
     const available = row.quantity - row.reservedQty;
     const variantPrice = row.variant
       ? row.variant.salePrice != null
         ? row.variant.salePrice.toNumber()
         : row.variant.unitPrice.toNumber()
       : null;
+    const batchSummaries = row.batches?.map((b) =>
+      this.batches.mapBatchForApi(b, expiringSoonDays),
+    );
+    const nearestExpiry = batchSummaries?.[0]?.expiryDate;
+    const expiryStatus = batchSummaries?.some((b) => b.expiryStatus === 'expired')
+      ? 'expired'
+      : batchSummaries?.some((b) => b.expiryStatus === 'expiring_soon')
+        ? 'expiring_soon'
+        : batchSummaries?.length
+          ? 'ok'
+          : 'no_expiry';
+
     return {
       id: row.id,
       sku: row.variant?.sku ?? row.product.sku,
@@ -168,8 +216,13 @@ export class InventoryService {
       batchTracked: row.product.batchTracked,
       variantParent: row.product.variantParent ?? undefined,
       unitPrice: variantPrice ?? row.product.unitPrice.toNumber(),
+      costPrice: row.product.costPrice?.toNumber() ?? 0,
       variantId: row.variant?.id,
       hasVariants: row.product.hasVariants ?? false,
+      mfgDate: batchSummaries?.[0]?.mfgDate,
+      expiryDate: nearestExpiry,
+      expiryStatus,
+      batches: batchSummaries,
     };
   }
 
@@ -259,6 +312,7 @@ export class InventoryService {
       abcClass: dto.abcClass,
       velocity: dto.velocity,
       batchTracked: dto.batchTracked ?? false,
+      costPrice: dto.costPrice ?? 0,
       variantParent: dto.variantParent?.trim() || null,
       hasVariants: dto.hasVariants ?? false,
       createdById: user.id,
@@ -277,13 +331,23 @@ export class InventoryService {
         }
         defaultWarehouseId = warehouse.id;
         if (!dto.hasVariants) {
-          await this.stock.create({
+          const qty = dto.quantity ?? 0;
+          this.requireBatchDates(product.batchTracked, qty, dto.mfgDate, dto.expiryDate);
+          const stockRow = await this.stock.create({
             productId: product.id,
             warehouseId: warehouse.id,
-            quantity: dto.quantity ?? 0,
+            quantity: product.batchTracked && qty > 0 ? 0 : qty,
             minStock: dto.safetyStock ?? 0,
             reorderLevel: dto.reorderPoint ?? 0,
           });
+          if (product.batchTracked && qty > 0 && dto.mfgDate && dto.expiryDate) {
+            await this.batches.addBatch(user.tenantId!, stockRow.id, {
+              quantity: qty,
+              mfgDate: dto.mfgDate,
+              expiryDate: dto.expiryDate,
+              unitCost: dto.costPrice,
+            });
+          }
         }
       } else if (dto.variants?.hasVariants && dto.variants.variants?.length) {
         const defaultWarehouse = (await this.warehouses.findMany(true))[0];
@@ -347,6 +411,7 @@ export class InventoryService {
       ...(dto.abcClass !== undefined ? { abcClass: dto.abcClass } : {}),
       ...(dto.velocity !== undefined ? { velocity: dto.velocity } : {}),
       ...(dto.batchTracked !== undefined ? { batchTracked: dto.batchTracked } : {}),
+      ...(dto.costPrice !== undefined ? { costPrice: dto.costPrice } : {}),
       ...(dto.variantParent !== undefined
         ? { variantParent: dto.variantParent?.trim() || null }
         : {}),
@@ -444,20 +509,39 @@ export class InventoryService {
 
   // ─── Stock ───────────────────────────────────────────────────
 
-  async listStock(user: AuthenticatedUser) {
+  async listStock(user: AuthenticatedUser, expiryFilter?: string) {
     this.assertRead(user);
-    const rows = await this.stock.findMany();
-    return rows.map((r) => this.mapStockRow(r));
+    const soonDays = await this.expiringSoonDays(user.tenantId!);
+    const rows = await this.stock.findMany({ includeBatches: true });
+    const mapped = rows.map((r) => this.mapStockRow(r, soonDays));
+    if (!expiryFilter || expiryFilter === 'all') return mapped;
+    return mapped.filter((row) => {
+      if (expiryFilter === 'no_expiry') return row.expiryStatus === 'no_expiry';
+      return row.expiryStatus === expiryFilter;
+    });
   }
 
   async adjustStock(user: AuthenticatedUser, dto: AdjustInventoryStockDto, meta: AuditMeta) {
     this.assertManage(user);
     const row = await this.stock.findByProductWarehouse(dto.productId, dto.warehouseId);
     if (!row) throw new NotFoundException('Stock record not found.');
-    const nextQty = row.quantity + dto.delta;
-    if (nextQty < 0) throw new BadRequestException('Insufficient stock for adjustment.');
 
-    const updated = await this.stock.update(row.id, { quantity: nextQty });
+    if (dto.delta > 0 && row.product.batchTracked) {
+      this.requireBatchDates(true, dto.delta, dto.mfgDate, dto.expiryDate);
+      await this.batches.addBatch(user.tenantId!, row.id, {
+        quantity: dto.delta,
+        mfgDate: dto.mfgDate!,
+        expiryDate: dto.expiryDate!,
+        unitCost: dto.unitCost,
+      });
+    } else {
+      const nextQty = row.quantity + dto.delta;
+      if (nextQty < 0) throw new BadRequestException('Insufficient stock for adjustment.');
+      await this.stock.update(row.id, { quantity: nextQty });
+    }
+
+    const updated = await this.stock.findById(row.id, true);
+    const soonDays = await this.expiringSoonDays(user.tenantId!);
 
     await this.audit.log({
       actorId: user.id,
@@ -465,12 +549,17 @@ export class InventoryService {
       action: 'inventory.stock_adjusted',
       entityType: 'inventory_stock',
       entityId: row.id,
-      metadata: { delta: dto.delta, reason: dto.reason, newQuantity: nextQty },
+      metadata: {
+        delta: dto.delta,
+        reason: dto.reason,
+        mfgDate: dto.mfgDate,
+        expiryDate: dto.expiryDate,
+      },
       ipAddress: meta.ip,
       userAgent: meta.ua,
     });
 
-    return this.mapStockRow(updated);
+    return updated ? this.mapStockRow(updated, soonDays) : null;
   }
 
   async transferStock(user: AuthenticatedUser, dto: TransferInventoryStockDto, meta: AuditMeta) {
@@ -585,8 +674,29 @@ export class InventoryService {
       });
     }
 
+    const batchTracked = dto.batchTracked ?? row.product.batchTracked;
+    const currentQty = row.quantity - row.reservedQty;
+
+    if (dto.quantity !== undefined) {
+      const delta = dto.quantity - currentQty;
+      if (delta > 0 && batchTracked) {
+        this.requireBatchDates(true, delta, dto.mfgDate, dto.expiryDate);
+        await this.batches.addBatch(user.tenantId!, stockId, {
+          quantity: delta,
+          mfgDate: dto.mfgDate!,
+          expiryDate: dto.expiryDate!,
+        });
+      } else if (delta < 0) {
+        throw new BadRequestException(
+          'Use stock adjustment to reduce batch-tracked quantity (FEFO applies).',
+        );
+      } else if (!batchTracked) {
+        await this.stock.update(stockId, { quantity: dto.quantity });
+      }
+    }
+
     const updated = await this.stock.update(stockId, {
-      ...(dto.quantity !== undefined ? { quantity: dto.quantity } : {}),
+      ...(dto.quantity !== undefined && !batchTracked ? { quantity: dto.quantity } : {}),
       ...(minStock !== undefined ? { minStock } : {}),
       ...(reorderLevel !== undefined ? { reorderLevel } : {}),
     });
@@ -598,14 +708,19 @@ export class InventoryService {
         action: 'inventory.stock_adjusted',
         entityType: 'inventory_stock',
         entityId: stockId,
-        metadata: { quantity: dto.quantity },
+        metadata: {
+          quantity: dto.quantity,
+          mfgDate: dto.mfgDate,
+          expiryDate: dto.expiryDate,
+        },
         ipAddress: meta.ip,
         userAgent: meta.ua,
       });
     }
 
-    const full = await this.stock.findById(stockId);
-    return full ? this.mapStockRow(full) : this.mapStockRow(updated);
+    const soonDays = await this.expiringSoonDays(user.tenantId!);
+    const full = await this.stock.findById(stockId, true);
+    return full ? this.mapStockRow(full, soonDays) : this.mapStockRow(updated, soonDays);
   }
 
   async dashboardMetrics(tenantId: string) {

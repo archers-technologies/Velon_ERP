@@ -1,6 +1,6 @@
-import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import type { Request } from 'express';
+import type { Request, Response } from 'express';
 import type { AuthenticatedUser } from '../auth/auth.types';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePortalScope } from '../auth/decorators/portal-scope.decorator';
@@ -8,6 +8,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PortalScopeGuard } from '../auth/guards/portal-scope.guard';
 import { TenantScopeGuard } from '../auth/guards/tenant-scope.guard';
 import { CommitPosSaleDto } from './dto/pos-sale.dto';
+import { ReportsQueryDto } from './dto/reports-query.dto';
 import { WorkspaceContextService } from './workspace-context.service';
 import { WorkspaceDataService } from './workspace-data.service';
 
@@ -75,13 +76,29 @@ export class WorkspaceController {
   }
 
   @Get('accounting')
-  accounting(@CurrentUser() user: AuthenticatedUser) {
-    return this.workspaceData.accounting(user);
+  accounting(@CurrentUser() user: AuthenticatedUser, @Query() query: ReportsQueryDto) {
+    return this.workspaceData.accounting(user, query);
   }
 
   @Get('reports')
-  reports(@CurrentUser() user: AuthenticatedUser) {
-    return this.workspaceData.reports(user);
+  reports(@CurrentUser() user: AuthenticatedUser, @Query() query: ReportsQueryDto) {
+    return this.workspaceData.reports(user, query);
+  }
+
+  @Get('reports/export')
+  async exportReport(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query() query: ReportsQueryDto,
+    @Query('format') format: 'csv' | 'pdf' = 'csv',
+    @Res() res: Response,
+  ) {
+    const result = await this.workspaceData.exportReport(user, query, format);
+    if (result.format === 'csv' && 'body' in result) {
+      res.setHeader('Content-Type', result.contentType);
+      res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);
+      return res.send(result.body);
+    }
+    return res.json(result);
   }
 
   @Get('branches')

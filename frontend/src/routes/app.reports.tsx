@@ -14,6 +14,10 @@ import {
 } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts';
 import { toast } from 'sonner';
+import {
+  ReportDateFilter,
+  useReportDateFilterState,
+} from '@/components/reports/report-date-filter';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -43,13 +47,29 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useWorkspaceCurrency } from '@/contexts/workspace-currency';
 import { useDismissiblePanel } from '@/hooks/use-dismissible-panel';
+import { downloadReportExport, fetchReports } from '@/lib/reports/api';
 import type { FinanceExpenseDrillNode } from '@/lib/types/workspace-ui';
+import { emptyFinanceReportsWorkspace } from '@/lib/workspace/empty-states';
 import { loadFinanceReportsWorkspace } from '@/lib/workspace/loaders';
 
 export const Route = createFileRoute('/app/reports')({
   loader: () => loadFinanceReportsWorkspace(),
   component: ReportsPage,
 });
+
+type ReportsData = ReturnType<typeof emptyFinanceReportsWorkspace> & {
+  period?: { label: string; startDate: string; endDate: string; preset: string };
+  kpis: ReturnType<typeof emptyFinanceReportsWorkspace>['kpis'] & {
+    grossSales?: number;
+    discounts?: number;
+    returns?: number;
+    netSales?: number;
+    cogs?: number;
+    grossProfit?: number;
+    netProfit?: number;
+    profitLabel?: string;
+  };
+};
 
 const cashNetConfig = {
   net: {
@@ -69,26 +89,89 @@ type RoleLens = 'cfo' | 'controller';
 
 function ReportsPage() {
   const { formatCurrency } = useWorkspaceCurrency();
-  const data = Route.useLoaderData();
+  const fallback = Route.useLoaderData();
+  const filterState = useReportDateFilterState();
+  const [data, setData] = React.useState<ReportsData>(fallback as ReportsData);
+  const [loading, setLoading] = React.useState(false);
+  const [exporting, setExporting] = React.useState(false);
   const [drillOpen, setDrillOpen] = React.useState<string | null>(null);
   const alertsDismiss = useDismissiblePanel('velon-dismiss:app:reports:alerts');
 
-  const profitLoss = data.kpis.revenueMtd - data.kpis.expensesMtd;
+  const loadReports = React.useCallback(
+    async (filter = filterState.applied) => {
+      setLoading(true);
+      try {
+        const next = (await fetchReports(filter)) as ReportsData;
+        setData(next);
+      } catch {
+        toast.error('Could not load reports for the selected period.');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [filterState.applied],
+  );
+
+  React.useEffect(() => {
+    void loadReports(filterState.applied);
+  }, [filterState.applied, loadReports]);
+
+  const periodLabel = data.period?.label ?? 'This month';
+  const profitValue =
+    data.kpis.netProfit ?? data.kpis.grossProfit ?? data.kpis.revenueMtd - data.kpis.expensesMtd;
   const profitTone =
-    profitLoss >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive';
+    profitValue >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive';
 
   const hasFinanceData =
-    data.kpis.revenueMtd > 0 ||
+    (data.kpis.netSales ?? data.kpis.revenueMtd) > 0 ||
     data.kpis.expensesMtd > 0 ||
     data.netCashSeries.some((p) => p.net !== 0);
 
+  async function handleExport(format: 'csv' | 'pdf') {
+    setExporting(true);
+    try {
+      await downloadReportExport(filterState.applied, format);
+      toast.success(format === 'csv' ? 'Report downloaded (CSV)' : 'Report export ready');
+    } catch {
+      toast.error('Export failed');
+    } finally {
+      setExporting(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
-      <div>
-        <p className="text-muted-foreground text-sm">
-          Plain-language reports for your business — no accounting degree required.
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight">Sales & profit reports</h1>
+          <p className="text-muted-foreground text-sm">
+            Plain-language reports for your business — filtered by period.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={exporting || loading}
+            onClick={() => void handleExport('csv')}
+          >
+            <Download className="mr-1.5 h-4 w-4" />
+            CSV
+          </Button>
+        </div>
       </div>
+
+      <ReportDateFilter
+        value={filterState.draft}
+        onChange={filterState.setDraft}
+        onApply={() => {
+          filterState.apply();
+        }}
+        onReset={filterState.reset}
+        loading={loading}
+        periodLabel={periodLabel}
+      />
 
       {!hasFinanceData ? (
         <Card className="border-border bg-muted/20 text-muted-foreground border-dashed p-6 text-sm">
@@ -102,9 +185,9 @@ function ReportsPage() {
             Total Sales
           </div>
           <div className="mt-2 text-2xl font-semibold tracking-tight tabular-nums">
-            {formatCurrency(data.kpis.revenueMtd)}
+            {formatCurrency(data.kpis.netSales ?? data.kpis.revenueMtd)}
           </div>
-          <div className="text-muted-foreground mt-1 text-[11px]">This month</div>
+          <div className="text-muted-foreground mt-1 text-[11px]">{periodLabel}</div>
         </Card>
         <Card className="border-border bg-card p-5">
           <div className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
@@ -113,7 +196,9 @@ function ReportsPage() {
           <div className="mt-2 text-2xl font-semibold tracking-tight tabular-nums">
             {formatCurrency(data.kpis.expensesMtd)}
           </div>
-          <div className="text-muted-foreground mt-1 text-[11px]">This month</div>
+          <div className="text-muted-foreground mt-1 text-[11px]">
+            Operating expenses · {periodLabel}
+          </div>
         </Card>
         <Card className="border-border bg-card p-5">
           <div className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
@@ -142,12 +227,15 @@ function ReportsPage() {
         </Card>
         <Card className="border-border bg-card p-5">
           <div className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
-            Profit / Loss
+            {data.kpis.profitLabel ?? 'Gross Profit'}
           </div>
           <div className={`mt-2 text-2xl font-semibold tracking-tight tabular-nums ${profitTone}`}>
-            {formatCurrency(profitLoss)}
+            {formatCurrency(profitValue)}
           </div>
-          <div className="text-muted-foreground mt-1 text-[11px]">Sales minus purchases (MTD)</div>
+          <div className="text-muted-foreground mt-1 text-[11px]">
+            Net sales − COGS
+            {(data.kpis.expensesMtd ?? 0) > 0 ? ' − expenses' : ''} · {periodLabel}
+          </div>
         </Card>
         <Card className="border-border bg-card p-5">
           <div className="text-muted-foreground text-xs font-medium tracking-wider uppercase">

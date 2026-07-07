@@ -124,6 +124,16 @@ export class ReceivePurchaseOrderLineDto {
   @IsInt()
   @Min(1)
   quantity!: number;
+
+  @ApiPropertyOptional({ description: 'YYYY-MM-DD for batch-tracked products' })
+  @IsOptional()
+  @IsString()
+  mfgDate?: string;
+
+  @ApiPropertyOptional({ description: 'YYYY-MM-DD for batch-tracked products' })
+  @IsOptional()
+  @IsString()
+  expiryDate?: string;
 }
 
 export class ReceivePurchaseOrderDto {
