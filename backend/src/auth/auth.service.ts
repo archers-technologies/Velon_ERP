@@ -163,7 +163,21 @@ export class AuthService {
   }): Promise<TokenIssueContext> {
     const membership = await this.prisma.client.tenantMembership.findFirst({
       where: { userId: user.id, isActive: true },
-      include: { tenant: { include: { workspace: true } } },
+      include: {
+        tenant: {
+          select: {
+            id: true,
+            status: true,
+            deletedAt: true,
+            workspace: {
+              select: {
+                id: true,
+                isActive: true,
+              },
+            },
+          },
+        },
+      },
       orderBy: { createdAt: 'asc' },
     });
 
