@@ -205,6 +205,10 @@ export class AuthService {
         this.log.authFailure('login.failed', { email, reason: 'invalid_credentials' });
         throw new UnauthorizedException('Invalid email or password.');
       }
+      if (!user.passwordHash) {
+        this.log.authFailure('login.failed', { email, reason: 'missing_password_hash' });
+        throw new UnauthorizedException('Invalid email or password.');
+      }
 
       const ok = await bcrypt.compare(dto.password, user.passwordHash);
       if (!ok) {
@@ -520,7 +524,7 @@ export class AuthService {
 
   async changePassword(userId: string, dto: ChangePasswordDto) {
     const user = await this.prisma.client.user.findUnique({ where: { id: userId } });
-    if (!user || !user.isActive) {
+    if (!user || !user.isActive || !user.passwordHash) {
       throw new UnauthorizedException('Invalid current password.');
     }
 
