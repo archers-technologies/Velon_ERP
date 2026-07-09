@@ -123,6 +123,7 @@ export class NotificationService {
 
   async notifyLogin(input: LoginNotificationInput) {
     const loginAt = input.loginAt ?? new Date();
+    const idempotencyKey = `login:${input.userId}:${loginAt.toISOString()}`;
     const context = this.lifecycle.buildBaseContext({
       user: { name: input.userName, email: input.email },
       workspace: { name: input.workspaceName },
@@ -135,12 +136,13 @@ export class NotificationService {
       },
     });
 
-    return this.emitSecurityEvent(EMAIL_EVENT_TYPES.USER_LOGGED_IN, 'user', input.userId, {
+    // One event per login — not per user (EmailEvent dedupes on eventType + entityId).
+    return this.emitSecurityEvent(EMAIL_EVENT_TYPES.USER_LOGGED_IN, 'user', idempotencyKey, {
       userId: input.userId,
       tenantId: input.tenantId ?? null,
       email: input.email,
       context,
-      idempotencyKey: `login:${input.userId}:${loginAt.toISOString()}`,
+      idempotencyKey,
     });
   }
 

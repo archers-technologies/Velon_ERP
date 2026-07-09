@@ -68,10 +68,11 @@ describe('NotificationService', () => {
     expect(lifecycle.emit).toHaveBeenCalledWith(
       EMAIL_EVENT_TYPES.USER_LOGGED_IN,
       'user',
-      'user-1',
+      expect.stringMatching(/^login:user-1:/),
       expect.objectContaining({
         email: 'alex@velonerp.com',
         tenantId: 'tenant-1',
+        idempotencyKey: expect.stringMatching(/^login:user-1:/),
         context: expect.objectContaining({
           workspace: { name: 'Acme Workspace' },
           security: expect.objectContaining({
