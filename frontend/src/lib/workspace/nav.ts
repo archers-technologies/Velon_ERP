@@ -1,6 +1,7 @@
 import {
   BarChart3,
   Boxes,
+  FileText,
   LayoutDashboard,
   Settings,
   ShoppingBag,
@@ -30,6 +31,7 @@ export function buildWorkspaceNavGroups(badges: WorkspaceNavBadges): NavGroup[] 
       items: [
         { label: 'Dashboard', to: '/app', icon: LayoutDashboard },
         { label: 'Sales', to: '/app/sales-crm', icon: ShoppingBag },
+        { label: 'Invoices', to: '/app/invoices', icon: FileText },
         { label: 'Purchases', to: '/app/procurement', icon: ShoppingCart },
         { label: 'Inventory', to: '/app/inventory', icon: Boxes },
         { label: 'Customers', to: '/app/customers', icon: Users },

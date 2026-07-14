@@ -15,26 +15,64 @@ const FALLBACK_PLANS: PublicPlan[] = [
   {
     id: 'STARTER',
     displayName: 'Starter',
-    monthlyPrice: 49,
-    seatLimit: 5,
-    description: 'For small teams getting started with Velon ERP.',
-    features: ['Up to 5 users', 'CRM foundation', 'Workspace admin', 'Email support'],
+    monthlyPrice: 199,
+    seatLimit: 2,
+    description: 'For small shops, freelancers and new businesses.',
+    features: [
+      '1 business · 2 users',
+      'All platforms included',
+      'GST invoices & quotations',
+      'Customers, suppliers & products',
+      'Basic inventory & expense tracking',
+      'Basic reports & PDF printing',
+      'Email support',
+    ],
+    regionalPrices: {
+      india: { monthlyPrice: 199, annualPrice: 1999, currency: 'INR' },
+      global: { monthlyPrice: 49, annualPrice: 539, currency: 'USD' },
+    },
   },
   {
     id: 'GROWTH',
-    displayName: 'Professional',
-    monthlyPrice: 149,
-    seatLimit: 25,
-    description: 'For growing companies that need more seats and control.',
-    features: ['Up to 25 users', 'Full CRM & quotations', 'Departments', 'Priority support'],
+    displayName: 'Business',
+    monthlyPrice: 399,
+    seatLimit: 10,
+    description: 'For growing retailers, wholesalers and service businesses.',
+    features: [
+      'Up to 3 businesses · 10 users',
+      'All platforms included',
+      'Full inventory & stock transfers',
+      'CRM, POS & barcode billing',
+      'Purchase orders & P&L reports',
+      'Multiple warehouses',
+      'Role-based access',
+      'Priority support',
+    ],
+    regionalPrices: {
+      india: { monthlyPrice: 399, annualPrice: 3999, currency: 'INR' },
+      global: { monthlyPrice: 149, annualPrice: 1639, currency: 'USD' },
+    },
   },
   {
     id: 'ENTERPRISE',
-    displayName: 'Enterprise',
-    monthlyPrice: 499,
-    seatLimit: null,
-    description: 'Unlimited scale with dedicated support.',
-    features: ['Unlimited users', 'All modules', 'Custom integrations', 'Dedicated support'],
+    displayName: 'Professional',
+    monthlyPrice: 699,
+    seatLimit: 25,
+    description: 'For established businesses needing more control.',
+    features: [
+      'Up to 10 businesses · 25 users',
+      'All platforms included',
+      'Advanced CRM & sales pipeline',
+      'Department management',
+      'API access & audit logs',
+      'Custom roles & approvals',
+      'Data import & export',
+      'Faster priority support',
+    ],
+    regionalPrices: {
+      india: { monthlyPrice: 699, annualPrice: 6999, currency: 'INR' },
+      global: { monthlyPrice: 499, annualPrice: 5489, currency: 'USD' },
+    },
   },
 ];
 
@@ -61,7 +99,17 @@ export async function loadPublicPlans(): Promise<PublicPlan[]> {
   }
 }
 
-export function marketingPlanCards(plans: PublicPlan[]) {
+export type MarketingPlanCard = {
+  id: string;
+  name: string;
+  monthlyPrice: number;
+  regionalPrices?: PlanRegionalPrices;
+  desc: string;
+  features: string[];
+  featured: boolean;
+};
+
+export function marketingPlanCards(plans: PublicPlan[]): MarketingPlanCard[] {
   const list = Array.isArray(plans) ? plans : FALLBACK_PLANS;
   return list.map((plan) => ({
     id: plan.id,
@@ -71,6 +119,5 @@ export function marketingPlanCards(plans: PublicPlan[]) {
     desc: plan.description,
     features: plan.features,
     featured: plan.id === 'GROWTH',
-    isCustom: plan.id === 'ENTERPRISE',
   }));
 }

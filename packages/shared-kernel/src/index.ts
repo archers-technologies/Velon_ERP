@@ -276,3 +276,14 @@ export {
 } from './procurement-permissions';
 
 export { canReadSales, canWriteSales } from './sales-permissions';
+
+export {
+  calculateInvoiceLine,
+  calculateInvoiceTotals,
+  resolvePaymentStatus,
+  shouldDeductStock,
+  type CalculatedInvoiceLine,
+  type CalculatedInvoiceTotals,
+  type InvoiceLineInput,
+  type InvoiceTotalsInput,
+} from './invoice-calculation';

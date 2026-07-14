@@ -53,6 +53,16 @@ export class CreateCrmCustomerDto {
   @IsString()
   address?: string;
 
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  taxId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  notes?: string;
+
   @ApiPropertyOptional({ enum: CrmCustomerStatus })
   @IsOptional()
   @IsEnum(CrmCustomerStatus)
@@ -105,6 +115,16 @@ export class UpdateCrmCustomerDto {
   @IsOptional()
   @IsString()
   address?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  taxId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  notes?: string;
 
   @ApiPropertyOptional({ enum: CrmCustomerStatus })
   @IsOptional()

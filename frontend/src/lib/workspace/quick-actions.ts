@@ -24,7 +24,7 @@ export const WORKSPACE_QUICK_ACTIONS: WorkspaceQuickAction[] = [
   {
     label: 'Create Invoice',
     description: 'Bill a customer and get paid',
-    to: '/app/billing-pos',
+    to: '/app/invoices/create',
     icon: FileText,
     tone: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
   },
@@ -46,7 +46,7 @@ export const WORKSPACE_QUICK_ACTIONS: WorkspaceQuickAction[] = [
   {
     label: 'Record Payment',
     description: 'Log money received or paid',
-    to: '/app/billing-pos',
+    to: '/app/invoices',
     icon: Wallet,
     tone: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
   },

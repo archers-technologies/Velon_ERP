@@ -13,6 +13,8 @@ export type { PricingCountry, PricingCurrency };
 
 export type PricingLanguage = 'en' | 'hi' | 'ar';
 
+export type MarketingBillingInterval = 'MONTHLY' | 'YEARLY';
+
 export type PricingPreference = {
   country: PricingCountry;
   currency: PricingCurrency;
@@ -49,43 +51,99 @@ export function resolveMarketingPlanPrice(
   regionalPrices: PlanRegionalPrices | undefined,
   fallbackMonthlyPrice: number,
   preference: PricingPreference,
-): { amount: number; currency: PricingCurrency } {
+  interval: MarketingBillingInterval = 'MONTHLY',
+): { amount: number; currency: PricingCurrency; monthlyEquivalent: number } {
+  const india = isIndiaBilling(preference.country, preference.currency);
+
   if (!regionalPrices) {
-    if (isIndiaBilling(preference.country, preference.currency)) {
-      return { amount: fallbackMonthlyPrice, currency: 'INR' };
+    const monthly = fallbackMonthlyPrice;
+    if (india) {
+      const annual = monthly * 10;
+      return interval === 'YEARLY'
+        ? {
+            amount: annual,
+            currency: 'INR',
+            monthlyEquivalent: Math.round((annual / 12) * 100) / 100,
+          }
+        : { amount: monthly, currency: 'INR', monthlyEquivalent: monthly };
     }
     if (preference.currency === 'USD') {
-      return { amount: fallbackMonthlyPrice, currency: 'USD' };
+      const annual = monthly * 11;
+      return interval === 'YEARLY'
+        ? {
+            amount: annual,
+            currency: 'USD',
+            monthlyEquivalent: Math.round((annual / 12) * 100) / 100,
+          }
+        : { amount: monthly, currency: 'USD', monthlyEquivalent: monthly };
     }
     const inrPerUnit = getInrPerUnit(preference.currency);
-    return { amount: fallbackMonthlyPrice / inrPerUnit, currency: preference.currency };
+    const converted = monthly / inrPerUnit;
+    return { amount: converted, currency: preference.currency, monthlyEquivalent: converted };
   }
 
-  if (isIndiaBilling(preference.country, preference.currency)) {
-    return { amount: regionalPrices.india.monthlyPrice, currency: 'INR' };
-  }
+  const table = india ? regionalPrices.india : regionalPrices.global;
+  const monthlyPrice = india
+    ? regionalPrices.india.monthlyPrice
+    : preference.currency === 'USD'
+      ? regionalPrices.global.monthlyPrice
+      : regionalPrices.india.monthlyPrice / getInrPerUnit(preference.currency);
 
-  if (preference.currency === 'USD') {
-    return { amount: regionalPrices.global.monthlyPrice, currency: 'USD' };
+  if (india || preference.currency === 'USD') {
+    const annualPrice = table.annualPrice;
+    const currency = table.currency as PricingCurrency;
+    if (interval === 'YEARLY') {
+      return {
+        amount: annualPrice,
+        currency,
+        monthlyEquivalent: Math.round((annualPrice / 12) * 100) / 100,
+      };
+    }
+    return { amount: table.monthlyPrice, currency, monthlyEquivalent: table.monthlyPrice };
   }
 
   const inrPerUnit = getInrPerUnit(preference.currency);
+  const annualConverted = table.annualPrice / inrPerUnit;
+  const monthlyConverted = table.monthlyPrice / inrPerUnit;
+  if (interval === 'YEARLY') {
+    return {
+      amount: annualConverted,
+      currency: preference.currency,
+      monthlyEquivalent: Math.round((annualConverted / 12) * 100) / 100,
+    };
+  }
   return {
-    amount: regionalPrices.india.monthlyPrice / inrPerUnit,
+    amount: monthlyConverted,
     currency: preference.currency,
+    monthlyEquivalent: monthlyConverted,
   };
 }
 
 export function formatPlanPriceForPreference(
   plan: { regionalPrices?: PlanRegionalPrices; monthlyPrice: number },
   preference: PricingPreference,
+  interval: MarketingBillingInterval = 'MONTHLY',
 ) {
   const { amount, currency } = resolveMarketingPlanPrice(
     plan.regionalPrices,
     plan.monthlyPrice,
     preference,
+    interval,
   );
   return formatMarketingMonthlyPrice(amount, currency);
+}
+
+export function formatPlanEffectiveMonthly(
+  plan: { regionalPrices?: PlanRegionalPrices; monthlyPrice: number },
+  preference: PricingPreference,
+) {
+  const { monthlyEquivalent, currency } = resolveMarketingPlanPrice(
+    plan.regionalPrices,
+    plan.monthlyPrice,
+    preference,
+    'YEARLY',
+  );
+  return formatMarketingMonthlyPrice(monthlyEquivalent, currency);
 }
 
 function isValidLanguage(value: unknown): value is PricingLanguage {

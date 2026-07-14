@@ -18,6 +18,8 @@ export type CrmCustomer = {
   country: string | null;
   city: string | null;
   address: string | null;
+  taxId?: string | null;
+  notes?: string | null;
   status: CrmCustomerStatus;
   isArchived: boolean;
   archivedAt: string | null;

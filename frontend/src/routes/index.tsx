@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { ArrowRight, Boxes, Check, Zap } from 'lucide-react';
+import { ArrowRight, Boxes, Zap } from 'lucide-react';
+import { MarketingPricingSection } from '@/components/billing/marketing-pricing';
 import {
-  PricingPreferenceControl,
   PricingPreferencePrompt,
   usePricingPreference,
 } from '@/components/billing/pricing-preference';
@@ -11,7 +11,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { loginSearch } from '@/lib/auth/login-utils';
-import { formatPlanPriceForPreference } from '@/lib/billing/pricing-preferences';
 import { loadPublicPlans, marketingPlanCards } from '@/lib/billing/public-api';
 import { loadPublicSiteContentSafe } from '@/lib/cms/load-public';
 
@@ -155,83 +154,19 @@ function Home() {
         className="border-border bg-muted/40 border-t py-24"
       >
         <div className="mx-auto max-w-7xl px-6">
-          <div className="mb-14 text-center">
-            <Badge
-              variant="outline"
-              className="border-border bg-background mb-3 rounded-full"
-            >
-              Pricing
-            </Badge>
-            <h2 className="text-4xl font-semibold tracking-tight">{pricingContent.headline}</h2>
-            <p className="text-muted-foreground mx-auto mt-2 max-w-xl">{pricingContent.subhead}</p>
-            <div className="mt-4">
-              <PricingPreferenceControl
-                preference={preference}
-                onChange={updatePreference}
-                compact
-              />
-            </div>
-          </div>
-          <div className="grid gap-6 md:grid-cols-3">
-            {plans.map((p) => (
-              <Card
-                key={p.name}
-                className={`relative p-7 transition ${p.featured ? 'border-foreground bg-foreground text-background shadow-elegant' : 'border-border bg-card hover:-translate-y-0.5'}`}
-              >
-                {p.featured && (
-                  <Badge className="bg-background text-foreground hover:bg-background absolute -top-3 left-1/2 -translate-x-1/2">
-                    Most popular
-                  </Badge>
-                )}
-                <div
-                  className={`text-sm font-medium ${p.featured ? 'text-background/70' : 'text-muted-foreground'}`}
-                >
-                  {p.name}
-                </div>
-                <div className="mt-3 flex items-baseline gap-1">
-                  <span className="text-4xl font-semibold tracking-tight">
-                    {p.isCustom ? 'Custom' : formatPlanPriceForPreference(p, preference)}
-                  </span>
-                  {!p.isCustom && (
-                    <span
-                      className={`text-sm ${p.featured ? 'text-background/60' : 'text-muted-foreground'}`}
-                    >
-                      /mo
-                    </span>
-                  )}
-                </div>
-                <p
-                  className={`mt-1 text-sm ${p.featured ? 'text-background/70' : 'text-muted-foreground'}`}
-                >
-                  {p.desc}
-                </p>
-                <ul className="mt-6 space-y-2.5 text-sm">
-                  {p.features.map((f) => (
-                    <li
-                      key={f}
-                      className="flex items-center gap-2"
-                    >
-                      <Check
-                        className={`h-4 w-4 ${p.featured ? 'text-background' : 'text-foreground'}`}
-                      />{' '}
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Button
-                  asChild
-                  className={`mt-7 w-full rounded-lg ${p.featured ? 'bg-background text-foreground hover:bg-background/90' : 'bg-foreground text-background hover:bg-foreground/90'}`}
-                >
-                  <Link
-                    to={p.isCustom ? '/contact' : '/login'}
-                    search={p.isCustom ? undefined : { tab: 'signup' }}
-                  >
-                    {p.isCustom ? 'Talk to sales' : 'Start free trial'}
-                  </Link>
-                </Button>
-              </Card>
-            ))}
-          </div>
+          <Badge
+            variant="outline"
+            className="border-border bg-background mx-auto mb-6 flex w-fit rounded-full"
+          >
+            Pricing
+          </Badge>
+          <MarketingPricingSection
+            headline={pricingContent.headline}
+            subhead={pricingContent.subhead}
+            plans={plans}
+            preference={preference}
+            onPreferenceChange={updatePreference}
+          />
         </div>
       </section>
 

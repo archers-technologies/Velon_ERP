@@ -42,8 +42,9 @@ const DEFAULTS: Record<SiteContentKey, Prisma.JsonValue> = {
     ],
   },
   pricing: {
-    headline: 'Simple, transparent pricing',
-    subhead: 'Choose a plan that fits your team size.',
+    headline: 'One subscription. Every device.',
+    subhead:
+      'GST billing, inventory, CRM and reports on web, desktop and mobile — no separate app fees.',
   },
   faq: {
     items: [

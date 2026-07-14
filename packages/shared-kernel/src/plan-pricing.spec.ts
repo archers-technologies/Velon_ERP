@@ -2,13 +2,13 @@ import { isIndiaBilling, planRegionalPricesFromDefinition, resolvePlanPrice } fr
 
 describe('plan-pricing', () => {
   const regionalPrices = planRegionalPricesFromDefinition({
-    indiaMonthlyPrice: 49,
-    indiaAnnualPrice: 490,
+    indiaMonthlyPrice: 199,
+    indiaAnnualPrice: 1999,
     globalMonthlyPrice: 49,
-    globalAnnualPrice: 490,
+    globalAnnualPrice: 539,
   });
 
-  it('India workspace pays ₹49, not USD converted to INR', () => {
+  it('India workspace pays ₹199, not USD converted to INR', () => {
     const resolved = resolvePlanPrice({
       planId: 'STARTER',
       billingCountry: 'IN',
@@ -18,9 +18,9 @@ describe('plan-pricing', () => {
     });
     expect(resolved.regionApplied).toBe('INDIA');
     expect(resolved.currency).toBe('INR');
-    expect(resolved.amount).toBe(49);
-    expect(resolved.paymentAmountMinorUnit).toBe(4900);
-    expect(resolved.displayAmount).toBe(49);
+    expect(resolved.amount).toBe(199);
+    expect(resolved.paymentAmountMinorUnit).toBe(19900);
+    expect(resolved.displayAmount).toBe(199);
   });
 
   it('global workspace pays $49', () => {
@@ -46,7 +46,7 @@ describe('plan-pricing', () => {
       billingInterval: 'MONTHLY',
       regionalPrices,
     });
-    expect(resolved.amount).toBe(49);
+    expect(resolved.amount).toBe(199);
     expect(resolved.currency).toBe('INR');
   });
 
@@ -58,16 +58,16 @@ describe('plan-pricing', () => {
       billingInterval: 'YEARLY',
       regionalPrices,
     });
-    expect(resolved.amount).toBe(490);
-    expect(resolved.paymentAmountMinorUnit).toBe(49000);
+    expect(resolved.amount).toBe(1999);
+    expect(resolved.paymentAmountMinorUnit).toBe(199900);
   });
 
   it('annual fallback equals 11× monthly when annual prices are omitted', () => {
     const derived = planRegionalPricesFromDefinition({
-      indiaMonthlyPrice: 650,
+      indiaMonthlyPrice: 199,
       globalMonthlyPrice: 49,
     });
-    expect(derived.india.annualPrice).toBe(7150);
+    expect(derived.india.annualPrice).toBe(2189);
     expect(derived.global.annualPrice).toBe(539);
   });
 });

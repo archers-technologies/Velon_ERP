@@ -14,9 +14,15 @@ declare module 'nodemailer' {
   export interface MailOptions {
     from?: string;
     to?: string;
+    replyTo?: string;
     subject?: string;
     text?: string;
     html?: string;
+    attachments?: Array<{
+      filename?: string;
+      content?: Buffer | string;
+      contentType?: string;
+    }>;
   }
 
   export interface Transporter {

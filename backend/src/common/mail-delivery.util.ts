@@ -1,10 +1,21 @@
 import { Logger } from '@nestjs/common';
 
+export type TransactionalMailAttachment = {
+  filename: string;
+  content: Buffer;
+  contentType?: string;
+};
+
 export type TransactionalMail = {
   to: string;
   subject: string;
   text: string;
   html: string;
+  /** Override platform default From (e.g. tenant company identity). */
+  from?: string;
+  /** Customer replies go here (typically the tenant company email). */
+  replyTo?: string;
+  attachments?: TransactionalMailAttachment[];
 };
 
 export type MailProvider = 'resend' | 'smtp' | 'none';
@@ -138,6 +149,81 @@ export function formatMailProviderForLog(): string {
   return lines.join('\n');
 }
 
+/** Pull bare address from `Name <email>` or plain email. */
+export function extractEmailAddress(raw: string): string {
+  const trimmed = raw.trim();
+  const match = trimmed.match(/<([^>]+)>/);
+  return (match ? match[1] : trimmed).trim().toLowerCase();
+}
+
+export function getPlatformFromRaw(): string {
+  const provider = resolveMailProvider();
+  if (provider === 'resend') {
+    return process.env.RESEND_FROM?.trim() || '';
+  }
+  if (provider === 'smtp') {
+    return process.env.SMTP_FROM?.trim() || process.env.SMTP_FROM_EMAIL?.trim() || '';
+  }
+  return (
+    process.env.RESEND_FROM?.trim() ||
+    process.env.SMTP_FROM?.trim() ||
+    process.env.SMTP_FROM_EMAIL?.trim() ||
+    ''
+  );
+}
+
+export function formatNamedFrom(displayName: string, email: string): string {
+  const safeName = displayName.replace(/"/g, '').trim() || 'Company';
+  return `"${safeName}" <${email}>`;
+}
+
+/**
+ * Customer-facing sender for tenant emails (invoices, etc.).
+ *
+ * Prefer the company email as From when:
+ * - it matches the platform From / SMTP auth user, or
+ * - it shares the platform sender domain (verified Resend domain / same-host mailbox)
+ *
+ * Otherwise keep the platform envelope address with the company display name
+ * and set Reply-To to the company email so customers see the tenant, not Velon.
+ */
+export function resolveTenantCustomerFrom(opts: {
+  companyName: string;
+  companyEmail?: string | null;
+}): { from: string; replyTo?: string } {
+  const companyEmail = opts.companyEmail?.trim().toLowerCase() || undefined;
+  const replyTo = companyEmail;
+  const platformRaw = getPlatformFromRaw();
+  const platformEmail = platformRaw ? extractEmailAddress(platformRaw) : '';
+  const smtpUser = process.env.SMTP_USER?.trim().toLowerCase();
+
+  if (companyEmail) {
+    const companyDomain = companyEmail.split('@')[1];
+    const platformDomain = platformEmail.split('@')[1];
+    const sameDomain = Boolean(
+      companyDomain && platformDomain && companyDomain === platformDomain,
+    );
+    const canSendAsCompany =
+      companyEmail === platformEmail ||
+      (smtpUser != null && companyEmail === smtpUser) ||
+      sameDomain;
+
+    if (canSendAsCompany) {
+      return { from: formatNamedFrom(opts.companyName, companyEmail), replyTo };
+    }
+  }
+
+  if (platformEmail) {
+    return { from: formatNamedFrom(opts.companyName, platformEmail), replyTo };
+  }
+
+  if (companyEmail) {
+    return { from: formatNamedFrom(opts.companyName, companyEmail), replyTo };
+  }
+
+  return { from: formatNamedFrom(opts.companyName, 'noreply@localhost'), replyTo };
+}
+
 export function shouldSendViaSmtp(to: string): boolean {
   if (process.env.NODE_ENV === 'test') return false;
   if (isNonDeliverableEmail(to)) return false;
@@ -191,20 +277,26 @@ export async function deliverViaSmtp(
   const transporter = nodemailer.createTransport(smtpTransportOptions(override));
   await withSmtpTimeout(
     transporter.sendMail({
-      from: process.env.SMTP_FROM,
+      from: input.from ?? process.env.SMTP_FROM,
       to: input.to,
+      replyTo: input.replyTo,
       subject: input.subject,
       text: input.text,
       html: input.html,
-    }),
+      attachments: input.attachments?.map((file) => ({
+        filename: file.filename,
+        content: file.content,
+        contentType: file.contentType,
+      })),
+    } as Parameters<typeof transporter.sendMail>[0]),
     12_000,
   );
 }
 
 export async function deliverViaResend(input: TransactionalMail): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY?.trim();
-  const from = process.env.RESEND_FROM?.trim();
-  if (!apiKey || !from) {
+  const defaultFrom = process.env.RESEND_FROM?.trim();
+  if (!apiKey || !defaultFrom) {
     throw new Error('resend_not_configured');
   }
 
@@ -215,11 +307,16 @@ export async function deliverViaResend(input: TransactionalMail): Promise<void> 
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from,
+      from: input.from ?? defaultFrom,
       to: [input.to],
+      ...(input.replyTo ? { reply_to: input.replyTo } : {}),
       subject: input.subject,
       html: input.html,
       text: input.text,
+      attachments: input.attachments?.map((file) => ({
+        filename: file.filename,
+        content: file.content.toString('base64'),
+      })),
     }),
   });
 

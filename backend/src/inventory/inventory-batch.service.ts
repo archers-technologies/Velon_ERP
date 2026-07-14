@@ -101,6 +101,10 @@ export class InventoryBatchService {
       if (stock.quantity - stock.reservedQty < requestedQty) {
         throw new BadRequestException(`Insufficient stock.`);
       }
+      await db.inventoryStock.update({
+        where: { id: stockId },
+        data: { quantity: { decrement: requestedQty } },
+      });
       return {
         allocations: [],
         totalCost: Math.round(unitCost * requestedQty * 100) / 100,
@@ -145,6 +149,36 @@ export class InventoryBatchService {
     });
 
     return { allocations, totalCost: Math.round(totalCost * 100) / 100 };
+  }
+
+  async restoreDeduction(
+    tenantId: string,
+    stockId: string,
+    qty: number,
+    allocations: Array<{ batchId: string; qty: number }>,
+    tx?: Prisma.TransactionClient,
+  ) {
+    if (qty <= 0) return;
+    const db = tx ?? this.prisma.client;
+    const stock = await db.inventoryStock.findFirst({
+      where: { id: stockId, tenantId },
+      include: { product: true },
+    });
+    if (!stock) throw new NotFoundException('Stock record not found.');
+
+    if (stock.product.batchTracked && allocations.length) {
+      for (const alloc of allocations) {
+        await db.inventoryStockBatch.update({
+          where: { id: alloc.batchId },
+          data: { quantity: { increment: alloc.qty } },
+        });
+      }
+    }
+
+    await db.inventoryStock.update({
+      where: { id: stockId },
+      data: { quantity: { increment: qty } },
+    });
   }
 
   resolveBatchFilterStatus(

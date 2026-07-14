@@ -220,6 +220,10 @@ model User {
   purchaseRequestsApproved   PurchaseRequest[]    @relation("PurchaseRequestApprovedBy")
   purchaseOrdersApproved     PurchaseOrder[]      @relation("PurchaseOrderApprovedBy")
   supplierThreadsAuthored    SupplierThread[]     @relation("SupplierThreadAuthor")
+  salesInvoicesCreated       SalesInvoice[]       @relation("SalesInvoiceCreatedBy")
+  salesInvoicesUpdated       SalesInvoice[]       @relation("SalesInvoiceUpdatedBy")
+  salesInvoicesSalesperson   SalesInvoice[]       @relation("SalesInvoiceSalesperson")
+  salesInvoicePaymentsRecorded SalesInvoicePayment[] @relation("SalesInvoicePaymentRecordedBy")
   emailPreferences           EmailPreference[]
   emailLogs                  EmailLog[]           @relation("EmailLogUser")
 
@@ -305,6 +309,10 @@ model Tenant {
   salesOrders           SalesOrder[]
   salesOrderItems       SalesOrderItem[]
   salesOrderSequences   SalesOrderNumberSequence[]
+  salesInvoices         SalesInvoice[]
+  salesInvoiceItems     SalesInvoiceItem[]
+  salesInvoicePayments  SalesInvoicePayment[]
+  salesInvoiceSequences SalesInvoiceNumberSequence[]
   subscription          Subscription?
 
   @@index([status])
@@ -376,8 +384,9 @@ model Workspace {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  salesOrders SalesOrder[]
+  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  salesOrders   SalesOrder[]
+  salesInvoices SalesInvoice[]
 }
 
 model TenantMembership {
@@ -557,6 +566,8 @@ model CrmCustomer {
   country      String?
   city         String?
   address      String?
+  taxId        String?
+  notes        String?
   status       CrmCustomerStatus @default(PROSPECT)
   archivedAt   DateTime?
   createdAt    DateTime          @default(now())
@@ -573,6 +584,7 @@ model CrmCustomer {
   leadsConverted CrmLead[] @relation("CrmLeadConvertedCustomer")
   quotations    CrmQuotation[]
   salesOrders   SalesOrder[]
+  salesInvoices SalesInvoice[]
 
   @@unique([tenantId, customerCode])
   @@index([tenantId])
@@ -953,6 +965,31 @@ enum SalesOrderStatus {
   CANCELLED
 }
 
+enum SalesInvoiceStatus {
+  DRAFT
+  UNPAID
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  CANCELLED
+  VOID
+}
+
+enum SalesInvoicePaymentMethod {
+  CASH
+  CARD
+  UPI
+  BANK_TRANSFER
+  WALLET
+  GIFT
+  OTHER
+}
+
+enum SalesInvoiceLineType {
+  PRODUCT
+  CUSTOM
+}
+
 model InventoryCategory {
   id          String   @id @default(cuid())
   tenantId    String
@@ -1003,6 +1040,7 @@ model InventoryProduct {
   purchaseOrderItems   PurchaseOrderItem[]
   quotationItems       CrmQuotationItem[]
   salesOrderItems      SalesOrderItem[]
+  salesInvoiceItems    SalesInvoiceItem[]
 
   @@unique([tenantId, sku])
   @@index([tenantId])
@@ -1068,6 +1106,7 @@ model InventoryProductVariant {
   stock           InventoryStock[]
   quotationItems  CrmQuotationItem[]
   salesOrderItems SalesOrderItem[]
+  salesInvoiceItems SalesInvoiceItem[]
 
   @@unique([tenantId, sku])
   @@index([tenantId])
@@ -1106,6 +1145,7 @@ model InventoryWarehouse {
   tenant  Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   manager User?            @relation("InventoryWarehouseManager", fields: [managerId], references: [id], onDelete: SetNull)
   stock   InventoryStock[]
+  salesInvoices SalesInvoice[]
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -1387,6 +1427,129 @@ model SalesOrderItem {
 }
 
 model SalesOrderNumberSequence {
+  id         String @id @default(cuid())
+  tenantId   String
+  year       Int
+  lastNumber Int    @default(0)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, year])
+  @@index([tenantId])
+}
+
+/// Tenant sales invoices — persisted AR documents (distinct from POS audit tickets).
+model SalesInvoice {
+  id                String                     @id @default(cuid())
+  tenantId          String
+  workspaceId       String
+  invoiceNumber     String
+  customerId        String?
+  customerName      String
+  customerPhone     String?
+  customerEmail     String?
+  customerAddress   String?
+  customerTaxId     String?
+  customerNotes     String?
+  issueDate         DateTime                   @db.Date
+  dueDate           DateTime?                  @db.Date
+  status            SalesInvoiceStatus         @default(DRAFT)
+  paymentMethod     SalesInvoicePaymentMethod?
+  salespersonId     String?
+  salespersonName   String?
+  referenceNumber   String?
+  notes             String?
+  footerNotes       String?
+  warehouseId       String?
+  currency          String                     @default("INR")
+  subtotal          Decimal                    @default(0) @db.Decimal(14, 2)
+  discount          Decimal                    @default(0) @db.Decimal(14, 2)
+  taxAmount         Decimal                    @default(0) @db.Decimal(14, 2)
+  shippingCharges   Decimal                    @default(0) @db.Decimal(14, 2)
+  roundingAdjustment Decimal                   @default(0) @db.Decimal(14, 2)
+  total             Decimal                    @default(0) @db.Decimal(14, 2)
+  amountPaid        Decimal                    @default(0) @db.Decimal(14, 2)
+  balanceDue        Decimal                    @default(0) @db.Decimal(14, 2)
+  stockDeductedAt   DateTime?
+  idempotencyKey    String?                    @unique
+  createdAt         DateTime                   @default(now())
+  updatedAt         DateTime                   @updatedAt
+  createdById       String?
+  updatedById       String?
+
+  tenant      Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  workspace   Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  customer    CrmCustomer?        @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  warehouse   InventoryWarehouse? @relation(fields: [warehouseId], references: [id], onDelete: SetNull)
+  salesperson User?               @relation("SalesInvoiceSalesperson", fields: [salespersonId], references: [id], onDelete: SetNull)
+  createdBy   User?               @relation("SalesInvoiceCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy   User?               @relation("SalesInvoiceUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  items       SalesInvoiceItem[]
+  payments    SalesInvoicePayment[]
+
+  @@unique([tenantId, invoiceNumber])
+  @@index([tenantId])
+  @@index([workspaceId])
+  @@index([tenantId, status])
+  @@index([tenantId, customerId])
+  @@index([tenantId, issueDate])
+}
+
+model SalesInvoiceItem {
+  id           String               @id @default(cuid())
+  tenantId     String
+  invoiceId    String
+  lineType     SalesInvoiceLineType @default(PRODUCT)
+  productId    String?
+  variantId    String?
+  stockId      String?
+  itemName     String
+  sku          String?
+  description  String?
+  uom          String?
+  quantity     Decimal              @default(1) @db.Decimal(12, 4)
+  unitPrice    Decimal              @default(0) @db.Decimal(14, 2)
+  discount     Decimal              @default(0) @db.Decimal(14, 2)
+  taxRate      Decimal              @default(0) @db.Decimal(5, 2)
+  taxAmount    Decimal              @default(0) @db.Decimal(14, 2)
+  lineSubtotal Decimal              @default(0) @db.Decimal(14, 2)
+  lineTotal    Decimal              @default(0) @db.Decimal(14, 2)
+  position     Int                  @default(0)
+  stockMovement Json?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  tenant  Tenant                    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  invoice SalesInvoice              @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  product InventoryProduct?         @relation(fields: [productId], references: [id], onDelete: SetNull)
+  variant InventoryProductVariant?  @relation(fields: [variantId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([tenantId, invoiceId])
+  @@index([tenantId, productId])
+}
+
+model SalesInvoicePayment {
+  id           String                    @id @default(cuid())
+  tenantId     String
+  invoiceId    String
+  amount       Decimal                   @db.Decimal(14, 2)
+  method       SalesInvoicePaymentMethod
+  reference    String?
+  notes        String?
+  paidAt       DateTime                  @default(now())
+  recordedById String?
+  createdAt    DateTime                  @default(now())
+
+  tenant     Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  invoice    SalesInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  recordedBy User?        @relation("SalesInvoicePaymentRecordedBy", fields: [recordedById], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([tenantId, invoiceId])
+}
+
+model SalesInvoiceNumberSequence {
   id         String @id @default(cuid())
   tenantId   String
   year       Int

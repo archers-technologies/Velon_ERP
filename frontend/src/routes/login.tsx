@@ -192,8 +192,11 @@ function WorkspaceLoginPage() {
       saveWorkspaceName(companyName);
       bootstrapWorkspaceUser({ email: companyEmail, businessName: companyName, fullName });
       setSignupVerificationToken(null);
-      toast.success('Workspace created — redirecting');
-      await router.navigate({ to: '/app' });
+      toast.success('Workspace created — add your logo for branded invoices');
+      await router.navigate({
+        to: '/app/settings/admin',
+        search: { tab: 'general', section: 'company' },
+      });
     } catch (err) {
       toast.error(formatApiError(err, 'Could not create workspace'));
     }

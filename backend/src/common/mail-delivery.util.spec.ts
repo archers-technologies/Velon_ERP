@@ -1,6 +1,7 @@
 import {
   classifySmtpSendError,
   deliverViaResend,
+  extractEmailAddress,
   getSmtpPassword,
   isNonDeliverableEmail,
   parseResendSendFailure,
@@ -8,6 +9,7 @@ import {
   resendConfigured,
   resolveMailProvider,
   resolveSmtpPortAndSecure,
+  resolveTenantCustomerFrom,
   sendTransactionalMail,
   shouldSendViaResend,
   shouldSendViaSmtp,
@@ -218,5 +220,97 @@ describe('mail-delivery.util', () => {
         html: '<p>hello</p>',
       }),
     ).rejects.toThrow('resend_not_configured');
+  });
+
+  it('extracts address from Name <email> form', () => {
+    expect(extractEmailAddress('Velon ERP <noreply@velonerp.com>')).toBe('noreply@velonerp.com');
+    expect(extractEmailAddress('noreply@velonerp.com')).toBe('noreply@velonerp.com');
+  });
+
+  it('uses company email as From when it shares the platform domain', () => {
+    process.env.MAIL_PROVIDER = 'resend';
+    process.env.RESEND_API_KEY = 're_test_123';
+    process.env.RESEND_FROM = 'Velon ERP <noreply@velonerp.com>';
+    expect(
+      resolveTenantCustomerFrom({
+        companyName: 'Acme Corp',
+        companyEmail: 'billing@velonerp.com',
+      }),
+    ).toEqual({
+      from: '"Acme Corp" <billing@velonerp.com>',
+      replyTo: 'billing@velonerp.com',
+    });
+  });
+
+  it('uses company email as From when it matches the SMTP mailbox', () => {
+    process.env.MAIL_PROVIDER = 'smtp';
+    delete process.env.RESEND_API_KEY;
+    delete process.env.RESEND_FROM;
+    process.env.SMTP_FROM = 'Velon ERP <info@velonerp.com>';
+    process.env.SMTP_USER = 'info@velonerp.com';
+    expect(
+      resolveTenantCustomerFrom({
+        companyName: 'Acme Corp',
+        companyEmail: 'info@velonerp.com',
+      }),
+    ).toEqual({
+      from: '"Acme Corp" <info@velonerp.com>',
+      replyTo: 'info@velonerp.com',
+    });
+  });
+
+  it('uses company email as From on SMTP when it shares the platform domain', () => {
+    process.env.MAIL_PROVIDER = 'smtp';
+    delete process.env.RESEND_API_KEY;
+    delete process.env.RESEND_FROM;
+    process.env.SMTP_FROM = 'Velon ERP <info@velonerp.com>';
+    process.env.SMTP_USER = 'info@velonerp.com';
+    expect(
+      resolveTenantCustomerFrom({
+        companyName: 'Acme Corp',
+        companyEmail: 'billing@velonerp.com',
+      }),
+    ).toEqual({
+      from: '"Acme Corp" <billing@velonerp.com>',
+      replyTo: 'billing@velonerp.com',
+    });
+  });
+
+  it('keeps platform envelope with tenant display name when domains differ', () => {
+    process.env.MAIL_PROVIDER = 'resend';
+    process.env.RESEND_API_KEY = 're_test_123';
+    process.env.RESEND_FROM = 'Velon ERP <noreply@velonerp.com>';
+    expect(
+      resolveTenantCustomerFrom({
+        companyName: 'Acme Corp',
+        companyEmail: 'owner@acme.com',
+      }),
+    ).toEqual({
+      from: '"Acme Corp" <noreply@velonerp.com>',
+      replyTo: 'owner@acme.com',
+    });
+  });
+
+  it('forwards custom from and replyTo via Resend', async () => {
+    process.env.RESEND_API_KEY = 're_test_123';
+    process.env.RESEND_FROM = 'Velon ERP <noreply@velonerp.com>';
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => '{"id":"email_123"}',
+    });
+
+    await deliverViaResend({
+      to: 'customer@gmail.com',
+      from: '"Acme Corp" <billing@velonerp.com>',
+      replyTo: 'billing@velonerp.com',
+      subject: 'Invoice',
+      text: 'attached',
+      html: '<p>attached</p>',
+    });
+
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body as string) as Record<string, unknown>;
+    expect(body.from).toBe('"Acme Corp" <billing@velonerp.com>');
+    expect(body.reply_to).toBe('billing@velonerp.com');
   });
 });

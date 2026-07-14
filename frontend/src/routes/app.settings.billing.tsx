@@ -452,7 +452,7 @@ function BillingPortalPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="MONTHLY">Monthly</SelectItem>
-                  <SelectItem value="YEARLY">Yearly (1 month free)</SelectItem>
+                  <SelectItem value="YEARLY">Yearly (Save 16%)</SelectItem>
                 </SelectContent>
               </Select>
             </div>

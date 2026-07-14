@@ -38,6 +38,7 @@ import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppSalesCrmRouteImport } from './routes/app.sales-crm'
 import { Route as AppReportsRouteImport } from './routes/app.reports'
 import { Route as AppProcurementRouteImport } from './routes/app.procurement'
+import { Route as AppInvoicesRouteImport } from './routes/app.invoices'
 import { Route as AppInventoryRouteImport } from './routes/app.inventory'
 import { Route as AppHrPayrollRouteImport } from './routes/app.hr-payroll'
 import { Route as AppDocumentsRouteImport } from './routes/app.documents'
@@ -63,10 +64,13 @@ import { Route as AdminComplianceRouteImport } from './routes/admin.compliance'
 import { Route as AdminAutomationsRouteImport } from './routes/admin.automations'
 import { Route as AdminAlertsLogsRouteImport } from './routes/admin.alerts-logs'
 import { Route as AppSettingsIndexRouteImport } from './routes/app.settings.index'
+import { Route as AppInvoicesIndexRouteImport } from './routes/app.invoices.index'
 import { Route as AppInventoryIndexRouteImport } from './routes/app.inventory.index'
 import { Route as AppCrmIndexRouteImport } from './routes/app.crm.index'
 import { Route as AppSettingsBillingRouteImport } from './routes/app.settings.billing'
 import { Route as AppSettingsAdminRouteImport } from './routes/app.settings.admin'
+import { Route as AppInvoicesCreateRouteImport } from './routes/app.invoices.create'
+import { Route as AppInvoicesInvoiceIdRouteImport } from './routes/app.invoices.$invoiceId'
 import { Route as AppInventoryWarehousesRouteImport } from './routes/app.inventory.warehouses'
 import { Route as AppInventoryProductsRouteImport } from './routes/app.inventory.products'
 import { Route as AppInventoryCategoriesRouteImport } from './routes/app.inventory.categories'
@@ -223,6 +227,11 @@ const AppProcurementRoute = AppProcurementRouteImport.update({
   path: '/procurement',
   getParentRoute: () => AppRoute,
 } as any)
+const AppInvoicesRoute = AppInvoicesRouteImport.update({
+  id: '/invoices',
+  path: '/invoices',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppInventoryRoute = AppInventoryRouteImport.update({
   id: '/inventory',
   path: '/inventory',
@@ -348,6 +357,11 @@ const AppSettingsIndexRoute = AppSettingsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppSettingsRoute,
 } as any)
+const AppInvoicesIndexRoute = AppInvoicesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppInvoicesRoute,
+} as any)
 const AppInventoryIndexRoute = AppInventoryIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -367,6 +381,16 @@ const AppSettingsAdminRoute = AppSettingsAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
   getParentRoute: () => AppSettingsRoute,
+} as any)
+const AppInvoicesCreateRoute = AppInvoicesCreateRouteImport.update({
+  id: '/create',
+  path: '/create',
+  getParentRoute: () => AppInvoicesRoute,
+} as any)
+const AppInvoicesInvoiceIdRoute = AppInvoicesInvoiceIdRouteImport.update({
+  id: '/$invoiceId',
+  path: '/$invoiceId',
+  getParentRoute: () => AppInvoicesRoute,
 } as any)
 const AppInventoryWarehousesRoute = AppInventoryWarehousesRouteImport.update({
   id: '/warehouses',
@@ -463,6 +487,7 @@ export interface FileRoutesByFullPath {
   '/app/documents': typeof AppDocumentsRoute
   '/app/hr-payroll': typeof AppHrPayrollRoute
   '/app/inventory': typeof AppInventoryRouteWithChildren
+  '/app/invoices': typeof AppInvoicesRouteWithChildren
   '/app/procurement': typeof AppProcurementRoute
   '/app/reports': typeof AppReportsRoute
   '/app/sales-crm': typeof AppSalesCrmRoute
@@ -483,10 +508,13 @@ export interface FileRoutesByFullPath {
   '/app/inventory/categories': typeof AppInventoryCategoriesRoute
   '/app/inventory/products': typeof AppInventoryProductsRoute
   '/app/inventory/warehouses': typeof AppInventoryWarehousesRoute
+  '/app/invoices/$invoiceId': typeof AppInvoicesInvoiceIdRoute
+  '/app/invoices/create': typeof AppInvoicesCreateRoute
   '/app/settings/admin': typeof AppSettingsAdminRoute
   '/app/settings/billing': typeof AppSettingsBillingRoute
   '/app/crm/': typeof AppCrmIndexRoute
   '/app/inventory/': typeof AppInventoryIndexRoute
+  '/app/invoices/': typeof AppInvoicesIndexRoute
   '/app/settings/': typeof AppSettingsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -548,10 +576,13 @@ export interface FileRoutesByTo {
   '/app/inventory/categories': typeof AppInventoryCategoriesRoute
   '/app/inventory/products': typeof AppInventoryProductsRoute
   '/app/inventory/warehouses': typeof AppInventoryWarehousesRoute
+  '/app/invoices/$invoiceId': typeof AppInvoicesInvoiceIdRoute
+  '/app/invoices/create': typeof AppInvoicesCreateRoute
   '/app/settings/admin': typeof AppSettingsAdminRoute
   '/app/settings/billing': typeof AppSettingsBillingRoute
   '/app/crm': typeof AppCrmIndexRoute
   '/app/inventory': typeof AppInventoryIndexRoute
+  '/app/invoices': typeof AppInvoicesIndexRoute
   '/app/settings': typeof AppSettingsIndexRoute
 }
 export interface FileRoutesById {
@@ -599,6 +630,7 @@ export interface FileRoutesById {
   '/app/documents': typeof AppDocumentsRoute
   '/app/hr-payroll': typeof AppHrPayrollRoute
   '/app/inventory': typeof AppInventoryRouteWithChildren
+  '/app/invoices': typeof AppInvoicesRouteWithChildren
   '/app/procurement': typeof AppProcurementRoute
   '/app/reports': typeof AppReportsRoute
   '/app/sales-crm': typeof AppSalesCrmRoute
@@ -619,10 +651,13 @@ export interface FileRoutesById {
   '/app/inventory/categories': typeof AppInventoryCategoriesRoute
   '/app/inventory/products': typeof AppInventoryProductsRoute
   '/app/inventory/warehouses': typeof AppInventoryWarehousesRoute
+  '/app/invoices/$invoiceId': typeof AppInvoicesInvoiceIdRoute
+  '/app/invoices/create': typeof AppInvoicesCreateRoute
   '/app/settings/admin': typeof AppSettingsAdminRoute
   '/app/settings/billing': typeof AppSettingsBillingRoute
   '/app/crm/': typeof AppCrmIndexRoute
   '/app/inventory/': typeof AppInventoryIndexRoute
+  '/app/invoices/': typeof AppInvoicesIndexRoute
   '/app/settings/': typeof AppSettingsIndexRoute
 }
 export interface FileRouteTypes {
@@ -671,6 +706,7 @@ export interface FileRouteTypes {
     | '/app/documents'
     | '/app/hr-payroll'
     | '/app/inventory'
+    | '/app/invoices'
     | '/app/procurement'
     | '/app/reports'
     | '/app/sales-crm'
@@ -691,10 +727,13 @@ export interface FileRouteTypes {
     | '/app/inventory/categories'
     | '/app/inventory/products'
     | '/app/inventory/warehouses'
+    | '/app/invoices/$invoiceId'
+    | '/app/invoices/create'
     | '/app/settings/admin'
     | '/app/settings/billing'
     | '/app/crm/'
     | '/app/inventory/'
+    | '/app/invoices/'
     | '/app/settings/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -756,10 +795,13 @@ export interface FileRouteTypes {
     | '/app/inventory/categories'
     | '/app/inventory/products'
     | '/app/inventory/warehouses'
+    | '/app/invoices/$invoiceId'
+    | '/app/invoices/create'
     | '/app/settings/admin'
     | '/app/settings/billing'
     | '/app/crm'
     | '/app/inventory'
+    | '/app/invoices'
     | '/app/settings'
   id:
     | '__root__'
@@ -806,6 +848,7 @@ export interface FileRouteTypes {
     | '/app/documents'
     | '/app/hr-payroll'
     | '/app/inventory'
+    | '/app/invoices'
     | '/app/procurement'
     | '/app/reports'
     | '/app/sales-crm'
@@ -826,10 +869,13 @@ export interface FileRouteTypes {
     | '/app/inventory/categories'
     | '/app/inventory/products'
     | '/app/inventory/warehouses'
+    | '/app/invoices/$invoiceId'
+    | '/app/invoices/create'
     | '/app/settings/admin'
     | '/app/settings/billing'
     | '/app/crm/'
     | '/app/inventory/'
+    | '/app/invoices/'
     | '/app/settings/'
   fileRoutesById: FileRoutesById
 }
@@ -1063,6 +1109,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProcurementRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/invoices': {
+      id: '/app/invoices'
+      path: '/invoices'
+      fullPath: '/app/invoices'
+      preLoaderRoute: typeof AppInvoicesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/inventory': {
       id: '/app/inventory'
       path: '/inventory'
@@ -1238,6 +1291,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsIndexRouteImport
       parentRoute: typeof AppSettingsRoute
     }
+    '/app/invoices/': {
+      id: '/app/invoices/'
+      path: '/'
+      fullPath: '/app/invoices/'
+      preLoaderRoute: typeof AppInvoicesIndexRouteImport
+      parentRoute: typeof AppInvoicesRoute
+    }
     '/app/inventory/': {
       id: '/app/inventory/'
       path: '/'
@@ -1265,6 +1325,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/settings/admin'
       preLoaderRoute: typeof AppSettingsAdminRouteImport
       parentRoute: typeof AppSettingsRoute
+    }
+    '/app/invoices/create': {
+      id: '/app/invoices/create'
+      path: '/create'
+      fullPath: '/app/invoices/create'
+      preLoaderRoute: typeof AppInvoicesCreateRouteImport
+      parentRoute: typeof AppInvoicesRoute
+    }
+    '/app/invoices/$invoiceId': {
+      id: '/app/invoices/$invoiceId'
+      path: '/$invoiceId'
+      fullPath: '/app/invoices/$invoiceId'
+      preLoaderRoute: typeof AppInvoicesInvoiceIdRouteImport
+      parentRoute: typeof AppInvoicesRoute
     }
     '/app/inventory/warehouses': {
       id: '/app/inventory/warehouses'
@@ -1428,6 +1502,22 @@ const AppInventoryRouteWithChildren = AppInventoryRoute._addFileChildren(
   AppInventoryRouteChildren,
 )
 
+interface AppInvoicesRouteChildren {
+  AppInvoicesInvoiceIdRoute: typeof AppInvoicesInvoiceIdRoute
+  AppInvoicesCreateRoute: typeof AppInvoicesCreateRoute
+  AppInvoicesIndexRoute: typeof AppInvoicesIndexRoute
+}
+
+const AppInvoicesRouteChildren: AppInvoicesRouteChildren = {
+  AppInvoicesInvoiceIdRoute: AppInvoicesInvoiceIdRoute,
+  AppInvoicesCreateRoute: AppInvoicesCreateRoute,
+  AppInvoicesIndexRoute: AppInvoicesIndexRoute,
+}
+
+const AppInvoicesRouteWithChildren = AppInvoicesRoute._addFileChildren(
+  AppInvoicesRouteChildren,
+)
+
 interface AppSettingsRouteChildren {
   AppSettingsAdminRoute: typeof AppSettingsAdminRoute
   AppSettingsBillingRoute: typeof AppSettingsBillingRoute
@@ -1456,6 +1546,7 @@ interface AppRouteChildren {
   AppDocumentsRoute: typeof AppDocumentsRoute
   AppHrPayrollRoute: typeof AppHrPayrollRoute
   AppInventoryRoute: typeof AppInventoryRouteWithChildren
+  AppInvoicesRoute: typeof AppInvoicesRouteWithChildren
   AppProcurementRoute: typeof AppProcurementRoute
   AppReportsRoute: typeof AppReportsRoute
   AppSalesCrmRoute: typeof AppSalesCrmRoute
@@ -1476,6 +1567,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDocumentsRoute: AppDocumentsRoute,
   AppHrPayrollRoute: AppHrPayrollRoute,
   AppInventoryRoute: AppInventoryRouteWithChildren,
+  AppInvoicesRoute: AppInvoicesRouteWithChildren,
   AppProcurementRoute: AppProcurementRoute,
   AppReportsRoute: AppReportsRoute,
   AppSalesCrmRoute: AppSalesCrmRoute,

@@ -1,4 +1,12 @@
-import { Building2, FileText, Package, UserPlus, Users, type LucideIcon } from 'lucide-react';
+import {
+  Building2,
+  FileText,
+  Image,
+  Package,
+  UserPlus,
+  Users,
+  type LucideIcon,
+} from 'lucide-react';
 import { workspaceAdminSearch } from '@velon/shared';
 
 export type OnboardingStep = {
@@ -17,6 +25,7 @@ type DashboardSnapshot = {
     email: string | null;
     phone: string | null;
     address: string | null;
+    logoDataUrl?: string | null;
   };
   crmSummary: { customers: number; openQuotations: number };
   inventorySummary: { totalProducts: number };
@@ -34,6 +43,15 @@ export function buildOnboardingSteps(data: DashboardSnapshot): OnboardingStep[] 
   const hasTeam = data.team.activeUsers > 1 || data.seats.pendingInvites > 0;
 
   return [
+    {
+      id: 'logo',
+      label: 'Upload company logo',
+      description: 'Used on invoice PDFs and documents',
+      done: Boolean(data.company.logoDataUrl),
+      to: '/app/settings/admin',
+      search: workspaceAdminSearch('company'),
+      icon: Image,
+    },
     {
       id: 'company',
       label: 'Add company details',
@@ -65,7 +83,7 @@ export function buildOnboardingSteps(data: DashboardSnapshot): OnboardingStep[] 
       label: 'Create first invoice',
       description: 'Bill a customer and track payment',
       done: hasInvoiceActivity && hasCustomer && hasProduct,
-      to: '/app/billing-pos',
+      to: '/app/invoices/create',
       icon: FileText,
     },
     {

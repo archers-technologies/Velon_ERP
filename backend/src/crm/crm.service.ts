@@ -123,6 +123,8 @@ export class CrmService {
       country: dto.country?.trim() || null,
       city: dto.city?.trim() || null,
       address: dto.address?.trim() || null,
+      taxId: dto.taxId?.trim() || null,
+      notes: dto.notes?.trim() || null,
       status: dto.status ?? CrmCustomerStatus.PROSPECT,
       createdById: user.id,
       updatedById: user.id,
@@ -158,6 +160,8 @@ export class CrmService {
       ...(dto.country !== undefined ? { country: dto.country?.trim() || null } : {}),
       ...(dto.city !== undefined ? { city: dto.city?.trim() || null } : {}),
       ...(dto.address !== undefined ? { address: dto.address?.trim() || null } : {}),
+      ...(dto.taxId !== undefined ? { taxId: dto.taxId?.trim() || null } : {}),
+      ...(dto.notes !== undefined ? { notes: dto.notes?.trim() || null } : {}),
       ...(dto.status !== undefined ? { status: dto.status } : {}),
       updatedById: user.id,
     });

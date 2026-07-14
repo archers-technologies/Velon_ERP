@@ -32,8 +32,16 @@ function AppLayout() {
       subtitle: 'Products, stock levels, and warehouses',
     },
     '/app/billing-pos': {
-      title: 'Billing',
-      subtitle: 'Create invoices and record payments',
+      title: 'Quick Sale',
+      subtitle: 'Fast POS billing for walk-in sales',
+    },
+    '/app/invoices': {
+      title: 'Invoices',
+      subtitle: 'Create and manage customer invoices',
+    },
+    '/app/invoices/create': {
+      title: 'Create Invoice',
+      subtitle: 'Professional invoice workflow with inventory products',
     },
     '/app/customers': {
       title: 'Customers',

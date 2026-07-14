@@ -2,9 +2,9 @@
 export type SeatPlan = 'STARTER' | 'GROWTH' | 'ENTERPRISE';
 
 export const SEAT_LIMITS: Record<SeatPlan, number | null> = {
-  STARTER: 5,
-  GROWTH: 25,
-  ENTERPRISE: null,
+  STARTER: 2,
+  GROWTH: 10,
+  ENTERPRISE: 25,
 };
 
 export function seatLimitForPlan(plan: SeatPlan | string): number | null {

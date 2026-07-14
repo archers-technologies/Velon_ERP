@@ -22,8 +22,9 @@ export const CMS_DEFAULTS = {
     ],
   },
   pricing: {
-    headline: 'Affordable ERP that stays simple',
-    subhead: 'Cheaper and easier than traditional ERP — built for small and growing businesses.',
+    headline: 'One subscription. Every device.',
+    subhead:
+      'GST billing, inventory, CRM and reports on web, desktop and mobile — no separate app fees.',
   },
   faq: {
     items: [
