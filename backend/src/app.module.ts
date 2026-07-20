@@ -14,6 +14,7 @@ import { validateEnvironment } from './config/env';
 import { CrmModule } from './crm/crm.module';
 import { EmailModule } from './email/email.module';
 import { HealthModule } from './health/health.module';
+import { HrModule } from './hr/hr.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { MongoModule } from './mongo/mongo.module';
 import { NotificationsModule } from './notifications/notifications.module';
@@ -48,6 +49,7 @@ import { WorkspaceModule } from './workspace/workspace.module';
     TenantResourcesModule,
     TenantAdminModule,
     CrmModule,
+    HrModule,
     InventoryModule,
     SuppliersModule,
     ProcurementModule,

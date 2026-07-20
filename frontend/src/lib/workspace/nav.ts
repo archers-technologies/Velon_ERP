@@ -37,7 +37,7 @@ export function buildWorkspaceNavGroups(badges: WorkspaceNavBadges): NavGroup[] 
         { label: 'Customers', to: '/app/customers', icon: Users },
         { label: 'Vendors', to: '/app/suppliers', icon: Truck },
         { label: 'Accounting', to: '/app/accounting', icon: Wallet },
-        { label: 'HR & Payroll', to: '/app/hr-payroll', icon: UserCircle },
+        { label: 'HR & Payroll', to: '/app/hr', icon: UserCircle },
         {
           label: 'Reports',
           to: '/app/reports',

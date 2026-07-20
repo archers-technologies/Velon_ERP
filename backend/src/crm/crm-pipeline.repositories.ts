@@ -85,6 +85,22 @@ export class CrmLeadRepository extends TenantScopedRepository {
   count(where: Prisma.CrmLeadWhereInput) {
     return this.prisma.client.crmLead.count({ where: this.where(where) });
   }
+
+  groupBySource() {
+    return this.prisma.client.crmLead.groupBy({
+      by: ['source'],
+      where: this.where({ archivedAt: null }),
+      _count: true,
+    });
+  }
+
+  groupByStatus() {
+    return this.prisma.client.crmLead.groupBy({
+      by: ['status'],
+      where: this.where({ archivedAt: null }),
+      _count: true,
+    });
+  }
 }
 
 @Injectable()
@@ -297,6 +313,24 @@ export class CrmOpportunityRepository extends TenantScopedRepository {
     return this.prisma.client.crmOpportunity.findMany({
       where: this.where({ status: CrmOpportunityStatus.OPEN, archivedAt: null }),
       select: { value: true, probability: true },
+    });
+  }
+
+  groupByStage() {
+    return this.prisma.client.crmOpportunity.groupBy({
+      by: ['stageId'],
+      where: this.where({ status: CrmOpportunityStatus.OPEN, archivedAt: null }),
+      _count: true,
+      _sum: { value: true },
+    });
+  }
+
+  salespersonPerformance() {
+    return this.prisma.client.crmOpportunity.groupBy({
+      by: ['ownerId'],
+      where: this.where({ archivedAt: null }),
+      _count: true,
+      _sum: { value: true },
     });
   }
 }

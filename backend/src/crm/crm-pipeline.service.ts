@@ -9,6 +9,7 @@ import { CrmCustomerStatus, CrmLeadStatus, CrmOpportunityStatus } from '@velon/d
 import { canReadCrm, canWriteCrmRecords, normalizeVelonRole } from '@velon/shared';
 import { AuditService } from '../audit/audit.service';
 import type { AuthenticatedUser } from '../auth/auth.types';
+import { PrismaService } from '../prisma/prisma.service';
 import { DEFAULT_PIPELINE_NAME, DEFAULT_PIPELINE_STAGES } from './crm-pipeline.defaults';
 import {
   CrmLeadRepository,
@@ -45,6 +46,7 @@ export class CrmPipelineService {
     private readonly opportunities: CrmOpportunityRepository,
     private readonly customers: CrmCustomerRepository,
     private readonly audit: AuditService,
+    private readonly prisma: PrismaService,
   ) {}
 
   private assertRead(user: AuthenticatedUser) {
@@ -107,6 +109,10 @@ export class CrmPipelineService {
       lostOpportunities,
       pipelineValue,
       openRows,
+      leadsBySourceRows,
+      leadsByStatusRows,
+      opportunitiesByStageRows,
+      salespersonRows,
     ] = await Promise.all([
       this.leads.count({ archivedAt: null }),
       this.leads.count({ status: CrmLeadStatus.QUALIFIED, archivedAt: null }),
@@ -115,12 +121,34 @@ export class CrmPipelineService {
       this.opportunities.count({ status: CrmOpportunityStatus.LOST, archivedAt: null }),
       this.opportunities.aggregateOpenValue(),
       this.opportunities.expectedRevenue(),
+      this.leads.groupBySource(),
+      this.leads.groupByStatus(),
+      this.opportunities.groupByStage(),
+      this.opportunities.salespersonPerformance(),
     ]);
 
     const expectedRevenue = openRows.reduce(
       (sum, row) => sum + Number(row.value) * (row.probability / 100),
       0,
     );
+
+    const stageIds = opportunitiesByStageRows.map((r) => r.stageId).filter(Boolean) as string[];
+    const stages = stageIds.length
+      ? await this.prisma.client.crmPipelineStage.findMany({
+          where: { id: { in: stageIds }, tenantId: user.tenantId! },
+          select: { id: true, name: true },
+        })
+      : [];
+    const stageNameById = Object.fromEntries(stages.map((s) => [s.id, s.name]));
+
+    const ownerIds = salespersonRows.map((r) => r.ownerId).filter(Boolean) as string[];
+    const owners = ownerIds.length
+      ? await this.prisma.client.user.findMany({
+          where: { id: { in: ownerIds } },
+          select: { id: true, name: true, email: true },
+        })
+      : [];
+    const ownerNameById = Object.fromEntries(owners.map((u) => [u.id, u.name ?? u.email ?? u.id]));
 
     return {
       totalLeads,
@@ -130,6 +158,26 @@ export class CrmPipelineService {
       lostOpportunities,
       pipelineValue: Number(pipelineValue._sum.value ?? 0),
       expectedRevenue: Math.round(expectedRevenue * 100) / 100,
+      winRate:
+        wonOpportunities + lostOpportunities > 0
+          ? Math.round((wonOpportunities / (wonOpportunities + lostOpportunities)) * 10000) / 100
+          : 0,
+      leadConversionRate:
+        totalLeads > 0 ? Math.round((qualifiedLeads / totalLeads) * 10000) / 100 : 0,
+      leadsBySource: leadsBySourceRows.map((r) => ({ source: r.source, count: r._count })),
+      leadsByStatus: leadsByStatusRows.map((r) => ({ status: r.status, count: r._count })),
+      opportunitiesByStage: opportunitiesByStageRows.map((r) => ({
+        stageId: r.stageId,
+        stageName: stageNameById[r.stageId] ?? 'Unknown',
+        count: r._count,
+        value: Number(r._sum.value ?? 0),
+      })),
+      salespersonPerformance: salespersonRows.map((r) => ({
+        ownerId: r.ownerId,
+        ownerName: r.ownerId ? (ownerNameById[r.ownerId] ?? 'Unassigned') : 'Unassigned',
+        opportunities: r._count,
+        totalValue: Number(r._sum.value ?? 0),
+      })),
     };
   }
 

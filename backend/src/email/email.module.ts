@@ -9,8 +9,8 @@ import { EmailProviderService } from './email-provider.service';
 import { EmailQueueService } from './email-queue.service';
 import { EmailSchedulerService } from './email-scheduler.service';
 import { EmailTemplateService } from './email-template.service';
-import { NotificationService } from './notification.service';
 import { EmailController } from './email.controller';
+import { NotificationService } from './notification.service';
 
 @Module({
   imports: [AuditModule],

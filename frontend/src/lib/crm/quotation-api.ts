@@ -1,5 +1,7 @@
 import { apiFetch } from '@/lib/api/client';
 import { API_V1_BASE } from '@/lib/api/config';
+import { getAccessToken } from '@/lib/auth/session';
+import type { DocumentBody } from '@/lib/crm/document-types';
 
 export type CrmQuotationStatus =
   | 'DRAFT'
@@ -27,6 +29,13 @@ export type CrmQuotation = {
   terms: string | null;
   scopeOfWork: string | null;
   deliverables: string | null;
+  coverTitle?: string | null;
+  executiveSummary?: string | null;
+  timeline?: string | null;
+  assumptions?: string | null;
+  exclusions?: string | null;
+  documentJson?: DocumentBody | Record<string, unknown> | null;
+  currency?: string;
   revisionNumber: number;
   revisionReason: string | null;
   createdAt: string;
@@ -109,6 +118,41 @@ export function loadQuotations(filters?: {
 
 export function getQuotation(id: string) {
   return apiFetch<CrmQuotation>(`/crm/quotations/${id}`);
+}
+
+export function updateQuotation(
+  id: string,
+  data: {
+    notes?: string;
+    terms?: string;
+    scopeOfWork?: string;
+    deliverables?: string;
+    coverTitle?: string;
+    executiveSummary?: string;
+    timeline?: string;
+    assumptions?: string;
+    exclusions?: string;
+    documentJson?: DocumentBody;
+  },
+) {
+  return apiFetch<CrmQuotation>(`/crm/quotations/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
+export function quotationPdfUrl(id: string) {
+  return `${API_V1_BASE}/crm/quotations/${id}/pdf`;
+}
+
+export async function downloadQuotationPdf(id: string) {
+  const token = getAccessToken();
+  const res = await fetch(quotationPdfUrl(id), {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error('Failed to download quotation PDF');
+  return res.blob();
 }
 
 export function createQuotation(data: {

@@ -20,6 +20,11 @@ import {
   CrmQuotationRepository,
 } from './crm-quotation.repositories';
 import { CrmCustomerRepository } from './crm.repositories';
+import {
+  defaultProposalDocument,
+  defaultQuotationDocument,
+  type DocumentBody,
+} from './document-builder.types';
 import type {
   BulkAddCrmQuotationItemsDto,
   CreateCrmProposalTemplateDto,
@@ -34,6 +39,7 @@ import type {
   UpdateCrmQuotationItemDto,
 } from './dto/crm-quotation.dto';
 import { ProposalPdfService } from './proposal-pdf.service';
+import { QuotationDocumentPdfService } from './quotation-document-pdf.service';
 
 type AuditMeta = { ip?: string; ua?: string };
 
@@ -58,6 +64,7 @@ export class CrmQuotationService {
     private readonly customers: CrmCustomerRepository,
     private readonly opportunities: CrmOpportunityRepository,
     private readonly pdf: ProposalPdfService,
+    private readonly quotationPdf: QuotationDocumentPdfService,
     private readonly audit: AuditService,
     private readonly prisma: PrismaService,
     private readonly notifications: NotificationService,
@@ -142,7 +149,13 @@ export class CrmQuotationService {
 
   private notifyQuotation(
     user: AuthenticatedUser,
-    row: { id: string; quotationNumber: string; status: string; total?: unknown; currency?: string },
+    row: {
+      id: string;
+      quotationNumber: string;
+      status: string;
+      total?: unknown;
+      currency?: string;
+    },
     kind: 'created' | 'sent' | 'approved' | 'rejected',
   ) {
     if (!user.tenantId) return;
@@ -211,16 +224,26 @@ export class CrmQuotationService {
     }
     const year = new Date().getFullYear();
     const quotationNumber = await this.quotations.nextQuotationNumber(year);
+    const documentJson = defaultQuotationDocument(dto.coverTitle?.trim() || undefined);
     const row = await this.quotations.create({
       quotationNumber,
       customerId: dto.customerId,
       opportunityId: dto.opportunityId || null,
       issueDate: dto.issueDate ? new Date(dto.issueDate) : new Date(),
       expiryDate: dto.expiryDate ? new Date(dto.expiryDate) : null,
+      currency: dto.currency?.trim() || 'USD',
+      language: dto.language?.trim() || 'en',
       notes: dto.notes?.trim() || null,
       terms: dto.terms?.trim() || null,
       scopeOfWork: dto.scopeOfWork?.trim() || null,
       deliverables: dto.deliverables?.trim() || null,
+      coverTitle: dto.coverTitle?.trim() || null,
+      executiveSummary: dto.executiveSummary?.trim() || null,
+      timeline: dto.timeline?.trim() || null,
+      assumptions: dto.assumptions?.trim() || null,
+      exclusions: dto.exclusions?.trim() || null,
+      documentJson,
+      qrCode: crypto.randomBytes(16).toString('hex'),
       discount: dto.discount ?? 0,
       status: CrmQuotationStatus.DRAFT,
       createdById: user.id,
@@ -262,10 +285,26 @@ export class CrmQuotationService {
       ...(dto.expiryDate !== undefined
         ? { expiryDate: dto.expiryDate ? new Date(dto.expiryDate) : null }
         : {}),
+      ...(dto.currency !== undefined ? { currency: dto.currency.trim() || 'USD' } : {}),
+      ...(dto.language !== undefined ? { language: dto.language.trim() || 'en' } : {}),
       ...(dto.notes !== undefined ? { notes: dto.notes?.trim() || null } : {}),
       ...(dto.terms !== undefined ? { terms: dto.terms?.trim() || null } : {}),
       ...(dto.scopeOfWork !== undefined ? { scopeOfWork: dto.scopeOfWork?.trim() || null } : {}),
       ...(dto.deliverables !== undefined ? { deliverables: dto.deliverables?.trim() || null } : {}),
+      ...(dto.coverTitle !== undefined ? { coverTitle: dto.coverTitle?.trim() || null } : {}),
+      ...(dto.executiveSummary !== undefined
+        ? { executiveSummary: dto.executiveSummary?.trim() || null }
+        : {}),
+      ...(dto.timeline !== undefined ? { timeline: dto.timeline?.trim() || null } : {}),
+      ...(dto.assumptions !== undefined ? { assumptions: dto.assumptions?.trim() || null } : {}),
+      ...(dto.exclusions !== undefined ? { exclusions: dto.exclusions?.trim() || null } : {}),
+      ...(dto.documentJson !== undefined ? { documentJson: dto.documentJson as object } : {}),
+      ...(dto.signatureName !== undefined
+        ? { signatureName: dto.signatureName?.trim() || null }
+        : {}),
+      ...(dto.signatureDataUrl !== undefined
+        ? { signatureDataUrl: dto.signatureDataUrl || null }
+        : {}),
     });
     if (dto.discount !== undefined) {
       await this.recalculateTotals(id, dto.discount);
@@ -766,12 +805,22 @@ export class CrmQuotationService {
       include: { companyProfile: true, workspace: true },
     });
     const profile = tenant?.companyProfile;
+    const document =
+      (q.documentJson as DocumentBody | null) ??
+      defaultProposalDocument(q.coverTitle ?? q.quotationNumber);
+    const synced = this.syncLegacyFieldsIntoDocument(document, q);
     const pdfBuffer = await this.pdf.generate({
       quotationNumber: q.quotationNumber,
       revisionNumber: q.revisionNumber,
       issueDate: q.issueDate.toISOString().slice(0, 10),
       expiryDate: q.expiryDate?.toISOString().slice(0, 10),
       status: q.status,
+      currency: q.currency ?? 'USD',
+      title: q.coverTitle ?? 'Proposal',
+      document: synced,
+      qrPayload: q.qrCode
+        ? `velon-quote:${q.quotationNumber}:${q.qrCode}`
+        : `velon-quote:${q.quotationNumber}`,
       subtotal: Number(q.subtotal),
       discount: Number(q.discount),
       tax: Number(q.tax),
@@ -811,6 +860,8 @@ export class CrmQuotationService {
     const doc = await this.proposals.create({
       quotationId,
       version,
+      title: q.coverTitle ?? `Proposal ${q.quotationNumber}`,
+      documentJson: synced,
       pdfContent: new Uint8Array(pdfBuffer),
       generatedById: user.id,
     });
@@ -825,6 +876,105 @@ export class CrmQuotationService {
       userAgent: meta.ua,
     });
     return doc;
+  }
+
+  async getQuotationPdf(user: AuthenticatedUser, quotationId: string) {
+    this.assertRead(user);
+    const q = await this.quotations.findById(quotationId);
+    if (!q) throw new NotFoundException('Quotation not found.');
+    const tenant = await this.prisma.client.tenant.findUnique({
+      where: { id: q.tenantId },
+      include: { companyProfile: true, workspace: true },
+    });
+    const profile = tenant?.companyProfile;
+    const document =
+      (q.documentJson as DocumentBody | null) ??
+      defaultQuotationDocument(q.coverTitle ?? q.quotationNumber);
+    const synced = this.syncLegacyFieldsIntoDocument(document, q);
+    const buffer = await this.quotationPdf.generate({
+      quotationNumber: q.quotationNumber,
+      revisionNumber: q.revisionNumber,
+      issueDate: q.issueDate.toISOString().slice(0, 10),
+      expiryDate: q.expiryDate?.toISOString().slice(0, 10),
+      status: q.status,
+      currency: q.currency ?? 'USD',
+      document: synced,
+      qrPayload: q.qrCode
+        ? `velon-quote:${q.quotationNumber}:${q.qrCode}`
+        : `velon-quote:${q.quotationNumber}`,
+      subtotal: Number(q.subtotal),
+      discount: Number(q.discount),
+      tax: Number(q.tax),
+      total: Number(q.total),
+      signature: {
+        customerName: q.signatureName,
+        customerSignatureDataUrl: q.signatureDataUrl,
+        authorizedBy: profile?.legalName ?? tenant?.workspace?.name ?? tenant?.name,
+      },
+      company: {
+        name: tenant?.workspace?.name ?? tenant?.name ?? 'Company',
+        legalName: profile?.legalName,
+        email: profile?.email,
+        phone: profile?.phone,
+        address: profile?.address,
+        website: profile?.website,
+        taxId: profile?.taxId,
+        logoDataUrl: profile?.logoDataUrl,
+      },
+      customer: {
+        companyName: q.customer.companyName,
+        email: q.customer.email,
+        phone: q.customer.phone,
+        address: q.customer.address,
+      },
+      items: q.items.map((i) => ({
+        itemName: i.itemName,
+        description: i.description,
+        quantity: Number(i.quantity),
+        unitPrice: Number(i.unitPrice),
+        discount: Number(i.discount),
+        taxRate: Number(i.taxRate),
+        lineTotal: Number(i.lineTotal),
+      })),
+    });
+    await this.quotations.update(quotationId, { downloadCount: { increment: 1 } });
+    return { buffer, quotationNumber: q.quotationNumber };
+  }
+
+  private syncLegacyFieldsIntoDocument(
+    document: DocumentBody,
+    q: {
+      coverTitle?: string | null;
+      executiveSummary?: string | null;
+      scopeOfWork?: string | null;
+      deliverables?: string | null;
+      timeline?: string | null;
+      assumptions?: string | null;
+      exclusions?: string | null;
+      terms?: string | null;
+      notes?: string | null;
+    },
+  ): DocumentBody {
+    const map: Partial<Record<string, string | null | undefined>> = {
+      COVER: q.coverTitle,
+      EXECUTIVE_SUMMARY: q.executiveSummary ?? q.notes,
+      SCOPE_OF_WORK: q.scopeOfWork,
+      DELIVERABLES: q.deliverables,
+      TIMELINE: q.timeline,
+      ASSUMPTIONS: q.assumptions,
+      EXCLUSIONS: q.exclusions,
+      TERMS: q.terms,
+    };
+    return {
+      ...document,
+      sections: document.sections.map((s) => {
+        const legacy = map[s.type];
+        if (legacy && !s.body?.trim()) {
+          return { ...s, body: legacy };
+        }
+        return s;
+      }),
+    };
   }
 
   async listProposals(user: AuthenticatedUser, quotationId: string) {

@@ -65,6 +65,7 @@ export const ROLE_PERMISSIONS: Record<VelonRole, string[]> = {
     'inventory:*',
     'procurement:*',
     'sales:*',
+    'hr:*',
   ],
   [VelonRole.TENANT_ADMIN]: [
     'workspace:*',
@@ -81,6 +82,7 @@ export const ROLE_PERMISSIONS: Record<VelonRole, string[]> = {
     'inventory:*',
     'procurement:*',
     'sales:*',
+    'hr:*',
   ],
   [VelonRole.DEPARTMENT_ADMIN]: [
     'workspace:read',
@@ -93,6 +95,8 @@ export const ROLE_PERMISSIONS: Record<VelonRole, string[]> = {
     'procurement:read',
     'procurement:write',
     'sales:*',
+    'hr:read',
+    'hr:write',
   ],
   [VelonRole.USER]: [
     'workspace:read',
@@ -101,6 +105,7 @@ export const ROLE_PERMISSIONS: Record<VelonRole, string[]> = {
     'inventory:read',
     'procurement:read',
     'sales:read',
+    'hr:read',
   ],
   [VelonRole.TENANT_USER]: [
     'workspace:read',
@@ -109,6 +114,7 @@ export const ROLE_PERMISSIONS: Record<VelonRole, string[]> = {
     'inventory:read',
     'procurement:read',
     'sales:read',
+    'hr:read',
   ],
 };
 
@@ -266,6 +272,8 @@ export {
   canWriteCrmActivities,
   canManageCrmActivities,
 } from './crm-permissions';
+
+export { canReadHr, canWriteHr } from './hr-permissions';
 
 export { canReadInventory, canManageInventory } from './inventory-permissions';
 

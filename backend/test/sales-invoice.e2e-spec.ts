@@ -58,7 +58,12 @@ describeIfDb('Sales invoice workflow', () => {
     const cust = await request(app.getHttpServer())
       .post('/api/v1/crm/customers')
       .set('Authorization', `Bearer ${tokenA}`)
-      .send({ companyName: 'Buyer Inc', email: 'buyer@test.com', status: 'ACTIVE', taxId: 'GST123' });
+      .send({
+        companyName: 'Buyer Inc',
+        email: 'buyer@test.com',
+        status: 'ACTIVE',
+        taxId: 'GST123',
+      });
     customerAId = (cust.body.data ?? cust.body).id;
 
     const warehouse = await request(app.getHttpServer())

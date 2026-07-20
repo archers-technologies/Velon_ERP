@@ -158,6 +158,18 @@ export class CrmQuotationController {
     return this.quotations.createRevision(user, id, dto, reqMeta(req));
   }
 
+  @Get('quotations/:id/pdf')
+  async downloadQuotationPdf(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Res() res: Response,
+  ) {
+    const { buffer, quotationNumber } = await this.quotations.getQuotationPdf(user, id);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="quotation-${quotationNumber}.pdf"`);
+    res.send(buffer);
+  }
+
   @Get('quotations/:id/approval-history')
   approvalHistory(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
     return this.quotations.getApprovalHistory(user, id);

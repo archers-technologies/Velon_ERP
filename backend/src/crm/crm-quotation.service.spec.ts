@@ -26,6 +26,7 @@ describe('CrmQuotationService', () => {
   const customers = createRepoMock(['findById']);
   const opportunities = createRepoMock(['findById']);
   const pdf = { generate: jest.fn() };
+  const quotationPdf = { generate: jest.fn() };
   const audit = createMockAudit();
   const prisma = createMockPrisma(createMockPrismaClient());
 
@@ -42,9 +43,15 @@ describe('CrmQuotationService', () => {
       customers as never,
       opportunities as never,
       pdf as never,
+      quotationPdf as never,
       audit as never,
       prisma,
-      { notifyQuotationCreated: jest.fn().mockResolvedValue(undefined), notifyQuotationSent: jest.fn().mockResolvedValue(undefined), notifyQuotationApproved: jest.fn().mockResolvedValue(undefined), notifyQuotationRejected: jest.fn().mockResolvedValue(undefined) } as never,
+      {
+        notifyQuotationCreated: jest.fn().mockResolvedValue(undefined),
+        notifyQuotationSent: jest.fn().mockResolvedValue(undefined),
+        notifyQuotationApproved: jest.fn().mockResolvedValue(undefined),
+        notifyQuotationRejected: jest.fn().mockResolvedValue(undefined),
+      } as never,
     );
   });
 

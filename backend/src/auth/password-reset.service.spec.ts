@@ -38,7 +38,12 @@ describe('PasswordResetService', () => {
     notifyPasswordChanged: jest.fn().mockResolvedValue(undefined),
     getMailConfigurationStatus: jest.fn().mockReturnValue({ configured: true }),
   };
-  const service = new PasswordResetService(prisma, redis as never, audit as never, notifications as never);
+  const service = new PasswordResetService(
+    prisma,
+    redis as never,
+    audit as never,
+    notifications as never,
+  );
 
   beforeEach(() => {
     jest.clearAllMocks();

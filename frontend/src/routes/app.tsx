@@ -79,9 +79,9 @@ function AppLayout() {
       title: 'Purchases',
       subtitle: 'Buy stock and manage vendor orders',
     },
-    '/app/hr-payroll': {
+    '/app/hr': {
       title: 'HR & Payroll',
-      subtitle: 'Team, departments, and branches',
+      subtitle: 'Employees, leave, attendance, and payroll',
     },
     '/app/settings/billing': {
       title: 'Subscription',

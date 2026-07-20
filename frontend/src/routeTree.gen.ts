@@ -40,7 +40,7 @@ import { Route as AppReportsRouteImport } from './routes/app.reports'
 import { Route as AppProcurementRouteImport } from './routes/app.procurement'
 import { Route as AppInvoicesRouteImport } from './routes/app.invoices'
 import { Route as AppInventoryRouteImport } from './routes/app.inventory'
-import { Route as AppHrPayrollRouteImport } from './routes/app.hr-payroll'
+import { Route as AppHrRouteImport } from './routes/app.hr'
 import { Route as AppDocumentsRouteImport } from './routes/app.documents'
 import { Route as AppCustomersRouteImport } from './routes/app.customers'
 import { Route as AppCrmRouteImport } from './routes/app.crm'
@@ -66,6 +66,7 @@ import { Route as AdminAlertsLogsRouteImport } from './routes/admin.alerts-logs'
 import { Route as AppSettingsIndexRouteImport } from './routes/app.settings.index'
 import { Route as AppInvoicesIndexRouteImport } from './routes/app.invoices.index'
 import { Route as AppInventoryIndexRouteImport } from './routes/app.inventory.index'
+import { Route as AppHrIndexRouteImport } from './routes/app.hr.index'
 import { Route as AppCrmIndexRouteImport } from './routes/app.crm.index'
 import { Route as AppSettingsBillingRouteImport } from './routes/app.settings.billing'
 import { Route as AppSettingsAdminRouteImport } from './routes/app.settings.admin'
@@ -74,13 +75,19 @@ import { Route as AppInvoicesInvoiceIdRouteImport } from './routes/app.invoices.
 import { Route as AppInventoryWarehousesRouteImport } from './routes/app.inventory.warehouses'
 import { Route as AppInventoryProductsRouteImport } from './routes/app.inventory.products'
 import { Route as AppInventoryCategoriesRouteImport } from './routes/app.inventory.categories'
+import { Route as AppHrPayrollRouteImport } from './routes/app.hr.payroll'
+import { Route as AppHrLeaveRouteImport } from './routes/app.hr.leave'
+import { Route as AppHrEmployeesRouteImport } from './routes/app.hr.employees'
+import { Route as AppHrAttendanceRouteImport } from './routes/app.hr.attendance'
 import { Route as AppCrmTemplatesRouteImport } from './routes/app.crm.templates'
 import { Route as AppCrmQuotationsRouteImport } from './routes/app.crm.quotations'
 import { Route as AppCrmProposalsRouteImport } from './routes/app.crm.proposals'
 import { Route as AppCrmPipelinesRouteImport } from './routes/app.crm.pipelines'
 import { Route as AppCrmOpportunitiesRouteImport } from './routes/app.crm.opportunities'
 import { Route as AppCrmLeadsRouteImport } from './routes/app.crm.leads'
+import { Route as AppCrmAssetsRouteImport } from './routes/app.crm.assets'
 import { Route as AdminSettingsEmailRouteImport } from './routes/admin.settings.email'
+import { Route as AppCrmQuotationsQuotationIdRouteImport } from './routes/app.crm.quotations.$quotationId'
 
 const UnavailableRoute = UnavailableRouteImport.update({
   id: '/unavailable',
@@ -237,9 +244,9 @@ const AppInventoryRoute = AppInventoryRouteImport.update({
   path: '/inventory',
   getParentRoute: () => AppRoute,
 } as any)
-const AppHrPayrollRoute = AppHrPayrollRouteImport.update({
-  id: '/hr-payroll',
-  path: '/hr-payroll',
+const AppHrRoute = AppHrRouteImport.update({
+  id: '/hr',
+  path: '/hr',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDocumentsRoute = AppDocumentsRouteImport.update({
@@ -367,6 +374,11 @@ const AppInventoryIndexRoute = AppInventoryIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppInventoryRoute,
 } as any)
+const AppHrIndexRoute = AppHrIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppHrRoute,
+} as any)
 const AppCrmIndexRoute = AppCrmIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -407,6 +419,26 @@ const AppInventoryCategoriesRoute = AppInventoryCategoriesRouteImport.update({
   path: '/categories',
   getParentRoute: () => AppInventoryRoute,
 } as any)
+const AppHrPayrollRoute = AppHrPayrollRouteImport.update({
+  id: '/payroll',
+  path: '/payroll',
+  getParentRoute: () => AppHrRoute,
+} as any)
+const AppHrLeaveRoute = AppHrLeaveRouteImport.update({
+  id: '/leave',
+  path: '/leave',
+  getParentRoute: () => AppHrRoute,
+} as any)
+const AppHrEmployeesRoute = AppHrEmployeesRouteImport.update({
+  id: '/employees',
+  path: '/employees',
+  getParentRoute: () => AppHrRoute,
+} as any)
+const AppHrAttendanceRoute = AppHrAttendanceRouteImport.update({
+  id: '/attendance',
+  path: '/attendance',
+  getParentRoute: () => AppHrRoute,
+} as any)
 const AppCrmTemplatesRoute = AppCrmTemplatesRouteImport.update({
   id: '/templates',
   path: '/templates',
@@ -437,11 +469,22 @@ const AppCrmLeadsRoute = AppCrmLeadsRouteImport.update({
   path: '/leads',
   getParentRoute: () => AppCrmRoute,
 } as any)
+const AppCrmAssetsRoute = AppCrmAssetsRouteImport.update({
+  id: '/assets',
+  path: '/assets',
+  getParentRoute: () => AppCrmRoute,
+} as any)
 const AdminSettingsEmailRoute = AdminSettingsEmailRouteImport.update({
   id: '/email',
   path: '/email',
   getParentRoute: () => AdminSettingsRoute,
 } as any)
+const AppCrmQuotationsQuotationIdRoute =
+  AppCrmQuotationsQuotationIdRouteImport.update({
+    id: '/$quotationId',
+    path: '/$quotationId',
+    getParentRoute: () => AppCrmQuotationsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -485,7 +528,7 @@ export interface FileRoutesByFullPath {
   '/app/crm': typeof AppCrmRouteWithChildren
   '/app/customers': typeof AppCustomersRoute
   '/app/documents': typeof AppDocumentsRoute
-  '/app/hr-payroll': typeof AppHrPayrollRoute
+  '/app/hr': typeof AppHrRouteWithChildren
   '/app/inventory': typeof AppInventoryRouteWithChildren
   '/app/invoices': typeof AppInvoicesRouteWithChildren
   '/app/procurement': typeof AppProcurementRoute
@@ -499,12 +542,17 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/admin/settings/email': typeof AdminSettingsEmailRoute
+  '/app/crm/assets': typeof AppCrmAssetsRoute
   '/app/crm/leads': typeof AppCrmLeadsRoute
   '/app/crm/opportunities': typeof AppCrmOpportunitiesRoute
   '/app/crm/pipelines': typeof AppCrmPipelinesRoute
   '/app/crm/proposals': typeof AppCrmProposalsRoute
-  '/app/crm/quotations': typeof AppCrmQuotationsRoute
+  '/app/crm/quotations': typeof AppCrmQuotationsRouteWithChildren
   '/app/crm/templates': typeof AppCrmTemplatesRoute
+  '/app/hr/attendance': typeof AppHrAttendanceRoute
+  '/app/hr/employees': typeof AppHrEmployeesRoute
+  '/app/hr/leave': typeof AppHrLeaveRoute
+  '/app/hr/payroll': typeof AppHrPayrollRoute
   '/app/inventory/categories': typeof AppInventoryCategoriesRoute
   '/app/inventory/products': typeof AppInventoryProductsRoute
   '/app/inventory/warehouses': typeof AppInventoryWarehousesRoute
@@ -513,9 +561,11 @@ export interface FileRoutesByFullPath {
   '/app/settings/admin': typeof AppSettingsAdminRoute
   '/app/settings/billing': typeof AppSettingsBillingRoute
   '/app/crm/': typeof AppCrmIndexRoute
+  '/app/hr/': typeof AppHrIndexRoute
   '/app/inventory/': typeof AppInventoryIndexRoute
   '/app/invoices/': typeof AppInvoicesIndexRoute
   '/app/settings/': typeof AppSettingsIndexRoute
+  '/app/crm/quotations/$quotationId': typeof AppCrmQuotationsQuotationIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -556,7 +606,6 @@ export interface FileRoutesByTo {
   '/app/branches': typeof AppBranchesRoute
   '/app/customers': typeof AppCustomersRoute
   '/app/documents': typeof AppDocumentsRoute
-  '/app/hr-payroll': typeof AppHrPayrollRoute
   '/app/procurement': typeof AppProcurementRoute
   '/app/reports': typeof AppReportsRoute
   '/app/sales-crm': typeof AppSalesCrmRoute
@@ -567,12 +616,17 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/app': typeof AppIndexRoute
   '/admin/settings/email': typeof AdminSettingsEmailRoute
+  '/app/crm/assets': typeof AppCrmAssetsRoute
   '/app/crm/leads': typeof AppCrmLeadsRoute
   '/app/crm/opportunities': typeof AppCrmOpportunitiesRoute
   '/app/crm/pipelines': typeof AppCrmPipelinesRoute
   '/app/crm/proposals': typeof AppCrmProposalsRoute
-  '/app/crm/quotations': typeof AppCrmQuotationsRoute
+  '/app/crm/quotations': typeof AppCrmQuotationsRouteWithChildren
   '/app/crm/templates': typeof AppCrmTemplatesRoute
+  '/app/hr/attendance': typeof AppHrAttendanceRoute
+  '/app/hr/employees': typeof AppHrEmployeesRoute
+  '/app/hr/leave': typeof AppHrLeaveRoute
+  '/app/hr/payroll': typeof AppHrPayrollRoute
   '/app/inventory/categories': typeof AppInventoryCategoriesRoute
   '/app/inventory/products': typeof AppInventoryProductsRoute
   '/app/inventory/warehouses': typeof AppInventoryWarehousesRoute
@@ -581,9 +635,11 @@ export interface FileRoutesByTo {
   '/app/settings/admin': typeof AppSettingsAdminRoute
   '/app/settings/billing': typeof AppSettingsBillingRoute
   '/app/crm': typeof AppCrmIndexRoute
+  '/app/hr': typeof AppHrIndexRoute
   '/app/inventory': typeof AppInventoryIndexRoute
   '/app/invoices': typeof AppInvoicesIndexRoute
   '/app/settings': typeof AppSettingsIndexRoute
+  '/app/crm/quotations/$quotationId': typeof AppCrmQuotationsQuotationIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -628,7 +684,7 @@ export interface FileRoutesById {
   '/app/crm': typeof AppCrmRouteWithChildren
   '/app/customers': typeof AppCustomersRoute
   '/app/documents': typeof AppDocumentsRoute
-  '/app/hr-payroll': typeof AppHrPayrollRoute
+  '/app/hr': typeof AppHrRouteWithChildren
   '/app/inventory': typeof AppInventoryRouteWithChildren
   '/app/invoices': typeof AppInvoicesRouteWithChildren
   '/app/procurement': typeof AppProcurementRoute
@@ -642,12 +698,17 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/admin/settings/email': typeof AdminSettingsEmailRoute
+  '/app/crm/assets': typeof AppCrmAssetsRoute
   '/app/crm/leads': typeof AppCrmLeadsRoute
   '/app/crm/opportunities': typeof AppCrmOpportunitiesRoute
   '/app/crm/pipelines': typeof AppCrmPipelinesRoute
   '/app/crm/proposals': typeof AppCrmProposalsRoute
-  '/app/crm/quotations': typeof AppCrmQuotationsRoute
+  '/app/crm/quotations': typeof AppCrmQuotationsRouteWithChildren
   '/app/crm/templates': typeof AppCrmTemplatesRoute
+  '/app/hr/attendance': typeof AppHrAttendanceRoute
+  '/app/hr/employees': typeof AppHrEmployeesRoute
+  '/app/hr/leave': typeof AppHrLeaveRoute
+  '/app/hr/payroll': typeof AppHrPayrollRoute
   '/app/inventory/categories': typeof AppInventoryCategoriesRoute
   '/app/inventory/products': typeof AppInventoryProductsRoute
   '/app/inventory/warehouses': typeof AppInventoryWarehousesRoute
@@ -656,9 +717,11 @@ export interface FileRoutesById {
   '/app/settings/admin': typeof AppSettingsAdminRoute
   '/app/settings/billing': typeof AppSettingsBillingRoute
   '/app/crm/': typeof AppCrmIndexRoute
+  '/app/hr/': typeof AppHrIndexRoute
   '/app/inventory/': typeof AppInventoryIndexRoute
   '/app/invoices/': typeof AppInvoicesIndexRoute
   '/app/settings/': typeof AppSettingsIndexRoute
+  '/app/crm/quotations/$quotationId': typeof AppCrmQuotationsQuotationIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -704,7 +767,7 @@ export interface FileRouteTypes {
     | '/app/crm'
     | '/app/customers'
     | '/app/documents'
-    | '/app/hr-payroll'
+    | '/app/hr'
     | '/app/inventory'
     | '/app/invoices'
     | '/app/procurement'
@@ -718,12 +781,17 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/app/'
     | '/admin/settings/email'
+    | '/app/crm/assets'
     | '/app/crm/leads'
     | '/app/crm/opportunities'
     | '/app/crm/pipelines'
     | '/app/crm/proposals'
     | '/app/crm/quotations'
     | '/app/crm/templates'
+    | '/app/hr/attendance'
+    | '/app/hr/employees'
+    | '/app/hr/leave'
+    | '/app/hr/payroll'
     | '/app/inventory/categories'
     | '/app/inventory/products'
     | '/app/inventory/warehouses'
@@ -732,9 +800,11 @@ export interface FileRouteTypes {
     | '/app/settings/admin'
     | '/app/settings/billing'
     | '/app/crm/'
+    | '/app/hr/'
     | '/app/inventory/'
     | '/app/invoices/'
     | '/app/settings/'
+    | '/app/crm/quotations/$quotationId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -775,7 +845,6 @@ export interface FileRouteTypes {
     | '/app/branches'
     | '/app/customers'
     | '/app/documents'
-    | '/app/hr-payroll'
     | '/app/procurement'
     | '/app/reports'
     | '/app/sales-crm'
@@ -786,12 +855,17 @@ export interface FileRouteTypes {
     | '/admin'
     | '/app'
     | '/admin/settings/email'
+    | '/app/crm/assets'
     | '/app/crm/leads'
     | '/app/crm/opportunities'
     | '/app/crm/pipelines'
     | '/app/crm/proposals'
     | '/app/crm/quotations'
     | '/app/crm/templates'
+    | '/app/hr/attendance'
+    | '/app/hr/employees'
+    | '/app/hr/leave'
+    | '/app/hr/payroll'
     | '/app/inventory/categories'
     | '/app/inventory/products'
     | '/app/inventory/warehouses'
@@ -800,9 +874,11 @@ export interface FileRouteTypes {
     | '/app/settings/admin'
     | '/app/settings/billing'
     | '/app/crm'
+    | '/app/hr'
     | '/app/inventory'
     | '/app/invoices'
     | '/app/settings'
+    | '/app/crm/quotations/$quotationId'
   id:
     | '__root__'
     | '/'
@@ -846,7 +922,7 @@ export interface FileRouteTypes {
     | '/app/crm'
     | '/app/customers'
     | '/app/documents'
-    | '/app/hr-payroll'
+    | '/app/hr'
     | '/app/inventory'
     | '/app/invoices'
     | '/app/procurement'
@@ -860,12 +936,17 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/app/'
     | '/admin/settings/email'
+    | '/app/crm/assets'
     | '/app/crm/leads'
     | '/app/crm/opportunities'
     | '/app/crm/pipelines'
     | '/app/crm/proposals'
     | '/app/crm/quotations'
     | '/app/crm/templates'
+    | '/app/hr/attendance'
+    | '/app/hr/employees'
+    | '/app/hr/leave'
+    | '/app/hr/payroll'
     | '/app/inventory/categories'
     | '/app/inventory/products'
     | '/app/inventory/warehouses'
@@ -874,9 +955,11 @@ export interface FileRouteTypes {
     | '/app/settings/admin'
     | '/app/settings/billing'
     | '/app/crm/'
+    | '/app/hr/'
     | '/app/inventory/'
     | '/app/invoices/'
     | '/app/settings/'
+    | '/app/crm/quotations/$quotationId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1123,11 +1206,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppInventoryRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/hr-payroll': {
-      id: '/app/hr-payroll'
-      path: '/hr-payroll'
-      fullPath: '/app/hr-payroll'
-      preLoaderRoute: typeof AppHrPayrollRouteImport
+    '/app/hr': {
+      id: '/app/hr'
+      path: '/hr'
+      fullPath: '/app/hr'
+      preLoaderRoute: typeof AppHrRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/documents': {
@@ -1305,6 +1388,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppInventoryIndexRouteImport
       parentRoute: typeof AppInventoryRoute
     }
+    '/app/hr/': {
+      id: '/app/hr/'
+      path: '/'
+      fullPath: '/app/hr/'
+      preLoaderRoute: typeof AppHrIndexRouteImport
+      parentRoute: typeof AppHrRoute
+    }
     '/app/crm/': {
       id: '/app/crm/'
       path: '/'
@@ -1361,6 +1451,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppInventoryCategoriesRouteImport
       parentRoute: typeof AppInventoryRoute
     }
+    '/app/hr/payroll': {
+      id: '/app/hr/payroll'
+      path: '/payroll'
+      fullPath: '/app/hr/payroll'
+      preLoaderRoute: typeof AppHrPayrollRouteImport
+      parentRoute: typeof AppHrRoute
+    }
+    '/app/hr/leave': {
+      id: '/app/hr/leave'
+      path: '/leave'
+      fullPath: '/app/hr/leave'
+      preLoaderRoute: typeof AppHrLeaveRouteImport
+      parentRoute: typeof AppHrRoute
+    }
+    '/app/hr/employees': {
+      id: '/app/hr/employees'
+      path: '/employees'
+      fullPath: '/app/hr/employees'
+      preLoaderRoute: typeof AppHrEmployeesRouteImport
+      parentRoute: typeof AppHrRoute
+    }
+    '/app/hr/attendance': {
+      id: '/app/hr/attendance'
+      path: '/attendance'
+      fullPath: '/app/hr/attendance'
+      preLoaderRoute: typeof AppHrAttendanceRouteImport
+      parentRoute: typeof AppHrRoute
+    }
     '/app/crm/templates': {
       id: '/app/crm/templates'
       path: '/templates'
@@ -1403,12 +1521,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCrmLeadsRouteImport
       parentRoute: typeof AppCrmRoute
     }
+    '/app/crm/assets': {
+      id: '/app/crm/assets'
+      path: '/assets'
+      fullPath: '/app/crm/assets'
+      preLoaderRoute: typeof AppCrmAssetsRouteImport
+      parentRoute: typeof AppCrmRoute
+    }
     '/admin/settings/email': {
       id: '/admin/settings/email'
       path: '/email'
       fullPath: '/admin/settings/email'
       preLoaderRoute: typeof AdminSettingsEmailRouteImport
       parentRoute: typeof AdminSettingsRoute
+    }
+    '/app/crm/quotations/$quotationId': {
+      id: '/app/crm/quotations/$quotationId'
+      path: '/$quotationId'
+      fullPath: '/app/crm/quotations/$quotationId'
+      preLoaderRoute: typeof AppCrmQuotationsQuotationIdRouteImport
+      parentRoute: typeof AppCrmQuotationsRoute
     }
   }
 }
@@ -1461,28 +1593,59 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface AppCrmQuotationsRouteChildren {
+  AppCrmQuotationsQuotationIdRoute: typeof AppCrmQuotationsQuotationIdRoute
+}
+
+const AppCrmQuotationsRouteChildren: AppCrmQuotationsRouteChildren = {
+  AppCrmQuotationsQuotationIdRoute: AppCrmQuotationsQuotationIdRoute,
+}
+
+const AppCrmQuotationsRouteWithChildren =
+  AppCrmQuotationsRoute._addFileChildren(AppCrmQuotationsRouteChildren)
+
 interface AppCrmRouteChildren {
+  AppCrmAssetsRoute: typeof AppCrmAssetsRoute
   AppCrmLeadsRoute: typeof AppCrmLeadsRoute
   AppCrmOpportunitiesRoute: typeof AppCrmOpportunitiesRoute
   AppCrmPipelinesRoute: typeof AppCrmPipelinesRoute
   AppCrmProposalsRoute: typeof AppCrmProposalsRoute
-  AppCrmQuotationsRoute: typeof AppCrmQuotationsRoute
+  AppCrmQuotationsRoute: typeof AppCrmQuotationsRouteWithChildren
   AppCrmTemplatesRoute: typeof AppCrmTemplatesRoute
   AppCrmIndexRoute: typeof AppCrmIndexRoute
 }
 
 const AppCrmRouteChildren: AppCrmRouteChildren = {
+  AppCrmAssetsRoute: AppCrmAssetsRoute,
   AppCrmLeadsRoute: AppCrmLeadsRoute,
   AppCrmOpportunitiesRoute: AppCrmOpportunitiesRoute,
   AppCrmPipelinesRoute: AppCrmPipelinesRoute,
   AppCrmProposalsRoute: AppCrmProposalsRoute,
-  AppCrmQuotationsRoute: AppCrmQuotationsRoute,
+  AppCrmQuotationsRoute: AppCrmQuotationsRouteWithChildren,
   AppCrmTemplatesRoute: AppCrmTemplatesRoute,
   AppCrmIndexRoute: AppCrmIndexRoute,
 }
 
 const AppCrmRouteWithChildren =
   AppCrmRoute._addFileChildren(AppCrmRouteChildren)
+
+interface AppHrRouteChildren {
+  AppHrAttendanceRoute: typeof AppHrAttendanceRoute
+  AppHrEmployeesRoute: typeof AppHrEmployeesRoute
+  AppHrLeaveRoute: typeof AppHrLeaveRoute
+  AppHrPayrollRoute: typeof AppHrPayrollRoute
+  AppHrIndexRoute: typeof AppHrIndexRoute
+}
+
+const AppHrRouteChildren: AppHrRouteChildren = {
+  AppHrAttendanceRoute: AppHrAttendanceRoute,
+  AppHrEmployeesRoute: AppHrEmployeesRoute,
+  AppHrLeaveRoute: AppHrLeaveRoute,
+  AppHrPayrollRoute: AppHrPayrollRoute,
+  AppHrIndexRoute: AppHrIndexRoute,
+}
+
+const AppHrRouteWithChildren = AppHrRoute._addFileChildren(AppHrRouteChildren)
 
 interface AppInventoryRouteChildren {
   AppInventoryCategoriesRoute: typeof AppInventoryCategoriesRoute
@@ -1544,7 +1707,7 @@ interface AppRouteChildren {
   AppCrmRoute: typeof AppCrmRouteWithChildren
   AppCustomersRoute: typeof AppCustomersRoute
   AppDocumentsRoute: typeof AppDocumentsRoute
-  AppHrPayrollRoute: typeof AppHrPayrollRoute
+  AppHrRoute: typeof AppHrRouteWithChildren
   AppInventoryRoute: typeof AppInventoryRouteWithChildren
   AppInvoicesRoute: typeof AppInvoicesRouteWithChildren
   AppProcurementRoute: typeof AppProcurementRoute
@@ -1565,7 +1728,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppCrmRoute: AppCrmRouteWithChildren,
   AppCustomersRoute: AppCustomersRoute,
   AppDocumentsRoute: AppDocumentsRoute,
-  AppHrPayrollRoute: AppHrPayrollRoute,
+  AppHrRoute: AppHrRouteWithChildren,
   AppInventoryRoute: AppInventoryRouteWithChildren,
   AppInvoicesRoute: AppInvoicesRouteWithChildren,
   AppProcurementRoute: AppProcurementRoute,

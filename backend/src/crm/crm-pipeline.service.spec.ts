@@ -19,6 +19,7 @@ describe('CrmPipelineService', () => {
   const opportunities = createRepoMock(['findMany', 'findById', 'create', 'update']);
   const customers = createRepoMock(['create']);
   const audit = createMockAudit();
+  const prisma = { client: { crmPipelineStage: { findMany: jest.fn() }, user: { findMany: jest.fn() } } };
 
   let service: CrmPipelineService;
 
@@ -31,6 +32,7 @@ describe('CrmPipelineService', () => {
       opportunities as never,
       customers as never,
       audit as never,
+      prisma as never,
     );
   });
 

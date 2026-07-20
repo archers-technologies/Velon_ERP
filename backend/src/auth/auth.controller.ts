@@ -1,7 +1,7 @@
 import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
-import type { Request } from 'express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
+import type { Request } from 'express';
 import { extractRequestMeta } from '../common/request-meta.util';
 import { AuthService } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';

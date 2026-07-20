@@ -31,7 +31,10 @@ export function formatDeviceFromUserAgent(ua?: string): string {
 }
 
 export function formatLoginTime(date = new Date()): string {
-  return date.toISOString().replace('T', ' ').replace(/\.\d{3}Z$/, ' UTC');
+  return date
+    .toISOString()
+    .replace('T', ' ')
+    .replace(/\.\d{3}Z$/, ' UTC');
 }
 
 export function securityLoginWarningText(): string {

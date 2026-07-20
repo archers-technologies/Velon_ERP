@@ -200,9 +200,7 @@ export function resolveTenantCustomerFrom(opts: {
   if (companyEmail) {
     const companyDomain = companyEmail.split('@')[1];
     const platformDomain = platformEmail.split('@')[1];
-    const sameDomain = Boolean(
-      companyDomain && platformDomain && companyDomain === platformDomain,
-    );
+    const sameDomain = Boolean(companyDomain && platformDomain && companyDomain === platformDomain);
     const canSendAsCompany =
       companyEmail === platformEmail ||
       (smtpUser != null && companyEmail === smtpUser) ||

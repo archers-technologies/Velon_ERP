@@ -83,6 +83,22 @@ export type CrmDashboardMetrics = {
   lostOpportunities: number;
   pipelineValue: number;
   expectedRevenue: number;
+  winRate: number;
+  leadConversionRate: number;
+  leadsBySource: Array<{ source: string; count: number }>;
+  leadsByStatus: Array<{ status: string; count: number }>;
+  opportunitiesByStage: Array<{
+    stageId: string;
+    stageName: string;
+    count: number;
+    value: number;
+  }>;
+  salespersonPerformance: Array<{
+    ownerId: string | null;
+    ownerName: string;
+    opportunities: number;
+    totalValue: number;
+  }>;
 };
 
 function q(params: Record<string, string | undefined>) {

@@ -48,14 +48,14 @@ export function isWorkspaceNavItemActive(pathname: string, to: string, label: st
   }
 
   if (label === 'HR & Payroll') {
-    return path === '/app/hr-payroll' || path.startsWith('/app/hr-payroll/');
+    return path === '/app/hr' || path.startsWith('/app/hr/');
   }
 
   if (label === 'Settings') {
     if (path === '/app/settings/billing' || path.startsWith('/app/settings/billing/')) {
       return false;
     }
-    if (path === '/app/hr-payroll' || path.startsWith('/app/hr-payroll/')) {
+    if (path === '/app/hr' || path.startsWith('/app/hr/')) {
       return false;
     }
     return (

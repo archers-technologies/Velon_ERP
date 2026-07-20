@@ -10,6 +10,7 @@ const salesCrmNav = [
   { to: '/app/crm/opportunities', label: 'Opportunities' },
   { to: '/app/crm/quotations', label: 'Quotations' },
   { to: '/app/crm/proposals', label: 'Proposals' },
+  { to: '/app/crm/assets', label: 'Assets' },
   { to: '/app/crm/pipelines', label: 'Pipelines' },
   { to: '/app/crm/templates', label: 'Templates' },
 ] as const;
@@ -42,9 +43,11 @@ function SalesCrmLayout() {
     ? [
         { label: 'Total leads', value: metrics.totalLeads },
         { label: 'Qualified leads', value: metrics.qualifiedLeads },
+        { label: 'Lead conversion', value: `${metrics.leadConversionRate ?? 0}%` },
         { label: 'Open opportunities', value: metrics.openOpportunities },
         { label: 'Won', value: metrics.wonOpportunities },
         { label: 'Lost', value: metrics.lostOpportunities },
+        { label: 'Win rate', value: `${metrics.winRate ?? 0}%` },
         { label: 'Pipeline value', value: `$${metrics.pipelineValue.toLocaleString()}` },
         { label: 'Expected revenue', value: `$${metrics.expectedRevenue.toLocaleString()}` },
       ]

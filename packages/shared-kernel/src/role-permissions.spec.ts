@@ -19,4 +19,11 @@ describe('roleHasPermission', () => {
     expect(roleHasPermission(VelonRole.DEPARTMENT_ADMIN, 'inventory:write')).toBe(true);
     expect(roleHasPermission(VelonRole.DEPARTMENT_ADMIN, 'procurement:*')).toBe(false);
   });
+
+  it('grants hr permissions by role', () => {
+    expect(roleHasPermission(VelonRole.TENANT_OWNER, 'hr:write')).toBe(true);
+    expect(roleHasPermission(VelonRole.DEPARTMENT_ADMIN, 'hr:write')).toBe(true);
+    expect(roleHasPermission(VelonRole.USER, 'hr:read')).toBe(true);
+    expect(roleHasPermission(VelonRole.USER, 'hr:write')).toBe(false);
+  });
 });

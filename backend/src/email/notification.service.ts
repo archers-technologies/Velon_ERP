@@ -1,13 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
-import {
-  EMAIL_EVENT_TYPES,
-  EMAIL_TEMPLATE_KEYS,
-  type EmailMergeContext,
-} from '@velon/shared';
+import { EMAIL_EVENT_TYPES, EMAIL_TEMPLATE_KEYS, type EmailMergeContext } from '@velon/shared';
 import {
   formatMailProviderForLog,
-  resolveMailProvider,
   resendConfigured,
+  resolveMailProvider,
   sendTransactionalMail,
   smtpConfigured,
 } from '../common/mail-delivery.util';
@@ -67,7 +63,9 @@ export class NotificationService {
       warnings.push('SMTP credentials are present but Resend is the active provider.');
     }
     if (!process.env.REDIS_URL?.trim() && process.env.NODE_ENV !== 'test') {
-      warnings.push('REDIS_URL is not set — emails are sent inline instead of via background queue.');
+      warnings.push(
+        'REDIS_URL is not set — emails are sent inline instead of via background queue.',
+      );
     }
 
     return {

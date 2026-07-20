@@ -117,12 +117,7 @@ describe('NotificationService', () => {
       ...lifecycle,
       notifyPaymentSucceeded,
     } as unknown as EmailLifecycleService;
-    const paymentService = new NotificationService(
-      lifecycleWithPayment,
-      logs,
-      provider,
-      templates,
-    );
+    const paymentService = new NotificationService(lifecycleWithPayment, logs, provider, templates);
 
     await paymentService.notifyPaymentSucceeded('pay-1');
     expect(notifyPaymentSucceeded).toHaveBeenCalledWith('pay-1');

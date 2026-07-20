@@ -4,13 +4,13 @@ import { Barcode, Package, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { canManageInventory, normalizeVelonRole } from '@velon/shared';
 import { BarcodeManagementDialog } from '@/components/inventory/barcode-management-dialog';
+import { ExpiryDateFields } from '@/components/inventory/expiry-date-fields';
 import {
   buildVariantsPayload,
   ProductVariantsSection,
   variantsFromProductDetail,
   type ProductVariantsSectionHandle,
 } from '@/components/inventory/product-variants-section';
-import { ExpiryDateFields } from '@/components/inventory/expiry-date-fields';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -279,7 +279,7 @@ function InventoryProductsPage() {
               </div>
             )}
             {!editingId && !hasVariants ? (
-              <div className="sm:col-span-2 space-y-3">
+              <div className="space-y-3 sm:col-span-2">
                 <label className="flex cursor-pointer items-center gap-2 text-sm">
                   <Checkbox
                     checked={batchTracked}

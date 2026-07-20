@@ -37,12 +37,9 @@ describe('workspace-navigation', () => {
   });
 
   it('highlights HR & Payroll on its hub route', () => {
-    expect(isWorkspaceNavItemActive('/app/hr-payroll', '/app/hr-payroll', 'HR & Payroll')).toBe(
-      true,
-    );
-    expect(isWorkspaceNavItemActive('/app/settings/admin', '/app/hr-payroll', 'HR & Payroll')).toBe(
-      false,
-    );
+    expect(isWorkspaceNavItemActive('/app/hr', '/app/hr', 'HR & Payroll')).toBe(true);
+    expect(isWorkspaceNavItemActive('/app/hr/employees', '/app/hr', 'HR & Payroll')).toBe(true);
+    expect(isWorkspaceNavItemActive('/app/settings/admin', '/app/hr', 'HR & Payroll')).toBe(false);
   });
 
   it('highlights dashboard only on /app', () => {
@@ -56,7 +53,7 @@ describe('workspace-navigation', () => {
     expect(isWorkspaceNavItemActive('/app/settings/billing', '/app/settings', 'Settings')).toBe(
       false,
     );
-    expect(isWorkspaceNavItemActive('/app/hr-payroll', '/app/settings', 'Settings')).toBe(false);
+    expect(isWorkspaceNavItemActive('/app/hr', '/app/settings', 'Settings')).toBe(false);
   });
 
   it('classifies missing API config separately from auth errors', () => {

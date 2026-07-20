@@ -77,6 +77,41 @@ export class CreateCrmQuotationDto {
 
   @ApiPropertyOptional()
   @IsOptional()
+  @IsString()
+  currency?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  language?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  coverTitle?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  executiveSummary?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  timeline?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  assumptions?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  exclusions?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsNumber()
   @Min(0)
   discount?: number;
@@ -122,6 +157,55 @@ export class UpdateCrmQuotationDto {
   @IsOptional()
   @IsString()
   deliverables?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  currency?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  language?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  coverTitle?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  executiveSummary?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  timeline?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  assumptions?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  exclusions?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  documentJson?: Record<string, unknown>;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  signatureName?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  signatureDataUrl?: string;
 
   @ApiPropertyOptional()
   @IsOptional()

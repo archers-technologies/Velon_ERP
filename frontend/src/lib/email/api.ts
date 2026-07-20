@@ -97,13 +97,15 @@ export async function loadPlatformMailStatus() {
 }
 
 export async function sendPlatformConnectivityTest(toEmail: string) {
-  return apiFetch<{ sent: boolean; skipped?: boolean; reason?: string; status: MailConfigurationStatus }>(
-    '/email/platform/test',
-    {
-      method: 'POST',
-      body: JSON.stringify({ toEmail }),
-    },
-  );
+  return apiFetch<{
+    sent: boolean;
+    skipped?: boolean;
+    reason?: string;
+    status: MailConfigurationStatus;
+  }>('/email/platform/test', {
+    method: 'POST',
+    body: JSON.stringify({ toEmail }),
+  });
 }
 
 export async function loadPlatformEmailLogs(params?: { tenantId?: string; status?: string }) {

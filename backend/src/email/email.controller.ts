@@ -16,12 +16,12 @@ import {
 } from './dto/email.dto';
 import { getAppBaseUrl } from './email-env.util';
 import { EmailLifecycleService } from './email-lifecycle.service';
-import { NotificationService } from './notification.service';
 import { EmailLogService } from './email-log.service';
 import { EmailPreferenceService } from './email-preference.service';
 import { EMAIL_SUPPORT_REPLY_TEMPLATES } from './email-support-templates';
 import { renderEmailTemplate } from './email-template-renderer.util';
 import { EmailTemplateService } from './email-template.service';
+import { NotificationService } from './notification.service';
 
 @ApiTags('email')
 @Controller('email')

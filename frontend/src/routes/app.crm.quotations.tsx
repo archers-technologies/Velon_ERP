@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { ClipboardList } from 'lucide-react';
 import { toast } from 'sonner';
 import { canWriteCrmRecords, normalizeVelonRole } from '@velon/shared';
@@ -346,9 +346,13 @@ function CrmQuotationsPage() {
             className="flex flex-wrap items-center justify-between gap-3 p-4"
           >
             <div>
-              <p className="font-medium">
+              <Link
+                to="/app/crm/quotations/$quotationId"
+                params={{ quotationId: q.id }}
+                className="font-medium hover:underline"
+              >
                 {q.quotationNumber} · {q.customer?.companyName ?? q.customerId}
-              </p>
+              </Link>
               <p className="text-muted-foreground text-xs">
                 Rev {q.revisionNumber} · ${Number(q.total).toLocaleString()} ·{' '}
                 {q.opportunity?.title ?? 'No opportunity'}

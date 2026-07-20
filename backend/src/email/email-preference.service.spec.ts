@@ -1,4 +1,8 @@
-import { EMAIL_TEMPLATE_KEYS, MARKETING_TEMPLATE_KEYS, TRANSACTIONAL_TEMPLATE_KEYS } from '@velon/shared';
+import {
+  EMAIL_TEMPLATE_KEYS,
+  MARKETING_TEMPLATE_KEYS,
+  TRANSACTIONAL_TEMPLATE_KEYS,
+} from '@velon/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailPreferenceService } from './email-preference.service';
 

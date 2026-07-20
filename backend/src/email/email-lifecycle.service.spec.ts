@@ -1,8 +1,8 @@
 import { EMAIL_TEMPLATE_KEYS } from '@velon/shared';
+import { EmailEventService } from './email-event.service';
 import { EmailLifecycleService } from './email-lifecycle.service';
 import { EmailLogService } from './email-log.service';
 import { EmailPreferenceService } from './email-preference.service';
-import { EmailEventService } from './email-event.service';
 import { EmailProviderService } from './email-provider.service';
 import { EmailQueueService } from './email-queue.service';
 import { EmailTemplateService } from './email-template.service';
@@ -23,7 +23,9 @@ describe('EmailLifecycleService security events', () => {
 
   const preferences = {
     getOrCreate: jest.fn(),
-    canSendTemplate: jest.fn().mockReturnValue({ allowed: false, reason: 'transactional_disabled' }),
+    canSendTemplate: jest
+      .fn()
+      .mockReturnValue({ allowed: false, reason: 'transactional_disabled' }),
   } as unknown as EmailPreferenceService;
 
   const events = {

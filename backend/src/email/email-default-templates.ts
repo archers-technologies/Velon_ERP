@@ -239,7 +239,8 @@ export const DEFAULT_EMAIL_TEMPLATES: DefaultEmailTemplate[] = [
     category: 'SECURITY',
     subject: 'Your VelonERP password reset code',
     htmlBody: `<p>Hi {{user.name}},</p><p>Your VelonERP password reset verification code is:</p><p style="font-size:24px;font-weight:700;letter-spacing:4px">{{otpCode}}</p><p>This code expires in 10 minutes.</p>`,
-    textBody: 'Hi {{user.name}},\n\nYour password reset code is {{otpCode}}. It expires in 10 minutes.',
+    textBody:
+      'Hi {{user.name}},\n\nYour password reset code is {{otpCode}}. It expires in 10 minutes.',
   },
   {
     key: EMAIL_TEMPLATE_KEYS.QUOTATION_CREATED,
@@ -256,8 +257,7 @@ export const DEFAULT_EMAIL_TEMPLATES: DefaultEmailTemplate[] = [
     category: 'TRANSACTIONAL',
     subject: 'Quotation {{quotation.number}} sent to customer',
     htmlBody: `<p>Hi {{user.name}},</p><p>Quotation <strong>{{quotation.number}}</strong> was sent from <strong>{{workspace.name}}</strong>.</p><p>Total: {{quotation.currency}} {{quotation.total}}</p>${cta('Open Workspace', 'loginUrl')}`,
-    textBody:
-      'Hi {{user.name}},\n\nQuotation {{quotation.number}} was sent.\n\n{{loginUrl}}',
+    textBody: 'Hi {{user.name}},\n\nQuotation {{quotation.number}} was sent.\n\n{{loginUrl}}',
   },
   {
     key: EMAIL_TEMPLATE_KEYS.QUOTATION_APPROVED,
@@ -265,8 +265,7 @@ export const DEFAULT_EMAIL_TEMPLATES: DefaultEmailTemplate[] = [
     category: 'TRANSACTIONAL',
     subject: 'Quotation {{quotation.number}} approved',
     htmlBody: `<p>Hi {{user.name}},</p><p>Quotation <strong>{{quotation.number}}</strong> in <strong>{{workspace.name}}</strong> was approved.</p>${cta('Open Workspace', 'loginUrl')}`,
-    textBody:
-      'Hi {{user.name}},\n\nQuotation {{quotation.number}} was approved.\n\n{{loginUrl}}',
+    textBody: 'Hi {{user.name}},\n\nQuotation {{quotation.number}} was approved.\n\n{{loginUrl}}',
   },
   {
     key: EMAIL_TEMPLATE_KEYS.QUOTATION_REJECTED,
@@ -274,8 +273,7 @@ export const DEFAULT_EMAIL_TEMPLATES: DefaultEmailTemplate[] = [
     category: 'TRANSACTIONAL',
     subject: 'Quotation {{quotation.number}} rejected',
     htmlBody: `<p>Hi {{user.name}},</p><p>Quotation <strong>{{quotation.number}}</strong> in <strong>{{workspace.name}}</strong> was rejected.</p>${cta('Open Workspace', 'loginUrl')}`,
-    textBody:
-      'Hi {{user.name}},\n\nQuotation {{quotation.number}} was rejected.\n\n{{loginUrl}}',
+    textBody: 'Hi {{user.name}},\n\nQuotation {{quotation.number}} was rejected.\n\n{{loginUrl}}',
   },
   {
     key: EMAIL_TEMPLATE_KEYS.SALES_ORDER_CREATED,
@@ -283,8 +281,7 @@ export const DEFAULT_EMAIL_TEMPLATES: DefaultEmailTemplate[] = [
     category: 'TRANSACTIONAL',
     subject: 'Sales order {{salesOrder.number}} created',
     htmlBody: `<p>Hi {{user.name}},</p><p>Sales order <strong>{{salesOrder.number}}</strong> was created in <strong>{{workspace.name}}</strong>.</p><p>Status: {{salesOrder.status}}</p><p>Total: {{salesOrder.currency}} {{salesOrder.total}}</p>${cta('Open Workspace', 'loginUrl')}`,
-    textBody:
-      'Hi {{user.name}},\n\nSales order {{salesOrder.number}} was created.\n\n{{loginUrl}}',
+    textBody: 'Hi {{user.name}},\n\nSales order {{salesOrder.number}} was created.\n\n{{loginUrl}}',
   },
   {
     key: EMAIL_TEMPLATE_KEYS.SALES_ORDER_UPDATED,
@@ -292,8 +289,7 @@ export const DEFAULT_EMAIL_TEMPLATES: DefaultEmailTemplate[] = [
     category: 'TRANSACTIONAL',
     subject: 'Sales order {{salesOrder.number}} updated',
     htmlBody: `<p>Hi {{user.name}},</p><p>Sales order <strong>{{salesOrder.number}}</strong> in <strong>{{workspace.name}}</strong> was updated.</p><p>Status: {{salesOrder.status}}</p>${cta('Open Workspace', 'loginUrl')}`,
-    textBody:
-      'Hi {{user.name}},\n\nSales order {{salesOrder.number}} was updated.\n\n{{loginUrl}}',
+    textBody: 'Hi {{user.name}},\n\nSales order {{salesOrder.number}} was updated.\n\n{{loginUrl}}',
   },
   {
     key: EMAIL_TEMPLATE_KEYS.INVENTORY_PRODUCT_MAJOR_UPDATE,
