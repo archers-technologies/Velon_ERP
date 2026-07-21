@@ -19,4 +19,6 @@ COPY --from=builder /workspace/packages/shared-kernel /packages/shared-kernel
 COPY --from=builder /workspace/backend/dist /backend/dist
 COPY --from=builder /workspace/backend/package.json /backend/
 EXPOSE 3001
-CMD ["node", "/backend/dist/main.js"]
+# Migrate on boot as a safety net (Prisma advisory-locks concurrent replicas).
+# railway.json also runs migrate in preDeploy; keep both so schema never lags the app.
+CMD ["sh", "-c", "node /packages/database/scripts/require-database-url.mjs && cd /packages/database && /node_modules/.bin/prisma migrate deploy && exec node /backend/dist/main.js"]

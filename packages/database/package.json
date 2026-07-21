@@ -24,10 +24,10 @@
   "dependencies": {
     "@prisma/client": "^6.8.2",
     "@velon/shared": "*",
-    "bcrypt": "^5.1.1"
+    "bcrypt": "^5.1.1",
+    "prisma": "^6.8.2"
   },
   "devDependencies": {
-    "prisma": "^6.8.2",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3"
   }
