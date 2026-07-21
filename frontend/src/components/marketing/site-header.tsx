@@ -25,7 +25,7 @@ export function SiteHeader() {
         <BrandLogoLink className="flex shrink-0 items-center gap-2.5">
           <VelonLogoMark size="sm" />
           <span className="text-lg font-semibold tracking-tight">
-            Velon<span className="text-muted-foreground">-ERP</span>
+            Velon<span className="text-muted-foreground">ERP</span>
           </span>
         </BrandLogoLink>
 

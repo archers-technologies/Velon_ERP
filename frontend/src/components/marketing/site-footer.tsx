@@ -9,7 +9,7 @@ type SiteFooterProps = {
 };
 
 export function SiteFooter({ footer, contact }: SiteFooterProps = {}) {
-  const tagline = footer?.tagline ?? 'Velon-ERP';
+  const tagline = footer?.tagline ?? 'VelonERP';
   const email = footer?.email ?? contact?.email ?? VELON_CONTACT_EMAIL;
   const links = footer?.links ?? [
     { label: 'Features', href: '/features' },
