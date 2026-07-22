@@ -1,10 +1,12 @@
+import { useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { Copy, Download, Mail, Pencil, Printer } from 'lucide-react';
+import { toast } from 'sonner';
 import { SalesInvoiceStatusBadge } from '@/components/sales/sales-invoice-status-badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useWorkspaceCurrency } from '@/contexts/workspace-currency';
-import { invoicePdfUrl, type SalesInvoice } from '@/lib/sales/invoice-api';
+import { openInvoicePdf, type SalesInvoice } from '@/lib/sales/invoice-api';
 
 type Props = {
   invoice: SalesInvoice;
@@ -34,6 +36,21 @@ export function InvoiceDocumentView({
   canWrite,
 }: Props) {
   const { formatCurrency } = useWorkspaceCurrency();
+  const [pdfBusy, setPdfBusy] = useState(false);
+
+  const handlePdf = async (mode: 'download' | 'print') => {
+    setPdfBusy(true);
+    try {
+      await openInvoicePdf(
+        invoice.id,
+        mode === 'download' ? { downloadName: `${invoice.invoiceNumber}.pdf` } : undefined,
+      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to open invoice PDF');
+    } finally {
+      setPdfBusy(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -63,20 +80,16 @@ export function InvoiceDocumentView({
           </Button>
           <Button
             variant="outline"
-            asChild
+            disabled={pdfBusy}
+            onClick={() => void handlePdf('download')}
           >
-            <a
-              href={invoicePdfUrl(invoice.id)}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Download PDF
-            </a>
+            <Download className="mr-2 h-4 w-4" />
+            Download PDF
           </Button>
           <Button
             variant="outline"
-            onClick={() => window.open(invoicePdfUrl(invoice.id), '_blank', 'noopener')}
+            disabled={pdfBusy}
+            onClick={() => void handlePdf('print')}
           >
             <Printer className="mr-2 h-4 w-4" />
             Print

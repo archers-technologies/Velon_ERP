@@ -1,5 +1,6 @@
 import { apiFetch } from '@/lib/api/client';
 import { API_V1_BASE } from '@/lib/api/config';
+import { getAccessToken } from '@/lib/auth/session';
 
 export type SalesInvoiceStatus =
   | 'DRAFT'
@@ -231,4 +232,46 @@ export async function sendInvoiceEmail(id: string, input?: { to?: string; messag
 
 export function invoicePdfUrl(id: string) {
   return `${API_V1_BASE}/sales/invoices/${id}/pdf`;
+}
+
+/** Authenticated PDF fetch — bare window.open/href cannot send Bearer token. */
+export async function downloadInvoicePdf(id: string) {
+  const token = getAccessToken();
+  const res = await fetch(invoicePdfUrl(id), {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error('Failed to download invoice PDF');
+  const contentType = res.headers.get('content-type') ?? '';
+  if (!contentType.includes('application/pdf')) {
+    throw new Error('Invoice PDF is not available');
+  }
+  return res.blob();
+}
+
+export async function openInvoicePdf(
+  id: string,
+  options?: { downloadName?: string },
+): Promise<void> {
+  const blob = await downloadInvoicePdf(id);
+  const url = URL.createObjectURL(blob);
+  try {
+    if (options?.downloadName) {
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = options.downloadName;
+      anchor.click();
+    } else {
+      const opened = window.open(url, '_blank', 'noopener');
+      if (!opened) {
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.target = '_blank';
+        anchor.rel = 'noreferrer';
+        anchor.click();
+      }
+    }
+  } finally {
+    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  }
 }

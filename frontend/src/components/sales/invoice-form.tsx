@@ -20,8 +20,8 @@ import { getSessionMembershipRole } from '@/lib/auth/session';
 import { loadCrmCustomers } from '@/lib/crm/api';
 import {
   createInvoice,
-  invoicePdfUrl,
   loadInvoiceBootstrap,
+  openInvoicePdf,
   searchInvoiceProducts,
   type CreateInvoiceInput,
   type InvoiceBootstrap,
@@ -270,7 +270,11 @@ export function InvoiceForm() {
       const invoice = await createInvoice(buildPayload(action));
       toast.success(`Invoice ${invoice.invoiceNumber} saved`);
       if (action === 'save_print') {
-        window.open(invoicePdfUrl(invoice.id), '_blank', 'noopener');
+        try {
+          await openInvoicePdf(invoice.id);
+        } catch (pdfErr) {
+          toast.error(pdfErr instanceof Error ? pdfErr.message : 'Could not open invoice PDF');
+        }
       }
       await navigate({ to: '/app/invoices/$invoiceId', params: { invoiceId: invoice.id } });
     } catch (err) {

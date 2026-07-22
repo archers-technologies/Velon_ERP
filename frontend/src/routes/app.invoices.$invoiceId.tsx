@@ -83,9 +83,25 @@ function InvoiceDetailPage() {
   };
 
   const onEmail = async () => {
-    const result = await sendInvoiceEmail(invoice.id);
-    if (result.sent) toast.success('Invoice email sent');
-    else toast.warning(result.warning ?? 'Invoice saved but email could not be sent');
+    try {
+      const result = await sendInvoiceEmail(invoice.id);
+      if (result.sent) {
+        toast.success('Invoice email sent');
+        return;
+      }
+      const warning = result.warning ?? 'Invoice email could not be sent';
+      const friendly =
+        warning.includes('not_configured') || warning.includes('EMAIL NOT CONFIGURED')
+          ? 'Email is not configured on the server (Resend/SMTP). PDF still works — ask Super Admin to set mail env.'
+          : warning.includes('timeout')
+            ? 'Email provider timed out. Try again in a moment.'
+            : warning.includes('failed')
+              ? 'Email provider rejected the message. Check Resend/SMTP settings and sender domain.'
+              : warning;
+      toast.error(friendly);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Invoice email could not be sent');
+    }
   };
 
   return (
