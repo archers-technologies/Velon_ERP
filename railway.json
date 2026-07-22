@@ -6,7 +6,7 @@
   },
   "deploy": {
     "preDeployCommand": "node /packages/database/scripts/require-database-url.mjs && cd /packages/database && /node_modules/.bin/prisma migrate deploy",
-    "startCommand": "node /packages/database/scripts/require-database-url.mjs && cd /packages/database && /node_modules/.bin/prisma migrate deploy && node /backend/dist/main.js",
+    "startCommand": "node /backend/dist/main.js",
     "healthcheckPath": "/api/v1/health/live",
     "healthcheckTimeout": 300,
     "restartPolicyType": "ON_FAILURE",
