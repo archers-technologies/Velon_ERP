@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEmail, IsEnum, IsOptional, IsString, Matches, MinLength } from 'class-validator';
-import { IndustryTemplate } from '@velon/database';
+import { IndustryTemplate, TenantPlan } from '@velon/database';
 import { VELON_CONTACT_EMAIL } from '@velon/shared';
 import { IsVelonPassword } from '../validators/is-velon-password.decorator';
 
@@ -72,6 +72,15 @@ export class SignUpDto {
   @ApiProperty({ enum: IndustryTemplate })
   @IsEnum(IndustryTemplate)
   industry!: IndustryTemplate;
+
+  @ApiPropertyOptional({
+    enum: TenantPlan,
+    description: 'Subscription plan for the trial workspace (defaults to STARTER)',
+    default: TenantPlan.STARTER,
+  })
+  @IsOptional()
+  @IsEnum(TenantPlan)
+  plan?: TenantPlan;
 
   @ApiProperty({ description: 'Full name of the account owner' })
   @IsString()

@@ -1,8 +1,26 @@
+import type { PlanCatalogEntry } from '@velon/shared';
+
+export type SignupPlanId = PlanCatalogEntry['id'];
+
+const SIGNUP_PLANS = new Set<SignupPlanId>(['STARTER', 'GROWTH', 'ENTERPRISE']);
+
+/** Parse a signup plan id from URL / form input (case-insensitive). */
+export function parseSignupPlan(value: unknown): SignupPlanId | undefined {
+  if (typeof value !== 'string') return undefined;
+  const normalized = value.trim().toUpperCase();
+  return SIGNUP_PLANS.has(normalized as SignupPlanId) ? (normalized as SignupPlanId) : undefined;
+}
+
 /** Canonical `/login` search params for TanStack Router. */
-export function loginSearch(opts?: { tab?: 'signin' | 'signup'; reset?: 'success' }) {
+export function loginSearch(opts?: {
+  tab?: 'signin' | 'signup';
+  reset?: 'success';
+  plan?: SignupPlanId;
+}) {
   return {
     tab: opts?.tab === 'signup' ? ('signup' as const) : ('signin' as const),
     reset: opts?.reset === 'success' ? ('success' as const) : undefined,
+    plan: opts?.plan && SIGNUP_PLANS.has(opts.plan) ? opts.plan : undefined,
   };
 }
 

@@ -6,7 +6,7 @@ import { PricingPreferenceControl } from '@/components/billing/pricing-preferenc
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { loginSearch } from '@/lib/auth/login-utils';
+import { loginSearch, parseSignupPlan } from '@/lib/auth/login-utils';
 import {
   formatPlanEffectiveMonthly,
   formatPlanPriceForPreference,
@@ -173,7 +173,10 @@ export function MarketingPricingSection({
             >
               <Link
                 to="/login"
-                search={loginSearch({ tab: 'signup' })}
+                search={loginSearch({
+                  tab: 'signup',
+                  plan: parseSignupPlan(plan.id) ?? 'STARTER',
+                })}
               >
                 Start free trial
               </Link>

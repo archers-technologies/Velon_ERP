@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router';
 import { Headphones, LockKeyhole, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
-import { VELON_CONTACT_EMAIL } from '@velon/shared';
+import { PLAN_CATALOG, VELON_CONTACT_EMAIL } from '@velon/shared';
 import { AuthPortalShell } from '@/components/auth/auth-portal-shell';
 import { PasswordRequirementsChecklist } from '@/components/auth/password-requirements-checklist';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -23,7 +24,12 @@ import {
 import { apiLogin, apiRequestSignupOtp, apiSignUp, apiVerifySignupOtp } from '@/lib/api/client';
 import { API_V1_BASE, isApiEnabled } from '@/lib/api/config';
 import { isSuperAdminEmail } from '@/lib/auth/demo-auth';
-import { formatApiError, loginSearch } from '@/lib/auth/login-utils';
+import {
+  formatApiError,
+  loginSearch,
+  parseSignupPlan,
+  type SignupPlanId,
+} from '@/lib/auth/login-utils';
 import { isPasswordStrong } from '@/lib/auth/password-policy';
 import { redirectIfWorkspaceAuthenticated } from '@/lib/auth/route-guard';
 import { saveSession } from '@/lib/auth/session';
@@ -41,6 +47,7 @@ export const Route = createFileRoute('/login')({
   validateSearch: (search: Record<string, unknown>) => ({
     tab: search.tab === 'signup' ? 'signup' : 'signin',
     reset: search.reset === 'success' ? ('success' as const) : undefined,
+    plan: parseSignupPlan(search.plan),
   }),
   beforeLoad: () => {
     redirectIfWorkspaceAuthenticated();
@@ -92,6 +99,7 @@ function WorkspaceLoginPage() {
     createDefaultLocalization('IN'),
   );
   const [industry, setIndustry] = useState<string>(INDUSTRY_OPTIONS[0].value);
+  const [plan, setPlan] = useState<SignupPlanId>(search.plan ?? 'STARTER');
   const [fullName, setFullName] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
   const [signupStep, setSignupStep] = useState<'details' | 'otp'>('details');
@@ -100,6 +108,11 @@ function WorkspaceLoginPage() {
   const [devOtpHint, setDevOtpHint] = useState<string | null>(null);
   const [apiReachable, setApiReachable] = useState<boolean | null>(null);
   const appOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+  const selectedPlan = PLAN_CATALOG.find((p) => p.id === plan) ?? PLAN_CATALOG[0];
+
+  useEffect(() => {
+    if (search.plan) setPlan(search.plan);
+  }, [search.plan]);
 
   useEffect(() => {
     if (!import.meta.env.DEV) return;
@@ -184,6 +197,7 @@ function WorkspaceLoginPage() {
         address: localization.address?.trim() ?? '',
         taxId: localization.taxId?.trim() || undefined,
         industry,
+        plan,
         fullName,
         password: signupPassword,
         verificationToken,
@@ -267,7 +281,7 @@ function WorkspaceLoginPage() {
       portalLabel="Velon-ERP Workspace"
       portalTitle="Sign in to your workspace"
       headline="Your company ERP workspace."
-      description="Sign in with your work email or create a new company workspace. Each email can register one company."
+      description="Sign in with your work email or create a new company workspace. Choose your plan at signup — trials still track the selected package."
       signals={workspaceSignals}
       complianceIcon={ShieldCheck}
       complianceText={
@@ -398,6 +412,38 @@ function WorkspaceLoginPage() {
                 showFormats={false}
                 idPrefix="signup"
               />
+              <div className="space-y-1.5">
+                <Label htmlFor="signup-plan">Plan</Label>
+                <Select
+                  value={plan}
+                  onValueChange={(value) => {
+                    const next = parseSignupPlan(value);
+                    if (next) setPlan(next);
+                  }}
+                >
+                  <SelectTrigger
+                    id="signup-plan"
+                    className="h-10"
+                  >
+                    <SelectValue placeholder="Select a plan" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PLAN_CATALOG.map((opt) => (
+                      <SelectItem
+                        key={opt.id}
+                        value={opt.id}
+                      >
+                        {opt.displayName}
+                        {opt.seatLimit ? ` · ${opt.seatLimit} users` : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  Starts as a free trial on {selectedPlan.displayName}. You can change plans later
+                  from billing.
+                </p>
+              </div>
               <Select
                 value={industry}
                 onValueChange={setIndustry}
@@ -451,7 +497,9 @@ function WorkspaceLoginPage() {
             >
               <div className="border-border bg-muted/40 text-muted-foreground rounded-lg border p-3 text-xs">
                 Enter the 6-digit code sent to{' '}
-                <span className="text-foreground font-medium">{companyEmail}</span>.
+                <span className="text-foreground font-medium">{companyEmail}</span>. Creating a{' '}
+                <span className="text-foreground font-medium">{selectedPlan.displayName}</span>{' '}
+                trial workspace.
                 {devOtpHint ? (
                   <span className="text-foreground mt-1 block font-mono">
                     Local dev OTP: {devOtpHint}

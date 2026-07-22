@@ -9,7 +9,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import * as crypto from 'crypto';
 import * as bcrypt from 'bcrypt';
-import { IndustryTemplate, Prisma, UserRole } from '@velon/database';
+import { IndustryTemplate, Prisma, TenantPlan, UserRole } from '@velon/database';
 import {
   defaultDateFormatForCountry,
   defaultNumberFormatForCountry,
@@ -380,6 +380,9 @@ export class AuthService {
       throw new BadRequestException(err instanceof Error ? err.message : 'Invalid password.');
     }
     const passwordHash = await bcrypt.hash(dto.password, 12);
+    const plan = dto.plan ?? TenantPlan.STARTER;
+    const storageCapGb =
+      plan === TenantPlan.ENTERPRISE ? 500 : plan === TenantPlan.GROWTH ? 120 : 20;
     const renewal = new Date();
     renewal.setDate(renewal.getDate() + 30);
 
@@ -409,7 +412,9 @@ export class AuthService {
             slug: tenantSlug,
             tenantCode: `TNT-${crypto.randomBytes(3).toString('hex').toUpperCase()}`,
             country: countryName,
+            plan,
             industryTemplate: dto.industry as IndustryTemplate,
+            storageCapGb,
             renewalDate: renewal,
           },
         });
@@ -469,6 +474,7 @@ export class AuthService {
       await this.redis.bumpRevision();
       try {
         const sub = await this.subscriptions.ensureForTenant(result.tenant.id, {
+          plan,
           trialEndsAt: renewal,
           currentPeriodEnd: renewal,
         });
@@ -490,6 +496,7 @@ export class AuthService {
           email: companyEmail,
           workspaceId: result.workspace.id,
           membershipRole: UserRole.TENANT_OWNER,
+          plan,
         },
       });
 
@@ -497,6 +504,7 @@ export class AuthService {
         email: companyEmail,
         tenantId: result.tenant.id,
         workspaceId: result.workspace.id,
+        plan,
       });
 
       return this.toSessionResponse(result.tokens);

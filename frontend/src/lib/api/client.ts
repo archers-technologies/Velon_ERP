@@ -172,6 +172,7 @@ export type SignUpPayload = {
   address: string;
   taxId?: string;
   industry: string;
+  plan: 'STARTER' | 'GROWTH' | 'ENTERPRISE';
   fullName: string;
   password: string;
   verificationToken: string;
