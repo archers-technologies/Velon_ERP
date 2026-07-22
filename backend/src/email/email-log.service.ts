@@ -26,7 +26,27 @@ export class EmailLogService {
       const existing = await this.prisma.client.emailLog.findUnique({
         where: { idempotencyKey: input.idempotencyKey },
       });
-      if (existing) return { log: existing, duplicate: true as const };
+      if (existing) {
+        // Allow provider-outage retries for the same logical email.
+        if (
+          existing.status === EmailLogStatus.FAILED ||
+          existing.status === EmailLogStatus.SKIPPED
+        ) {
+          const log = await this.prisma.client.emailLog.update({
+            where: { id: existing.id },
+            data: {
+              status: EmailLogStatus.QUEUED,
+              errorMessage: null,
+              subject: input.subject,
+              toEmail: input.toEmail,
+              fromEmail: input.fromEmail,
+              metadata: (input.metadata ?? undefined) as object | undefined,
+            },
+          });
+          return { log, duplicate: false as const };
+        }
+        return { log: existing, duplicate: true as const };
+      }
     }
 
     const log = await this.prisma.client.emailLog.create({

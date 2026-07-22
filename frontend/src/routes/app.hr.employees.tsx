@@ -17,12 +17,7 @@ import {
 } from '@/components/ui/select';
 import { ModuleEmptyState } from '@/components/workspace/module-empty-state';
 import { getSessionMembershipRole } from '@/lib/auth/session';
-import {
-  createEmployee,
-  deleteEmployee,
-  loadEmployees,
-  type HrEmployee,
-} from '@/lib/hr/api';
+import { createEmployee, deleteEmployee, loadEmployees, type HrEmployee } from '@/lib/hr/api';
 
 export const Route = createFileRoute('/app/hr/employees')({
   component: HrEmployeesPage,

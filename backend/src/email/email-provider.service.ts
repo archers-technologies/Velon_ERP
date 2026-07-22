@@ -1,10 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import {
-  deliverViaResend,
-  deliverViaSmtp,
-  sendTransactionalMail,
-  type TransactionalMail,
-} from '../common/mail-delivery.util';
+import { sendTransactionalMail, type TransactionalMail } from '../common/mail-delivery.util';
 import {
   getFromEmail,
   getFromName,
@@ -38,12 +33,31 @@ export class EmailProviderService {
     const provider = this.resolveProvider();
 
     if (provider === 'sendgrid') {
-      return this.sendViaSendGrid(input);
+      return this.sendViaSendGrid({
+        ...input,
+        from: input.from ?? this.formatFromAddress(),
+      });
     }
 
-    const result = await sendTransactionalMail(input);
+    if (provider === 'none') {
+      return {
+        delivered: false,
+        provider,
+        skippedReason: 'mail_not_configured',
+        errorMessage: 'mail_not_configured',
+      };
+    }
+
+    const result = await sendTransactionalMail({
+      ...input,
+      from: input.from ?? this.formatFromAddress(),
+    });
     if (result.delivered) {
-      return { delivered: true, provider };
+      return {
+        delivered: true,
+        // Resend may fall back to SMTP on quota/API errors.
+        provider: result.resendFailureDetail ? 'smtp' : provider,
+      };
     }
     return {
       delivered: false,
@@ -58,7 +72,6 @@ export class EmailProviderService {
 
   private async sendViaSendGrid(input: TransactionalMail): Promise<SendEmailResult> {
     const apiKey = process.env.SENDGRID_API_KEY?.trim();
-    const from = this.formatFromAddress();
     if (!apiKey) {
       return { delivered: false, provider: 'sendgrid', skippedReason: 'sendgrid_not_configured' };
     }
@@ -100,19 +113,5 @@ export class EmailProviderService {
         errorMessage: String(err),
       };
     }
-  }
-}
-
-/** Direct delivery helpers for tests and provider diagnostics. */
-export async function deliverEmailDirect(
-  provider: EmailProviderId,
-  input: TransactionalMail,
-): Promise<void> {
-  if (provider === 'resend') {
-    await deliverViaResend(input);
-    return;
-  }
-  if (provider === 'smtp') {
-    await deliverViaSmtp(input);
   }
 }

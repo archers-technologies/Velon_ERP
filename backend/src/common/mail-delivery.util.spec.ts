@@ -149,9 +149,34 @@ describe('mail-delivery.util', () => {
     expect(mockCreateTransport).not.toHaveBeenCalled();
   });
 
-  it('does not fall back to SMTP when Resend fails', async () => {
+  it('falls back to SMTP when Resend fails and SMTP is configured', async () => {
     process.env.RESEND_API_KEY = 're_test_123';
     process.env.RESEND_FROM = 'Velon ERP <noreply@velonerp.com>';
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 429,
+      text: async () => '{"message":"You have reached your daily email sending quota."}',
+    });
+
+    const result = await sendTransactionalMail({
+      to: 'user@gmail.com',
+      subject: 'Test',
+      text: 'hello',
+      html: '<p>hello</p>',
+    });
+
+    expect(result.delivered).toBe(true);
+    expect(fetchMock).toHaveBeenCalled();
+    expect(mockCreateTransport).toHaveBeenCalled();
+  });
+
+  it('does not fall back to SMTP when Resend fails and SMTP is missing', async () => {
+    process.env.RESEND_API_KEY = 're_test_123';
+    process.env.RESEND_FROM = 'Velon ERP <noreply@velonerp.com>';
+    delete process.env.SMTP_HOST;
+    delete process.env.SMTP_USER;
+    delete process.env.SMTP_PASS;
+    delete process.env.SMTP_FROM;
     fetchMock.mockResolvedValue({
       ok: false,
       status: 403,

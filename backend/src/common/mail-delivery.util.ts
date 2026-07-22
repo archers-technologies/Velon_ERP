@@ -476,29 +476,43 @@ export async function sendTransactionalMail(input: TransactionalMail): Promise<{
 
   if (provider === 'resend') {
     log.log('Using Resend');
-    if (smtpConfigured()) {
-      log.log('SMTP disabled');
-    }
     try {
       await deliverViaResend(input);
       return { delivered: true };
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
+      let resendFailureDetail: ResendSendFailureDetail | undefined;
       if (message.startsWith('resend_send_failed:')) {
         try {
-          const detail = JSON.parse(
+          resendFailureDetail = JSON.parse(
             message.slice('resend_send_failed:'.length),
           ) as ResendSendFailureDetail;
-          return {
-            delivered: false,
-            skippedReason: 'resend_send_failed',
-            resendFailureDetail: detail,
-          };
         } catch {
-          return { delivered: false, skippedReason: 'resend_send_failed' };
+          /* keep undefined */
         }
       }
-      return { delivered: false, skippedReason: 'resend_send_failed' };
+
+      // Resend quota / API outages should not kill lifecycle mail when SMTP works.
+      if (smtpConfigured()) {
+        log.warn(
+          `Resend failed (${resendFailureDetail?.message ?? message}); falling back to SMTP`,
+        );
+        const smtpResult = await sendViaSmtp(input);
+        if (smtpResult.delivered) {
+          return { ...smtpResult, resendFailureDetail };
+        }
+        return {
+          ...smtpResult,
+          skippedReason: smtpResult.skippedReason ?? 'resend_send_failed',
+          resendFailureDetail,
+        };
+      }
+
+      return {
+        delivered: false,
+        skippedReason: 'resend_send_failed',
+        resendFailureDetail,
+      };
     }
   }
 

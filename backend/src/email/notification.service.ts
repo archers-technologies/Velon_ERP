@@ -59,8 +59,10 @@ export class NotificationService {
         'No mail provider configured. Set RESEND_API_KEY + RESEND_FROM or SMTP_HOST, SMTP_USER, SMTP_PASS, and SMTP_FROM.',
       );
     }
-    if (smtpConfigured() && provider !== 'smtp' && resendConfigured()) {
-      warnings.push('SMTP credentials are present but Resend is the active provider.');
+    if (smtpConfigured() && provider === 'resend') {
+      warnings.push(
+        'Resend is primary; SMTP is configured as automatic fallback if Resend fails (e.g. daily quota).',
+      );
     }
     if (!process.env.REDIS_URL?.trim() && process.env.NODE_ENV !== 'test') {
       warnings.push(
@@ -121,7 +123,10 @@ export class NotificationService {
 
   async notifyLogin(input: LoginNotificationInput) {
     const loginAt = input.loginAt ?? new Date();
-    const idempotencyKey = `login:${input.userId}:${loginAt.toISOString()}`;
+    // One login alert per user per calendar day — avoids burning Resend daily quota
+    // on repeated sign-ins while still notifying of account activity.
+    const dayKey = loginAt.toISOString().slice(0, 10);
+    const idempotencyKey = `login:${input.userId}:${dayKey}`;
     const context = this.lifecycle.buildBaseContext({
       user: { name: input.userName, email: input.email },
       workspace: { name: input.workspaceName },
@@ -134,7 +139,6 @@ export class NotificationService {
       },
     });
 
-    // One event per login — not per user (EmailEvent dedupes on eventType + entityId).
     return this.emitSecurityEvent(EMAIL_EVENT_TYPES.USER_LOGGED_IN, 'user', idempotencyKey, {
       userId: input.userId,
       tenantId: input.tenantId ?? null,

@@ -31,6 +31,7 @@ describe('EmailLifecycleService security events', () => {
   const events = {
     record: jest.fn().mockResolvedValue({ event: { id: 'evt-1' }, duplicate: false }),
     markProcessed: jest.fn(),
+    releaseForRetry: jest.fn(),
   } as unknown as EmailEventService;
 
   const provider = {

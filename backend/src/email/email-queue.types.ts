@@ -5,5 +5,8 @@ export type EmailQueueJobData = {
   subject: string;
   text: string;
   html: string;
+  from?: string;
+  eventType?: string;
+  entityId?: string;
   attempt?: number;
 };

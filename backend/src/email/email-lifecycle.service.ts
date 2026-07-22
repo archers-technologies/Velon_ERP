@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { EMAIL_EVENT_TYPES, EMAIL_TEMPLATE_KEYS, type EmailMergeContext } from '@velon/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { getAppBaseUrl, getBillingEmail, getSupportEmail } from './email-env.util';
@@ -10,6 +11,11 @@ import { EmailQueueService } from './email-queue.service';
 import type { EmailQueueJobData } from './email-queue.types';
 import { renderEmailTemplate, wrapEmailHtml } from './email-template-renderer.util';
 import { EmailTemplateService } from './email-template.service';
+
+type EmailEventContext = {
+  eventType: string;
+  entityId: string;
+};
 
 export type SendLifecycleEmailInput = {
   templateKey: string;
@@ -53,6 +59,7 @@ const ONBOARDING_TEMPLATES = [
 @Injectable()
 export class EmailLifecycleService {
   private readonly log = new Logger(EmailLifecycleService.name);
+  private readonly eventContext = new AsyncLocalStorage<EmailEventContext>();
 
   constructor(
     private readonly prisma: PrismaService,
@@ -91,11 +98,14 @@ export class EmailLifecycleService {
     }
 
     try {
-      await this.handleEvent(eventType, payload);
+      await this.eventContext.run({ eventType, entityId }, async () => {
+        await this.handleEvent(eventType, payload);
+      });
       await this.events.markProcessed(event.id);
       return { processed: true, duplicate: false };
     } catch (err) {
       this.log.error(`Email event handler failed ${eventType}: ${String(err)}`);
+      await this.events.releaseForRetry(eventType, entityId);
       throw err;
     }
   }
@@ -204,6 +214,8 @@ export class EmailLifecycleService {
       htmlBody = wrapEmailHtml(htmlBody);
     }
 
+    const activeEvent = this.eventContext.getStore();
+    const fromEmail = this.provider.formatFromAddress();
     const { log, duplicate } = await this.logs.createQueued({
       tenantId: input.tenantId,
       userId: input.userId,
@@ -214,9 +226,13 @@ export class EmailLifecycleService {
       templateKey: input.templateKey,
       idempotencyKey: input.idempotencyKey,
       toEmail: input.toEmail,
-      fromEmail: this.provider.formatFromAddress(),
+      fromEmail,
       subject,
-      metadata: { eventContext: input.context },
+      metadata: {
+        eventContext: input.context,
+        eventType: activeEvent?.eventType,
+        entityId: activeEvent?.entityId,
+      },
     });
 
     if (duplicate) {
@@ -230,6 +246,9 @@ export class EmailLifecycleService {
       subject,
       text: textBody,
       html: htmlBody,
+      from: fromEmail,
+      eventType: activeEvent?.eventType,
+      entityId: activeEvent?.entityId,
     };
 
     await this.queue.enqueue(job, input.delayMs ?? 0);
@@ -240,7 +259,12 @@ export class EmailLifecycleService {
     if (!log || log.status !== 'FAILED') return { resent: false };
 
     const template = await this.templates.getByKey(log.templateKey);
-    const ctx = (log.metadata as { eventContext?: EmailMergeContext })?.eventContext ?? {};
+    const meta = log.metadata as {
+      eventContext?: EmailMergeContext;
+      eventType?: string;
+      entityId?: string;
+    } | null;
+    const ctx = meta?.eventContext ?? {};
     const mergedCtx = this.buildBaseContext(ctx);
     const subject = renderEmailTemplate(template.subject, mergedCtx);
     const text = renderEmailTemplate(template.textBody, mergedCtx);
@@ -253,6 +277,9 @@ export class EmailLifecycleService {
       subject,
       text,
       html,
+      from: log.fromEmail,
+      eventType: meta?.eventType,
+      entityId: meta?.entityId,
     });
     return { resent: true };
   }
@@ -519,12 +546,13 @@ export class EmailLifecycleService {
 
   private async onTrialEndingSoon(payload: Record<string, unknown>) {
     const ctx = this.buildBaseContext(payload.context as EmailMergeContext);
+    const dayKey = String(payload.dayKey ?? new Date().toISOString().slice(0, 10));
     await this.sendLifecycleEmail({
       templateKey: EMAIL_TEMPLATE_KEYS.TRIAL_ENDING_SOON,
       toEmail: String(payload.email),
       userId: String(payload.userId),
       tenantId: String(payload.tenantId),
-      idempotencyKey: `trial_ending:${payload.subscriptionId}`,
+      idempotencyKey: `trial_ending:${payload.subscriptionId}:${dayKey}`,
       context: ctx,
       cta: { label: 'Choose Plan', urlVar: 'billingUrl' },
     });
@@ -545,12 +573,13 @@ export class EmailLifecycleService {
 
   private async onAccountSuspended(payload: Record<string, unknown>) {
     const ctx = this.buildBaseContext(payload.context as EmailMergeContext);
+    const dayKey = String(payload.dayKey ?? new Date().toISOString().slice(0, 10));
     await this.sendLifecycleEmail({
       templateKey: EMAIL_TEMPLATE_KEYS.ACCOUNT_SUSPENDED_BILLING,
       toEmail: String(payload.email),
       userId: String(payload.userId),
       tenantId: String(payload.tenantId),
-      idempotencyKey: `account_suspended:${payload.tenantId}`,
+      idempotencyKey: `account_suspended:${payload.tenantId}:${dayKey}`,
       context: ctx,
       cta: { label: 'Update Billing', urlVar: 'billingUrl' },
     });

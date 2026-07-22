@@ -103,15 +103,17 @@ export class EmailSchedulerService implements OnModuleInit, OnModuleDestroy {
       const owner = await this.lifecycle.getTenantOwnerEmail(sub.tenantId);
       if (!owner?.user) continue;
 
+      const dayKey = now.toISOString().slice(0, 10);
       await this.lifecycle.emit(
         EMAIL_EVENT_TYPES.TRIAL_ENDING_SOON,
         'subscription',
-        `${sub.id}:trial_ending`,
+        `${sub.id}:trial_ending:${dayKey}`,
         {
           tenantId: sub.tenantId,
           subscriptionId: sub.id,
           userId: owner.user.id,
           email: owner.user.email,
+          dayKey,
           context: this.lifecycle.buildBaseContext({
             user: { name: owner.user.name ?? owner.user.email, email: owner.user.email },
             workspace: { name: owner.tenant.workspace?.name ?? owner.tenant.name },
@@ -132,16 +134,23 @@ export class EmailSchedulerService implements OnModuleInit, OnModuleDestroy {
       const owner = await this.lifecycle.getTenantOwnerEmail(tenant.id);
       if (!owner?.user) continue;
 
-      await this.lifecycle.emit(EMAIL_EVENT_TYPES.SUBSCRIPTION_SUSPENDED, 'tenant', tenant.id, {
-        tenantId: tenant.id,
-        userId: owner.user.id,
-        email: owner.user.email,
-        context: this.lifecycle.buildBaseContext({
-          user: { name: owner.user.name ?? owner.user.email, email: owner.user.email },
-          workspace: { name: owner.tenant.workspace?.name ?? tenant.name },
-          plan: { name: tenant.plan },
-        }),
-      });
+      const dayKey = new Date().toISOString().slice(0, 10);
+      await this.lifecycle.emit(
+        EMAIL_EVENT_TYPES.SUBSCRIPTION_SUSPENDED,
+        'tenant',
+        `${tenant.id}:suspended:${dayKey}`,
+        {
+          tenantId: tenant.id,
+          userId: owner.user.id,
+          email: owner.user.email,
+          dayKey,
+          context: this.lifecycle.buildBaseContext({
+            user: { name: owner.user.name ?? owner.user.email, email: owner.user.email },
+            workspace: { name: owner.tenant.workspace?.name ?? tenant.name },
+            plan: { name: tenant.plan },
+          }),
+        },
+      );
     }
   }
 }

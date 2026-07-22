@@ -1,4 +1,10 @@
 import { VELON_CONTACT_EMAIL } from '@velon/shared';
+import {
+  getPlatformFromRaw,
+  resendConfigured,
+  resolveMailProvider,
+  smtpConfigured,
+} from '../common/mail-delivery.util';
 
 export type EmailProviderId = 'smtp' | 'resend' | 'sendgrid' | 'ses' | 'mailgun' | 'none';
 
@@ -23,15 +29,25 @@ export function getFromName(): string {
 }
 
 export function getFromEmail(): string {
+  const platformRaw = getPlatformFromRaw();
+  if (platformRaw) {
+    const match = platformRaw.match(/<([^>]+)>/);
+    return (match ? match[1] : platformRaw).trim();
+  }
+
   const raw =
+    process.env.RESEND_FROM?.trim() ||
     process.env.SMTP_FROM_EMAIL?.trim() ||
     process.env.SMTP_FROM?.trim() ||
-    process.env.RESEND_FROM?.trim() ||
     getSupportEmail();
   const match = raw.match(/<([^>]+)>/);
   return (match ? match[1] : raw).trim();
 }
 
+/**
+ * Status/reporting resolver — stays aligned with actual delivery (`resolveMailProvider`)
+ * and only reports providers that can actually send.
+ */
 export function resolveEmailProvider(): EmailProviderId {
   const explicit = (
     process.env.EMAIL_PROVIDER?.trim() ||
@@ -39,22 +55,19 @@ export function resolveEmailProvider(): EmailProviderId {
     ''
   ).toLowerCase();
 
-  if (explicit === 'smtp' || explicit === 'resend' || explicit === 'sendgrid') {
-    return explicit as EmailProviderId;
+  if (explicit === 'sendgrid') {
+    return process.env.SENDGRID_API_KEY?.trim() ? 'sendgrid' : 'none';
   }
   if (explicit === 'ses' || explicit === 'mailgun') {
-    return explicit as EmailProviderId;
+    // Named in env docs but not implemented — fall through to working transports.
+    if (resendConfigured()) return 'resend';
+    if (smtpConfigured()) return 'smtp';
+    return 'none';
   }
 
-  if (process.env.RESEND_API_KEY?.trim() && process.env.RESEND_FROM?.trim()) return 'resend';
-  if (
-    process.env.SMTP_HOST?.trim() &&
-    process.env.SMTP_USER?.trim() &&
-    (process.env.SMTP_PASS?.trim() || process.env.SMTP_PASSWORD?.trim()) &&
-    (process.env.SMTP_FROM?.trim() || process.env.SMTP_FROM_EMAIL?.trim())
-  ) {
-    return 'smtp';
-  }
+  const mail = resolveMailProvider();
+  if (mail !== 'none') return mail;
+
   if (process.env.SENDGRID_API_KEY?.trim()) return 'sendgrid';
   return 'none';
 }
