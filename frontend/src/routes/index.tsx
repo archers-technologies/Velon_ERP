@@ -3,6 +3,7 @@ import { ArrowRight, Boxes, Zap } from 'lucide-react';
 import { MarketingPricingSection } from '@/components/billing/marketing-pricing';
 import {
   PricingPreferencePrompt,
+  PricingPreferenceProvider,
   usePricingPreference,
 } from '@/components/billing/pricing-preference';
 import { SiteFooter } from '@/components/marketing/site-footer';
@@ -36,6 +37,14 @@ export const Route = createFileRoute('/')({
 });
 
 function Home() {
+  return (
+    <PricingPreferenceProvider>
+      <HomeContent />
+    </PricingPreferenceProvider>
+  );
+}
+
+function HomeContent() {
   const { siteContent, plans } = Route.useLoaderData();
   const hero = siteContent.hero;
   const features = siteContent.features;
@@ -44,7 +53,7 @@ function Home() {
   const pricingContent = siteContent.pricing;
   const faqItems = siteContent.faq.items;
   const cta = siteContent.cta;
-  const { preference, updatePreference } = usePricingPreference();
+  const { preference } = usePricingPreference();
 
   return (
     <div className="bg-background min-h-screen">
@@ -165,7 +174,6 @@ function Home() {
             subhead={pricingContent.subhead}
             plans={plans}
             preference={preference}
-            onPreferenceChange={updatePreference}
           />
         </div>
       </section>

@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { MarketingPricingSection } from '@/components/billing/marketing-pricing';
 import {
   PricingPreferencePrompt,
+  PricingPreferenceProvider,
   usePricingPreference,
 } from '@/components/billing/pricing-preference';
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell';
@@ -20,8 +21,16 @@ export const Route = createFileRoute('/pricing')({
 });
 
 function PricingPage() {
+  return (
+    <PricingPreferenceProvider>
+      <PricingPageContent />
+    </PricingPreferenceProvider>
+  );
+}
+
+function PricingPageContent() {
   const { siteContent, plans } = Route.useLoaderData();
-  const { preference, updatePreference } = usePricingPreference();
+  const { preference } = usePricingPreference();
 
   return (
     <MarketingPageShell
@@ -30,13 +39,12 @@ function PricingPage() {
       description={siteContent.pricing.subhead}
       siteContent={siteContent}
     >
-      <PricingPreferencePrompt skipAutoOpen />
+      <PricingPreferencePrompt />
       <MarketingPricingSection
         headline={siteContent.pricing.headline}
         subhead={siteContent.pricing.subhead}
         plans={plans}
         preference={preference}
-        onPreferenceChange={updatePreference}
         hideHeadline
       />
     </MarketingPageShell>

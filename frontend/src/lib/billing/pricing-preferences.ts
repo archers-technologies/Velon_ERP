@@ -23,6 +23,7 @@ export type PricingPreference = {
 
 export const PRICING_PREFERENCE_KEY = 'velon-pricing-preference-v2';
 export const PRICING_PROMPT_DISMISSED_KEY = 'velon-pricing-prompt-dismissed-v2';
+export const LANGUAGE_CONFIRMED_KEY = 'velon-language-confirmed-v1';
 
 export const defaultPricingPreference: PricingPreference = {
   country: 'IN',
@@ -31,6 +32,39 @@ export const defaultPricingPreference: PricingPreference = {
 };
 
 export { countryOptions, currencyOptions, getCountryDefaultCurrency };
+
+export const LANGUAGE_LABELS: Record<PricingLanguage, string> = {
+  en: 'English',
+  hi: 'Hindi',
+  ar: 'العربية',
+};
+
+const GCC_COUNTRIES = new Set<PricingCountry>(['SA', 'AE', 'BH', 'OM', 'QA', 'KW']);
+
+export function getCountryLabel(country: PricingCountry): string {
+  return countryOptions.find((option) => option.value === country)?.label ?? 'your region';
+}
+
+/** Languages offered on first-visit confirmation for a detected country. */
+export function languageChoicesForCountry(country: PricingCountry): PricingLanguage[] {
+  if (GCC_COUNTRIES.has(country) || country === 'EG') return ['ar', 'en'];
+  if (country === 'IN') return ['en', 'hi'];
+  return ['en'];
+}
+
+export function hasConfirmedLanguage(): boolean {
+  if (typeof window === 'undefined') return true;
+  return (
+    window.localStorage.getItem(LANGUAGE_CONFIRMED_KEY) === 'true' ||
+    window.localStorage.getItem(PRICING_PROMPT_DISMISSED_KEY) === 'true'
+  );
+}
+
+export function markLanguageConfirmed() {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(LANGUAGE_CONFIRMED_KEY, 'true');
+  window.localStorage.setItem(PRICING_PROMPT_DISMISSED_KEY, 'true');
+}
 
 export function formatMarketingMonthlyPrice(amount: number, currency: PricingCurrency) {
   const rounded = Math.round(amount * 100) / 100;
@@ -192,6 +226,8 @@ const TIMEZONE_COUNTRY: Record<string, PricingCountry> = {
   'Asia/Kuwait': 'KW',
   'Asia/Singapore': 'SG',
   'Europe/London': 'GB',
+  'Europe/Berlin': 'DE',
+  'Europe/Paris': 'FR',
   'America/New_York': 'US',
   'America/Los_Angeles': 'US',
   'America/Chicago': 'US',
@@ -222,16 +258,30 @@ export function detectVisitorPricingPreference(): PricingPreference {
       } else {
         country = 'AE';
       }
-    } else if (languages.some((l) => /-GB\b/i.test(l))) country = 'GB';
+    } else if (languages.some((l) => /-DE\b/i.test(l))) country = 'DE';
+    else if (languages.some((l) => /-GB\b/i.test(l))) country = 'GB';
     else if (languages.some((l) => /-US\b/i.test(l))) country = 'US';
   }
 
   const currency = getCountryDefaultCurrency(country);
-  let language: PricingLanguage = 'en';
-  if (primaryLang.startsWith('hi')) language = 'hi';
-  else if (primaryLang.startsWith('ar')) language = 'ar';
+  const choices = languageChoicesForCountry(country);
+  let language: PricingLanguage = choices[0] ?? 'en';
+  if (primaryLang.startsWith('hi') && choices.includes('hi')) language = 'hi';
+  else if (primaryLang.startsWith('ar') && choices.includes('ar')) language = 'ar';
+  else if (primaryLang.startsWith('en') && choices.includes('en')) language = 'en';
+  else if (GCC_COUNTRIES.has(country) || country === 'EG') language = 'ar';
 
   return { country, currency, language };
+}
+
+/** Soft-apply region detection when the visitor has no saved preference yet. */
+export function ensureDetectedPricingPreference(): PricingPreference {
+  if (typeof window === 'undefined') return defaultPricingPreference;
+  const raw = window.localStorage.getItem(PRICING_PREFERENCE_KEY);
+  if (raw) return readPricingPreference();
+  const detected = detectVisitorPricingPreference();
+  savePricingPreference(detected);
+  return detected;
 }
 
 export function applyPricingLanguage(language: PricingLanguage) {

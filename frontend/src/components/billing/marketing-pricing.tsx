@@ -20,7 +20,6 @@ type MarketingPricingSectionProps = {
   subhead: string;
   plans: MarketingPlanCard[];
   preference: PricingPreference;
-  onPreferenceChange: (preference: PricingPreference) => void;
   hideHeadline?: boolean;
 };
 
@@ -72,7 +71,6 @@ export function MarketingPricingSection({
   subhead,
   plans,
   preference,
-  onPreferenceChange,
   hideHeadline = false,
 }: MarketingPricingSectionProps) {
   const [interval, setInterval] = useState<MarketingBillingInterval>('MONTHLY');
@@ -96,7 +94,6 @@ export function MarketingPricingSection({
           />
           <PricingPreferenceControl
             preference={preference}
-            onChange={onPreferenceChange}
             compact
           />
         </div>
