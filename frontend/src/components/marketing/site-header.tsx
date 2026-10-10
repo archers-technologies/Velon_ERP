@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { Menu } from 'lucide-react';
 import { BrandLogoLink } from '@/components/marketing/brand-logo-link';
-import { VelonLogoMark } from '@/components/marketing/velon-logo-mark';
+import { VelonLogo } from '@/components/marketing/velon-logo';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { loginSearch } from '@/lib/auth/login-utils';
@@ -22,11 +22,12 @@ export function SiteHeader() {
   return (
     <header className="border-border/60 bg-background/80 sticky top-0 z-50 border-b backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
-        <BrandLogoLink className="flex shrink-0 items-center gap-2.5">
-          <VelonLogoMark size="sm" />
-          <span className="text-lg font-semibold tracking-tight">
-            Velon<span className="text-muted-foreground">ERP</span>
-          </span>
+        <BrandLogoLink className="flex shrink-0 items-center">
+          <VelonLogo
+            slot="navbar"
+            size="md"
+            alt=""
+          />
         </BrandLogoLink>
 
         <nav className="text-muted-foreground hidden items-center gap-8 text-sm font-medium md:flex">
@@ -58,7 +59,7 @@ export function SiteHeader() {
 
           <Button
             size="sm"
-            className="bg-foreground text-background hover:bg-foreground/90 hidden md:inline-flex"
+            className="bg-gradient-primary shadow-glow hidden text-white hover:opacity-95 md:inline-flex"
             asChild
           >
             <Link to="/contact">Contact sales</Link>
@@ -101,7 +102,7 @@ export function SiteHeader() {
             ))}
             <div className="border-border mt-4 border-t pt-4">
               <Button
-                className="bg-foreground text-background hover:bg-foreground/90 w-full"
+                className="bg-gradient-primary w-full text-white hover:opacity-95"
                 asChild
               >
                 <Link

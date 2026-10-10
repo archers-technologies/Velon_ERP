@@ -99,14 +99,14 @@ function PlatformLoginPage() {
           changes are logged with tamper-evident audit trails. See{' '}
           <Link
             to="/privacy"
-            className="text-amber-100"
+            className="text-[#b7f3df]"
           >
             Privacy Policy
           </Link>{' '}
           and{' '}
           <Link
             to="/terms"
-            className="text-amber-100"
+            className="text-[#b7f3df]"
           >
             Terms
           </Link>
@@ -149,7 +149,7 @@ function PlatformLoginPage() {
         <Button
           type="submit"
           disabled={busy}
-          className="w-full bg-amber-500 text-black hover:bg-amber-400"
+          className="bg-gradient-primary shadow-glow w-full text-white hover:opacity-95"
         >
           {busy ? 'Verifying…' : 'Enter control plane'}
         </Button>

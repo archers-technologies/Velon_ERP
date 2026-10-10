@@ -68,7 +68,7 @@ function HomeContent() {
             variant="outline"
             className="border-border bg-background/70 mb-6 gap-2 rounded-full px-4 py-1.5 text-xs font-medium backdrop-blur"
           >
-            <span className="bg-foreground flex h-1.5 w-1.5 rounded-full" />
+            <span className="bg-primary-glow flex h-1.5 w-1.5 rounded-full" />
             {hero.badge ?? 'Velon-ERP'}
           </Badge>
           <h1 className="mx-auto max-w-4xl text-5xl leading-[1.05] font-semibold tracking-tight sm:text-6xl md:text-[72px]">
@@ -81,7 +81,7 @@ function HomeContent() {
             <Button
               asChild
               size="lg"
-              className="bg-foreground text-background hover:bg-foreground/90 h-12 rounded-xl px-7"
+              className="bg-gradient-primary shadow-glow h-12 rounded-xl px-7 text-white hover:opacity-95"
             >
               <Link
                 to="/login"
@@ -122,7 +122,7 @@ function HomeContent() {
               key={item.title}
               className="group bg-card hover:bg-gradient-pale relative p-7 transition"
             >
-              <div className="bg-foreground text-background mb-5 flex h-11 w-11 items-center justify-center rounded-xl">
+              <div className="bg-gradient-primary mb-5 flex h-11 w-11 items-center justify-center rounded-xl text-white">
                 <Boxes className="h-5 w-5" />
               </div>
               <h3 className="text-lg font-semibold tracking-tight">{item.title}</h3>
@@ -199,16 +199,16 @@ function HomeContent() {
       )}
 
       <section className="mx-auto max-w-7xl px-6 py-24">
-        <Card className="border-border bg-foreground text-background relative overflow-hidden p-12 text-center">
+        <Card className="bg-gradient-primary shadow-glow relative overflow-hidden border-0 p-12 text-center text-white">
           <div className="bg-gradient-mesh absolute inset-0 opacity-20" />
           <div className="relative">
             <Zap className="mx-auto mb-4 h-9 w-9" />
             <h3 className="text-3xl font-semibold tracking-tight">{cta.title}</h3>
-            <p className="text-background/70 mx-auto mt-3 max-w-xl">{cta.subtitle}</p>
+            <p className="mx-auto mt-3 max-w-xl text-white/75">{cta.subtitle}</p>
             <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
               <Button
                 size="lg"
-                className="bg-background text-foreground hover:bg-background/90 h-12 rounded-xl px-7"
+                className="h-12 rounded-xl bg-white px-7 text-[#12294d] hover:bg-white/90"
                 asChild
               >
                 {cta.primaryHref === '/login' ? (
@@ -225,7 +225,7 @@ function HomeContent() {
               <Button
                 size="lg"
                 variant="ghost"
-                className="text-background hover:bg-background/10 h-12 rounded-xl px-7"
+                className="h-12 rounded-xl px-7 text-white hover:bg-white/10"
                 asChild
               >
                 <Link to={cta.secondaryHref}>{cta.secondaryLabel}</Link>

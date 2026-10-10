@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router';
 import type { LucideIcon } from 'lucide-react';
 import { BrandLogoLink } from '@/components/marketing/brand-logo-link';
 import { SiteFooter } from '@/components/marketing/site-footer';
+import { VelonLogo } from '@/components/marketing/velon-logo';
 import { VelonLogoMark } from '@/components/marketing/velon-logo-mark';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -47,25 +48,23 @@ export function AuthPortalShell({
     <div
       className={cn(
         'min-h-screen',
-        isPlatform ? 'bg-[#0a0a0b] text-white' : 'bg-background text-foreground',
+        isPlatform ? 'bg-[#071422] text-white' : 'bg-background text-foreground',
       )}
     >
       <header
         className={cn(
           'sticky top-0 z-50 border-b backdrop-blur-xl',
-          isPlatform ? 'border-white/10 bg-[#0a0a0b]/90' : 'border-border/60 bg-background/80',
+          isPlatform ? 'border-white/10 bg-[#071422]/90' : 'border-border/60 bg-background/80',
         )}
       >
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-          <BrandLogoLink className="flex items-center gap-2.5">
-            <VelonLogoMark
-              size="sm"
-              variant={isPlatform ? 'platform' : 'default'}
+          <BrandLogoLink className="flex items-center">
+            <VelonLogo
+              slot="navbar"
+              tone={isPlatform ? 'white' : 'auto'}
+              size="md"
+              alt=""
             />
-            <span className="text-lg font-semibold tracking-tight">
-              Velon
-              <span className={isPlatform ? 'text-white/50' : 'text-muted-foreground'}>-ERP</span>
-            </span>
           </BrandLogoLink>
           {crossLink ? (
             <Link
@@ -73,7 +72,7 @@ export function AuthPortalShell({
               search={crossLink.search}
               className={cn(
                 'text-sm font-medium underline-offset-4 hover:underline',
-                isPlatform ? 'text-amber-200/90' : 'text-muted-foreground hover:text-foreground',
+                isPlatform ? 'text-[#b7f3df]' : 'text-muted-foreground hover:text-foreground',
               )}
             >
               {crossLink.label}
@@ -90,8 +89,8 @@ export function AuthPortalShell({
           </>
         ) : (
           <>
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(245,158,11,0.12),_transparent_55%)]" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_rgba(255,255,255,0.04),_transparent_50%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(0,130,91,0.22),_transparent_55%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_rgba(18,81,135,0.28),_transparent_50%)]" />
           </>
         )}
 
@@ -102,7 +101,7 @@ export function AuthPortalShell({
               className={cn(
                 'rounded-full',
                 isPlatform
-                  ? 'border-amber-500/40 bg-amber-500/10 text-amber-100'
+                  ? 'border-[#5ee0b5]/40 bg-[#00825b]/15 text-[#d8fff2]'
                   : 'border-border bg-background/80',
               )}
             >
@@ -154,7 +153,7 @@ export function AuthPortalShell({
                   )}
                 >
                   <item.icon
-                    className={cn('h-5 w-5', isPlatform ? 'text-amber-400' : 'text-foreground')}
+                    className={cn('h-5 w-5', isPlatform ? 'text-[#5ee0b5]' : 'text-primary')}
                   />
                   <div className="mt-3 text-sm font-semibold">{item.title}</div>
                   <p
@@ -173,7 +172,7 @@ export function AuthPortalShell({
               className={cn(
                 'mt-6 p-4 text-sm backdrop-blur',
                 isPlatform
-                  ? 'border-amber-500/20 bg-amber-500/5 text-white/65'
+                  ? 'border-[#5ee0b5]/25 bg-[#00825b]/10 text-white/70'
                   : 'border-border bg-background/80 text-muted-foreground',
               )}
             >
@@ -181,7 +180,7 @@ export function AuthPortalShell({
                 <ComplianceIcon
                   className={cn(
                     'mt-0.5 h-4 w-4 shrink-0',
-                    isPlatform ? 'text-amber-400' : 'text-foreground',
+                    isPlatform ? 'text-[#5ee0b5]' : 'text-primary',
                   )}
                 />
                 <div className="leading-relaxed [&_a]:underline [&_a]:underline-offset-2">
@@ -195,7 +194,7 @@ export function AuthPortalShell({
             className={cn(
               'shadow-elegant p-6 backdrop-blur',
               isPlatform
-                ? 'border-white/10 bg-[#141416]/95 text-white'
+                ? 'border-white/10 bg-[#102033]/95 text-white'
                 : 'border-border bg-card/95',
             )}
           >
@@ -204,7 +203,7 @@ export function AuthPortalShell({
         </div>
       </main>
 
-      <SiteFooter />
+      <SiteFooter appearance={isPlatform ? 'navy' : 'canvas'} />
     </div>
   );
 }

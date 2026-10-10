@@ -359,7 +359,7 @@ function WorkspaceLoginPage() {
             <Button
               type="submit"
               disabled={busy}
-              className="bg-foreground text-background hover:bg-foreground/90 w-full"
+              className="bg-gradient-primary w-full text-white hover:opacity-95"
             >
               {busy ? 'Signing in…' : 'Sign In'}
             </Button>
@@ -481,7 +481,7 @@ function WorkspaceLoginPage() {
               <Button
                 type="submit"
                 disabled={busy || !isPasswordStrong(signupPassword)}
-                className="bg-foreground text-background hover:bg-foreground/90 w-full"
+                className="bg-gradient-primary w-full text-white hover:opacity-95"
               >
                 {busy ? 'Sending OTP…' : 'Verify email & continue'}
               </Button>
@@ -518,7 +518,7 @@ function WorkspaceLoginPage() {
               <Button
                 type="submit"
                 disabled={busy || signupOtp.length !== 6}
-                className="bg-foreground text-background hover:bg-foreground/90 w-full"
+                className="bg-gradient-primary w-full text-white hover:opacity-95"
               >
                 {busy ? 'Creating workspace…' : 'Verify OTP & create workspace'}
               </Button>

@@ -1,6 +1,7 @@
 import { createRootRoute, HeadContent, Link, Outlet, Scripts } from '@tanstack/react-router';
 import { SiteFooter } from '@/components/marketing/site-footer';
 import { Toaster } from '@/components/ui/sonner';
+import favicon from '@/Logo assets/07 VelonERP logo - favicon - Primary.svg';
 import appCss from '../styles.css?url';
 
 function NotFoundComponent() {
@@ -50,6 +51,8 @@ export const Route = createRootRoute({
         rel: 'stylesheet',
         href: appCss,
       },
+      { rel: 'icon', type: 'image/svg+xml', href: favicon },
+      { rel: 'apple-touch-icon', href: favicon },
     ],
   }),
   shellComponent: RootShell,
