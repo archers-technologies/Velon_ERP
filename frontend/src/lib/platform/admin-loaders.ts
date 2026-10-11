@@ -491,8 +491,8 @@ export async function updatePlanDefinition(
     displayName?: string;
     monthlyPrice?: number;
     annualPrice?: number;
-    indiaMonthlyPrice?: number;
-    indiaAnnualPrice?: number;
+    saudiMonthlyPrice?: number;
+    saudiAnnualPrice?: number;
     globalMonthlyPrice?: number;
     globalAnnualPrice?: number;
     currency?: string;

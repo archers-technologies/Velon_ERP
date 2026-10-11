@@ -1,9 +1,9 @@
 import { yearlyPriceFromMonthly, type BillingInterval } from './billing';
 
-export type PricingRegion = 'INDIA' | 'GLOBAL';
+export type PricingRegion = 'SAUDI' | 'GLOBAL';
 
 export type PlanRegionalPrices = {
-  india: { monthlyPrice: number; annualPrice: number; currency: 'INR' };
+  saudi: { monthlyPrice: number; annualPrice: number; currency: 'SAR' };
   global: { monthlyPrice: number; annualPrice: number; currency: 'USD' };
 };
 
@@ -17,36 +17,36 @@ export type ResolvedPlanPrice = {
   monthlyEquivalent: number;
 };
 
-/** India billing uses the India price table — never USD×FX conversion. */
-export function isIndiaBilling(billingCountry: string, billingCurrency: string): boolean {
+/** Saudi billing uses the SAR price table. Other countries use the USD table. */
+export function isSaudiBilling(billingCountry: string, billingCurrency: string): boolean {
   const country = billingCountry?.trim().toUpperCase();
   const currency = billingCurrency?.trim().toUpperCase();
-  return country === 'IN' || currency === 'INR';
+  return country === 'SA' || currency === 'SAR';
 }
 
 export function planRegionalPricesFromDefinition(input: {
-  indiaMonthlyPrice?: number | null;
-  indiaAnnualPrice?: number | null;
+  saudiMonthlyPrice?: number | null;
+  saudiAnnualPrice?: number | null;
   globalMonthlyPrice?: number | null;
   globalAnnualPrice?: number | null;
   monthlyPrice?: number;
   annualPrice?: number;
   currency?: string;
 }): PlanRegionalPrices {
-  const legacyMonthly = Number(input.monthlyPrice ?? 49);
+  const legacyMonthly = Number(input.monthlyPrice ?? 199);
   const legacyAnnual = Number(input.annualPrice ?? yearlyPriceFromMonthly(legacyMonthly));
-  const legacyCurrency = (input.currency ?? 'INR').toUpperCase();
+  const legacyCurrency = (input.currency ?? 'SAR').toUpperCase();
 
-  const indiaMonthly = Number(
-    input.indiaMonthlyPrice ?? (legacyCurrency === 'INR' ? legacyMonthly : 49),
+  const saudiMonthly = Number(
+    input.saudiMonthlyPrice ?? (legacyCurrency === 'SAR' ? legacyMonthly : 199),
   );
-  const indiaAnnual = Number(
-    input.indiaAnnualPrice ??
-      (input.indiaMonthlyPrice != null
-        ? yearlyPriceFromMonthly(indiaMonthly)
-        : legacyCurrency === 'INR'
+  const saudiAnnual = Number(
+    input.saudiAnnualPrice ??
+      (input.saudiMonthlyPrice != null
+        ? yearlyPriceFromMonthly(saudiMonthly)
+        : legacyCurrency === 'SAR'
           ? legacyAnnual
-          : yearlyPriceFromMonthly(indiaMonthly)),
+          : yearlyPriceFromMonthly(saudiMonthly)),
   );
   const globalMonthly = Number(
     input.globalMonthlyPrice ?? (legacyCurrency === 'USD' ? legacyMonthly : 49),
@@ -61,7 +61,7 @@ export function planRegionalPricesFromDefinition(input: {
   );
 
   return {
-    india: { monthlyPrice: indiaMonthly, annualPrice: indiaAnnual, currency: 'INR' },
+    saudi: { monthlyPrice: saudiMonthly, annualPrice: saudiAnnual, currency: 'SAR' },
     global: { monthlyPrice: globalMonthly, annualPrice: globalAnnual, currency: 'USD' },
   };
 }
@@ -73,17 +73,34 @@ export function resolvePlanPrice(input: {
   billingInterval: BillingInterval;
   regionalPrices: PlanRegionalPrices;
 }): ResolvedPlanPrice {
-  const useIndia = isIndiaBilling(input.billingCountry, input.billingCurrency);
+  const useSaudi = isSaudiBilling(input.billingCountry, input.billingCurrency);
   const interval = input.billingInterval;
+  const currency = input.billingCurrency?.trim().toUpperCase();
 
-  if (useIndia) {
+  if (currency === 'INR') {
     const amount =
       interval === 'YEARLY'
-        ? input.regionalPrices.india.annualPrice
-        : input.regionalPrices.india.monthlyPrice;
+        ? input.regionalPrices.global.annualPrice
+        : input.regionalPrices.global.monthlyPrice;
     return {
-      regionApplied: 'INDIA',
+      regionApplied: 'GLOBAL',
       currency: 'INR',
+      amount,
+      billingInterval: interval,
+      displayAmount: amount,
+      paymentAmountMinorUnit: Math.round(amount * 100),
+      monthlyEquivalent: interval === 'YEARLY' ? Math.round((amount / 12) * 100) / 100 : amount,
+    };
+  }
+
+  if (useSaudi) {
+    const amount =
+      interval === 'YEARLY'
+        ? input.regionalPrices.saudi.annualPrice
+        : input.regionalPrices.saudi.monthlyPrice;
+    return {
+      regionApplied: 'SAUDI',
+      currency: 'SAR',
       amount,
       billingInterval: interval,
       displayAmount: amount,

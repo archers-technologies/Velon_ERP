@@ -44,7 +44,7 @@ const DEFAULTS: Record<SiteContentKey, Prisma.JsonValue> = {
   pricing: {
     headline: 'One subscription. Every device.',
     subhead:
-      'GST billing, inventory, CRM and reports on web, desktop and mobile — no separate app fees.',
+      'VAT billing, inventory, CRM and reports on web, desktop and mobile — no separate app fees.',
   },
   faq: {
     items: [
@@ -117,7 +117,7 @@ const DEFAULTS: Record<SiteContentKey, Prisma.JsonValue> = {
       {
         id: 'introduction',
         title: '1. Introduction',
-        body: "Velon Systems processes personal data when you use Velon-ERP. We align with India's DPDP Act and international privacy standards where applicable.",
+        body: 'VelonERP Saudi Arabia processes personal data when you use the service. We align with the Saudi Personal Data Protection Law (PDPL) and its implementing regulations where they apply to this service. This notice is not a certification.',
       },
       {
         id: 'data-we-collect',
@@ -160,7 +160,7 @@ const DEFAULTS: Record<SiteContentKey, Prisma.JsonValue> = {
       {
         id: 'governing-law',
         title: '4. Governing law',
-        body: 'These Terms are governed by the laws of India. Courts in Bengaluru, Karnataka have exclusive jurisdiction unless consumer law provides otherwise.',
+        body: 'These Terms are governed by the laws of the Kingdom of Saudi Arabia. The competent courts of the Kingdom have jurisdiction, unless a mandatory consumer rule requires otherwise. Subscription VAT depends on the selling entity and the customer, and is not created by using SAR alone.',
       },
     ],
   },

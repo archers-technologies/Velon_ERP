@@ -62,7 +62,7 @@ describeIfDb('Sales invoice workflow', () => {
         companyName: 'Buyer Inc',
         email: 'buyer@test.com',
         status: 'ACTIVE',
-        taxId: 'GST123',
+        taxId: '399999999900003',
       });
     customerAId = (cust.body.data ?? cust.body).id;
 

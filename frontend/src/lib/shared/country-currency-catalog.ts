@@ -302,3 +302,11 @@ export function getCountryDefaultCurrency(country: PricingCountry): PricingCurre
 export function getInrPerUnit(currency: string): number {
   return inrPerCurrencyUnit[currency] ?? inrPerCurrencyUnit.USD ?? 83;
 }
+
+/** Approximate SAR per 1 unit of another currency, derived from the marketing rate table. */
+export function getSarPerUnit(currency: string): number {
+  if (currency === 'SAR') return 1;
+  const inrPerSar = inrPerCurrencyUnit.SAR ?? 22.1;
+  const inrPerUnit = getInrPerUnit(currency);
+  return inrPerUnit / inrPerSar;
+}

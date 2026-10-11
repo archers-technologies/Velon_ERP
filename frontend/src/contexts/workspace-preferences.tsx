@@ -35,9 +35,9 @@ const DEFAULTS = {
   theme: 'light' as WorkspaceThemeMode,
   lowStockEmailAlerts: true,
   dailySummaryReport: true,
-  city: 'Mumbai',
-  country: 'India',
-  region: 'West India',
+  city: 'Riyadh',
+  country: 'Saudi Arabia',
+  region: 'Riyadh',
 };
 
 function readBool(key: string, defaultValue: boolean): boolean {

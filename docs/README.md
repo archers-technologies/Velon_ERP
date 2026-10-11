@@ -29,6 +29,7 @@ Documentation is split by topic. Start with the tech stack if you need to know *
 | [TESTING.md](./TESTING.md)                   | Unit, security, and e2e tests                           |
 | [OPERATIONS.md](./OPERATIONS.md)             | Backup, health, demo cleanup                            |
 | [CONVENTIONS.md](./CONVENTIONS.md)           | How to extend the codebase (domain folders, formatting) |
+| [SAUDI-EDITION.md](./SAUDI-EDITION.md)       | Saudi VAT, ZATCA boundary, domain, and regulatory register |
 
 ## End-user documentation
 

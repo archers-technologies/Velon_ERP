@@ -23,7 +23,7 @@ export const PAYMENT_PROVIDERS: {
   {
     id: 'RAZORPAY',
     name: 'Razorpay',
-    description: 'Cards, UPI, and netbanking (India).',
+    description: 'India-only gateway. Not used for Saudi edition checkout.',
     supportsRecurring: true,
     requiresManualApproval: false,
   },

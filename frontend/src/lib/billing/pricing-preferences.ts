@@ -1,17 +1,17 @@
-import { isIndiaBilling, type PlanRegionalPrices } from '@velon/shared';
+import { isSaudiBilling, type PlanRegionalPrices } from '@velon/shared';
 import {
   countryOptions,
   currencyLocale,
   currencyOptions,
   getCountryDefaultCurrency,
-  getInrPerUnit,
+  getSarPerUnit,
   type PricingCountry,
   type PricingCurrency,
 } from '@/lib/shared/country-currency-catalog';
 
 export type { PricingCountry, PricingCurrency };
 
-export type PricingLanguage = 'en' | 'hi' | 'ar';
+export type PricingLanguage = 'en' | 'ar';
 
 export type MarketingBillingInterval = 'MONTHLY' | 'YEARLY';
 
@@ -26,16 +26,15 @@ export const PRICING_PROMPT_DISMISSED_KEY = 'velon-pricing-prompt-dismissed-v2';
 export const LANGUAGE_CONFIRMED_KEY = 'velon-language-confirmed-v1';
 
 export const defaultPricingPreference: PricingPreference = {
-  country: 'IN',
-  currency: 'INR',
-  language: 'en',
+  country: 'SA',
+  currency: 'SAR',
+  language: 'ar',
 };
 
 export { countryOptions, currencyOptions, getCountryDefaultCurrency };
 
 export const LANGUAGE_LABELS: Record<PricingLanguage, string> = {
   en: 'English',
-  hi: 'Hindi',
   ar: 'العربية',
 };
 
@@ -48,8 +47,7 @@ export function getCountryLabel(country: PricingCountry): string {
 /** Languages offered on first-visit confirmation for a detected country. */
 export function languageChoicesForCountry(country: PricingCountry): PricingLanguage[] {
   if (GCC_COUNTRIES.has(country) || country === 'EG') return ['ar', 'en'];
-  if (country === 'IN') return ['en', 'hi'];
-  return ['en'];
+  return ['en', 'ar'];
 }
 
 export function hasConfirmedLanguage(): boolean {
@@ -87,19 +85,19 @@ export function resolveMarketingPlanPrice(
   preference: PricingPreference,
   interval: MarketingBillingInterval = 'MONTHLY',
 ): { amount: number; currency: PricingCurrency; monthlyEquivalent: number } {
-  const india = isIndiaBilling(preference.country, preference.currency);
+  const saudi = isSaudiBilling(preference.country, preference.currency);
 
   if (!regionalPrices) {
     const monthly = fallbackMonthlyPrice;
-    if (india) {
-      const annual = monthly * 10;
+    if (saudi) {
+      const annual = monthly * 11;
       return interval === 'YEARLY'
         ? {
             amount: annual,
-            currency: 'INR',
+            currency: 'SAR',
             monthlyEquivalent: Math.round((annual / 12) * 100) / 100,
           }
-        : { amount: monthly, currency: 'INR', monthlyEquivalent: monthly };
+        : { amount: monthly, currency: 'SAR', monthlyEquivalent: monthly };
     }
     if (preference.currency === 'USD') {
       const annual = monthly * 11;
@@ -111,19 +109,19 @@ export function resolveMarketingPlanPrice(
           }
         : { amount: monthly, currency: 'USD', monthlyEquivalent: monthly };
     }
-    const inrPerUnit = getInrPerUnit(preference.currency);
-    const converted = monthly / inrPerUnit;
+    const sarPerUnit = getSarPerUnit(preference.currency);
+    const converted = monthly / sarPerUnit;
     return { amount: converted, currency: preference.currency, monthlyEquivalent: converted };
   }
 
-  const table = india ? regionalPrices.india : regionalPrices.global;
-  const monthlyPrice = india
-    ? regionalPrices.india.monthlyPrice
+  const table = saudi ? regionalPrices.saudi : regionalPrices.global;
+  const monthlyPrice = saudi
+    ? regionalPrices.saudi.monthlyPrice
     : preference.currency === 'USD'
       ? regionalPrices.global.monthlyPrice
-      : regionalPrices.india.monthlyPrice / getInrPerUnit(preference.currency);
+      : regionalPrices.saudi.monthlyPrice / getSarPerUnit(preference.currency);
 
-  if (india || preference.currency === 'USD') {
+  if (saudi || preference.currency === 'USD') {
     const annualPrice = table.annualPrice;
     const currency = table.currency as PricingCurrency;
     if (interval === 'YEARLY') {
@@ -136,9 +134,9 @@ export function resolveMarketingPlanPrice(
     return { amount: table.monthlyPrice, currency, monthlyEquivalent: table.monthlyPrice };
   }
 
-  const inrPerUnit = getInrPerUnit(preference.currency);
-  const annualConverted = table.annualPrice / inrPerUnit;
-  const monthlyConverted = table.monthlyPrice / inrPerUnit;
+  const sarPerUnit = getSarPerUnit(preference.currency);
+  const annualConverted = table.annualPrice / sarPerUnit;
+  const monthlyConverted = table.monthlyPrice / sarPerUnit;
   if (interval === 'YEARLY') {
     return {
       amount: annualConverted,
@@ -181,7 +179,7 @@ export function formatPlanEffectiveMonthly(
 }
 
 function isValidLanguage(value: unknown): value is PricingLanguage {
-  return value === 'en' || value === 'hi' || value === 'ar';
+  return value === 'en' || value === 'ar';
 }
 
 export function readPricingPreference(): PricingPreference {
@@ -212,7 +210,7 @@ export function readPricingPreference(): PricingPreference {
 export function savePricingPreference(preference: PricingPreference) {
   if (typeof window === 'undefined') return;
   window.localStorage.setItem(PRICING_PREFERENCE_KEY, JSON.stringify(preference));
-  document.documentElement.lang = preference.language;
+  applyPricingLanguage(preference.language);
 }
 
 const TIMEZONE_COUNTRY: Record<string, PricingCountry> = {
@@ -266,8 +264,7 @@ export function detectVisitorPricingPreference(): PricingPreference {
   const currency = getCountryDefaultCurrency(country);
   const choices = languageChoicesForCountry(country);
   let language: PricingLanguage = choices[0] ?? 'en';
-  if (primaryLang.startsWith('hi') && choices.includes('hi')) language = 'hi';
-  else if (primaryLang.startsWith('ar') && choices.includes('ar')) language = 'ar';
+  if (primaryLang.startsWith('ar') && choices.includes('ar')) language = 'ar';
   else if (primaryLang.startsWith('en') && choices.includes('en')) language = 'en';
   else if (GCC_COUNTRIES.has(country) || country === 'EG') language = 'ar';
 
@@ -286,6 +283,7 @@ export function ensureDetectedPricingPreference(): PricingPreference {
 
 export function applyPricingLanguage(language: PricingLanguage) {
   if (typeof document !== 'undefined') {
-    document.documentElement.lang = language;
+    document.documentElement.lang = language === 'ar' ? 'ar-SA' : 'en-SA';
+    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
   }
 }

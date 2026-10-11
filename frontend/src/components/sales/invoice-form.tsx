@@ -2,7 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { Minus, Plus, Search, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { calculateInvoiceTotals, canWriteSales, normalizeVelonRole } from '@velon/shared';
+import {
+  calculateInvoiceTotals,
+  canWriteSales,
+  normalizeVelonRole,
+  standardVatRateOn,
+} from '@velon/shared';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -35,7 +40,6 @@ type FormLine = InvoiceLineInput & { key: string };
 const PAYMENT_METHODS: SalesInvoicePaymentMethod[] = [
   'CASH',
   'CARD',
-  'UPI',
   'BANK_TRANSFER',
   'WALLET',
   'GIFT',
@@ -50,6 +54,7 @@ function newLine(partial?: Partial<FormLine>): FormLine {
     quantity: 1,
     unitPrice: 0,
     discount: 0,
+    taxTreatment: '',
     taxRate: 0,
     ...partial,
   };
@@ -263,6 +268,10 @@ export function InvoiceForm() {
       toast.error('Add at least one line item.');
       return;
     }
+    if (action !== 'draft' && lines.some((line) => line.itemName.trim() && !line.taxTreatment)) {
+      toast.error('Select a VAT treatment for every line.');
+      return;
+    }
     if (submittingRef.current) return;
     submittingRef.current = true;
     setBusy(true);
@@ -360,7 +369,7 @@ export function InvoiceForm() {
               />
             </div>
             <div>
-              <Label>Tax / GST / VAT</Label>
+              <Label>Customer VAT number</Label>
               <Input
                 value={customerTaxId}
                 onChange={(e) => setCustomerTaxId(e.target.value)}
@@ -657,22 +666,34 @@ export function InvoiceForm() {
                     />
                   </div>
                   <div>
-                    <Label>Tax %</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={line.taxRate ?? 0}
-                      onChange={(e) =>
+                    <Label>VAT treatment</Label>
+                    <Select
+                      value={line.taxTreatment || undefined}
+                      onValueChange={(value) =>
                         setLines((prev) =>
                           prev.map((row) =>
                             row.key === line.key
-                              ? { ...row, taxRate: Number(e.target.value) }
+                              ? {
+                                  ...row,
+                                  taxTreatment: value,
+                                  taxRate:
+                                    value === 'STANDARD' ? (standardVatRateOn(new Date()) ?? 0) : 0,
+                                }
                               : row,
                           ),
                         )
                       }
-                    />
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select treatment" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="STANDARD">Standard</SelectItem>
+                        <SelectItem value="ZERO_RATED">Zero-rated</SelectItem>
+                        <SelectItem value="EXEMPT">Exempt</SelectItem>
+                        <SelectItem value="OUT_OF_SCOPE">Out of scope</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </div>

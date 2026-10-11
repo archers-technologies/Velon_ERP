@@ -72,6 +72,9 @@ export type SalesInvoice = {
   footerNotes: string | null;
   warehouseId: string | null;
   currency: string;
+  invoiceKind?: string;
+  zatcaStatus?: string;
+  zatcaStatusDetail?: string | null;
   subtotal: string | number;
   discount: string | number;
   taxAmount: string | number;
@@ -128,6 +131,7 @@ export type InvoiceLineInput = {
   unitPrice: number;
   discount?: number;
   taxRate?: number;
+  taxTreatment?: string;
 };
 
 export type CreateInvoiceInput = {

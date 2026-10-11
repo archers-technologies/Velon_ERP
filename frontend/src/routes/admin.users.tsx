@@ -401,7 +401,7 @@ function AdminUsersPage() {
                 type="email"
                 value={inviteEmail}
                 onChange={(e) => setInviteEmail(e.target.value)}
-                placeholder="info@velonerp.com"
+                placeholder="info@velonerp.sa"
               />
             </div>
             <div className="space-y-1.5">

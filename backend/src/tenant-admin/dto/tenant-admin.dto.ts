@@ -90,6 +90,46 @@ export class UpdateCompanyProfileDto {
 
   @IsOptional()
   @IsString()
+  legalNameAr?: string;
+
+  @IsOptional()
+  @IsString()
+  commercialRegistrationNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  vatRegistrationNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  buildingNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  streetName?: string;
+
+  @IsOptional()
+  @IsString()
+  district?: string;
+
+  @IsOptional()
+  @IsString()
+  city?: string;
+
+  @IsOptional()
+  @IsString()
+  postalCode?: string;
+
+  @IsOptional()
+  @IsString()
+  additionalNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  region?: string;
+
+  @IsOptional()
+  @IsString()
   logoDataUrl?: string;
 
   @IsOptional()

@@ -255,9 +255,9 @@ const REPORT_LIBRARY: ReportDef[] = [
     href: '/admin/subscriptions',
   },
   {
-    id: 'gst-tax',
-    title: 'GST · indirect tax roll-up',
-    description: 'Place-of-supply, HSN/SAC summaries, and filing readiness across books.',
+    id: 'vat-tax',
+    title: 'VAT · indirect tax summary',
+    description: 'Standard, zero-rated, and exempt VAT collected on issued invoices.',
     category: 'financial',
     href: '/admin/subscriptions',
   },

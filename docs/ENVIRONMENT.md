@@ -29,7 +29,7 @@ Validated in `backend/src/config/env.ts` on API boot.
 
 | Variable                                   | Purpose                                            |
 | ------------------------------------------ | -------------------------------------------------- |
-| `SUPER_ADMIN_EMAIL`                        | Platform admin email (default `info@velonerp.com`) |
+| `SUPER_ADMIN_EMAIL`                        | Platform admin email (default `info@velonerp.sa`) |
 | `SUPER_ADMIN_PASSWORD`                     | Required for seed                                  |
 | `DEV_TENANT_EMAIL` / `DEV_TENANT_PASSWORD` | Optional seeded workspace user                     |
 | `DEV_TENANT_COMPANY_NAME`                  | Seeded company name                                |

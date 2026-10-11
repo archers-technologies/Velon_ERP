@@ -121,12 +121,12 @@ export class UpdatePlanDefinitionDto {
   @IsOptional()
   @IsNumber()
   @Min(0)
-  indiaMonthlyPrice?: number;
+  saudiMonthlyPrice?: number;
 
   @IsOptional()
   @IsNumber()
   @Min(0)
-  indiaAnnualPrice?: number;
+  saudiAnnualPrice?: number;
 
   @IsOptional()
   @IsNumber()

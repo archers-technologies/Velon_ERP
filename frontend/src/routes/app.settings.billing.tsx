@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { ArrowLeft, CreditCard, IndianRupee, Landmark, RefreshCw, Zap } from 'lucide-react';
+import { ArrowLeft, CreditCard, Landmark, RefreshCw, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   canManageWorkspaceBilling,
@@ -477,7 +477,7 @@ function BillingPortalPage() {
                 onClick={() => void onPayWithRazorpay()}
                 disabled={busy}
               >
-                <IndianRupee className="mr-2 h-4 w-4" />
+                <Landmark className="mr-2 h-4 w-4" />
                 Pay with Razorpay
               </Button>
             ) : null}
@@ -536,7 +536,7 @@ function BillingPortalPage() {
                 onClick={() => void onPayWithRazorpay()}
                 disabled={busy}
               >
-                <IndianRupee className="h-5 w-5" />
+                <Landmark className="h-5 w-5" />
                 Pay online with Razorpay
               </Button>
             ) : null}

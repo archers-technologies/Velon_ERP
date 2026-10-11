@@ -39,15 +39,13 @@ export const Route = createFileRoute('/admin/settings')({
   component: AdminSettingsPage,
 });
 
-const POLICY_STORAGE = 'velon-admin-policy-engine-v1';
+const POLICY_STORAGE = 'velon-admin-policy-engine-sa-v1';
 
 type RoundingMode = 'nearest_whole' | 'up_whole' | 'down_whole' | 'nearest_minor';
 
 type PolicyPersist = {
   taxLabel: string;
-  cgstPct: string;
-  sgstPct: string;
-  igstPct: string;
+  standardVatPct: string;
   rounding: RoundingMode;
   invoiceNumbering: string;
   supportEmail: string;
@@ -64,10 +62,8 @@ type PolicyPersist = {
 };
 
 const DEFAULT_POLICY: PolicyPersist = {
-  taxLabel: 'GST / VAT',
-  cgstPct: '9',
-  sgstPct: '9',
-  igstPct: '18',
+  taxLabel: 'VAT',
+  standardVatPct: '15',
   rounding: 'nearest_whole',
   invoiceNumbering: 'VELON-{YYYY}-{SEQ}',
   supportEmail: VELON_CONTACT_EMAIL,
@@ -122,9 +118,7 @@ function roundingLabel(mode: RoundingMode): string {
 
 function fiscalSnapshot(p: {
   taxLabel: string;
-  cgstPct: string;
-  sgstPct: string;
-  igstPct: string;
+  standardVatPct: string;
   rounding: RoundingMode;
   invoiceNumbering: string;
 }): string {
@@ -144,9 +138,7 @@ function AdminSettingsPage() {
 
   const [hydrated, setHydrated] = useState(false);
   const [taxLabel, setTaxLabel] = useState(DEFAULT_POLICY.taxLabel);
-  const [cgstPct, setCgstPct] = useState(DEFAULT_POLICY.cgstPct);
-  const [sgstPct, setSgstPct] = useState(DEFAULT_POLICY.sgstPct);
-  const [igstPct, setIgstPct] = useState(DEFAULT_POLICY.igstPct);
+  const [standardVatPct, setStandardVatPct] = useState(DEFAULT_POLICY.standardVatPct);
   const [rounding, setRounding] = useState<RoundingMode>(DEFAULT_POLICY.rounding);
   const [invoiceNumbering, setInvoiceNumbering] = useState(DEFAULT_POLICY.invoiceNumbering);
   const [supportEmail, setSupportEmail] = useState(DEFAULT_POLICY.supportEmail);
@@ -176,9 +168,7 @@ function AdminSettingsPage() {
     const s = safeLoad();
     const merged = { ...DEFAULT_POLICY, ...s };
     setTaxLabel(merged.taxLabel);
-    setCgstPct(merged.cgstPct);
-    setSgstPct(merged.sgstPct);
-    setIgstPct(merged.igstPct);
+    setStandardVatPct(merged.standardVatPct);
     setRounding(merged.rounding);
     setInvoiceNumbering(merged.invoiceNumbering);
     setSupportEmail(merged.supportEmail);
@@ -195,9 +185,7 @@ function AdminSettingsPage() {
     setFiscalBaseline(
       fiscalSnapshot({
         taxLabel: merged.taxLabel,
-        cgstPct: merged.cgstPct,
-        sgstPct: merged.sgstPct,
-        igstPct: merged.igstPct,
+        standardVatPct: merged.standardVatPct,
         rounding: merged.rounding,
         invoiceNumbering: merged.invoiceNumbering,
       }),
@@ -205,19 +193,16 @@ function AdminSettingsPage() {
     setHydrated(true);
   }, []);
 
-  const isGstMode = useMemo(() => /\bgst\b/i.test(taxLabel.trim()), [taxLabel]);
-
   const previewAmount = 12_345.67;
   const roundedPreview = applyRounding(previewAmount, rounding);
-  const demoRateNote = 'ECB / RBI reference (simulated) · next refresh in 42m';
+  const demoRateNote = 'Display-only reference rates. This is not a Saudi Central Bank feed.';
 
   const fiscalDirty = useMemo(() => {
     if (!hydrated) return false;
     return (
-      fiscalSnapshot({ taxLabel, cgstPct, sgstPct, igstPct, rounding, invoiceNumbering }) !==
-      fiscalBaseline
+      fiscalSnapshot({ taxLabel, standardVatPct, rounding, invoiceNumbering }) !== fiscalBaseline
     );
-  }, [hydrated, taxLabel, cgstPct, sgstPct, igstPct, rounding, invoiceNumbering, fiscalBaseline]);
+  }, [hydrated, taxLabel, standardVatPct, rounding, invoiceNumbering, fiscalBaseline]);
 
   const spfOk = useMemo(() => dnsLooksVerified(supportEmail), [supportEmail]);
 
@@ -225,9 +210,7 @@ function AdminSettingsPage() {
     (changeSummary: string) => {
       const payload: PolicyPersist = {
         taxLabel,
-        cgstPct,
-        sgstPct,
-        igstPct,
+        standardVatPct,
         rounding,
         invoiceNumbering,
         supportEmail,
@@ -253,9 +236,7 @@ function AdminSettingsPage() {
       setFiscalBaseline(
         fiscalSnapshot({
           taxLabel,
-          cgstPct,
-          sgstPct,
-          igstPct,
+          standardVatPct,
           rounding,
           invoiceNumbering,
         }),
@@ -266,9 +247,7 @@ function AdminSettingsPage() {
     },
     [
       taxLabel,
-      cgstPct,
-      sgstPct,
-      igstPct,
+      standardVatPct,
       rounding,
       invoiceNumbering,
       supportEmail,
@@ -293,9 +272,9 @@ function AdminSettingsPage() {
     );
     lines.push(`Invoice numbering pattern: ${invoiceNumbering}.`);
     lines.push(`Default tax label: ${taxLabel.trim() || '—'}.`);
-    if (isGstMode) {
-      lines.push(`GST split (demo rates): CGST ${cgstPct}% · SGST ${sgstPct}% · IGST ${igstPct}%.`);
-    }
+    lines.push(
+      `Standard VAT display rate: ${standardVatPct}%. Zero-rated and exempt supplies are chosen per invoice, not as a split.`,
+    );
     return lines;
   }
 
@@ -371,7 +350,7 @@ function AdminSettingsPage() {
                     <SelectValue placeholder="Select currency" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="INR">INR · Indian Rupee (₹)</SelectItem>
+                    <SelectItem value="SAR">SAR · Saudi Riyal (﷼)</SelectItem>
                     <SelectItem value="USD">USD · US Dollar ($)</SelectItem>
                     <SelectItem value="EUR">EUR · Euro (€)</SelectItem>
                     <SelectItem value="GBP">GBP · Pound (£)</SelectItem>
@@ -436,59 +415,29 @@ function AdminSettingsPage() {
                 id="default-tax"
                 value={taxLabel}
                 onChange={(e) => setTaxLabel(e.target.value)}
-                placeholder="GST / VAT"
+                placeholder="VAT"
                 className="border-border bg-muted/30 rounded-lg"
               />
               <p className="text-muted-foreground text-[11px]">
-                Shown on platform invoices and tax summaries. When the label contains{' '}
-                <span className="font-medium">GST</span>, the preset builder assumes India CGST /
-                SGST / IGST style splits.
+                Shown on platform invoices. The standard rate is effective-dated. Zero-rated,
+                exempt, and out-of-scope treatments are selected on each invoice.
               </p>
             </div>
             <div className="border-border bg-muted/20 space-y-2 rounded-xl border p-4">
-              <div className="text-foreground text-xs font-medium">Tax presets builder</div>
-              {isGstMode ? (
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="space-y-1">
-                    <Label className="text-muted-foreground text-[10px] tracking-wider uppercase">
-                      CGST %
-                    </Label>
-                    <Input
-                      inputMode="decimal"
-                      value={cgstPct}
-                      onChange={(e) => setCgstPct(e.target.value)}
-                      className="h-9 rounded-lg font-mono text-xs"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-muted-foreground text-[10px] tracking-wider uppercase">
-                      SGST %
-                    </Label>
-                    <Input
-                      inputMode="decimal"
-                      value={sgstPct}
-                      onChange={(e) => setSgstPct(e.target.value)}
-                      className="h-9 rounded-lg font-mono text-xs"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-muted-foreground text-[10px] tracking-wider uppercase">
-                      IGST %
-                    </Label>
-                    <Input
-                      inputMode="decimal"
-                      value={igstPct}
-                      onChange={(e) => setIgstPct(e.target.value)}
-                      className="h-9 rounded-lg font-mono text-xs"
-                    />
-                  </div>
-                </div>
-              ) : (
-                <p className="text-muted-foreground text-xs">
-                  Enter a label containing GST to unlock CGST / SGST / IGST fields. For VAT-style
-                  regimes, keep a single headline rate in your ERP books module (demo placeholder).
-                </p>
-              )}
+              <div className="text-foreground text-xs font-medium">Standard VAT rate</div>
+              <Label className="text-muted-foreground text-[10px] tracking-wider uppercase">
+                Standard %
+              </Label>
+              <Input
+                inputMode="decimal"
+                value={standardVatPct}
+                onChange={(e) => setStandardVatPct(e.target.value)}
+                className="h-9 max-w-32 rounded-lg font-mono text-xs"
+              />
+              <p className="text-muted-foreground text-xs">
+                ZATCA states the current standard rate is 15% from 1 July 2020. Issued invoices keep
+                the rate that applied on their issue date.
+              </p>
             </div>
           </div>
 

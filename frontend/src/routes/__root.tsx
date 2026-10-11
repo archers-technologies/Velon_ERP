@@ -34,19 +34,24 @@ export const Route = createRootRoute({
     meta: [
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'Velon-ERP' },
-      { name: 'description', content: 'AI-ready universal ERP SaaS platform' },
-      { name: 'author', content: 'Velon Systems' },
-      { property: 'og:title', content: 'Velon-ERP' },
+      { title: 'VelonERP Saudi Arabia' },
+      {
+        name: 'description',
+        content: 'Saudi Arabia ERP for VAT invoicing, inventory, CRM, and operations.',
+      },
+      { name: 'author', content: 'VelonERP' },
+      { property: 'og:title', content: 'VelonERP Saudi Arabia' },
       {
         property: 'og:description',
-        content: 'Modern business operating system with role-based dashboards and automation.',
+        content: 'ERP for Saudi businesses, with Arabic and English and SAR accounting.',
       },
       { property: 'og:type', content: 'website' },
+      { property: 'og:url', content: 'https://velonerp.sa' },
       { name: 'twitter:card', content: 'summary' },
       { name: 'twitter:site', content: '@velonerp' },
     ],
     links: [
+      { rel: 'canonical', href: 'https://velonerp.sa' },
       {
         rel: 'stylesheet',
         href: appCss,
@@ -62,7 +67,10 @@ export const Route = createRootRoute({
 
 function RootShell({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html
+      lang="ar"
+      dir="rtl"
+    >
       <head>
         <HeadContent />
       </head>

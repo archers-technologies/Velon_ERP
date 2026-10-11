@@ -12,7 +12,7 @@ export function getAppBaseUrl(): string {
   return (
     process.env.APP_BASE_URL?.trim() ||
     process.env.FRONTEND_URL?.trim() ||
-    (process.env.NODE_ENV === 'production' ? 'https://velonerp.com' : 'http://localhost:8080')
+    (process.env.NODE_ENV === 'production' ? 'https://velonerp.sa' : 'http://localhost:8080')
   ).replace(/\/$/, '');
 }
 
@@ -25,7 +25,7 @@ export function getBillingEmail(): string {
 }
 
 export function getFromName(): string {
-  return process.env.SMTP_FROM_NAME?.trim() || 'Velon ERP';
+  return process.env.SMTP_FROM_NAME?.trim() || 'VelonERP Saudi Arabia';
 }
 
 export function getFromEmail(): string {

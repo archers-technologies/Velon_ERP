@@ -238,7 +238,7 @@ function BillingPosPage() {
             className="border-border text-[10px] font-normal"
           >
             {companyProfile?.taxId
-              ? `VAT/GST ${companyProfile.taxId}`
+              ? `VAT ${companyProfile.taxId}`
               : 'Configure tax ID in company profile'}
           </Badge>
         </div>

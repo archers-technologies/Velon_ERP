@@ -112,7 +112,7 @@ export class InvoicePdfService {
       if (input.company.address) doc.text(input.company.address, headerX);
       const contactBits = [input.company.phone, input.company.email].filter(Boolean).join(' · ');
       if (contactBits) doc.text(contactBits, headerX);
-      if (input.company.taxId) doc.text(`Tax ID: ${input.company.taxId}`, headerX);
+      if (input.company.taxId) doc.text(`VAT: ${input.company.taxId}`, headerX);
       doc.fillColor('#000000');
 
       doc.fontSize(22).font('Helvetica-Bold').text('INVOICE', 50, y, {
@@ -134,7 +134,7 @@ export class InvoicePdfService {
       if (input.customer.email) doc.text(input.customer.email);
       if (input.customer.phone) doc.text(input.customer.phone);
       if (input.customer.address) doc.text(input.customer.address);
-      if (input.customer.taxId) doc.text(`Tax ID: ${input.customer.taxId}`);
+      if (input.customer.taxId) doc.text(`Customer VAT: ${input.customer.taxId}`);
 
       const rightColX = 320;
       doc.fontSize(12).font('Helvetica-Bold').text('Invoice Details', rightColX, leftY);

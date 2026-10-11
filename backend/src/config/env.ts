@@ -3,8 +3,8 @@ import { validateMongoEnvironment } from '../mongo/mongo.config';
 const REQUIRED_IN_ALL_ENVS = ['DATABASE_URL', 'REDIS_URL'] as const;
 const REQUIRED_SECRETS = ['JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET', 'AUTH_OTP_SECRET'] as const;
 const PROD_CORS_BASELINE = [
-  'https://velonerp.com',
-  'https://www.velonerp.com',
+  'https://velonerp.sa',
+  'https://www.velonerp.sa',
   'https://*.vercel.app',
 ] as const;
 

@@ -57,7 +57,7 @@ export function renderA4InvoiceHtml(doc: InvoiceDocument, qrDataUrl: string): st
       ${c.address ? `<div class="muted">${escapeHtml(c.address)}</div>` : ''}
       ${c.phone ? `<div class="muted">Tel: ${escapeHtml(c.phone)}</div>` : ''}
       ${c.email ? `<div class="muted">${escapeHtml(c.email)}</div>` : ''}
-      ${c.taxId ? `<div class="muted">VAT/GST: ${escapeHtml(c.taxId)}</div>` : ''}
+      ${c.taxId ? `<div class="muted">VAT: ${escapeHtml(c.taxId)}</div>` : ''}
       ${c.crNumber ? `<div class="muted">CR: ${escapeHtml(c.crNumber)}</div>` : ''}
     </div>
     <div style="text-align:right">

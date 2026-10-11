@@ -19,13 +19,13 @@ import {
 const STORAGE_PRESET = 'velon-admin-currency-preset';
 const STORAGE_CUSTOM = 'velon-admin-currency-custom-symbol';
 
-export type AdminCurrencyPreset = 'INR' | 'USD' | 'EUR' | 'GBP' | 'AED' | 'CUSTOM';
+export type AdminCurrencyPreset = 'SAR' | 'USD' | 'EUR' | 'GBP' | 'AED' | 'CUSTOM';
 
 const PRESET_META: Record<
   Exclude<AdminCurrencyPreset, 'CUSTOM'>,
   { currency: string; locale: string }
 > = {
-  INR: { currency: 'INR', locale: 'en-IN' },
+  SAR: { currency: 'SAR', locale: 'ar-SA' },
   USD: { currency: 'USD', locale: 'en-US' },
   EUR: { currency: 'EUR', locale: 'de-DE' },
   GBP: { currency: 'GBP', locale: 'en-GB' },
@@ -33,7 +33,7 @@ const PRESET_META: Record<
 };
 
 function isPreset(v: string): v is AdminCurrencyPreset {
-  return v === 'INR' || v === 'USD' || v === 'EUR' || v === 'GBP' || v === 'AED' || v === 'CUSTOM';
+  return v === 'SAR' || v === 'USD' || v === 'EUR' || v === 'GBP' || v === 'AED' || v === 'CUSTOM';
 }
 
 type AdminCurrencyContextValue = {
@@ -47,8 +47,8 @@ type AdminCurrencyContextValue = {
 const AdminCurrencyContext = createContext<AdminCurrencyContextValue | null>(null);
 
 export function AdminCurrencyProvider({ children }: { children: ReactNode }) {
-  const [preset, setPresetState] = useState<AdminCurrencyPreset>('INR');
-  const [customSymbol, setCustomSymbolState] = useState('₹');
+  const [preset, setPresetState] = useState<AdminCurrencyPreset>('SAR');
+  const [customSymbol, setCustomSymbolState] = useState('﷼');
 
   useEffect(() => {
     try {
@@ -82,8 +82,8 @@ export function AdminCurrencyProvider({ children }: { children: ReactNode }) {
   const formatCurrency = useCallback(
     (amount: number) => {
       if (preset === 'CUSTOM') {
-        const sym = customSymbol.trim() || '₹';
-        return `${sym}${new Intl.NumberFormat('en-IN', {
+        const sym = customSymbol.trim() || '﷼';
+        return `${sym}${new Intl.NumberFormat('ar-SA', {
           minimumFractionDigits: 0,
           maximumFractionDigits: 2,
         }).format(amount)}`;
@@ -111,7 +111,7 @@ export function useAdminCurrency(): AdminCurrencyContextValue {
 }
 
 const PRESET_BOOKS_IN: Record<Exclude<AdminCurrencyPreset, 'CUSTOM'>, string> = {
-  INR: 'Indian Rupee · INR (₹)',
+  SAR: 'Saudi Riyal · SAR (﷼)',
   USD: 'US Dollar · USD ($)',
   EUR: 'Euro · EUR (€)',
   GBP: 'Pound sterling · GBP (£)',
@@ -142,7 +142,7 @@ export function AdminCurrencySelect() {
           <SelectValue placeholder="Currency" />
         </SelectTrigger>
         <SelectContent align="end">
-          <SelectItem value="INR">INR · Indian Rupee (₹)</SelectItem>
+          <SelectItem value="SAR">SAR · Saudi Riyal (﷼)</SelectItem>
           <SelectItem value="USD">USD · US Dollar ($)</SelectItem>
           <SelectItem value="EUR">EUR · Euro (€)</SelectItem>
           <SelectItem value="GBP">GBP · Pound (£)</SelectItem>

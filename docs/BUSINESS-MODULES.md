@@ -34,7 +34,7 @@ Lead → Opportunity (pipeline stage) → Quotation → (customer accept) → Sa
 
 ## Billing
 
-- Plans: `STARTER`, `GROWTH`, `ENTERPRISE` with regional pricing (India vs global).
+- Plans: `STARTER`, `GROWTH`, `ENTERPRISE` with Saudi SAR pricing and a separate USD table.
 - Providers: Razorpay implemented; Stripe, STC Pay, HyperPay, bank transfer stubbed in provider registry.
 - Subscription access helpers in shared (`subscriptionAllowsWorkspaceAccess`, `isBillingPortalPath`) keep billing pages available when the workspace is otherwise locked.
 

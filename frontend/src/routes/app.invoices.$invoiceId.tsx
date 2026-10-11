@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { toast } from 'sonner';
-import { canWriteSales, normalizeVelonRole } from '@velon/shared';
+import { canWriteSales, formatHijriDate, normalizeVelonRole } from '@velon/shared';
 import { InvoiceDocumentView } from '@/components/sales/invoice-document';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -36,7 +36,6 @@ export const Route = createFileRoute('/app/invoices/$invoiceId')({
 const PAYMENT_METHODS: SalesInvoicePaymentMethod[] = [
   'CASH',
   'CARD',
-  'UPI',
   'BANK_TRANSFER',
   'WALLET',
   'GIFT',
@@ -62,7 +61,7 @@ function InvoiceDetailPage() {
   useEffect(() => {
     loadInvoiceCompanyProfile()
       .then((profile) => {
-        setCompanyName(profile.legalName ?? profile.name);
+        setCompanyName(profile.legalName);
         setLogoDataUrl(profile.logoDataUrl ?? null);
       })
       .catch(() => undefined);
@@ -106,6 +105,16 @@ function InvoiceDetailPage() {
 
   return (
     <div className="space-y-6">
+      <Card className="border-border bg-card p-4 text-sm">
+        <p>
+          Gregorian issue date: {invoice.issueDate} · Hijri: {formatHijriDate(invoice.issueDate)}
+        </p>
+        <p className="text-muted-foreground mt-1">
+          E-invoice status: {invoice.zatcaStatus ?? 'NOT_SUBMITTED'}.{' '}
+          {invoice.zatcaStatusDetail ??
+            'A generated QR is not ZATCA clearance or reporting confirmation.'}
+        </p>
+      </Card>
       <InvoiceDocumentView
         invoice={invoice}
         companyName={companyName}

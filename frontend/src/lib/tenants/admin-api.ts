@@ -10,6 +10,16 @@ export type TenantAdminOverview = {
     address?: string | null;
     website?: string | null;
     taxId?: string | null;
+    legalNameAr?: string | null;
+    commercialRegistrationNumber?: string | null;
+    vatRegistrationNumber?: string | null;
+    buildingNumber?: string | null;
+    streetName?: string | null;
+    district?: string | null;
+    city?: string | null;
+    postalCode?: string | null;
+    additionalNumber?: string | null;
+    region?: string | null;
     logoDataUrl?: string | null;
   } | null;
   workspace: {
@@ -121,6 +131,16 @@ export async function updateCompanyProfile(body: {
   address?: string;
   website?: string;
   taxId?: string;
+  legalNameAr?: string;
+  commercialRegistrationNumber?: string;
+  vatRegistrationNumber?: string;
+  buildingNumber?: string;
+  streetName?: string;
+  district?: string;
+  city?: string;
+  postalCode?: string;
+  additionalNumber?: string;
+  region?: string;
   logoDataUrl?: string;
 }) {
   return apiFetch<TenantAdminOverview['companyProfile']>('/tenant-admin/company-profile', {

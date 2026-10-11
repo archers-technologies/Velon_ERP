@@ -13,6 +13,7 @@ import {
   getCountryByCode,
   getCurrencySymbol,
   normalizeVelonRole,
+  validateSaudiCompanyIdentifiers,
   VelonRole,
 } from '@velon/shared';
 import { AuditService } from '../audit/audit.service';
@@ -133,6 +134,18 @@ export class TenantAdminService {
       where: { tenantId },
     });
     if (!existing) throw new NotFoundException('Company profile not found.');
+    const identifierErrors = validateSaudiCompanyIdentifiers({
+      commercialRegistrationNumber:
+        dto.commercialRegistrationNumber ?? existing.commercialRegistrationNumber,
+      vatRegistrationNumber: dto.vatRegistrationNumber ?? existing.vatRegistrationNumber,
+      buildingNumber: dto.buildingNumber ?? existing.buildingNumber,
+      postalCode: dto.postalCode ?? existing.postalCode,
+      additionalNumber: dto.additionalNumber ?? existing.additionalNumber,
+    });
+    if (identifierErrors.length > 0) {
+      throw new BadRequestException(identifierErrors.join(' '));
+    }
+    const vatNumber = dto.vatRegistrationNumber?.trim();
     const row = await this.prisma.client.companyProfile.update({
       where: { tenantId },
       data: {
@@ -143,6 +156,27 @@ export class TenantAdminService {
         ...(dto.address !== undefined ? { address: dto.address?.trim() || null } : {}),
         ...(dto.website !== undefined ? { website: dto.website?.trim() || null } : {}),
         ...(dto.taxId !== undefined ? { taxId: dto.taxId?.trim() || null } : {}),
+        ...(dto.legalNameAr !== undefined ? { legalNameAr: dto.legalNameAr.trim() || null } : {}),
+        ...(dto.commercialRegistrationNumber !== undefined
+          ? { commercialRegistrationNumber: dto.commercialRegistrationNumber.trim() || null }
+          : {}),
+        ...(dto.vatRegistrationNumber !== undefined
+          ? {
+              vatRegistrationNumber: vatNumber || null,
+              taxId: vatNumber || null,
+            }
+          : {}),
+        ...(dto.buildingNumber !== undefined
+          ? { buildingNumber: dto.buildingNumber.trim() || null }
+          : {}),
+        ...(dto.streetName !== undefined ? { streetName: dto.streetName.trim() || null } : {}),
+        ...(dto.district !== undefined ? { district: dto.district.trim() || null } : {}),
+        ...(dto.city !== undefined ? { city: dto.city.trim() || null } : {}),
+        ...(dto.postalCode !== undefined ? { postalCode: dto.postalCode.trim() || null } : {}),
+        ...(dto.additionalNumber !== undefined
+          ? { additionalNumber: dto.additionalNumber.trim() || null }
+          : {}),
+        ...(dto.region !== undefined ? { region: dto.region.trim() || null } : {}),
         ...(dto.logoDataUrl !== undefined ? { logoDataUrl: dto.logoDataUrl || null } : {}),
         ...(dto.industry !== undefined ? { industry: dto.industry } : {}),
       },
