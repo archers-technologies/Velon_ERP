@@ -1,23 +1,23 @@
-import { isSaudiBilling, planRegionalPricesFromDefinition, resolvePlanPrice } from './plan-pricing';
+import { isIndiaBilling, planRegionalPricesFromDefinition, resolvePlanPrice } from './plan-pricing';
 
 describe('plan-pricing', () => {
   const regionalPrices = planRegionalPricesFromDefinition({
-    saudiMonthlyPrice: 199,
-    saudiAnnualPrice: 1999,
+    indiaMonthlyPrice: 199,
+    indiaAnnualPrice: 1999,
     globalMonthlyPrice: 49,
     globalAnnualPrice: 539,
   });
 
-  it('Saudi workspace pays SAR 199 from the Saudi table', () => {
+  it('India workspace pays ₹199, not USD converted to INR', () => {
     const resolved = resolvePlanPrice({
       planId: 'STARTER',
-      billingCountry: 'SA',
-      billingCurrency: 'SAR',
+      billingCountry: 'IN',
+      billingCurrency: 'INR',
       billingInterval: 'MONTHLY',
       regionalPrices,
     });
-    expect(resolved.regionApplied).toBe('SAUDI');
-    expect(resolved.currency).toBe('SAR');
+    expect(resolved.regionApplied).toBe('INDIA');
+    expect(resolved.currency).toBe('INR');
     expect(resolved.amount).toBe(199);
     expect(resolved.paymentAmountMinorUnit).toBe(19900);
     expect(resolved.displayAmount).toBe(199);
@@ -37,24 +37,24 @@ describe('plan-pricing', () => {
     expect(resolved.paymentAmountMinorUnit).toBe(4900);
   });
 
-  it('SAR currency selects the Saudi table even when the country code is not SA', () => {
-    expect(isSaudiBilling('AE', 'SAR')).toBe(true);
+  it('INR currency selects India table even when country is not IN', () => {
+    expect(isIndiaBilling('AE', 'INR')).toBe(true);
     const resolved = resolvePlanPrice({
       planId: 'STARTER',
       billingCountry: 'AE',
-      billingCurrency: 'SAR',
+      billingCurrency: 'INR',
       billingInterval: 'MONTHLY',
       regionalPrices,
     });
     expect(resolved.amount).toBe(199);
-    expect(resolved.currency).toBe('SAR');
+    expect(resolved.currency).toBe('INR');
   });
 
-  it('yearly Saudi pricing uses the annual Saudi table', () => {
+  it('yearly India pricing uses annual India table', () => {
     const resolved = resolvePlanPrice({
       planId: 'STARTER',
-      billingCountry: 'SA',
-      billingCurrency: 'SAR',
+      billingCountry: 'IN',
+      billingCurrency: 'INR',
       billingInterval: 'YEARLY',
       regionalPrices,
     });
@@ -64,10 +64,10 @@ describe('plan-pricing', () => {
 
   it('annual fallback equals 11× monthly when annual prices are omitted', () => {
     const derived = planRegionalPricesFromDefinition({
-      saudiMonthlyPrice: 199,
+      indiaMonthlyPrice: 199,
       globalMonthlyPrice: 49,
     });
-    expect(derived.saudi.annualPrice).toBe(2189);
+    expect(derived.india.annualPrice).toBe(2189);
     expect(derived.global.annualPrice).toBe(539);
   });
 });

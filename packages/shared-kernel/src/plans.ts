@@ -22,7 +22,7 @@ export const PLAN_CATALOG: PlanCatalogEntry[] = [
     features: [
       '1 business · 2 users',
       'All platforms included',
-      'Saudi VAT invoices & quotations',
+      'GST invoices & quotations',
       'Customers, suppliers & products',
       'Basic inventory & expense tracking',
       'Basic reports & PDF printing',

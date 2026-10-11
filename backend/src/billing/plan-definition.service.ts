@@ -16,12 +16,12 @@ export type PlanDefinitionView = {
   monthlyPrice: number;
   annualPrice: number;
   currency: string;
-  saudiMonthlyPrice: number;
-  saudiAnnualPrice: number;
+  indiaMonthlyPrice: number;
+  indiaAnnualPrice: number;
   globalMonthlyPrice: number;
   globalAnnualPrice: number;
   regionalPrices: {
-    saudi: { monthlyPrice: number; annualPrice: number; currency: 'SAR' };
+    india: { monthlyPrice: number; annualPrice: number; currency: 'INR' };
     global: { monthlyPrice: number; annualPrice: number; currency: 'USD' };
   };
   storageLimitGb: number;
@@ -47,8 +47,8 @@ export class PlanDefinitionService {
   private fallbackFromShared(plan: TenantPlan): PlanDefinitionView {
     const entry = PLAN_CATALOG.find((p) => p.id === plan) ?? PLAN_CATALOG[0];
     const regionalPrices = planRegionalPricesFromDefinition({
-      saudiMonthlyPrice: entry.monthlyPrice,
-      saudiAnnualPrice: yearlyPriceFromMonthly(entry.monthlyPrice),
+      indiaMonthlyPrice: entry.monthlyPrice,
+      indiaAnnualPrice: yearlyPriceFromMonthly(entry.monthlyPrice),
       globalMonthlyPrice: entry.monthlyPrice,
       globalAnnualPrice: yearlyPriceFromMonthly(entry.monthlyPrice),
     });
@@ -57,11 +57,11 @@ export class PlanDefinitionService {
       name: entry.name,
       displayName: entry.displayName,
       seatLimit: entry.seatLimit,
-      monthlyPrice: regionalPrices.saudi.monthlyPrice,
-      annualPrice: regionalPrices.saudi.annualPrice,
-      currency: 'SAR',
-      saudiMonthlyPrice: regionalPrices.saudi.monthlyPrice,
-      saudiAnnualPrice: regionalPrices.saudi.annualPrice,
+      monthlyPrice: regionalPrices.india.monthlyPrice,
+      annualPrice: regionalPrices.india.annualPrice,
+      currency: 'INR',
+      indiaMonthlyPrice: regionalPrices.india.monthlyPrice,
+      indiaAnnualPrice: regionalPrices.india.annualPrice,
       globalMonthlyPrice: regionalPrices.global.monthlyPrice,
       globalAnnualPrice: regionalPrices.global.annualPrice,
       regionalPrices,
@@ -88,8 +88,8 @@ export class PlanDefinitionService {
     monthlyPrice: unknown;
     annualPrice: unknown;
     currency: string;
-    saudiMonthlyPrice: unknown | null;
-    saudiAnnualPrice: unknown | null;
+    indiaMonthlyPrice: unknown | null;
+    indiaAnnualPrice: unknown | null;
     globalMonthlyPrice: unknown | null;
     globalAnnualPrice: unknown | null;
     seatLimit: number | null;
@@ -107,8 +107,8 @@ export class PlanDefinitionService {
   }): PlanDefinitionView {
     const fallback = this.fallbackFromShared(row.plan);
     const regionalPrices = planRegionalPricesFromDefinition({
-      saudiMonthlyPrice: row.saudiMonthlyPrice != null ? Number(row.saudiMonthlyPrice) : null,
-      saudiAnnualPrice: row.saudiAnnualPrice != null ? Number(row.saudiAnnualPrice) : null,
+      indiaMonthlyPrice: row.indiaMonthlyPrice != null ? Number(row.indiaMonthlyPrice) : null,
+      indiaAnnualPrice: row.indiaAnnualPrice != null ? Number(row.indiaAnnualPrice) : null,
       globalMonthlyPrice: row.globalMonthlyPrice != null ? Number(row.globalMonthlyPrice) : null,
       globalAnnualPrice: row.globalAnnualPrice != null ? Number(row.globalAnnualPrice) : null,
       monthlyPrice: Number(row.monthlyPrice),
@@ -120,11 +120,11 @@ export class PlanDefinitionService {
       name: row.plan,
       displayName: row.displayName,
       seatLimit: row.seatLimit,
-      monthlyPrice: regionalPrices.saudi.monthlyPrice,
-      annualPrice: regionalPrices.saudi.annualPrice,
-      currency: row.currency === 'INR' ? 'SAR' : row.currency,
-      saudiMonthlyPrice: regionalPrices.saudi.monthlyPrice,
-      saudiAnnualPrice: regionalPrices.saudi.annualPrice,
+      monthlyPrice: regionalPrices.india.monthlyPrice,
+      annualPrice: regionalPrices.india.annualPrice,
+      currency: row.currency,
+      indiaMonthlyPrice: regionalPrices.india.monthlyPrice,
+      indiaAnnualPrice: regionalPrices.india.annualPrice,
       globalMonthlyPrice: regionalPrices.global.monthlyPrice,
       globalAnnualPrice: regionalPrices.global.annualPrice,
       regionalPrices,
@@ -168,14 +168,11 @@ export class PlanDefinitionService {
       where: { plan },
       data: {
         displayName: dto.displayName?.trim() ?? undefined,
-        monthlyPrice: dto.saudiMonthlyPrice ?? dto.monthlyPrice,
-        annualPrice: dto.saudiAnnualPrice ?? dto.annualPrice,
-        currency:
-          dto.currency?.trim().toUpperCase() === 'INR'
-            ? 'SAR'
-            : (dto.currency?.trim().toUpperCase() ?? 'SAR'),
-        saudiMonthlyPrice: dto.saudiMonthlyPrice ?? dto.monthlyPrice,
-        saudiAnnualPrice: dto.saudiAnnualPrice ?? dto.annualPrice,
+        monthlyPrice: dto.indiaMonthlyPrice ?? dto.monthlyPrice,
+        annualPrice: dto.indiaAnnualPrice ?? dto.annualPrice,
+        currency: dto.currency?.trim().toUpperCase() ?? 'INR',
+        indiaMonthlyPrice: dto.indiaMonthlyPrice ?? dto.monthlyPrice,
+        indiaAnnualPrice: dto.indiaAnnualPrice ?? dto.annualPrice,
         globalMonthlyPrice: dto.globalMonthlyPrice,
         globalAnnualPrice: dto.globalAnnualPrice,
         seatLimit: dto.seatLimit,

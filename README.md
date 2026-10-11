@@ -76,7 +76,7 @@ npm run dev
 | API     | [http://localhost:3001](http://localhost:3001)                   |
 | Swagger | [http://localhost:3001/api/docs](http://localhost:3001/api/docs) |
 
-**Platform admin:** `SUPER_ADMIN_EMAIL` (default `info@velonerp.sa`) + `SUPER_ADMIN_PASSWORD` from `.env` → `/admin`
+**Platform admin:** `SUPER_ADMIN_EMAIL` (default `info@velonerp.com`) + `SUPER_ADMIN_PASSWORD` from `.env` → `/admin`
 
 **Workspace user:** set `DEV_TENANT_EMAIL` / `DEV_TENANT_PASSWORD`, run `npm run db:seed`, then sign in at `/login` → `/app`
 

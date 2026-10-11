@@ -5,7 +5,6 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { randomUUID } from 'crypto';
 import {
   Prisma,
   SalesInvoiceLineType,
@@ -13,13 +12,11 @@ import {
   SalesInvoiceStatus,
 } from '@velon/database';
 import {
-  assessZatcaPhase1Readiness,
-  buildZatcaTlvBase64,
+  calculateInvoiceLine,
   calculateInvoiceTotals,
   canReadSales,
   canWriteSales,
   normalizeVelonRole,
-  resolveLineVat,
   resolvePaymentStatus,
   shouldDeductStock,
 } from '@velon/shared';
@@ -54,7 +51,6 @@ type ResolvedLine = {
   quantity: number;
   unitPrice: number;
   discount: number;
-  taxTreatment?: string;
   taxRate: number;
   taxAmount: number;
   lineSubtotal: number;
@@ -304,8 +300,7 @@ export class InvoiceService {
   private async buildResolvedLines(
     user: AuthenticatedUser,
     dto: CreateSalesInvoiceDto,
-    warehouseId: string | undefined,
-    issueDate: Date,
+    warehouseId?: string,
   ): Promise<ResolvedLine[]> {
     const { tenantId } = this.requireWorkspace(user);
     const canOverridePrice = canWriteSales(normalizeVelonRole(user.role));
@@ -378,14 +373,11 @@ export class InvoiceService {
         uom = product.uom;
       }
 
-      const vat = resolveLineVat({
-        treatment: line.taxTreatment,
-        explicitRate: line.taxTreatment ? undefined : line.taxRate,
-        taxInclusive: dto.pricesIncludeVat === true,
+      const calc = calculateInvoiceLine({
         quantity: line.quantity,
         unitPrice,
         discount: line.discount ?? 0,
-        issuedOn: issueDate,
+        taxRate: line.taxRate ?? 0,
       });
 
       resolved.push({
@@ -400,11 +392,10 @@ export class InvoiceService {
         quantity: line.quantity,
         unitPrice,
         discount: line.discount ?? 0,
-        taxTreatment: vat.treatment,
-        taxRate: vat.ratePercent,
-        taxAmount: vat.taxAmount,
-        lineSubtotal: vat.lineSubtotal,
-        lineTotal: vat.lineTotal,
+        taxRate: line.taxRate ?? 0,
+        taxAmount: calc.taxAmount,
+        lineSubtotal: calc.lineSubtotal,
+        lineTotal: calc.lineTotal,
         position: position++,
       });
     }
@@ -477,74 +468,37 @@ export class InvoiceService {
     const dueDate = dto.dueDate ? new Date(dto.dueDate) : null;
     const warehouseId = dto.warehouseId;
 
-    const resolvedLines = await this.buildResolvedLines(user, dto, warehouseId, issueDate);
-    if (
-      dto.action !== 'draft' &&
-      resolvedLines.some((line) => line.taxTreatment === 'REVIEW_REQUIRED')
-    ) {
-      throw new BadRequestException(
-        'Select a VAT treatment for every line before issuing the invoice. Drafts can be saved for review.',
-      );
-    }
+    const resolvedLines = await this.buildResolvedLines(user, dto, warehouseId);
     const amountPaid = dto.action === 'save_paid' ? undefined : Math.max(0, dto.amountPaid ?? 0);
 
-    const totals = dto.pricesIncludeVat
-      ? {
-          subtotal: resolvedLines.reduce((sum, line) => sum + line.lineSubtotal, 0),
-          taxAmount: resolvedLines.reduce((sum, line) => sum + line.taxAmount, 0),
-          total:
-            resolvedLines.reduce((sum, line) => sum + line.lineTotal, 0) +
-            (dto.shippingCharges ?? 0) +
-            (dto.roundingAdjustment ?? 0),
-          balanceDue: 0,
-        }
-      : calculateInvoiceTotals({
-          lines: resolvedLines.map((line) => ({
-            quantity: line.quantity,
-            unitPrice: line.unitPrice,
-            discount: line.discount,
-            taxRate: line.taxRate,
-          })),
-          invoiceDiscount: dto.discount ?? 0,
-          shippingCharges: dto.shippingCharges ?? 0,
-          roundingAdjustment: dto.roundingAdjustment ?? 0,
-          amountPaid: amountPaid ?? 0,
-        });
-    if (dto.pricesIncludeVat) {
-      if ((dto.discount ?? 0) > 0) {
-        throw new BadRequestException(
-          'Put discounts on each line when prices include VAT so the VAT amount stays attributable.',
-        );
-      }
-      totals.balanceDue = Math.max(0, Math.round((totals.total - (amountPaid ?? 0)) * 100) / 100);
-      totals.subtotal = Math.round(totals.subtotal * 100) / 100;
-      totals.taxAmount = Math.round(totals.taxAmount * 100) / 100;
-      totals.total = Math.round(totals.total * 100) / 100;
-    }
+    const totals = calculateInvoiceTotals({
+      lines: resolvedLines.map((line) => ({
+        quantity: line.quantity,
+        unitPrice: line.unitPrice,
+        discount: line.discount,
+        taxRate: line.taxRate,
+      })),
+      invoiceDiscount: dto.discount ?? 0,
+      shippingCharges: dto.shippingCharges ?? 0,
+      roundingAdjustment: dto.roundingAdjustment ?? 0,
+      amountPaid: amountPaid ?? 0,
+    });
 
     let paidAmount = amountPaid ?? 0;
     if (dto.action === 'save_paid') paidAmount = totals.total;
 
-    const finalTotals = dto.pricesIncludeVat
-      ? {
-          lines: [],
-          subtotal: totals.subtotal,
-          taxAmount: totals.taxAmount,
-          total: totals.total,
-          balanceDue: Math.max(0, Math.round((totals.total - paidAmount) * 100) / 100),
-        }
-      : calculateInvoiceTotals({
-          lines: resolvedLines.map((line) => ({
-            quantity: line.quantity,
-            unitPrice: line.unitPrice,
-            discount: line.discount,
-            taxRate: line.taxRate,
-          })),
-          invoiceDiscount: dto.discount ?? 0,
-          shippingCharges: dto.shippingCharges ?? 0,
-          roundingAdjustment: dto.roundingAdjustment ?? 0,
-          amountPaid: paidAmount,
-        });
+    const finalTotals = calculateInvoiceTotals({
+      lines: resolvedLines.map((line) => ({
+        quantity: line.quantity,
+        unitPrice: line.unitPrice,
+        discount: line.discount,
+        taxRate: line.taxRate,
+      })),
+      invoiceDiscount: dto.discount ?? 0,
+      shippingCharges: dto.shippingCharges ?? 0,
+      roundingAdjustment: dto.roundingAdjustment ?? 0,
+      amountPaid: paidAmount,
+    });
 
     const status = this.resolveTargetStatus(
       dto.action,
@@ -565,32 +519,6 @@ export class InvoiceService {
     const year = issueDate.getFullYear();
     const invoiceNumber = await this.invoices.nextInvoiceNumber(year);
     const deductStock = shouldDeductStock(status);
-    const profile = await this.prisma.client.companyProfile.findUnique({ where: { tenantId } });
-    const sellerName = profile?.legalNameAr?.trim() || profile?.legalName?.trim() || '';
-    const vatNumber = profile?.vatRegistrationNumber?.trim() || profile?.taxId?.trim() || '';
-    const zatcaTimestamp = issueDate.toISOString();
-    const zatcaTotal = finalTotals.total.toFixed(2);
-    const zatcaVat = finalTotals.taxAmount.toFixed(2);
-    const readiness = assessZatcaPhase1Readiness({
-      sellerName,
-      vatNumber,
-      timestamp: zatcaTimestamp,
-      totalWithVat: zatcaTotal,
-      vatAmount: zatcaVat,
-    });
-    const zatcaQrPayload = readiness.readyForPhase1Qr
-      ? buildZatcaTlvBase64({
-          sellerName,
-          vatNumber,
-          timestamp: zatcaTimestamp,
-          totalWithVat: zatcaTotal,
-          vatAmount: zatcaVat,
-        })
-      : null;
-    const zatcaStatus = readiness.readyForPhase1Qr ? 'QR_READY' : 'PENDING_SELLER_VAT';
-    const zatcaStatusDetail = readiness.readyForPhase1Qr
-      ? 'Phase 1 QR generated locally. This is not a ZATCA clearance or reporting confirmation.'
-      : `Phase 1 QR was not generated. Missing: ${readiness.missing.join(', ')}.`;
 
     const created = await this.prisma.client.$transaction(async (tx) => {
       const stockMovements = deductStock
@@ -620,12 +548,6 @@ export class InvoiceService {
           footerNotes: dto.footerNotes,
           warehouseId,
           currency: workspace.currency,
-          invoiceKind: customer.customerTaxId ? 'TAX_INVOICE' : 'SIMPLIFIED_TAX_INVOICE',
-          pricesIncludeVat: dto.pricesIncludeVat === true,
-          zatcaUuid: randomUUID(),
-          zatcaQrPayload,
-          zatcaStatus,
-          zatcaStatusDetail,
           subtotal: finalTotals.subtotal,
           discount: dto.discount ?? 0,
           taxAmount: finalTotals.taxAmount,
@@ -651,7 +573,6 @@ export class InvoiceService {
               quantity: line.quantity,
               unitPrice: line.unitPrice,
               discount: line.discount,
-              taxTreatment: line.taxTreatment,
               taxRate: line.taxRate,
               taxAmount: line.taxAmount,
               lineSubtotal: line.lineSubtotal,
@@ -936,7 +857,7 @@ export class InvoiceService {
       website: profile?.website,
       taxId: profile?.taxId,
       logoDataUrl: profile?.logoDataUrl,
-      currency: tenant?.workspace?.currency ?? 'SAR',
+      currency: tenant?.workspace?.currency ?? 'INR',
     };
   }
 

@@ -1,8 +1,6 @@
-import { SAUDI_EDITION } from './saudi-edition';
+/** Canonical Velon contact, support, and platform admin email. */
+export const VELON_CONTACT_EMAIL = 'info@velonerp.com';
 
-/** Canonical Velon contact for the Saudi edition. Phone is configured by the operator. */
-export const VELON_CONTACT_EMAIL = SAUDI_EDITION.supportEmail;
+export const VELON_CONTACT_PHONE = '+916305864053';
 
-export const VELON_CONTACT_PHONE = '';
-
-export const VELON_CONTACT_ADDRESS = 'Kingdom of Saudi Arabia';
+export const VELON_CONTACT_ADDRESS = 'Babanagar, Hyderabad, 500005';

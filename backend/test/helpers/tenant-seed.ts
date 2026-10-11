@@ -52,7 +52,7 @@ export async function seedTenantUser(input: {
         name: input.companyName,
         slug,
         tenantCode: `TNT-${crypto.randomBytes(3).toString('hex').toUpperCase()}`,
-        country: 'Saudi Arabia',
+        country: 'India',
         industryTemplate: IndustryTemplate.SERVICES,
         renewalDate: renewal,
         seedSource,
@@ -65,7 +65,7 @@ export async function seedTenantUser(input: {
         legalName: input.companyName,
         email,
         phone: '+91 9999999999',
-        country: 'Saudi Arabia',
+        country: 'India',
         industry: IndustryTemplate.SERVICES,
       },
     });

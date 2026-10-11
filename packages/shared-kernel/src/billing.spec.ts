@@ -17,24 +17,24 @@ describe('yearlyPriceFromMonthly', () => {
 describe('planRegionalPricesFromDefinition annual fallback', () => {
   it('defaults annual to 11× monthly when regional annual prices are omitted', () => {
     const regional = planRegionalPricesFromDefinition({
-      saudiMonthlyPrice: 199,
+      indiaMonthlyPrice: 199,
       globalMonthlyPrice: 49,
     });
-    expect(regional.saudi.annualPrice).toBe(2189);
+    expect(regional.india.annualPrice).toBe(2189);
     expect(regional.global.annualPrice).toBe(539);
   });
 
   it('uses stored annual price for yearly checkout resolution', () => {
     const regional = planRegionalPricesFromDefinition({
-      saudiMonthlyPrice: 199,
-      saudiAnnualPrice: 1999,
+      indiaMonthlyPrice: 199,
+      indiaAnnualPrice: 1999,
       globalMonthlyPrice: 49,
       globalAnnualPrice: 539,
     });
     const resolved = resolvePlanPrice({
       planId: 'STARTER',
-      billingCountry: 'SA',
-      billingCurrency: 'SAR',
+      billingCountry: 'IN',
+      billingCurrency: 'INR',
       billingInterval: 'YEARLY',
       regionalPrices: regional,
     });

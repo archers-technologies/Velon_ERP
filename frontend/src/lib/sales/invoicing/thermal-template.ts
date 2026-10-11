@@ -48,7 +48,7 @@ export function renderThermalInvoiceHtml(
 </head>
 <body>
   <div class="center bold">${escapeHtml(c.legalName)}</div>
-  ${c.taxId ? `<div class="center">VAT: ${escapeHtml(c.taxId)}</div>` : ''}
+  ${c.taxId ? `<div class="center">VAT/GST: ${escapeHtml(c.taxId)}</div>` : ''}
   ${c.phone ? `<div class="center">${escapeHtml(c.phone)}</div>` : ''}
   <hr />
   <div class="row"><span>Invoice</span><span>${escapeHtml(doc.invoiceNumber)}</span></div>

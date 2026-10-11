@@ -1,4 +1,4 @@
-export const DEFAULT_WORKSPACE_PUBLIC_DOMAIN = 'app.velonerp.sa';
+export const DEFAULT_WORKSPACE_PUBLIC_DOMAIN = 'app.velonerp.com';
 
 const WORKSPACE_DOMAIN_ENV_KEYS = [
   'APP_PUBLIC_WORKSPACE_DOMAIN',

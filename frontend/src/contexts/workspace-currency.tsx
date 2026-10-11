@@ -83,16 +83,16 @@ type WorkspaceCurrencyContextValue = {
 const WorkspaceCurrencyContext = createContext<WorkspaceCurrencyContextValue | null>(null);
 
 export function WorkspaceCurrencyProvider({ children }: { children: ReactNode }) {
-  const [preset, setPresetState] = useState<WorkspaceCurrencyPreset>('SAR');
-  const [customSymbol, setCustomSymbolState] = useState('﷼');
+  const [preset, setPresetState] = useState<WorkspaceCurrencyPreset>('INR');
+  const [customSymbol, setCustomSymbolState] = useState('₹');
   const [moneyFormat, setMoneyFormat] = useState<{
     currencyCode: string;
     currencySymbol?: string | null;
     numberFormat?: string | null;
   }>({
-    currencyCode: 'SAR',
-    currencySymbol: '﷼',
-    numberFormat: 'ar-SA',
+    currencyCode: 'INR',
+    currencySymbol: '₹',
+    numberFormat: 'en-IN',
   });
 
   useEffect(() => {
@@ -101,10 +101,10 @@ export function WorkspaceCurrencyProvider({ children }: { children: ReactNode })
       if (p && isPreset(p) && p !== 'CUSTOM') {
         setPresetState(p);
       } else if (p === 'CUSTOM') {
-        localStorage.setItem(STORAGE_PRESET, 'SAR');
+        localStorage.setItem(STORAGE_PRESET, 'INR');
         localStorage.removeItem(STORAGE_CUSTOM);
-        setPresetState('SAR');
-        setCustomSymbolState('﷼');
+        setPresetState('INR');
+        setCustomSymbolState('₹');
       }
       const c = localStorage.getItem(STORAGE_CUSTOM);
       if (c !== null && p !== 'CUSTOM') setCustomSymbolState(c);
@@ -157,8 +157,8 @@ export function WorkspaceCurrencyProvider({ children }: { children: ReactNode })
   const formatCurrency = useCallback(
     (amount: number) => {
       if (preset === 'CUSTOM') {
-        const sym = customSymbol.trim() || moneyFormat.currencySymbol || '﷼';
-        return `${sym}${new Intl.NumberFormat(moneyFormat.numberFormat ?? 'ar-SA', {
+        const sym = customSymbol.trim() || moneyFormat.currencySymbol || '₹';
+        return `${sym}${new Intl.NumberFormat(moneyFormat.numberFormat ?? 'en-IN', {
           minimumFractionDigits: 0,
           maximumFractionDigits: 2,
         }).format(amount)}`;

@@ -97,25 +97,15 @@ function TenantAdminSettingsPage() {
     address: overview.companyProfile?.address ?? '',
     website: overview.companyProfile?.website ?? '',
     taxId: overview.companyProfile?.taxId ?? '',
-    legalNameAr: overview.companyProfile?.legalNameAr ?? '',
-    commercialRegistrationNumber: overview.companyProfile?.commercialRegistrationNumber ?? '',
-    vatRegistrationNumber: overview.companyProfile?.vatRegistrationNumber ?? '',
-    buildingNumber: overview.companyProfile?.buildingNumber ?? '',
-    streetName: overview.companyProfile?.streetName ?? '',
-    district: overview.companyProfile?.district ?? '',
-    city: overview.companyProfile?.city ?? '',
-    postalCode: overview.companyProfile?.postalCode ?? '',
-    additionalNumber: overview.companyProfile?.additionalNumber ?? '',
-    region: overview.companyProfile?.region ?? '',
     logoDataUrl: overview.companyProfile?.logoDataUrl ?? '',
   });
   const [editingDeptId, setEditingDeptId] = useState<string | null>(null);
   const [editDeptForm, setEditDeptForm] = useState({ name: '', description: '' });
   const [workspaceForm, setWorkspaceForm] = useState({
     name: overview.workspace?.name ?? '',
-    timezone: overview.workspace?.timezone ?? 'Asia/Riyadh',
-    currency: overview.workspace?.currency ?? 'SAR',
-    language: overview.workspace?.language ?? 'ar',
+    timezone: overview.workspace?.timezone ?? 'Asia/Kolkata',
+    currency: overview.workspace?.currency ?? 'INR',
+    language: overview.workspace?.language ?? 'en',
   });
   const [busy, setBusy] = useState(false);
 
@@ -330,90 +320,6 @@ function TenantAdminSettingsPage() {
                 />
               </div>
               <div>
-                <Label>Arabic legal name</Label>
-                <Input
-                  value={companyForm.legalNameAr}
-                  onChange={(e) => setCompanyForm({ ...companyForm, legalNameAr: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label>Commercial Registration</Label>
-                <Input
-                  value={companyForm.commercialRegistrationNumber}
-                  onChange={(e) =>
-                    setCompanyForm({ ...companyForm, commercialRegistrationNumber: e.target.value })
-                  }
-                  placeholder="10 digits, if registered"
-                />
-              </div>
-              <div>
-                <Label>VAT registration number</Label>
-                <Input
-                  value={companyForm.vatRegistrationNumber}
-                  onChange={(e) =>
-                    setCompanyForm({ ...companyForm, vatRegistrationNumber: e.target.value })
-                  }
-                  placeholder="15 digits, if VAT registered"
-                />
-              </div>
-              <div>
-                <Label>Region</Label>
-                <Input
-                  value={companyForm.region}
-                  onChange={(e) => setCompanyForm({ ...companyForm, region: e.target.value })}
-                  placeholder="Riyadh"
-                />
-              </div>
-              <div>
-                <Label>City</Label>
-                <Input
-                  value={companyForm.city}
-                  onChange={(e) => setCompanyForm({ ...companyForm, city: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label>District</Label>
-                <Input
-                  value={companyForm.district}
-                  onChange={(e) => setCompanyForm({ ...companyForm, district: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label>Street</Label>
-                <Input
-                  value={companyForm.streetName}
-                  onChange={(e) => setCompanyForm({ ...companyForm, streetName: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label>Building number</Label>
-                <Input
-                  value={companyForm.buildingNumber}
-                  onChange={(e) =>
-                    setCompanyForm({ ...companyForm, buildingNumber: e.target.value })
-                  }
-                  placeholder="4 digits"
-                />
-              </div>
-              <div>
-                <Label>Postal code</Label>
-                <Input
-                  value={companyForm.postalCode}
-                  onChange={(e) => setCompanyForm({ ...companyForm, postalCode: e.target.value })}
-                  placeholder="5 digits"
-                />
-              </div>
-              <div>
-                <Label>Additional number</Label>
-                <Input
-                  value={companyForm.additionalNumber}
-                  onChange={(e) =>
-                    setCompanyForm({ ...companyForm, additionalNumber: e.target.value })
-                  }
-                  placeholder="4 digits"
-                />
-              </div>
-              <div>
                 <Label>Tax ID</Label>
                 <Input
                   value={companyForm.taxId}
@@ -510,7 +416,7 @@ function TenantAdminSettingsPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Asia/Riyadh">Asia/Riyadh (AST)</SelectItem>
+                      <SelectItem value="Asia/Kolkata">Asia/Kolkata (IST)</SelectItem>
                       <SelectItem value="Asia/Dubai">Asia/Dubai (GST)</SelectItem>
                       <SelectItem value="Europe/London">Europe/London (GMT)</SelectItem>
                       <SelectItem value="America/New_York">America/New_York (EST)</SelectItem>
@@ -528,7 +434,7 @@ function TenantAdminSettingsPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="SAR">SAR</SelectItem>
+                      <SelectItem value="INR">INR</SelectItem>
                       <SelectItem value="USD">USD</SelectItem>
                       <SelectItem value="SAR">SAR</SelectItem>
                       <SelectItem value="AED">AED</SelectItem>
@@ -551,8 +457,9 @@ function TenantAdminSettingsPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="ar">العربية · Arabic</SelectItem>
                       <SelectItem value="en">English</SelectItem>
+                      <SelectItem value="hi">Hindi</SelectItem>
+                      <SelectItem value="ar">Arabic</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

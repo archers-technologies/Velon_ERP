@@ -484,7 +484,7 @@ export class SubscriptionService {
 
     if (isRazorpay && currency !== 'INR') {
       throw new BadRequestException(
-        'Razorpay is not available for Saudi Riyal billing. Use bank transfer until a Saudi payment gateway is configured.',
+        'Razorpay checkout is only available for India (INR) regional pricing.',
       );
     }
 

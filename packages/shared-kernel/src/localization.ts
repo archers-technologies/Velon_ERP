@@ -67,9 +67,9 @@ export const CURRENCY_SYMBOLS: Record<string, string> = {
 };
 
 export const TIMEZONE_OPTIONS = [
-  { value: 'Asia/Riyadh', label: 'Asia/Riyadh (AST)' },
-  { value: 'Asia/Dubai', label: 'Asia/Dubai (GST)' },
   { value: 'Asia/Kolkata', label: 'Asia/Kolkata (IST)' },
+  { value: 'Asia/Dubai', label: 'Asia/Dubai (GST)' },
+  { value: 'Asia/Riyadh', label: 'Asia/Riyadh (AST)' },
   { value: 'Asia/Muscat', label: 'Asia/Muscat (GST)' },
   { value: 'Asia/Qatar', label: 'Asia/Qatar (AST)' },
   { value: 'Asia/Kuwait', label: 'Asia/Kuwait (AST)' },
@@ -89,10 +89,10 @@ export const DATE_FORMAT_OPTIONS = [
 ] as const;
 
 export const NUMBER_FORMAT_OPTIONS = [
-  { value: 'ar-SA', label: 'Arabic (Saudi Arabia)' },
-  { value: 'en-SA', label: 'English (Saudi Arabia)' },
+  { value: 'en-IN', label: 'India (1,23,456.78)' },
   { value: 'en-US', label: 'US (1,234,567.89)' },
   { value: 'en-GB', label: 'UK (1,234,567.89)' },
+  { value: 'ar-SA', label: 'Arabic (Saudi)' },
   { value: 'de-DE', label: 'German (1.234.567,89)' },
 ] as const;
 
@@ -101,7 +101,7 @@ export function getCountryByCode(code: string) {
 }
 
 export function getCountryDefaultCurrency(code: string): string {
-  return getCountryByCode(code)?.currency ?? 'SAR';
+  return getCountryByCode(code)?.currency ?? 'USD';
 }
 
 export function getCurrencySymbol(currencyCode: string): string {
@@ -149,12 +149,18 @@ export function defaultDateFormatForCountry(code: string): string {
 }
 
 export function defaultNumberFormatForCountry(code: string): string {
+  if (code === 'IN') return 'en-IN';
   if (code === 'US') return 'en-US';
   if (code === 'GB') return 'en-GB';
-  if (code === 'SA') return 'ar-SA';
-  if (code === 'AE' || code === 'BH' || code === 'OM' || code === 'QA' || code === 'KW') {
+  if (
+    code === 'SA' ||
+    code === 'AE' ||
+    code === 'BH' ||
+    code === 'OM' ||
+    code === 'QA' ||
+    code === 'KW'
+  )
     return 'ar-SA';
-  }
   if (code === 'DE' || code === 'FR') return 'de-DE';
   return 'en-US';
 }
@@ -165,17 +171,9 @@ export type WorkspaceMoneyFormat = {
   numberFormat?: string | null;
 };
 
-export function formatHijriDate(value: Date | string, timeZone = 'Asia/Riyadh'): string {
-  const date = typeof value === 'string' ? new Date(value) : value;
-  return new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {
-    dateStyle: 'medium',
-    timeZone,
-  }).format(date);
-}
-
 export function formatWorkspaceMoney(amount: number, format: WorkspaceMoneyFormat): string {
-  const currencyCode = format.currencyCode || 'SAR';
-  const locale = format.numberFormat?.trim() || 'ar-SA';
+  const currencyCode = format.currencyCode || 'INR';
+  const locale = format.numberFormat?.trim() || 'en-IN';
   try {
     return new Intl.NumberFormat(locale, {
       style: 'currency',

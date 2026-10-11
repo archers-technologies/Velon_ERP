@@ -66,8 +66,8 @@ export class BillingService {
     if (dto.annualPrice !== undefined && dto.annualPrice < 0) {
       throw new BadRequestException('Annual price cannot be negative.');
     }
-    if (dto.saudiMonthlyPrice !== undefined && dto.saudiMonthlyPrice < 0) {
-      throw new BadRequestException('Saudi monthly price cannot be negative.');
+    if (dto.indiaMonthlyPrice !== undefined && dto.indiaMonthlyPrice < 0) {
+      throw new BadRequestException('India monthly price cannot be negative.');
     }
     if (dto.globalMonthlyPrice !== undefined && dto.globalMonthlyPrice < 0) {
       throw new BadRequestException('Global monthly price cannot be negative.');

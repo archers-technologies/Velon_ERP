@@ -38,7 +38,7 @@ type Props = {
   idPrefix?: string;
 };
 
-export function createDefaultLocalization(countryCode = 'SA'): BusinessLocalizationValue {
+export function createDefaultLocalization(countryCode = 'IN'): BusinessLocalizationValue {
   const code = countryCode as CountryCode;
   return {
     countryCode: code,

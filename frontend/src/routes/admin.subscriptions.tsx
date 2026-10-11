@@ -189,11 +189,11 @@ function AdminSubscriptionsPage() {
     try {
       await updatePlanDefinition(catalogPlanToApi(planDraft.id), {
         displayName: planDraft.name,
-        saudiMonthlyPrice: planDraft.monthlyPrice ?? 0,
-        saudiAnnualPrice: planDraft.annualPrice ?? 0,
+        indiaMonthlyPrice: planDraft.monthlyPrice ?? 0,
+        indiaAnnualPrice: planDraft.annualPrice ?? 0,
         monthlyPrice: planDraft.monthlyPrice ?? 0,
         annualPrice: planDraft.annualPrice ?? 0,
-        currency: 'SAR',
+        currency: 'INR',
         seatLimit: planDraft.limits.users === 0 ? null : planDraft.limits.users,
         storageLimitGb: planDraft.limits.storageGb,
         invoiceLimitMo:

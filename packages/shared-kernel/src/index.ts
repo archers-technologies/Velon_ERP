@@ -27,7 +27,6 @@ export {
   defaultNumberFormatForCountry,
   defaultTimezoneForCountry,
   formatCurrencyLabel,
-  formatHijriDate,
   formatWorkspaceMoney,
   getCountryByCode,
   getCountryDefaultCurrency,
@@ -173,39 +172,13 @@ export {
 export { PLAN_CATALOG, planCatalogEntry, type PlanCatalogEntry } from './plans';
 
 export {
-  isSaudiBilling,
+  isIndiaBilling,
   planRegionalPricesFromDefinition,
   resolvePlanPrice,
   type PlanRegionalPrices,
   type PricingRegion,
   type ResolvedPlanPrice,
 } from './plan-pricing';
-
-export { SAUDI_EDITION } from './saudi-edition';
-
-export {
-  SAUDI_REGIONS,
-  validateSaudiCompanyIdentifiers,
-  type SaudiCompanyIdentifiers,
-} from './saudi-address';
-
-export {
-  SAUDI_STANDARD_VAT_RULES,
-  SAUDI_VAT_STANDARD_RATE_SOURCE,
-  VAT_TREATMENTS,
-  resolveLineVat,
-  standardVatRateOn,
-  type ResolvedLineVat,
-  type VatRateRule,
-  type VatTreatment,
-} from './saudi-vat';
-
-export {
-  assessZatcaPhase1Readiness,
-  buildZatcaTlvBase64,
-  type ZatcaInvoiceQrInput,
-  type ZatcaReadiness,
-} from './zatca-qr';
 
 export {
   PASSWORD_MIN_LENGTH,

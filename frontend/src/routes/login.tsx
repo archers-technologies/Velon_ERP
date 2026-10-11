@@ -96,7 +96,7 @@ function WorkspaceLoginPage() {
   const [companyEmail, setCompanyEmail] = useState('');
   const [companyPhone, setCompanyPhone] = useState('');
   const [localization, setLocalization] = useState<BusinessLocalizationValue>(() =>
-    createDefaultLocalization('SA'),
+    createDefaultLocalization('IN'),
   );
   const [industry, setIndustry] = useState<string>(INDUSTRY_OPTIONS[0].value);
   const [plan, setPlan] = useState<SignupPlanId>(search.plan ?? 'STARTER');

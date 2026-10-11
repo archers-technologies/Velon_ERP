@@ -21,14 +21,14 @@ const FALLBACK_PLANS: PublicPlan[] = [
     features: [
       '1 business · 2 users',
       'All platforms included',
-      'Saudi VAT invoices & quotations',
+      'GST invoices & quotations',
       'Customers, suppliers & products',
       'Basic inventory & expense tracking',
       'Basic reports & PDF printing',
       'Email support',
     ],
     regionalPrices: {
-      saudi: { monthlyPrice: 199, annualPrice: 1999, currency: 'SAR' },
+      india: { monthlyPrice: 199, annualPrice: 1999, currency: 'INR' },
       global: { monthlyPrice: 49, annualPrice: 539, currency: 'USD' },
     },
   },
@@ -49,7 +49,7 @@ const FALLBACK_PLANS: PublicPlan[] = [
       'Priority support',
     ],
     regionalPrices: {
-      saudi: { monthlyPrice: 399, annualPrice: 3999, currency: 'SAR' },
+      india: { monthlyPrice: 399, annualPrice: 3999, currency: 'INR' },
       global: { monthlyPrice: 149, annualPrice: 1639, currency: 'USD' },
     },
   },
@@ -70,7 +70,7 @@ const FALLBACK_PLANS: PublicPlan[] = [
       'Faster priority support',
     ],
     regionalPrices: {
-      saudi: { monthlyPrice: 699, annualPrice: 6999, currency: 'SAR' },
+      india: { monthlyPrice: 699, annualPrice: 6999, currency: 'INR' },
       global: { monthlyPrice: 499, annualPrice: 5489, currency: 'USD' },
     },
   },

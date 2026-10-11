@@ -8,8 +8,8 @@ import { canSeedDemoTenants } from './seed-guards';
 import { resolveWorkspacePublicDomain, tenantWorkspaceHost } from './workspace-host';
 
 describe('workspace-host', () => {
-  it('returns sah-digitals.app.velonerp.sa by default', () => {
-    expect(tenantWorkspaceHost('sah-digitals')).toBe('sah-digitals.app.velonerp.sa');
+  it('returns sah-digitals.app.velonerp.com by default', () => {
+    expect(tenantWorkspaceHost('sah-digitals')).toBe('sah-digitals.app.velonerp.com');
   });
 
   it('never returns .demo in admin workspace display', () => {

@@ -48,7 +48,7 @@ Set in **Vercel → Settings → Environment Variables** (Production and Preview
 | Variable                       | Purpose                                                     |
 | ------------------------------ | ----------------------------------------------------------- |
 | `VITE_API_URL`                 | Public Railway API origin (e.g. `https://…up.railway.app/`) |
-| `VITE_PUBLIC_WORKSPACE_DOMAIN` | Workspace host branding (e.g. `app.velonerp.sa`)               |
+| `VITE_PUBLIC_WORKSPACE_DOMAIN` | Workspace host branding (e.g. `velonerp.com`)               |
 
 Only `VITE_*` variables belong on Vercel. Secrets and database URLs stay on Railway.
 
@@ -101,7 +101,7 @@ cd packages/database && npx prisma migrate deploy
 
 ## CORS in production
 
-Baseline origins include `https://velonerp.sa`, `https://www.velonerp.sa`, and `https://*.vercel.app`, merged with `CORS_ORIGINS`.
+Baseline origins include `https://velonerp.com`, `https://www.velonerp.com`, and `https://*.vercel.app`, merged with `CORS_ORIGINS`.
 
 ## Environment templates
 

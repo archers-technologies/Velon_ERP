@@ -3,7 +3,6 @@ import { Type } from 'class-transformer';
 import {
   ArrayMinSize,
   IsArray,
-  IsBoolean,
   IsDateString,
   IsEmail,
   IsEnum,
@@ -74,13 +73,6 @@ export class InvoiceLineDto {
   @IsNumber()
   @Min(0)
   discount?: number;
-
-  @ApiPropertyOptional({
-    description: 'STANDARD, ZERO_RATED, EXEMPT, OUT_OF_SCOPE, or REVIEW_REQUIRED',
-  })
-  @IsOptional()
-  @IsString()
-  taxTreatment?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -175,11 +167,6 @@ export class CreateSalesInvoiceDto {
   @IsOptional()
   @IsString()
   warehouseId?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsBoolean()
-  pricesIncludeVat?: boolean;
 
   @ApiPropertyOptional()
   @IsOptional()

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { Check } from 'lucide-react';
-import { isSaudiBilling } from '@velon/shared';
+import { isIndiaBilling } from '@velon/shared';
 import { PricingPreferenceControl } from '@/components/billing/pricing-preference';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -74,7 +74,7 @@ export function MarketingPricingSection({
   hideHeadline = false,
 }: MarketingPricingSectionProps) {
   const [interval, setInterval] = useState<MarketingBillingInterval>('MONTHLY');
-  const saudiPricing = isSaudiBilling(preference.country, preference.currency);
+  const indiaPricing = isIndiaBilling(preference.country, preference.currency);
 
   return (
     <div>
@@ -90,7 +90,7 @@ export function MarketingPricingSection({
           <BillingIntervalToggle
             interval={interval}
             onChange={setInterval}
-            showAnnualSavings={saudiPricing}
+            showAnnualSavings={indiaPricing}
           />
           <PricingPreferenceControl
             preference={preference}
@@ -98,7 +98,7 @@ export function MarketingPricingSection({
           />
         </div>
 
-        {saudiPricing ? (
+        {indiaPricing ? (
           <p className="text-muted-foreground mx-auto mt-5 max-w-2xl text-sm">
             <span className="text-foreground font-medium">Founding offer:</span> 50% off year one
             for the first 1,000 customers. Renews at standard annual rates.
@@ -186,9 +186,9 @@ export function MarketingPricingSection({
       </div>
 
       <p className="text-muted-foreground mt-8 text-center text-xs leading-relaxed">
-        {saudiPricing ? (
+        {indiaPricing ? (
           <>
-            Prices are listed in Saudi Riyal. VAT is added only when the selling entity is registered for Saudi VAT.{' '}
+            Prices exclude 18% GST.{' '}
             <Link
               to="/contact"
               className="text-foreground underline underline-offset-2"

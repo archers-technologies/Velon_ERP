@@ -24,7 +24,7 @@ async function seedPlanDefinitions() {
       annualPrice: 1999,
       globalMonthlyPrice: 49,
       globalAnnualPrice: 539,
-      currency: 'SAR',
+      currency: 'INR',
       seatLimit: 2,
       storageLimitGb: 10,
       invoiceLimitMo: 500,
@@ -41,7 +41,7 @@ async function seedPlanDefinitions() {
       annualPrice: 3999,
       globalMonthlyPrice: 149,
       globalAnnualPrice: 1639,
-      currency: 'SAR',
+      currency: 'INR',
       seatLimit: 10,
       storageLimitGb: 50,
       invoiceLimitMo: 5000,
@@ -58,7 +58,7 @@ async function seedPlanDefinitions() {
       annualPrice: 6999,
       globalMonthlyPrice: 499,
       globalAnnualPrice: 5489,
-      currency: 'SAR',
+      currency: 'INR',
       seatLimit: 25,
       storageLimitGb: 500,
       invoiceLimitMo: null,
@@ -77,8 +77,8 @@ async function seedPlanDefinitions() {
         displayName: row.displayName,
         monthlyPrice: row.monthlyPrice,
         annualPrice: row.annualPrice,
-        saudiMonthlyPrice: row.monthlyPrice,
-        saudiAnnualPrice: row.annualPrice,
+        indiaMonthlyPrice: row.monthlyPrice,
+        indiaAnnualPrice: row.annualPrice,
         globalMonthlyPrice: row.globalMonthlyPrice,
         globalAnnualPrice: row.globalAnnualPrice,
         seatLimit: row.seatLimit,
@@ -91,8 +91,8 @@ async function seedPlanDefinitions() {
         monthlyPrice: row.monthlyPrice,
         annualPrice: row.annualPrice,
         currency: row.currency,
-        saudiMonthlyPrice: row.monthlyPrice,
-        saudiAnnualPrice: row.annualPrice,
+        indiaMonthlyPrice: row.monthlyPrice,
+        indiaAnnualPrice: row.annualPrice,
         globalMonthlyPrice: row.globalMonthlyPrice,
         globalAnnualPrice: row.globalAnnualPrice,
         seatLimit: row.seatLimit,
@@ -175,7 +175,7 @@ async function seedDevTenant() {
           name: companyName,
           slug,
           tenantCode: 'TNT-DEV01',
-          country: 'Saudi Arabia',
+          country: 'India',
           plan: TenantPlan.GROWTH,
           status: TenantStatus.ACTIVE,
           health: TenantHealth.HEALTHY,
@@ -190,8 +190,8 @@ async function seedDevTenant() {
           tenantId: tenant.id,
           legalName: companyName,
           email,
-          phone: '+966500000000',
-          country: 'Saudi Arabia',
+          phone: '+91 9999999999',
+          country: 'India',
           industry: IndustryTemplate.SERVICES,
         },
       });
@@ -201,11 +201,6 @@ async function seedDevTenant() {
           tenantId: tenant.id,
           name: companyName,
           slug: `${slug}-ws`,
-          timezone: 'Asia/Riyadh',
-          countryCode: 'SA',
-          currency: 'SAR',
-          language: 'ar',
-          numberFormat: 'ar-SA',
         },
       });
     }
@@ -235,7 +230,7 @@ async function seedDevTenant() {
 }
 
 async function main() {
-  const superEmail = process.env.SUPER_ADMIN_EMAIL ?? 'info@velonerp.sa';
+  const superEmail = process.env.SUPER_ADMIN_EMAIL ?? 'info@velonerp.com';
   const superPassword = process.env.SUPER_ADMIN_PASSWORD;
   if (!superPassword) {
     throw new Error('SUPER_ADMIN_PASSWORD is required to seed the database.');
@@ -269,10 +264,10 @@ async function main() {
     renewal.setDate(renewal.getDate() + 30);
     const tenant = await prisma.tenant.create({
       data: {
-        name: 'Nakheel Demo Trading',
+        name: 'Demo Retail Co.',
         slug: 'demo-retail',
         tenantCode: 'TNT-DEMO1',
-        country: 'Saudi Arabia',
+        country: 'India',
         plan: TenantPlan.GROWTH,
         status: TenantStatus.ACTIVE,
         health: TenantHealth.HEALTHY,
@@ -285,25 +280,17 @@ async function main() {
         seedSource: 'demo',
         companyProfile: {
           create: {
-            legalName: 'Nakheel Demo Trading',
-            legalNameAr: 'مؤسسة النخيل التجريبية',
+            legalName: 'Demo Retail Co.',
             email: 'demo@demo-retail.local',
-            phone: '+966500000001',
-            country: 'Saudi Arabia',
-            city: 'Riyadh',
-            region: 'Riyadh',
+            phone: '+91 00000 00000',
+            country: 'India',
             industry: IndustryTemplate.RETAIL,
           },
         },
         workspace: {
           create: {
-            name: 'Nakheel Demo Trading',
+            name: 'Demo Retail Co.',
             slug: 'demo-retail-ws',
-            timezone: 'Asia/Riyadh',
-            countryCode: 'SA',
-            currency: 'SAR',
-            language: 'ar',
-            numberFormat: 'ar-SA',
           },
         },
       },

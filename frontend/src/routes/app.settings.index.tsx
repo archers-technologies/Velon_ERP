@@ -248,7 +248,7 @@ function SettingsPage() {
             { name: 'Sample product', quantity: 1, unitPrice: 100 },
             { name: 'Sample service', quantity: 2, unitPrice: 50 },
           ],
-          currency: 'SAR',
+          currency: 'INR',
           company,
           paymentStatus: 'paid',
         },

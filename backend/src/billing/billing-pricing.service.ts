@@ -27,8 +27,8 @@ export class BillingPricingService {
       select: { countryCode: true, currency: true },
     });
     return {
-      billingCountry: workspace?.countryCode ?? 'SA',
-      billingCurrency: workspace?.currency ?? 'SAR',
+      billingCountry: workspace?.countryCode ?? 'IN',
+      billingCurrency: workspace?.currency ?? 'INR',
     };
   }
 
@@ -36,8 +36,8 @@ export class BillingPricingService {
     const row = await this.prisma.client.planDefinition.findUnique({ where: { plan } });
     if (row) {
       return planRegionalPricesFromDefinition({
-        saudiMonthlyPrice: row.saudiMonthlyPrice != null ? Number(row.saudiMonthlyPrice) : null,
-        saudiAnnualPrice: row.saudiAnnualPrice != null ? Number(row.saudiAnnualPrice) : null,
+        indiaMonthlyPrice: row.indiaMonthlyPrice != null ? Number(row.indiaMonthlyPrice) : null,
+        indiaAnnualPrice: row.indiaAnnualPrice != null ? Number(row.indiaAnnualPrice) : null,
         globalMonthlyPrice: row.globalMonthlyPrice != null ? Number(row.globalMonthlyPrice) : null,
         globalAnnualPrice: row.globalAnnualPrice != null ? Number(row.globalAnnualPrice) : null,
         monthlyPrice: Number(row.monthlyPrice),
